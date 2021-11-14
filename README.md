@@ -12,6 +12,23 @@ $ cd mimixbox-0.0.1-linux-arm64
 $ sudo ./installer.sh
 ```
 
+# Command (Applet) List
+|Command (Applet) Name | Description|
+|:--|:--|
+|      cat | Concatenate files and print on the standard output|
+|   chroot | Run command or interactive shell with special root directory|
+|     echo | Display a line of text|
+|fakemovie | Adds a video playback button to the image|
+|    false | Do nothing. Return unsuccess(1)|
+|    ghrdc | GitHub Relase Download Counter|
+|     mbsh | Mimix Box Shell|
+|    mkdir | Make directories|
+|     path | Manipulate filename path|
+|   serial | Rename the file to the name with a serial number|
+|       sh | Mimix Box Shell|
+|     true | Do nothing. Return success(0)|
+|    which | Returns the file path which would be executed in the current environment.|
+
 # Development (How to build)
 If you want to contribute to the mimixbox project, get the source code with the following command.
 ```
