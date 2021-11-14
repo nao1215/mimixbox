@@ -1,0 +1,133 @@
+//
+// mimixbox/internal/applets/shellutils/chroot/chroot.go
+//
+// Copyright 2021 Naohiro CHIKAMATSU
+//
+// Licensed under the Apache License, Version 2.0 (the "License");
+// you may not use this file except in compliance with the License.
+// You may obtain a copy of the License at
+//
+//    http://www.apache.org/licenses/LICENSE-2.0
+//
+// Unless required by applicable law or agreed to in writing, software
+// distributed under the License is distributed on an "AS IS" BASIS,
+// WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
+// See the License for the specific language governing permissions and
+// limitations under the License.
+package chroot
+
+import (
+	"fmt"
+	check "mimixbox/internal/lib"
+	"os"
+	"syscall"
+
+	"github.com/jessevdk/go-flags"
+)
+
+const cmdName string = "chroot"
+const version = "1.0.0"
+
+var osExit = os.Exit
+
+type options struct {
+	Version bool `short:"v" long:"version" description:"Show chroot command version"`
+	Help    bool `short:"h" long:"help" description:"Show this message"`
+}
+
+// Exit code
+const (
+	ExitSuccess int = iota // 0
+	ExitFailuer
+)
+
+type command struct {
+	name       string
+	withOption []string
+	env        []string
+}
+
+func Run() error {
+	var opts options
+	var err error
+	var cmd command
+
+	parseArgs(&opts)
+
+	err = syscall.Chroot(os.Args[1])
+	if err != nil {
+		return err
+	}
+	//----------------From here, in the prison-------------------
+	decideExecCommand(&cmd)
+	err = syscall.Exec(cmd.name, cmd.withOption, cmd.env)
+	if err != nil {
+		fmt.Print(cmd.name)
+		return err
+	}
+	return os.Chdir("/")
+}
+
+// Execute this method after chroot.
+// If the user has not specified a command to be executed in the jail environment,
+// the execution command is set to the environment variable $SHELL.
+// If there is no $SHELL in the jail environment, use /bin/sh.
+func decideExecCommand(cmd *command) {
+	if len(os.Args) == 2 {
+		shell := os.Getenv("SHELL")
+		if shell != "" && check.ExistCmd(shell) {
+			cmd.name = shell
+		} else {
+			cmd.name = "/bin/sh"
+		}
+		cmd.withOption = []string{cmd.name, "-i"}
+	} else {
+		cmd.name = os.Args[2]
+		cmd.withOption = os.Args[2:]
+	}
+	cmd.env = os.Environ()
+}
+
+func parseArgs(opts *options) {
+	p := initParser(opts)
+
+	if hasVersionOption() {
+		showVersion()
+		osExit(ExitSuccess)
+	}
+	if !isValidArgNr(os.Args) {
+		showHelp(p)
+		osExit(ExitFailuer)
+	}
+}
+
+func hasVersionOption() bool {
+	for _, s := range os.Args[1:] {
+		if s == "--version" || s == "-v" {
+			return true
+		}
+	}
+	return false
+}
+
+func initParser(opts *options) *flags.Parser {
+	parser := flags.NewParser(opts, flags.Default)
+	parser.Name = cmdName
+	parser.Usage = "[OPTION] NEWROOT [COMMAND [ARG]...]"
+
+	return parser
+}
+
+func isValidArgNr(args []string) bool {
+	// 0:chroot, 1:root dir, 2:command(option)
+	return len(args) >= 2
+}
+
+func showVersion() {
+	description := cmdName + " version " + version + " (under Apache License verison 2.0)\n"
+	fmt.Print(description)
+}
+
+func showHelp(p *flags.Parser) {
+	p.WriteHelp(os.Stdout)
+}
