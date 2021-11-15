@@ -4,28 +4,9 @@
 #  This is created to be stored in tar.gz or zip for release files.
 ORG_COMMANDS="path serial ghrdc fakemovie mimixbox"
 DOC_INSTALL_DIR="/usr/share/doc/mimixbox"
+ROOT_DIR=$(git rev-parse --show-toplevel)
 
-function errMsg() {
-    local message="$1"
-    echo -n -e "\033[31m\c"
-    echo "${message}" >&2
-    echo -n -e "\033[m\c"
-}
-
-function warnMsg() {
-    local message="$1"
-    echo -n -e "\033[33m\c"
-    echo "${message}"
-    echo -n -e "\033[m\c"
-}
-
-function isRoot() {
-    if [ ${EUID:-${UID}} != 0 ]; then
-        errMsg "[Usage]"
-        errMsg " $ sudo ./installer.sh"
-        exit 1
-    fi
-}
+source ${ROOT_DIR}/scripts/libshell.sh
 
 function installMimixBox() {
 	install -v -m 0755 -D mimixbox /usr/local/bin/.
@@ -49,7 +30,12 @@ function installLicense() {
     install -v -m 0644 NOTICE ${DOC_INSTALL_DIR}
 }
 
-isRoot
+IS_ROOT=$(isRoot)
+if [ "$IS_ROOT" = "1" ]; then
+    errMsg "[Usage]"
+    errMsg " $ sudo ./installer.sh"
+    exit 1
+fi
 warnMsg "[Start] Install."
 installMimixBox
 installManPages
