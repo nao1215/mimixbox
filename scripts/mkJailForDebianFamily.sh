@@ -29,8 +29,13 @@ function hasDebootstrap() {
     fi
 }
 
+function deleteJailIfNeeded() {
+    if [ -e ${JAIL} ]; then
+        sudo rm -rf ${JAIL} 
+    fi
+}
+
 function mkJail() {
-    sudo rm -rf ${JAIL}
     sudo debootstrap bullseye ${JAIL} http://deb.debian.org/debian
 }
 
@@ -47,6 +52,6 @@ if [ "$IS_ROOT" = "1" ]; then
     errMsg "You are not root user."
     exit 1
 fi
-
+deleteJailIfNeeded
 mkJail
 cpMimixboxIfNeeded
