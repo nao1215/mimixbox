@@ -32,7 +32,7 @@ const cmdName string = "ghrdc"
 
 var osExit = os.Exit
 
-const version = "1.0.0"
+const version = "1.0.1"
 
 // Exit code
 const (
@@ -122,13 +122,13 @@ type GitHubReleaseData struct {
 	Body       string `json:"body"`
 }
 
-func Run() error {
+func Run() (int, error) {
 	var opts options
 	var args = parseArgs(&opts)
 	var repository string = args[0]
 	data, err := fetchGitHubReleaseData(repository)
 	if err != nil {
-		return err
+		return ExitFailuer, err
 	}
 	if len(data) == 0 {
 		// Because the ghrdc command does not authenticate with GitHub API,
@@ -138,7 +138,7 @@ func Run() error {
 		// URL: https://github.com/google/go-github
 		err := fmt.Errorf("Release Data is nothing. If %s is organization repository,\n"+
 			"gdrdc commant can't get release data.\n", repository)
-		return err
+		return ExitFailuer, err
 	}
 
 	var totalSrcCnt int = 0
@@ -172,7 +172,7 @@ func Run() error {
 		fmt.Printf("[Source Code Download Count(total)]:%d\n", totalSrcCnt)
 	}
 
-	return nil
+	return ExitSuccess, nil
 }
 
 // fetchGitHubReleaseData () runs the GitHub Web API. Convert the acquired json to a structure.

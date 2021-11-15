@@ -25,6 +25,7 @@ import (
 	"mimixbox/internal/applets/shellutils/echo"
 	"mimixbox/internal/applets/shellutils/false"
 	"mimixbox/internal/applets/shellutils/ghrdc"
+	"mimixbox/internal/applets/shellutils/ischroot"
 	"mimixbox/internal/applets/shellutils/mbsh"
 	"mimixbox/internal/applets/shellutils/path"
 	"mimixbox/internal/applets/shellutils/serial"
@@ -36,7 +37,7 @@ import (
 	"strconv"
 )
 
-type EntryPoint func() error
+type EntryPoint func() (int, error)
 
 type Applet struct {
 	Ep   EntryPoint
@@ -53,6 +54,7 @@ func init() {
 		"fakemovie": {fakemovie.Run, "Adds a video playback button to the image"},
 		"false":     {false.Run, "Do nothing. Return unsuccess(1)"},
 		"ghrdc":     {ghrdc.Run, "GitHub Relase Download Counter"},
+		"ischroot":  {ischroot.Run, "Detect if running in a chroot"},
 		"mbsh":      {mbsh.Run, "Mimix Box Shell"},
 		"mkdir":     {mkdir.Run, "Make directories"},
 		"path":      {path.Run, "Manipulate filename path"},

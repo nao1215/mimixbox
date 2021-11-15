@@ -80,7 +80,7 @@ const cmdName string = "fakemovie"
 
 var osExit = os.Exit
 
-const version = "1.0.1"
+const version = "1.0.2"
 
 // Exit code
 const (
@@ -95,7 +95,7 @@ type options struct {
 	Version bool   `short:"v" long:"version" description:"Show fakemovie command version"`
 }
 
-func Run() error {
+func Run() (int, error) {
 	var opts options
 	var args = parseArgs(&opts)
 	var inputFileName string = args[0]
@@ -103,12 +103,13 @@ func Run() error {
 	var radius int = opts.Radius
 
 	if !isValidExt(inputFileName) {
-		return errors.New("fakemovie command only support jpg or png.")
+		err := errors.New("fakemovie command only support jpg or png")
+		return ExitFailuer, err
 	}
 
 	img, err := openImage(inputFileName)
 	if err != nil {
-		return err
+		return ExitFailuer, err
 	}
 
 	if radius <= 0 {
@@ -126,10 +127,10 @@ func Run() error {
 	}
 	err = writeImage(img, outputFileName)
 	if err != nil {
-		return err
+		return ExitFailuer, err
 	}
 
-	return nil
+	return ExitSuccess, nil
 }
 
 func openImage(imageFileName string) (image.Image, error) {

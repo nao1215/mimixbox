@@ -25,7 +25,7 @@ import (
 )
 
 const cmdName string = "echo"
-const version = "1.0.0"
+const version = "1.0.1"
 
 var osExit = os.Exit
 
@@ -39,14 +39,14 @@ const (
 	ExitFailuer
 )
 
-func Run() error {
+func Run() (int, error) {
 	var output []string
 	var opts options
 	var args []string
 	var err error
 
 	if args, err = parseArgs(&opts); err != nil {
-		return nil
+		return ExitFailuer, nil
 	}
 
 	if len(args) == 0 {
@@ -56,7 +56,7 @@ func Run() error {
 	}
 
 	println(strings.Join(output, " "))
-	return nil
+	return ExitSuccess, nil
 }
 
 func parseArgs(opts *options) ([]string, error) {

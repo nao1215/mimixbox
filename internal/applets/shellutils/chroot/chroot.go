@@ -26,7 +26,7 @@ import (
 )
 
 const cmdName string = "chroot"
-const version = "1.0.0"
+const version = "1.0.1"
 
 var osExit = os.Exit
 
@@ -47,7 +47,7 @@ type command struct {
 	env        []string
 }
 
-func Run() error {
+func Run() (int, error) {
 	var opts options
 	var err error
 	var cmd command
@@ -56,23 +56,33 @@ func Run() error {
 
 	err = syscall.Chroot(os.Args[1])
 	if err != nil {
-		return err
+		return ExitFailuer, err
 	}
+
 	//----------------From here, in the prison-------------------
+	err = os.Chdir("/")
+	if err != nil {
+		return ExitFailuer, err
+	}
+
 	decideExecCommand(&cmd)
+	// TODO: Reset UID and GID.
+	// "/etc/passwd (uid name resolution file)" and "/etc/group (gid name resolution file)" may
+	// be different between the original environment and the jail environment.
+	// So, reset uid and gid in the jail environment.
+
 	err = syscall.Exec(cmd.name, cmd.withOption, cmd.env)
 	if err != nil {
-		fmt.Print(cmd.name)
-		return err
+		return ExitFailuer, err
 	}
-	return os.Chdir("/")
+	return ExitSuccess, nil
 }
 
 // Execute this method after chroot.
 // If the user has not specified a command to be executed in the jail environment,
 // the execution command is set to the environment variable $SHELL.
 // If there is no $SHELL in the jail environment, use /bin/sh.
-func decideExecCommand(cmd *command) {
+func decideExecCommand(cmd *command) error {
 	if len(os.Args) == 2 {
 		shell := os.Getenv("SHELL")
 		if shell != "" && check.ExistCmd(shell) {
@@ -85,7 +95,14 @@ func decideExecCommand(cmd *command) {
 		cmd.name = os.Args[2]
 		cmd.withOption = os.Args[2:]
 	}
+
+	// Reset the environment variable SHELL for the Jail environment.
+	if err := os.Setenv("SHELL", cmd.name); err != nil {
+		return err
+	}
+
 	cmd.env = os.Environ()
+	return nil
 }
 
 func parseArgs(opts *options) {

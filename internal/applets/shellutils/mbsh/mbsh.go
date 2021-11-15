@@ -36,7 +36,7 @@ var osExit = os.Exit
 // ErrNoPath is returned when 'cd' was called without a second argument.
 var ErrNoPath = errors.New("path required")
 
-const version = "0.0.1"
+const version = "0.0.2"
 
 const (
 	ExitSuccess int = iota // 0
@@ -47,7 +47,7 @@ type options struct {
 	Version bool `short:"v" long:"version" description:"Show shell version"`
 }
 
-func Run() error {
+func Run() (int, error) {
 	args, opts := parseArgs()
 
 	fmt.Printf("Dummy(Not implement shell option): %s:%v\n", args, opts.Version)

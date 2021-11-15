@@ -21,11 +21,12 @@ $ sudo ./installer.sh
 |fakemovie | Adds a video playback button to the image|
 |    false | Do nothing. Return unsuccess(1)|
 |    ghrdc | GitHub Relase Download Counter|
-|     mbsh | Mimix Box Shell|
+|  ischroot| Detect if running in a chroot|
+|     mbsh | Mimix Box Shell (In development)|
 |    mkdir | Make directories|
 |     path | Manipulate filename path|
 |   serial | Rename the file to the name with a serial number|
-|       sh | Mimix Box Shell|
+|       sh | Mimix Box Shell (In development)|
 |     true | Do nothing. Return success(0)|
 |    which | Returns the file path which would be executed in the current environment.|
 

@@ -16,9 +16,16 @@
 // limitations under the License.
 package check
 
-import "os/exec"
+import (
+	"os"
+	"os/exec"
+)
 
 func ExistCmd(cmd string) bool {
 	_, err := exec.LookPath(cmd)
 	return err == nil
+}
+
+func IsRoot() bool {
+	return os.Geteuid() == 0
 }

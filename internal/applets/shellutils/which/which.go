@@ -26,7 +26,7 @@ import (
 
 const cmdName string = "which"
 
-const version = "1.0.0"
+const version = "1.0.1"
 
 var osExit = os.Exit
 
@@ -40,13 +40,13 @@ const (
 	ExitFailuer
 )
 
-func Run() error {
+func Run() (int, error) {
 	var opts options
 	var args []string
 	var err error
 
 	if args, err = parseArgs(&opts); err != nil {
-		return nil
+		return ExitFailuer, nil
 	}
 
 	for _, path := range args {
@@ -56,11 +56,11 @@ func Run() error {
 			if ok && e.Err == exec.ErrNotFound {
 				continue // Ignore NotFound error
 			}
-			return err
+			return ExitFailuer, err
 		}
 		fmt.Fprintln(os.Stdout, p)
 	}
-	return nil
+	return ExitSuccess, nil
 }
 
 func parseArgs(opts *options) ([]string, error) {

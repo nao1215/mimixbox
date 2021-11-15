@@ -34,7 +34,7 @@ const cmdName string = "serial"
 
 var osExit = os.Exit
 
-const version = "1.0.0"
+const version = "1.0.1"
 
 // Exit code
 const (
@@ -52,20 +52,20 @@ type options struct {
 	Version bool   `short:"v" long:"version" description:"Show serial command version"`
 }
 
-func Run() error {
+func Run() (int, error) {
 	var opts options
 	var args = parseArgs(&opts)
 	var dirPath = args[0]
 
 	if !fileutils.Exists(dirPath) {
 		err := fmt.Errorf("%s doesn't exist.", dirPath)
-		return err
+		return ExitFailuer, err
 	}
 
 	var files = getFilePathsInDir(dirPath)
 	if len(files) == 0 {
 		err := fmt.Errorf("No files in %s directory.", dirPath)
-		return err
+		return ExitFailuer, err
 	}
 
 	newFileNames := newNames(opts, files)
@@ -77,7 +77,7 @@ func Run() error {
 	} else {
 		rename(newFileNames, opts.DryRun)
 	}
-	return nil
+	return ExitSuccess, nil
 }
 
 func rename(newFileNames map[string]string, dryRun bool) {

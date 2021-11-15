@@ -51,7 +51,7 @@ type options struct {
 
 var osExit = os.Exit
 
-const version = "0.0.1"
+const version = "0.1.1"
 
 const (
 	ExitSuccess int = iota // 0
@@ -60,6 +60,8 @@ const (
 
 func main() {
 	var opts options
+	var status int
+	var err error
 	parser := initParser(&opts)
 
 	// The contents of os.Args [0] are different when mimixbox is
@@ -84,11 +86,11 @@ func main() {
 	}
 
 	app := applets.Applets[os.Args[0]]
-	if err := app.Ep(); err != nil {
+	if status, err = app.Ep(); err != nil {
 		fmt.Println(err)
-		osExit(ExitFailuer)
+		osExit(status)
 	}
-	osExit(ExitSuccess)
+	osExit(status)
 }
 
 // If the mimixbox option exists, execute the processing for the option and exit.

@@ -24,7 +24,7 @@ import (
 )
 
 const cmdName string = "true"
-const version = "1.0.0"
+const version = "1.0.1"
 
 var osExit = os.Exit
 
@@ -38,16 +38,14 @@ const (
 	ExitFailuer
 )
 
-func Run() error {
+func Run() (int, error) {
 	var opts options
 	var err error
 
 	if _, err = parseArgs(&opts); err != nil {
-		return nil
+		return ExitSuccess, nil // This is true command. Not retuen fail.
 	}
-
-	os.Exit(0)
-	return nil
+	return ExitSuccess, nil
 }
 
 func parseArgs(opts *options) ([]string, error) {

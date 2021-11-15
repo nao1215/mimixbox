@@ -27,7 +27,7 @@ import (
 
 const cmdName string = "path"
 
-const version = "1.0.0"
+const version = "1.0.1"
 
 var osExit = os.Exit
 var errNotGetAbsPath = errors.New("can't get absolute path")
@@ -47,20 +47,20 @@ type options struct {
 	Version   bool `short:"v" long:"version" description:"Show path command version"`
 }
 
-func Run() error {
+func Run() (int, error) {
 	var opts options
 	var args []string
 	var err error
 
 	if args, err = parseArgs(&opts); err != nil {
-		return nil
+		return ExitFailuer, nil
 	}
 	path := args[0]
 
 	if opts.Abs {
 		abs, err := filepath.Abs(path)
 		if err != nil {
-			return errNotGetAbsPath
+			return ExitFailuer, errNotGetAbsPath
 		}
 		fmt.Printf("%s\n", abs)
 	}
@@ -81,7 +81,7 @@ func Run() error {
 		fmt.Printf("%s\n", filepath.Ext(path))
 	}
 
-	return nil
+	return ExitSuccess, nil
 }
 
 func parseArgs(opts *options) ([]string, error) {

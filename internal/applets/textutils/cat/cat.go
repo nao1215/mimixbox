@@ -26,7 +26,7 @@ import (
 
 const cmdName string = "cat"
 
-const version = "1.0.0"
+const version = "1.0.1"
 
 var osExit = os.Exit
 
@@ -40,23 +40,23 @@ type options struct {
 	Version bool `short:"v" long:"version" description:"Show cat command version"`
 }
 
-func Run() error {
+func Run() (int, error) {
 	var opts options
 	var args []string
 	var err error
 
 	if args, err = parseArgs(&opts); err != nil {
-		return nil
+		return ExitFailuer, nil
 	}
 
 	for _, file := range args {
 		err := cat(file)
 		if err != nil {
-			return err
+			return ExitFailuer, err
 		}
 	}
 
-	return nil
+	return ExitSuccess, nil
 }
 
 func cat(path string) error {

@@ -25,7 +25,7 @@ import (
 
 const cmdName string = "mkdir"
 
-const version = "1.0.0"
+const version = "1.0.1"
 
 var osExit = os.Exit
 
@@ -40,20 +40,27 @@ type options struct {
 	Version bool `short:"v" long:"version" description:"Show mkdir command version"`
 }
 
-func Run() error {
+func Run() (int, error) {
 	var opts options
 	var args []string
 	var err error
 
 	if args, err = parseArgs(&opts); err != nil {
-		return nil
+		return ExitFailuer, nil
 	}
 	path := args[0]
 
 	if opts.Parent {
-		return os.MkdirAll(path, 0755)
+		err = os.MkdirAll(path, 0755)
+	} else {
+		err = os.Mkdir(path, 0755)
 	}
-	return os.Mkdir(path, 0755)
+
+	if err != nil {
+		return ExitFailuer, err
+	}
+
+	return ExitSuccess, nil
 }
 
 func parseArgs(opts *options) ([]string, error) {
