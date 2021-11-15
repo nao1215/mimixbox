@@ -10,7 +10,7 @@ MAIN_CODE="${ROOT_DIR}/cmd/mimixbox/main.go"
 # Not build windows binary.
 OS="linux darwin"
 ARCH="386 amd64 arm arm64"
-VERSION=$(grep "const version" ${MAIN_CODE} | sed -e "s/const version = \"\(0.0.1\)\"/\1/g")
+VERSION=$(grep "const version" ${MAIN_CODE} | sed -e "s/const version = \"\(.*\)\"/\1/g")
 MANPAGES_DIR="${CWD}/docs/man"
 
 function mkReleaseDir() {
@@ -46,7 +46,6 @@ function cpLicense() {
     cd  ${CWD}
     cp -f LICENSE ${release}
     cp -f NOTICE ${release}
-    cp -rf licenses ${release}
 }
 
 function cpInstaller() {
@@ -66,7 +65,7 @@ function mkRelease() {
     zip_file="${release_dir}.zip"
 
     echo "---Make release files for OS=$os Architecture=$arch" >> ${BIN_INFO_TXT}
-    GOOS=$os GOARCH=$arch make
+    GOOS=$os GOARCH=$arch make build
     echo -n "   " >> ${BIN_INFO_TXT}
     file ${CWD}/${PROJECT} >> ${BIN_INFO_TXT}
     echo "" >> ${BIN_INFO_TXT}
@@ -121,7 +120,7 @@ function mkMacOsAllRelease() {
 function mkSrcRelease() {
     TMP=$(mktemp -d)
     code="${PROJECT}-${VERSION}-src"
-    tarball="$code.tar.gz"
+    #tarball="$code.tar.gz"
     zip_file="$code.zip"
 
     cd  ${CWD}
@@ -130,7 +129,7 @@ function mkSrcRelease() {
     mv ${TMP}/${PROJECT} ${RELEASE}/.
 
     cd  ${RELEASE}
-    tar cvfz ${tarball} "${PROJECT}"
+    #tar cvfz ${tarball} "${PROJECT}"
     zip ${zip_file} -r "${PROJECT}"
     rm -rf "${RELEASE}/${PROJECT}"
     cd  ${CWD}
@@ -146,7 +145,7 @@ function rmOsDirInRelease() {
 function main() {
     cd ${CWD}
     make clean
-    mkSrcRelease
+    #mkSrcRelease
 
     touch ${BIN_INFO_TXT}
     mkReleaseDir
