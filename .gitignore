@@ -6,8 +6,9 @@
 *.dylib
 mimixbox
 
-# Test binary, built with `go test -c`
+# Test binary, built with `go test -c`. And test directory
 *.test
+test
 
 # Output of the go coverage tool, specifically when used with LiteIDE
 *.out
