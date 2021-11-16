@@ -21,6 +21,7 @@ import (
 	"go/doc"
 	"mimixbox/internal/applets/fileutils/mkdir"
 	"mimixbox/internal/applets/fileutils/mv"
+	"mimixbox/internal/applets/fileutils/touch"
 	"mimixbox/internal/applets/jokeutils/fakemovie"
 	"mimixbox/internal/applets/shellutils/chroot"
 	"mimixbox/internal/applets/shellutils/echo"
@@ -58,12 +59,13 @@ func init() {
 		"ischroot":  {ischroot.Run, "Detect if running in a chroot"},
 		"mbsh":      {mbsh.Run, "Mimix Box Shell"},
 		"mkdir":     {mkdir.Run, "Make directories"},
-		"mv":        {mv.Run, "Rename SOURCE to DEST, or move SOURCE(s) to DIRECTORY"},
+		"mv":        {mv.Run, "Rename SOURCE to DESTINATION, or move SOURCE(s) to DIRECTORY"},
 		"path":      {path.Run, "Manipulate filename path"},
 		"serial":    {serial.Run, "Rename the file to the name with a serial number"},
 		"sh":        {mbsh.Run, "Mimix Box Shell"},
+		"touch":     {touch.Run, "Update the access and modification times of each FILE to the current time"},
 		"true":      {true.Run, "Do nothing. Return success(0)"},
-		"which":     {which.Run, "Returns the file path which would be executed in the current environment."},
+		"which":     {which.Run, "Returns the file path which would be executed in the current environment"},
 	}
 }
 

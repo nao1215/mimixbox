@@ -28,8 +28,9 @@ $ sudo ./installer.sh
 |     path | Manipulate filename path|
 |   serial | Rename the file to the name with a serial number|
 |       sh | Mimix Box Shell (In development)|
+|    touch | Update the access and modification times of each FILE to the current time|
 |     true | Do nothing. Return success(0)|
-|    which | Returns the file path which would be executed in the current environment.|
+|    which | Returns the file path which would be executed in the current environment|
 
 # Development (How to build)
 If you want to contribute to the mimixbox project, get the source code with the following command.
