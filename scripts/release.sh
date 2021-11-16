@@ -46,6 +46,7 @@ function cpLicense() {
     cd  ${CWD}
     cp -f LICENSE ${release}
     cp -f NOTICE ${release}
+    cp -rf licenses ${release}
 }
 
 function cpInstaller() {
@@ -55,6 +56,7 @@ function cpInstaller() {
     cp -f scripts/installer.sh ${release}
 }
 
+# TODO: Functionize
 function mkRelease() {
     cd ${CWD}
     os="$1"

@@ -26,8 +26,9 @@ function installLicense() {
     warnMsg "Install LICENSE at ${DOC_INSTALL_DIR}"
     which mkdir
     mkdir -p ${DOC_INSTALL_DIR}
-    install -v -m 0644 LICENSE ${DOC_INSTALL_DIR}
-    install -v -m 0644 NOTICE ${DOC_INSTALL_DIR}
+    #install -v -m 0644 LICENSE ${DOC_INSTALL_DIR}
+    #install -v -m 0644 NOTICE ${DOC_INSTALL_DIR}
+    cp -rf licenses ${DOC_INSTALL_DIR}
 }
 
 IS_ROOT=$(isRoot)

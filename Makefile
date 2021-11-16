@@ -1,12 +1,14 @@
 build: deps ## Build mimixbox and make man-pages
 	go build -o mimixbox cmd/mimixbox/main.go
 	$(MAKE) doc
+	$(MAKE) licenses
 
 clean: ## Clean project
 	-rm mimixbox
 	-rm -rf vendor
 	-rm cover.*
 	-rm -rf release
+	-rm -rf licenses
 	-find . -name "*.1.gz" | xargs rm -f
 
 doc: ## Make man-pages
@@ -20,6 +22,9 @@ jail:  ## Make jail environment for testing chroot/ischroot
 
 release: ## Make release files.
 	./scripts/release.sh
+
+licenses: ## Get licenses for dependent libraries
+	-@go-licenses save ./cmd/mimixbox --force --save_path "licenses/"
 
 deps: ## Dependency resolution for build
 	dep ensure

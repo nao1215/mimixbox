@@ -25,3 +25,6 @@ cover.html
 
 # Man-pages
 *.1.gz
+
+# Directory that manages licenses for dependent libraries
+licenses
