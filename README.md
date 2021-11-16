@@ -24,6 +24,7 @@ $ sudo ./installer.sh
 |  ischroot| Detect if running in a chroot|
 |     mbsh | Mimix Box Shell (In development)|
 |    mkdir | Make directories|
+|       mv | Rename SOURCE to DESTINATION, or move SOURCE(s) to DIRECTORY|
 |     path | Manipulate filename path|
 |   serial | Rename the file to the name with a serial number|
 |       sh | Mimix Box Shell (In development)|

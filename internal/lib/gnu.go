@@ -1,5 +1,5 @@
 //
-// mimixbox/internal/lib/check.go
+// mimixbox/internal/lib/gnu.go
 //
 // Copyright 2021 Naohiro CHIKAMATSU
 //
@@ -16,38 +16,12 @@
 // limitations under the License.
 package utils
 
-import (
-	"fmt"
-	"os"
-	"os/exec"
-	"strings"
-)
+import "os"
 
-func ExistCmd(cmd string) bool {
-	_, err := exec.LookPath(cmd)
-	return err == nil
-}
-
-func IsRoot() bool {
-	return os.Geteuid() == 0
-}
-
-func Question(ask string) bool {
-	var response string
-
-	fmt.Printf(ask + " [Y/n] ")
-	_, err := fmt.Scanln(&response)
-	if err != nil {
-		fmt.Print(err.Error())
-		return false
+func SimpleBackupSuffix() string {
+	suffix := os.Getenv("SIMPLE_BACKUP_SUFFIX")
+	if suffix == "" {
+		return "~"
 	}
-
-	switch strings.ToLower(response) {
-	case "y", "yes":
-		return true
-	case "n", "no":
-		return false
-	default:
-		return Question(ask)
-	}
+	return suffix
 }
