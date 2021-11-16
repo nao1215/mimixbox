@@ -36,7 +36,7 @@ If you want to contribute to the mimixbox project, get the source code with the 
 ```
 $ git clone https://github.com/nao1215/mimixbox.git
 $ cd mimixbox
-$ make
+$ make build
 ```
 
 The table below shows the tools used when developing the commands in the mimixbox project.
@@ -49,6 +49,17 @@ The table below shows the tools used when developing the commands in the mimixbo
 | make   | Used for build, run, test, etc |
 | gzip   | Used for compress man pages |
 | install   | Used for install serial binary and document in the system |
+
+# Roadmap
+- Step1. Implements many common Unix commands (〜Version 0.x.x).
+- Step2. Increase the options for each commands (〜Version 1.x.x).
+- Step3. Change the command to modern specifications(〜Version 2.x.x)
+  
+Now, Mimixbox has not implemented enough commands (applet). Therefore, as a project, we will increase the number of commands and aim for a state where dog fooding can be done with the highest priority.
+    
+Then increase the command options to the same level as Coreutils and other packages. Note that MimixBox does not aim to create commands equivalent to Coreutils. However, we think it's better to have the options that Linux users expect.
+  
+Finally, it's the phase that makes the Mimix Box unique. Extend commands to high functionality, like bat and lsd, which are reimplementations of cat and ls.
 
 # Contact
 If you would like to send comments such as "find a bug" or "request for additional features" to the developer, please use one of the following contacts.
