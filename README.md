@@ -11,30 +11,6 @@ $ tar xf mimixbox-0.0.1-linux-arm64.tar.gz
 $ cd mimixbox-0.0.1-linux-arm64
 $ sudo ./installer.sh
 ```
-
-# Command (Applet) List
-|Command (Applet) Name | Description|
-|:--|:--|
-|      cat | Concatenate files and print on the standard output|
-|   chroot | Run command or interactive shell with special root directory|
-|     echo | Display a line of text|
-|fakemovie | Adds a video playback button to the image|
-|    false | Do nothing. Return unsuccess(1)|
-|    ghrdc | GitHub Relase Download Counter|
-|  ischroot| Detect if running in a chroot|
-|     mbsh | Mimix Box Shell (In development)|
-|    mkdir | Make directories|
-|    mkfifo | Make FIFO (Named pipe)|
-|       mv | Rename SOURCE to DESTINATION, or move SOURCE(s) to DIRECTORY|
-|     path | Manipulate filename path|
-|     rm   | Remove file(s) or directory(s)|
-|     rmdir   | Remove directory|
-|   serial | Rename the file to the name with a serial number|
-|       sh | Mimix Box Shell (In development)|
-|    touch | Update the access and modification times of each FILE to the current time|
-|     true | Do nothing. Return success(0)|
-|    which | Returns the file path which would be executed in the current environment|
-
 # Development (How to build)
 If you want to contribute to the mimixbox project, get the source code with the following command.
 ```
@@ -59,7 +35,7 @@ The table below shows the tools used when developing the commands in the mimixbo
 - Step2. Increase the options for each commands (〜Version 1.x.x).
 - Step3. Change the command to modern specifications(〜Version 2.x.x)
   
-Now, Mimixbox has not implemented enough commands (applet). Therefore, as a project, we will increase the number of commands and aim for a state where dog fooding can be done with the highest priority.
+Now, Mimixbox has not implemented enough commands (currently supported command list is [here](./docs/introduction/en/CommandAppletList.md)). Therefore, as a project, we will increase the number of commands and aim for a state where dog fooding can be done with the highest priority.
     
 Then increase the command options to the same level as Coreutils and other packages. Note that MimixBox does not aim to create commands equivalent to Coreutils. However, we think it's better to have the options that Linux users expect.
   
