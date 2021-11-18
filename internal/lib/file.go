@@ -1,5 +1,5 @@
 //
-// mimixbox/pkg/fileutils/file.go
+// mimixbox/internal/lib/file.go
 //
 // Copyright 2021 Naohiro CHIKAMATSU
 //
@@ -14,7 +14,7 @@
 // WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
 // See the License for the specific language governing permissions and
 // limitations under the License.
-package fileutils
+package mb
 
 import (
 	"io/fs"

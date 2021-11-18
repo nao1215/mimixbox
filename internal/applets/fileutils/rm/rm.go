@@ -19,8 +19,7 @@ package rm
 import (
 	"errors"
 	"fmt"
-	utils "mimixbox/internal/lib"
-	"mimixbox/pkg/fileutils"
+	mb "mimixbox/internal/lib"
 	"os"
 	"sort"
 
@@ -57,7 +56,7 @@ func Run() (int, error) {
 		return ExitFailuer, nil
 	}
 
-	// Coreutils will continue to delete files as much as possible.
+	// Coremb will continue to delete files as much as possible.
 	// MimixBox stops processing if an error occurs even once.
 	for _, path := range args {
 		if status, err := rm(path, opts); err != nil {
@@ -73,8 +72,8 @@ func rm(path string, opts options) (int, error) {
 		return status, err
 	}
 
-	if fileutils.IsFile(path) {
-		if opts.Interactive && !utils.Question("Remove "+path+"?") {
+	if mb.IsFile(path) {
+		if opts.Interactive && !mb.Question("Remove "+path+"?") {
 			return ExitSuccess, nil // Skip this file
 		}
 		if err := os.Remove(path); err != nil {
@@ -104,7 +103,7 @@ func removeDir(dir string, interactive bool) error {
 }
 
 func interactiveRemoveDir(dir string) error {
-	dirs, files, err := fileutils.Walk(dir)
+	dirs, files, err := mb.Walk(dir)
 	if err != nil {
 		return err
 	}
@@ -114,7 +113,7 @@ func interactiveRemoveDir(dir string) error {
 	sort.Sort(sort.Reverse(sort.StringSlice(files)))
 
 	for _, file := range files {
-		if !utils.Question("Remove " + file + "?") {
+		if !mb.Question("Remove " + file + "?") {
 			continue
 		}
 		err := os.Remove(file)
@@ -123,7 +122,7 @@ func interactiveRemoveDir(dir string) error {
 		}
 	}
 	for _, dir := range dirs {
-		if !utils.Question("Remove " + dir + "?") {
+		if !mb.Question("Remove " + dir + "?") {
 			continue
 		}
 		err := os.Remove(dir)
@@ -135,18 +134,18 @@ func interactiveRemoveDir(dir string) error {
 }
 
 func validBeforeRemove(path string, opts options) (int, error) {
-	if utils.IsRootDir(path) && !opts.NoPreserve {
+	if mb.IsRootDir(path) && !opts.NoPreserve {
 		return ExitFailuer, errors.New("do not remove the root directory")
 	}
 
-	if !fileutils.Exists(path) {
+	if !mb.Exists(path) {
 		if !opts.Force {
 			return ExitFailuer, errors.New("can't remove " + path + ": No such file or directory exists")
 		}
 		return ExitFailuer, nil
 	}
 
-	if fileutils.IsDir(path) && !opts.Recursive {
+	if mb.IsDir(path) && !opts.Recursive {
 		return ExitFailuer, errors.New("can't remove " + path + ": It's directory")
 	}
 

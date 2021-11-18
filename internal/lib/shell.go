@@ -1,5 +1,5 @@
 //
-// mimixbox/internal/lib/check.go
+// mimixbox/internal/lib/shell.go
 //
 // Copyright 2021 Naohiro CHIKAMATSU
 //
@@ -14,7 +14,7 @@
 // WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
 // See the License for the specific language governing permissions and
 // limitations under the License.
-package utils
+package mb
 
 import (
 	"fmt"

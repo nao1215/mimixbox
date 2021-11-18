@@ -19,13 +19,12 @@ package serial
 import (
 	"fmt"
 	"io/ioutil"
+	mb "mimixbox/internal/lib"
 	"os"
 	"path/filepath"
 	"sort"
 	"strconv"
 	"strings"
-
-	"mimixbox/pkg/fileutils"
 
 	"github.com/jessevdk/go-flags"
 )
@@ -57,7 +56,7 @@ func Run() (int, error) {
 	var args = parseArgs(&opts)
 	var dirPath = args[0]
 
-	if !fileutils.Exists(dirPath) {
+	if !mb.Exists(dirPath) {
 		err := fmt.Errorf("%s doesn't exist.", dirPath)
 		return ExitFailuer, err
 	}
@@ -124,7 +123,7 @@ func copy(newFileNames map[string]string, dryRun bool) {
 		// If this function is running, it will force the file to be overwritten.
 		// If there is the file with the same name in the copy destination,
 		// delete it before copy the file.
-		if fileutils.Exists(dest) {
+		if mb.Exists(dest) {
 			if err := os.Remove(dest); err != nil {
 				fmt.Fprintf(os.Stderr, "Can't copy %s to %s\n", org, dest)
 				osExit(ExitFailuer)
@@ -202,7 +201,7 @@ func getFilePathsInDir(dir string) []string {
 	var paths []string
 	for _, file := range files {
 		path = filepath.Join(dir, file.Name())
-		if fileutils.IsFile(path) && !fileutils.IsHiddenFile(path) {
+		if mb.IsFile(path) && !mb.IsHiddenFile(path) {
 			paths = append(paths, filepath.Clean(path))
 		}
 	}
@@ -221,7 +220,7 @@ func newNames(opts options, path []string) map[string]string {
 		ext := filepath.Ext(file)
 
 		if len(opts.Name) == 0 {
-			format = fileNameFormat(opts.Prefix, opts.Suffix, fileutils.BaseNameWithoutExt(file), len(path))
+			format = fileNameFormat(opts.Prefix, opts.Suffix, mb.BaseNameWithoutExt(file), len(path))
 		} else {
 			format = fileNameFormat(opts.Prefix, opts.Suffix, opts.Name, len(path))
 		}
@@ -260,7 +259,7 @@ func dieIfExistSameNameFile(force bool, fileNames map[string]string) {
 	}
 
 	for _, file := range fileNames {
-		if fileutils.Exists(file) {
+		if mb.Exists(file) {
 			fmt.Fprintf(os.Stderr, "%s (file name which is after renaming) is already exists.\n", file)
 			fmt.Fprintf(os.Stderr, "Renaming may erase the contents of the file. ")
 			fmt.Fprintf(os.Stderr, "So, nothing to do.\n")
@@ -272,7 +271,7 @@ func dieIfExistSameNameFile(force bool, fileNames map[string]string) {
 func makeDirIfNeeded(filePath string) {
 	dirPath := filepath.Dir(filePath)
 
-	if fileutils.Exists(dirPath) {
+	if mb.Exists(dirPath) {
 		return
 	}
 

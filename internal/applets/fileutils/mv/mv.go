@@ -19,8 +19,7 @@ package mv
 import (
 	"errors"
 	"fmt"
-	utils "mimixbox/internal/lib"
-	"mimixbox/pkg/fileutils"
+	mb "mimixbox/internal/lib"
 	"os"
 	"path/filepath"
 
@@ -98,7 +97,7 @@ func validArgs(srcPaths []string, destPath string, opts options) error {
 
 func move(srcPaths []string, dest string, opts options) error {
 	for _, src := range srcPaths {
-		if !fileutils.Exists(src) {
+		if !mb.Exists(src) {
 			return errors.New(src + " doesn't exist")
 		}
 
@@ -140,7 +139,7 @@ func noclobberMove(src string, dest string) error {
 	if isSameNameFileOrDir(src, dest) {
 		return nil // Nothing to do. Say nothing.
 	}
-	if fileutils.IsFile(src) && fileutils.IsFile(dest) {
+	if mb.IsFile(src) && mb.IsFile(dest) {
 		if filepath.Base(src) == filepath.Base(dest) {
 			return nil // Nothing to do. Say nothing.
 		}
@@ -152,18 +151,18 @@ func noclobberMove(src string, dest string) error {
 }
 
 func isSameNameFileOrDir(src string, dest string) bool {
-	if fileutils.IsDir(src) && fileutils.IsDir(dest) {
+	if mb.IsDir(src) && mb.IsDir(dest) {
 		if filepath.Base(src) == filepath.Base(dest) {
 			return true
 		}
 	}
-	if fileutils.IsFile(src) && fileutils.IsFile(dest) {
+	if mb.IsFile(src) && mb.IsFile(dest) {
 		if filepath.Base(src) == filepath.Base(dest) {
 			return true
 		}
-	} else if fileutils.IsFile(src) && fileutils.IsDir(dest) {
+	} else if mb.IsFile(src) && mb.IsDir(dest) {
 		destPath := filepath.Join(dest, filepath.Base(src))
-		if fileutils.Exists(destPath) {
+		if mb.Exists(destPath) {
 			return true
 		}
 	}
@@ -180,7 +179,7 @@ func forceMove(src string, dest string, opts options) error {
 
 func interactiveMove(src string, dest string, opts options) error {
 	if isSameNameFileOrDir(src, dest) {
-		if !utils.Question("Overwrite " + filepath.Base(src)) {
+		if !mb.Question("Overwrite " + filepath.Base(src)) {
 			return nil
 		}
 	}
@@ -195,15 +194,15 @@ func interactiveMove(src string, dest string, opts options) error {
 
 func decideDestAbsPath(src string, dest string, opts options) string {
 	destPath := dest
-	if fileutils.IsDir(src) && fileutils.IsDir(destPath) {
+	if mb.IsDir(src) && mb.IsDir(destPath) {
 		if (filepath.Base(src) == filepath.Base(destPath)) && opts.Backup {
 			destPath = decideBackupFileName(destPath)
 		}
-	} else if fileutils.IsFile(src) && fileutils.IsFile(dest) && opts.Backup {
+	} else if mb.IsFile(src) && mb.IsFile(dest) && opts.Backup {
 		destPath = decideBackupFileName(destPath)
-	} else if fileutils.IsFile(src) && fileutils.IsDir(dest) {
+	} else if mb.IsFile(src) && mb.IsDir(dest) {
 		destPath = filepath.Join(dest, filepath.Base(src))
-		if fileutils.IsFile(destPath) && opts.Backup {
+		if mb.IsFile(destPath) && opts.Backup {
 			destPath = decideBackupFileName(destPath)
 		}
 	}
@@ -212,10 +211,10 @@ func decideDestAbsPath(src string, dest string, opts options) string {
 
 func decideBackupFileName(path string) string {
 	var backupPath string
-	if fileutils.Exists(path) {
-		backupPath = path + utils.SimpleBackupSuffix()
+	if mb.Exists(path) {
+		backupPath = path + mb.SimpleBackupSuffix()
 	}
-	if fileutils.Exists(backupPath) {
+	if mb.Exists(backupPath) {
 		return decideBackupFileName(backupPath)
 	}
 	return backupPath

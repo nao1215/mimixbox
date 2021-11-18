@@ -19,8 +19,7 @@ package main
 import (
 	"fmt"
 	"mimixbox/internal/applets"
-	check "mimixbox/internal/lib"
-	"mimixbox/pkg/fileutils"
+	mb "mimixbox/internal/lib"
 	"os"
 	"os/exec"
 	"path/filepath"
@@ -51,7 +50,7 @@ type options struct {
 
 var osExit = os.Exit
 
-const version = "0.3.0"
+const version = "0.4.1"
 
 const (
 	ExitSuccess int = iota // 0
@@ -225,7 +224,7 @@ func __install(mimixboxPath string, installPath string, full bool) error {
 	}
 
 	for applet := range applets.Applets {
-		if !full && check.ExistCmd(applet) {
+		if !full && mb.ExistCmd(applet) {
 			fmt.Printf("Same name command(%s) already exists. Not create symbolic link.\n", applet)
 			continue // if same name command already exists, not install for safety.
 		}
@@ -236,7 +235,7 @@ func __install(mimixboxPath string, installPath string, full bool) error {
 		// created by mimixbox, while the latter may be binaries
 		// provided by other packages.
 		newPath := filepath.Join(installPath, applet)
-		if fileutils.IsSymlink(newPath) {
+		if mb.IsSymlink(newPath) {
 			err := os.Remove(newPath) // Remove  even BusyBox's symbolic link
 			if err != nil {
 				fmt.Println(err)
@@ -274,7 +273,7 @@ func remove(installPath string) error {
 	for name := range applets.Applets {
 		symbolicPath := filepath.Join(installPath, name)
 
-		if !fileutils.IsSymlink(symbolicPath) {
+		if !mb.IsSymlink(symbolicPath) {
 			continue
 		}
 

@@ -18,7 +18,7 @@ package touch
 
 import (
 	"fmt"
-	"mimixbox/pkg/fileutils"
+	mb "mimixbox/internal/lib"
 	"os"
 	"time"
 
@@ -63,7 +63,7 @@ func Run() (int, error) {
 // ctime = change time
 // mtime = modify time
 func touch(file string, opts options) error {
-	if !fileutils.Exists(file) && !opts.NoCreate {
+	if !mb.Exists(file) && !opts.NoCreate {
 		file, err := os.Create(file)
 		if err != nil {
 			return err
