@@ -50,7 +50,7 @@ type options struct {
 
 var osExit = os.Exit
 
-const version = "0.4.1"
+const version = "0.5.1"
 
 const (
 	ExitSuccess int = iota // 0
@@ -97,7 +97,10 @@ func main() {
 func handleMimixBoxOptionsIfNeeded(parser *flags.Parser, opts *options) {
 	mimixBoxPath := os.Args[0]
 
-	if !hasInstallOption() && !hasRemoveOption() && hasAppletName() {
+	// As a temporary workaround for the bug, if the Applet name is included in the argument,
+	// it is considered not to be an argument of mimixbox.
+	// The directory with the same name as an applet can no longer be an installation directory.
+	if hasAppletName() {
 		return
 	}
 
