@@ -28,7 +28,7 @@ func ExistCmd(cmd string) bool {
 	return err == nil
 }
 
-func IsRoot() bool {
+func IsRootUser() bool {
 	return os.Geteuid() == 0
 }
 

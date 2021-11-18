@@ -99,7 +99,7 @@ func isChroot() int {
 		if !canLstatInitProcessRootDir() {
 			return NotSuperUser
 		}
-		if !check.IsRoot() {
+		if !check.IsRootUser() {
 			return NotSuperUser
 		}
 		// User is root. However, root can't stat "/proc/1/root". It's jail.
