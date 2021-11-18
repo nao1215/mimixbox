@@ -50,7 +50,7 @@ type options struct {
 
 var osExit = os.Exit
 
-const version = "0.6.0"
+const version = "0.6.1"
 
 const (
 	ExitSuccess int = iota // 0
@@ -162,24 +162,6 @@ func handleMimixBoxOptionsIfNeeded(parser *flags.Parser, opts *options) {
 func hasHelpOption() bool {
 	for _, s := range os.Args[1:] {
 		if s == "--help" || s == "-h" || s == "--full-install" || s == "-f" {
-			return true
-		}
-	}
-	return false
-}
-
-func hasInstallOption() bool {
-	for _, s := range os.Args[1:] {
-		if s == "--install" || s == "-i" {
-			return true
-		}
-	}
-	return false
-}
-
-func hasRemoveOption() bool {
-	for _, s := range os.Args[1:] {
-		if s == "--remove" || s == "-r" {
 			return true
 		}
 	}
