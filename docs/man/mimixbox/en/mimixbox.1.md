@@ -20,7 +20,7 @@ commands.
 
 # Command（applet）list
 **Common unix commands（applets）**  
-cat, chroot, echo, false, ischroot, mkdir, mv, rm, rmdir, touch, true, which
+cat, chroot, echo, false, ischroot, mkdir, mkfifo, mv, rm, rmdir, touch, true, which
 
 **MimixBox Original commands（applets）**  
 fakemovie, ghrdc, mbsh(sh), path, serial

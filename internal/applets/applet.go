@@ -20,6 +20,7 @@ import (
 	"fmt"
 	"go/doc"
 	"mimixbox/internal/applets/fileutils/mkdir"
+	"mimixbox/internal/applets/fileutils/mkfifo"
 	"mimixbox/internal/applets/fileutils/mv"
 	"mimixbox/internal/applets/fileutils/rm"
 	"mimixbox/internal/applets/fileutils/rmdir"
@@ -61,6 +62,7 @@ func init() {
 		"ischroot":  {ischroot.Run, "Detect if running in a chroot"},
 		"mbsh":      {mbsh.Run, "Mimix Box Shell"},
 		"mkdir":     {mkdir.Run, "Make directories"},
+		"mkfifo":    {mkfifo.Run, "Make FIFO (named pipe)"},
 		"mv":        {mv.Run, "Rename SOURCE to DESTINATION, or move SOURCE(s) to DIRECTORY"},
 		"path":      {path.Run, "Manipulate filename path"},
 		"rm":        {rm.Run, "Remove file(s) or directory(s)"},
