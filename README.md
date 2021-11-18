@@ -26,6 +26,7 @@ $ sudo ./installer.sh
 |    mkdir | Make directories|
 |       mv | Rename SOURCE to DESTINATION, or move SOURCE(s) to DIRECTORY|
 |     path | Manipulate filename path|
+|     rm   | Remove file(s) or directory(s)|
 |   serial | Rename the file to the name with a serial number|
 |       sh | Mimix Box Shell (In development)|
 |    touch | Update the access and modification times of each FILE to the current time|

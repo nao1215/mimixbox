@@ -21,6 +21,7 @@ import (
 	"go/doc"
 	"mimixbox/internal/applets/fileutils/mkdir"
 	"mimixbox/internal/applets/fileutils/mv"
+	"mimixbox/internal/applets/fileutils/rm"
 	"mimixbox/internal/applets/fileutils/touch"
 	"mimixbox/internal/applets/jokeutils/fakemovie"
 	"mimixbox/internal/applets/shellutils/chroot"
@@ -61,6 +62,7 @@ func init() {
 		"mkdir":     {mkdir.Run, "Make directories"},
 		"mv":        {mv.Run, "Rename SOURCE to DESTINATION, or move SOURCE(s) to DIRECTORY"},
 		"path":      {path.Run, "Manipulate filename path"},
+		"rm":        {rm.Run, "Remove file(s) or directory(s)"},
 		"serial":    {serial.Run, "Rename the file to the name with a serial number"},
 		"sh":        {mbsh.Run, "Mimix Box Shell"},
 		"touch":     {touch.Run, "Update the access and modification times of each FILE to the current time"},

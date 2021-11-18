@@ -17,6 +17,7 @@
 package fileutils
 
 import (
+	"io/fs"
 	"os"
 	"path"
 	"path/filepath"
@@ -104,4 +105,25 @@ func BaseNameWithoutExt(path string) string {
 		return file
 	}
 	return file[:len(file)-len(filepath.Ext(path))]
+}
+
+// Wark return 1）directory List, 2) file list, 3) error
+func Walk(dir string) ([]string, []string, error) {
+	fileList := []string{}
+	dirList := []string{}
+
+	err := filepath.Walk(dir, func(path string, info fs.FileInfo, err error) error {
+		if err != nil {
+			return err
+		}
+
+		if info.IsDir() {
+			dirList = append(dirList, path)
+		} else {
+			fileList = append(fileList, path)
+		}
+
+		return nil
+	})
+	return dirList, fileList, err
 }

@@ -20,6 +20,7 @@ import (
 	"fmt"
 	"os"
 	"os/exec"
+	"path/filepath"
 	"strings"
 )
 
@@ -32,12 +33,24 @@ func IsRootUser() bool {
 	return os.Geteuid() == 0
 }
 
+func IsRootDir(path string) bool {
+	p, err := filepath.Abs(path)
+	if err != nil {
+		return false
+	}
+	return p == "/"
+}
+
 func Question(ask string) bool {
 	var response string
 
 	fmt.Printf(ask + " [Y/n] ")
 	_, err := fmt.Scanln(&response)
 	if err != nil {
+		// If user input only enter.
+		if strings.Contains(err.Error(), "expected newline") {
+			return Question(ask)
+		}
 		fmt.Print(err.Error())
 		return false
 	}
