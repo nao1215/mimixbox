@@ -92,7 +92,7 @@ func IsExecutable(path string) bool {
 // IsHiddenFile reports whether the path exists and is included hidden file.
 func IsHiddenFile(filePath string) bool {
 	_, file := path.Split(filePath)
-	if IsFile(filePath) == true && strings.HasPrefix(file, ".") == true {
+	if IsFile(filePath) && strings.HasPrefix(file, ".") {
 		return true
 	}
 	return false

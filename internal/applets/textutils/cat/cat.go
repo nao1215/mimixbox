@@ -19,6 +19,7 @@ package cat
 import (
 	"fmt"
 	"io"
+	mb "mimixbox/internal/lib"
 	"os"
 
 	"github.com/jessevdk/go-flags"
@@ -26,7 +27,7 @@ import (
 
 const cmdName string = "cat"
 
-const version = "1.0.1"
+const version = "1.0.2"
 
 var osExit = os.Exit
 
@@ -47,6 +48,15 @@ func Run() (int, error) {
 
 	if args, err = parseArgs(&opts); err != nil {
 		return ExitFailuer, nil
+	}
+
+	if len(args) == 0 {
+		for {
+			if !mb.Parrot() {
+				break
+			}
+		}
+		return ExitSuccess, nil
 	}
 
 	for _, file := range args {
@@ -83,10 +93,6 @@ func parseArgs(opts *options) ([]string, error) {
 		osExit(ExitSuccess)
 	}
 
-	if !isValidArgNr(args) {
-		showHelp(p)
-		osExit(ExitFailuer)
-	}
 	return args, nil
 }
 
@@ -98,15 +104,7 @@ func initParser(opts *options) *flags.Parser {
 	return parser
 }
 
-func isValidArgNr(args []string) bool {
-	return len(args) >= 1
-}
-
 func showVersion() {
 	description := cmdName + " version " + version + " (under Apache License verison 2.0)\n"
 	fmt.Print(description)
-}
-
-func showHelp(p *flags.Parser) {
-	p.WriteHelp(os.Stdout)
 }

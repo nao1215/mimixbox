@@ -19,6 +19,7 @@ package tac
 import (
 	"bufio"
 	"fmt"
+	mb "mimixbox/internal/lib"
 	"os"
 
 	"github.com/jessevdk/go-flags"
@@ -26,7 +27,7 @@ import (
 
 const cmdName string = "tac"
 
-const version = "1.0.0"
+const version = "1.0.1"
 
 var osExit = os.Exit
 
@@ -47,6 +48,11 @@ func Run() (int, error) {
 
 	if args, err = parseArgs(&opts); err != nil {
 		return ExitFailuer, nil
+	}
+
+	if len(args) == 0 {
+		tacUserInput()
+		return ExitSuccess, nil
 	}
 
 	for _, file := range args {
@@ -77,6 +83,20 @@ func tac(path string) error {
 	return nil
 }
 
+func tacUserInput() {
+	var inputs []string
+	for {
+		input, next := mb.Input()
+		if !next {
+			break
+		}
+		inputs = append(inputs, input)
+	}
+	for i := range inputs {
+		fmt.Println(inputs[len(inputs)-i-1])
+	}
+}
+
 func parseArgs(opts *options) ([]string, error) {
 	p := initParser(opts)
 
@@ -90,10 +110,6 @@ func parseArgs(opts *options) ([]string, error) {
 		osExit(ExitSuccess)
 	}
 
-	if !isValidArgNr(args) {
-		showHelp(p)
-		osExit(ExitFailuer)
-	}
 	return args, nil
 }
 
@@ -105,15 +121,7 @@ func initParser(opts *options) *flags.Parser {
 	return parser
 }
 
-func isValidArgNr(args []string) bool {
-	return len(args) >= 1
-}
-
 func showVersion() {
 	description := cmdName + " version " + version + " (under Apache License verison 2.0)\n"
 	fmt.Print(description)
-}
-
-func showHelp(p *flags.Parser) {
-	p.WriteHelp(os.Stdout)
 }

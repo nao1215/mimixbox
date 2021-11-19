@@ -64,3 +64,28 @@ func Question(ask string) bool {
 		return Question(ask)
 	}
 }
+
+func Parrot() bool {
+	var response string
+
+	_, err := fmt.Scanln(&response)
+	if err != nil {
+		if !strings.Contains(err.Error(), "expected newline") {
+			return false // Ctrl+D or other error.
+		}
+	}
+	fmt.Println(response)
+	return true
+}
+
+func Input() (string, bool) {
+	var response string
+
+	_, err := fmt.Scanln(&response)
+	if err != nil {
+		if !strings.Contains(err.Error(), "expected newline") {
+			return "", false // Ctrl+D or other error.
+		}
+	}
+	return response, true
+}
