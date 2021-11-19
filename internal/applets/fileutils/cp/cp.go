@@ -43,7 +43,7 @@ type options struct {
 	Force       bool `short:"f" long:"force" description:"If file exists, forcibly overwrite it"`
 	Interactive bool `short:"i" long:"interactive" description:"Ask every time if you want to remove"`
 	Recursive   bool `short:"r" long:"recursive" description:"Recursively copy directories"`
-	Version     bool `short:"v" long:"version" description:"Show mkdir command version"`
+	Version     bool `short:"v" long:"version" description:"Show cp command version"`
 }
 
 func Run() (int, error) {
