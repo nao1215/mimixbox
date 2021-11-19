@@ -19,11 +19,8 @@ mimixbox project maintainer plan to have a wide range of built-in commands
 commands.
 
 # Command（applet）list
-**Common unix commands（applets）**  
-cat, chroot, echo, false, ischroot, mkdir, mkfifo, mv, rm, rmdir, touch, true, which
-
-**MimixBox Original commands（applets）**  
-fakemovie, ghrdc, mbsh(sh), path, serial
+cat chroot echo fakemovie false ghrdc ischroot mbsh mkdir  
+mkfifo mv path rm rmdir serial sh sleep touch true which
 
 # OPTIONS
 **-i**, **--install**

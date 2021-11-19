@@ -34,6 +34,7 @@ import (
 	"mimixbox/internal/applets/shellutils/mbsh"
 	"mimixbox/internal/applets/shellutils/path"
 	"mimixbox/internal/applets/shellutils/serial"
+	"mimixbox/internal/applets/shellutils/sleep"
 	"mimixbox/internal/applets/shellutils/true"
 	"mimixbox/internal/applets/shellutils/which"
 	"mimixbox/internal/applets/textutils/cat"
@@ -69,6 +70,7 @@ func init() {
 		"rmdir":     {rmdir.Run, "Remove directory"},
 		"serial":    {serial.Run, "Rename the file to the name with a serial number"},
 		"sh":        {mbsh.Run, "Mimix Box Shell"},
+		"sleep":     {sleep.Run, "Pause for NUMBER seconds(minutes, hours, days)"},
 		"touch":     {touch.Run, "Update the access and modification times of each FILE to the current time"},
 		"true":      {true.Run, "Do nothing. Return success(0)"},
 		"which":     {which.Run, "Returns the file path which would be executed in the current environment"},

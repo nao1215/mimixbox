@@ -17,6 +17,7 @@
 |     rmdir   | Remove directory|
 |   serial | Rename the file to the name with a serial number|
 |       sh | Mimix Box Shell (In development)|
+|    sleep | Pause for NUMBER seconds(minutes, hours, days)|
 |    touch | Update the access and modification times of each FILE to the current time|
 |     true | Do nothing. Return success(0)|
 |    which | Returns the file path which would be executed in the current environment|

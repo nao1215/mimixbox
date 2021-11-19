@@ -18,10 +18,8 @@ Coreutils等が提供する基本的な内容から実験的なコマンドま�
 
 # コマンド（applet）一覧
 **一般的なUnixコマンド（applet）**  
-cat, chroot, echo, false, ischroot, mkdir, mkfifo, mv, rm, rmdir, touch, true, which
-
-**MimixBoxオリジナルコマンド（applet）**  
-fakemovie, ghrdc, mbsh(sh), path, serial
+cat chroot echo fakemovie false ghrdc ischroot mbsh mkdir
+mkfifo mv path rm rmdir serial sh sleep touch true which  
 
 # オプション
 **-i**, **--install**
