@@ -39,6 +39,7 @@ import (
 	"mimixbox/internal/applets/shellutils/true"
 	"mimixbox/internal/applets/shellutils/which"
 	"mimixbox/internal/applets/textutils/cat"
+	"mimixbox/internal/applets/textutils/tac"
 	"os"
 	"sort"
 	"strconv"
@@ -73,6 +74,7 @@ func init() {
 		"serial":    {serial.Run, "Rename the file to the name with a serial number"},
 		"sh":        {mbsh.Run, "Mimix Box Shell"},
 		"sleep":     {sleep.Run, "Pause for NUMBER seconds(minutes, hours, days)"},
+		"tac":       {tac.Run, "Print the file contents from the end to the beginning"},
 		"touch":     {touch.Run, "Update the access and modification times of each FILE to the current time"},
 		"true":      {true.Run, "Do nothing. Return success(0)"},
 		"which":     {which.Run, "Returns the file path which would be executed in the current environment"},

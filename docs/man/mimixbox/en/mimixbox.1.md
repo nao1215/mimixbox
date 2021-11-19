@@ -19,8 +19,8 @@ mimixbox project maintainer plan to have a wide range of built-in commands
 commands.
 
 # Command（applet）list
-cat chroot echo fakemovie false ghrdc ischroot mbsh mkdir  
-mkfifo mv path rm rmdir serial sh sleep touch true which
+basename cat chroot echo fakemovie false ghrdc ischroot mbsh mkdir  
+mkfifo mv path rm rmdir serial sh sleep tac touch true which
 
 # OPTIONS
 **-i**, **--install**
