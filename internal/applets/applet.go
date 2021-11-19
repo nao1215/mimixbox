@@ -26,6 +26,7 @@ import (
 	"mimixbox/internal/applets/fileutils/rmdir"
 	"mimixbox/internal/applets/fileutils/touch"
 	"mimixbox/internal/applets/jokeutils/fakemovie"
+	"mimixbox/internal/applets/shellutils/basename"
 	"mimixbox/internal/applets/shellutils/chroot"
 	"mimixbox/internal/applets/shellutils/echo"
 	"mimixbox/internal/applets/shellutils/false"
@@ -54,6 +55,7 @@ var Applets map[string]Applet
 
 func init() {
 	Applets = map[string]Applet{
+		"basename":  {basename.Run, "Print basename (PATH without\"/\") from file path"},
 		"cat":       {cat.Run, "Concatenate files and print on the standard output"},
 		"chroot":    {chroot.Run, "Run command or interactive shell with special root directory"},
 		"echo":      {echo.Run, "Display a line of text"},

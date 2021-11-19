@@ -1,6 +1,7 @@
 # Command (Applet) List
 |Command (Applet) Name | Description|
 |:--|:--|
+|  basename| Print basename (PATH without "/") from file path |
 |      cat | Concatenate files and print on the standard output|
 |   chroot | Run command or interactive shell with special root directory|
 |     echo | Display a line of text|
