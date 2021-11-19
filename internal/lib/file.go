@@ -17,6 +17,7 @@
 package mb
 
 import (
+	"io"
 	"io/fs"
 	"os"
 	"path"
@@ -126,4 +127,31 @@ func Walk(dir string) ([]string, []string, error) {
 		return nil
 	})
 	return dirList, fileList, err
+}
+
+// IsSameFileName return true if src and dest is same name,
+// false if src and dest is not same name
+func IsSameFileName(src string, dest string) bool {
+	return filepath.Base(src) == filepath.Base(dest)
+}
+
+// Copy file(src) to dest
+func Copy(src string, dest string) error {
+	s, err := os.Open(src)
+	if err != nil {
+		return err
+	}
+	defer s.Close()
+
+	d, err := os.Create(dest)
+	if err != nil {
+		return err
+	}
+	defer d.Close()
+
+	_, err = io.Copy(d, s)
+	if err != nil {
+		return err
+	}
+	return nil
 }

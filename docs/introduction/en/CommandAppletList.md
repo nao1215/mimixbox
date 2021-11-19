@@ -5,6 +5,7 @@
 |  basename| Print basename (PATH without "/") from file path |
 |      cat | Concatenate files and print on the standard output|
 |   chroot | Run command or interactive shell with special root directory|
+|       cp | Copy file(s) otr Directory(s) |
 |     echo | Display a line of text|
 |fakemovie | Adds a video playback button to the image|
 |    false | Do nothing. Return unsuccess(1)|

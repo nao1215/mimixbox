@@ -19,6 +19,7 @@ package applets
 import (
 	"fmt"
 	"go/doc"
+	"mimixbox/internal/applets/fileutils/cp"
 	"mimixbox/internal/applets/fileutils/mkdir"
 	"mimixbox/internal/applets/fileutils/mkfifo"
 	"mimixbox/internal/applets/fileutils/mv"
@@ -61,6 +62,7 @@ func init() {
 		"basename":  {basename.Run, "Print basename (PATH without\"/\") from file path"},
 		"cat":       {cat.Run, "Concatenate files and print on the standard output"},
 		"chroot":    {chroot.Run, "Run command or interactive shell with special root directory"},
+		"cp":        {cp.Run, "Copy file(s) otr Directory(s)"},
 		"echo":      {echo.Run, "Display a line of text"},
 		"fakemovie": {fakemovie.Run, "Adds a video playback button to the image"},
 		"false":     {false.Run, "Do nothing. Return unsuccess(1)"},
