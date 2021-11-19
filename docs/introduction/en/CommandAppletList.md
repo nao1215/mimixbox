@@ -1,6 +1,7 @@
 # Command (Applet) List
 |Command (Applet) Name | Description|
 |:--|:--|
+|    base64| Base64 encode/decode from FILR(or STDIN) to STDOUT|
 |  basename| Print basename (PATH without "/") from file path |
 |      cat | Concatenate files and print on the standard output|
 |   chroot | Run command or interactive shell with special root directory|

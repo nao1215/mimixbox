@@ -18,7 +18,7 @@ Coreutils等が提供する基本的な内容から実験的なコマンドま�
 
 # コマンド（applet）一覧
 **一般的なUnixコマンド（applet）**  
-basename cat chroot echo fakemovie false ghrdc ischroot mbsh mkdir  
+base64 basename cat chroot echo fakemovie false ghrdc ischroot mbsh mkdir  
 mkfifo mv path rm rmdir serial sh sleep tac touch true which
 
 # オプション

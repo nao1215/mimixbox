@@ -89,3 +89,20 @@ func Input() (string, bool) {
 	}
 	return response, true
 }
+
+func WrapString(src string, column int) string {
+	var buf []string
+
+	if column <= 0 {
+		return src
+	}
+
+	for i := 0; i < len(src); i += column {
+		if i+column < len(src) {
+			buf = append(buf, src[i:(i+column)])
+		} else {
+			buf = append(buf, src[i:])
+		}
+	}
+	return strings.Join(buf, "\n")
+}
