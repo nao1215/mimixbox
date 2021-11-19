@@ -18,7 +18,7 @@ package ischroot
 
 import (
 	"fmt"
-	check "mimixbox/internal/lib"
+	mb "mimixbox/internal/lib"
 	"os"
 	"strings"
 	"syscall"
@@ -99,7 +99,7 @@ func isChroot() int {
 		if !canLstatInitProcessRootDir() {
 			return NotSuperUser
 		}
-		if !check.IsRootUser() {
+		if !mb.IsRootUser() {
 			return NotSuperUser
 		}
 		// User is root. However, root can't stat "/proc/1/root". It's jail.

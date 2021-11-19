@@ -18,7 +18,7 @@ package chroot
 
 import (
 	"fmt"
-	check "mimixbox/internal/lib"
+	mb "mimixbox/internal/lib"
 	"os"
 	"syscall"
 
@@ -85,7 +85,7 @@ func Run() (int, error) {
 func decideExecCommand(cmd *command) error {
 	if len(os.Args) == 2 {
 		shell := os.Getenv("SHELL")
-		if shell != "" && check.ExistCmd(shell) {
+		if shell != "" && mb.ExistCmd(shell) {
 			cmd.name = shell
 		} else {
 			cmd.name = "/bin/sh"
