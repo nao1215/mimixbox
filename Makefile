@@ -1,5 +1,5 @@
 build: deps ## Build mimixbox and make man-pages
-	go build -o mimixbox cmd/mimixbox/main.go
+	go build "-ldflags=-s -w" -trimpath -o mimixbox cmd/mimixbox/main.go
 	$(MAKE) doc
 	$(MAKE) licenses
 
