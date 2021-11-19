@@ -44,7 +44,7 @@ const (
 type options struct {
 	Decode  bool `short:"d" long:"decode" description:"Decode data (Default is encode)"`
 	Wrap    int  `short:"w" long:"wrap" default:"76" description:"Line break at the Nth character. If N=0, not line break"`
-	Version bool `short:"v" long:"version" description:"Show basename command version"`
+	Version bool `short:"v" long:"version" description:"Show base64 command version"`
 }
 
 func Run() (int, error) {
