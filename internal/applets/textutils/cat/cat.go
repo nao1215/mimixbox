@@ -18,7 +18,6 @@ package cat
 
 import (
 	"fmt"
-	"io"
 	mb "mimixbox/internal/lib"
 	"os"
 
@@ -27,7 +26,7 @@ import (
 
 const cmdName string = "cat"
 
-const version = "1.0.2"
+const version = "1.0.3"
 
 var osExit = os.Exit
 
@@ -38,6 +37,7 @@ const (
 )
 
 type options struct {
+	Number  bool `short:"n" long:"number" description:"Print with line number"`
 	Version bool `short:"v" long:"version" description:"Show cat command version"`
 }
 
@@ -50,34 +50,25 @@ func Run() (int, error) {
 		return ExitFailuer, nil
 	}
 
-	if len(args) == 0 {
-		for {
-			if !mb.Parrot() {
-				break
-			}
-		}
+	if len(args) == 0 || mb.Contains(args, "-") {
+		mb.Parrot(opts.Number)
 		return ExitSuccess, nil
 	}
 
-	for _, file := range args {
-		err := cat(file)
-		if err != nil {
-			return ExitFailuer, err
+	strLisr, err := mb.Concatenate(args, false)
+	if err != nil {
+		return ExitFailuer, nil
+	}
+
+	if opts.Number {
+		mb.PrintStrListWithNumberLine(strLisr, true)
+	} else {
+		for _, str := range strLisr {
+			fmt.Print(str)
 		}
 	}
 
 	return ExitSuccess, nil
-}
-
-func cat(path string) error {
-	f, err := os.Open(path)
-	if err != nil {
-		return err
-	}
-	defer f.Close()
-
-	_, err = io.Copy(os.Stdout, f)
-	return err
 }
 
 func parseArgs(opts *options) ([]string, error) {

@@ -17,6 +17,7 @@
 package mb
 
 import (
+	"bufio"
 	"io"
 	"io/fs"
 	"os"
@@ -154,4 +155,22 @@ func Copy(src string, dest string) error {
 		return err
 	}
 	return nil
+}
+
+func ReadFileToStrList(path string) ([]string, error) {
+	var strList []string
+
+	f, err := os.Open(path)
+	if err != nil {
+		return nil, err
+	}
+	defer f.Close()
+
+	scanner := bufio.NewScanner(f)
+	for scanner.Scan() {
+		strList = append(strList, scanner.Text()+"\n")
+	}
+
+	strList[len(strList)-1] = strings.TrimRight(strList[len(strList)-1], "\n")
+	return strList, nil
 }

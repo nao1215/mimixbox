@@ -41,6 +41,7 @@ import (
 	"mimixbox/internal/applets/shellutils/true"
 	"mimixbox/internal/applets/shellutils/which"
 	"mimixbox/internal/applets/textutils/cat"
+	"mimixbox/internal/applets/textutils/nl"
 	"mimixbox/internal/applets/textutils/tac"
 	"os"
 	"sort"
@@ -72,6 +73,7 @@ func init() {
 		"mkdir":     {mkdir.Run, "Make directories"},
 		"mkfifo":    {mkfifo.Run, "Make FIFO (named pipe)"},
 		"mv":        {mv.Run, "Rename SOURCE to DESTINATION, or move SOURCE(s) to DIRECTORY"},
+		"nl":        {nl.Run, "Write each FILE to standard output with line numbers added"},
 		"path":      {path.Run, "Manipulate filename path"},
 		"rm":        {rm.Run, "Remove file(s) or directory(s)"},
 		"rmdir":     {rmdir.Run, "Remove directory"},

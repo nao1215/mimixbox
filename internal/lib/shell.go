@@ -65,17 +65,22 @@ func Question(ask string) bool {
 	}
 }
 
-func Parrot() bool {
+func Parrot(withNl bool) {
 	var response string
-
-	_, err := fmt.Scanln(&response)
-	if err != nil {
-		if !strings.Contains(err.Error(), "expected newline") {
-			return false // Ctrl+D or other error.
+	var nl int = 1
+	for {
+		_, err := fmt.Scanln(&response)
+		if err != nil {
+			if !strings.Contains(err.Error(), "expected newline") {
+				break // Ctrl+D or other error.
+			}
+		}
+		if withNl {
+			PrintStrWithNumberLine(nl, response)
+		} else {
+			fmt.Println(response)
 		}
 	}
-	fmt.Println(response)
-	return true
 }
 
 func Input() (string, bool) {
@@ -105,4 +110,50 @@ func WrapString(src string, column int) string {
 		}
 	}
 	return strings.Join(buf, "\n")
+}
+
+func Concatenate(path []string, lfAtTheJoint bool) ([]string, error) {
+	var strList []string
+	var index int
+
+	for _, file := range path {
+		list, err := ReadFileToStrList(file)
+		if err != nil {
+			return nil, err
+		}
+
+		// In the case of the cat command, the beginning of the new file is
+		// concatenated to the end of the previous file.
+		// In the case of nl command, do not concatenate the new file at the end
+		// of the previous file. The end of file (EOF) is replaced with a newline.
+		index = len(strList) - 1
+		if lfAtTheJoint { // for nl command
+			list[len(list)-1] = list[len(list)-1] + "\n"
+			strList = append(strList, list...)
+		} else { // for cat command
+			if index > 0 {
+				strList[index] = strList[index] + list[0]
+				strList = append(strList, list[1:]...)
+			} else {
+				strList = append(strList, list...)
+			}
+		}
+	}
+	return strList, nil
+}
+
+func PrintStrListWithNumberLine(strList []string, countEmpryLine bool) {
+	var nl int = 1
+	for _, s := range strList {
+		if s == "\n" && !countEmpryLine {
+			fmt.Print(s)
+			continue
+		}
+		PrintStrWithNumberLine(nl, s)
+		nl++
+	}
+}
+
+func PrintStrWithNumberLine(nl int, str string) {
+	fmt.Printf("%6d  %s", nl, str)
 }

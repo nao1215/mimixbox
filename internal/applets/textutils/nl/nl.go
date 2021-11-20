@@ -1,5 +1,5 @@
 //
-// mimixbox/internal/applets/textutils/tac/tac.go
+// mimixbox/internal/applets/textutils/nl/nl.go
 //
 // Copyright 2021 Naohiro CHIKAMATSU
 //
@@ -14,10 +14,9 @@
 // WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
 // See the License for the specific language governing permissions and
 // limitations under the License.
-package tac
+package nl
 
 import (
-	"bufio"
 	"fmt"
 	mb "mimixbox/internal/lib"
 	"os"
@@ -25,9 +24,9 @@ import (
 	"github.com/jessevdk/go-flags"
 )
 
-const cmdName string = "tac"
+const cmdName string = "nl"
 
-const version = "1.0.2"
+const version = "1.0.0"
 
 var osExit = os.Exit
 
@@ -38,7 +37,7 @@ const (
 )
 
 type options struct {
-	Version bool `short:"v" long:"version" description:"Show cat command version"`
+	Version bool `short:"v" long:"version" description:"Show nl command version"`
 }
 
 func Run() (int, error) {
@@ -51,50 +50,29 @@ func Run() (int, error) {
 	}
 
 	if len(args) == 0 || mb.Contains(args, "-") {
-		tacUserInput()
+		var nr int = 1
+		for {
+			input, next := mb.Input()
+			if !next {
+				break
+			}
+			if input != "" {
+				mb.PrintStrWithNumberLine(nr, input+"\n")
+				nr++
+			} else {
+				fmt.Println("")
+			}
+		}
 		return ExitSuccess, nil
 	}
 
-	for _, file := range args {
-		err := tac(file)
-		if err != nil {
-			return ExitFailuer, err
-		}
+	str, err := mb.Concatenate(args, true)
+	if err != nil {
+		return ExitFailuer, nil
 	}
+	mb.PrintStrListWithNumberLine(str, false)
 
 	return ExitSuccess, nil
-}
-
-func tac(path string) error {
-	f, err := os.Open(path)
-	if err != nil {
-		return err
-	}
-	defer f.Close()
-
-	scanner := bufio.NewScanner(f)
-	lines := []string{}
-	for scanner.Scan() {
-		lines = append(lines, scanner.Text())
-	}
-	for i := range lines {
-		fmt.Println(lines[len(lines)-i-1])
-	}
-	return nil
-}
-
-func tacUserInput() {
-	var inputs []string
-	for {
-		input, next := mb.Input()
-		if !next {
-			break
-		}
-		inputs = append(inputs, input)
-	}
-	for i := range inputs {
-		fmt.Println(inputs[len(inputs)-i-1])
-	}
 }
 
 func parseArgs(opts *options) ([]string, error) {

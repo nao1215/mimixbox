@@ -15,6 +15,7 @@
 |    mkdir | Make directories|
 |    mkfifo | Make FIFO (Named pipe)|
 |       mv | Rename SOURCE to DESTINATION, or move SOURCE(s) to DIRECTORY|
+|       nl| Write each FILE to standard output with line numbers added|
 |     path | Manipulate filename path|
 |     rm   | Remove file(s) or directory(s)|
 |     rmdir   | Remove directory|
