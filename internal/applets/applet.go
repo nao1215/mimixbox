@@ -26,6 +26,7 @@ import (
 	"mimixbox/internal/applets/fileutils/rm"
 	"mimixbox/internal/applets/fileutils/rmdir"
 	"mimixbox/internal/applets/fileutils/touch"
+	"mimixbox/internal/applets/jokeutils/cowsay"
 	"mimixbox/internal/applets/jokeutils/fakemovie"
 	"mimixbox/internal/applets/shellutils/base64"
 	"mimixbox/internal/applets/shellutils/basename"
@@ -62,6 +63,7 @@ func init() {
 		"base64":    {base64.Run, "Base64 encode/decode from FILR(or STDIN) to STDOUT"},
 		"basename":  {basename.Run, "Print basename (PATH without\"/\") from file path"},
 		"cat":       {cat.Run, "Concatenate files and print on the standard output"},
+		"cowsay":    {cowsay.Run, "Print message with cow's ASCII art"},
 		"chroot":    {chroot.Run, "Run command or interactive shell with special root directory"},
 		"cp":        {cp.Run, "Copy file(s) otr Directory(s)"},
 		"echo":      {echo.Run, "Display a line of text"},

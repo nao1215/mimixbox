@@ -4,6 +4,7 @@
 |    base64| Base64 encode/decode from FILR(or STDIN) to STDOUT|
 |  basename| Print basename (PATH without "/") from file path |
 |      cat | Concatenate files and print on the standard output|
+|		cawsay | Print message with cow's ASCII art|
 |   chroot | Run command or interactive shell with special root directory|
 |       cp | Copy file(s) otr Directory(s) |
 |     echo | Display a line of text|

@@ -1,7 +1,8 @@
 # Changelog
 All notable changes to this project will be documented in this file. The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.0.0/), and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
-## [0.12.3] - 2021-11-20
+## [0.13.0] - 2021-11-20
 ### Added
+ - cowsay command. The process of enclosing the message in a frame is incomplete
  - docker target to Makefile. This target was created to test Mimixbox inside Docker.
  ### Changed
  - Fixed a bug in the cat command. This bug occurs when a standard input is accepted more than once and then an empty enter is received on the next input. In the correct behavior, it is correct to output a blank line, but since the previous input value has been saved, the previous input value is output.
