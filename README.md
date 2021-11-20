@@ -29,6 +29,27 @@ The table below shows the tools used when developing the commands in the mimixbo
 | make   | Used for build, run, test, etc |
 | gzip   | Used for compress man pages |
 | install   | Used for install serial binary and document in the system |
+| docker| Used for testing Mimixbox inside Docker|
+| debootstrap| Used for testing Mimixbox inside jail envrioment|
+
+# Debugging
+### How to create docker(testing) environment
+```
+# sudo apt install docker.io  ※ If you have not installed Docker in Ubuntu.
+$ make docker
+
+(注釈) Once the Docker image build is complete, you'll be inside the container.
+$ 
+```
+### How to create jail(testing) environment
+``` 
+$ sudo apt install debootstrap    ※ If you have not installed debootstrap in Ubuntu.
+$ make build                      ※ Build mimixbox binary
+$ sudo make jail                  ※ Create jail environment at /tmp/mimixbox/jail
+
+$ sudo chroot /tmp/mimixbox/jail /bin/bash   ※ Dive to jail
+# mimixbox --full-install /usr/local/bin     ※ Install MimixBox's command in jail
+```
 
 # Roadmap
 - Step1. Implements many common Unix commands (〜Version 0.x.x).

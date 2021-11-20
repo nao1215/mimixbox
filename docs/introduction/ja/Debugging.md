@@ -9,8 +9,16 @@ MimixBoxは、Version1.0.0となるまで開発環境にインストールして
 3. Raspberry Pi環境（イメージバックアップを残すと良い）
 4. Virtual Box仮想環境（オススメしない）
 
-上記は、オススメ順である。Docker環境は、Dockerfileを用意する予定である。jail環境は、DebianやUbuntu環境向けにスクリプトを用意している。利用手順は、以下の通りである。3〜4は、やや面倒な方法であるため、手順の説明は書かない予定である。
+上記は、オススメ順である。DockerとJail環境を利用したデバッグ方法のみ以下に示す。上記の3〜4は、やや面倒な方法であるため、手順の説明は書かない予定である。将来的にディストリビューションパッケージになれば、上記の3〜4.は現実的なデバッグ手段になるが、まだ早い。
 
+### Docker環境の作り方
+```
+# sudo apt install docker.io      (注釈) Ubuntu環境の場合
+$ make docker
+(注釈) Docker imageのビルドが完了すれば、コンテナの中に入る
+$ 
+```
+### Jail環境の作り方
 ``` 
 $ sudo apt install debootstrap    (注釈) Debian系の環境でdebootstrapをインストールしていない場合
 $ make build                      (注釈) mimixboxバイナリの作成
