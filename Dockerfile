@@ -8,10 +8,10 @@ RUN mimixbox --full-install /usr/local/bin/
 RUN echo 'root:password' | chpasswd
 
 # Create new user
-RUN useradd mimixbox -m 
+RUN useradd mimixbox -m -s /bin/bash
 RUN echo 'mimixbox:password' |chpasswd
 
-# If you want to administrator privileges, you become the root user
+# If you want to administrator privileges, you become the root user.
 # RUN echo "mimixbox    ALL=(ALL)       ALL" >> /etc/sudoers
 
 CMD ["su", "-", "mimixbox"]
