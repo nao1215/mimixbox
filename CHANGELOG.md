@@ -3,6 +3,7 @@ All notable changes to this project will be documented in this file. The format 
 ## [0.12.3] - 2021-11-20
 ### Added
  - docker target to Makefile. This target was created to test Mimixbox inside Docker.
+ ### Changed
  - Fixed a bug in the cat command. This bug occurs when a standard input is accepted more than once and then an empty enter is received on the next input. In the correct behavior, it is correct to output a blank line, but since the previous input value has been saved, the previous input value is output.
 ## [0.12.1] - 2021-11-20
 ### Added
