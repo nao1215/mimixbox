@@ -69,6 +69,7 @@ func Parrot(withNl bool) {
 	var response string
 	var nl int = 1
 	for {
+		response = ""
 		_, err := fmt.Scanln(&response)
 		if err != nil {
 			if !strings.Contains(err.Error(), "expected newline") {
