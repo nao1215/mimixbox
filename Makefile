@@ -16,7 +16,7 @@ doc: ## Make man-pages
 
 docker:build ## Run container for testing mimixbox 
 	docker image build -t mimixbox/test:latest .
-	docker container run -it mimixbox/test:latest
+	docker container run --rm -it mimixbox/test:latest
 
 install: ## Install mimixbox and man-pages on your system
 	./scripts/installer.sh
