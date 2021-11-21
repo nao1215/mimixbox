@@ -1,8 +1,9 @@
+![Serial logo](../../../images/serial.jpg "Serial logo")
 # serial: Add serial number to file name
 serial is a CLI command that renames files under any directory to the format "specified file name + serial number".
 The original version was released as a standalone command, but now it is one of the MimixBox commands.
 
-## Usage
+## How to use
 ```Usage
 $ serial [OPTIONS] DIRECTORY_PATH
 ```

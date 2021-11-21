@@ -1,5 +1,6 @@
+![Serial logo](../../../images/serial.jpg "Serial logo")
 # serial: シリアル番号をファイル名に付与
-serialは、指定されたディレクト以下にあるファイルに対してシリアル番号を付与するCLIコマンドです。オリジナル版は、単独のコマンドとしてリリースしましたが、現在はMimixBoxのコマンドの一部としています。
+serialは、指定されたディレクト以下にあるファイルに対してシリアル番号を付与するCLIコマンドである。オリジナル版は、単独のコマンドとしてリリースしましたが、現在はMimixBoxのコマンドの一部としている。
 
 ## 使い方
 ```Usage
@@ -67,4 +68,4 @@ $ ls
 ```
 
 ## クレジット
-シリアルコマンドロゴは、[DesignEvo (online logo maker)](https://www.designevo.com/)によって作成されました。
+シリアルコマンドロゴは、[DesignEvo (online logo maker)](https://www.designevo.com/)によって作成されている。
