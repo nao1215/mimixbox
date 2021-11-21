@@ -19,12 +19,13 @@ package serial
 import (
 	"fmt"
 	"io/ioutil"
-	mb "mimixbox/internal/lib"
 	"os"
 	"path/filepath"
 	"sort"
 	"strconv"
 	"strings"
+
+	mb "github.com/nao1215/mimixbox/internal/lib"
 
 	"github.com/jessevdk/go-flags"
 )

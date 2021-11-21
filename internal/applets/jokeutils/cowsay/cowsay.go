@@ -18,9 +18,10 @@ package cowsay
 
 import (
 	"fmt"
-	mb "mimixbox/internal/lib"
 	"os"
 	"strings"
+
+	mb "github.com/nao1215/mimixbox/internal/lib"
 )
 
 const cmdName string = "cowsay"

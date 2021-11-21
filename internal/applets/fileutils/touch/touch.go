@@ -18,9 +18,10 @@ package touch
 
 import (
 	"fmt"
-	mb "mimixbox/internal/lib"
 	"os"
 	"time"
+
+	mb "github.com/nao1215/mimixbox/internal/lib"
 
 	"github.com/jessevdk/go-flags"
 )

@@ -19,9 +19,10 @@ package rm
 import (
 	"errors"
 	"fmt"
-	mb "mimixbox/internal/lib"
 	"os"
 	"sort"
+
+	mb "github.com/nao1215/mimixbox/internal/lib"
 
 	"github.com/jessevdk/go-flags"
 )

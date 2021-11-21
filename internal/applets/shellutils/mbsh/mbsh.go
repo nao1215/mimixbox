@@ -24,7 +24,7 @@ import (
 	"os/exec"
 	"strings"
 
-	"mimixbox/internal/applets/shellutils/mbsh/builtin"
+	"github.com/nao1215/mimixbox/internal/applets/shellutils/mbsh/builtin"
 
 	"github.com/jessevdk/go-flags"
 )

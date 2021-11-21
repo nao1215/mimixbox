@@ -19,11 +19,12 @@ package sleep
 import (
 	"errors"
 	"fmt"
-	mb "mimixbox/internal/lib"
 	"os"
 	"strconv"
 	"strings"
 	"time"
+
+	mb "github.com/nao1215/mimixbox/internal/lib"
 )
 
 const cmdName string = "sleep"

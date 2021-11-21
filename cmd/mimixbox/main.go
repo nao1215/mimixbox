@@ -18,12 +18,14 @@ package main
 
 import (
 	"fmt"
-	"mimixbox/internal/applets"
-	mb "mimixbox/internal/lib"
 	"os"
 	"os/exec"
 	"path/filepath"
 	"strings"
+
+	mb "github.com/nao1215/mimixbox/internal/lib"
+
+	"github.com/nao1215/mimixbox/internal/applets"
 
 	"github.com/jessevdk/go-flags"
 )

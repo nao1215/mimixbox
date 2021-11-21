@@ -2,6 +2,7 @@
 ghrdc shows the number of Release file downloads in the repository using GitHub API. By default, it shows the number of downloads for the latest release. Because ghrdc does not authenticate with the GitHub API, it has the following restrictions.   
 - It can only be run 60 times per hour.  
 - Unable to get information in Organization repository.  
+- Unable to get information in private repository
 
 ## How to Use
 ``` Usage

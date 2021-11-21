@@ -31,7 +31,6 @@ licenses: ## Get licenses for dependent libraries
 	-@go-licenses save ./cmd/mimixbox --force --save_path "licenses/"
 
 deps: ## Dependency resolution for build
-	dep ensure
 	go mod vendor
 
 .DEFAULT_GOAL := help

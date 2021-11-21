@@ -19,9 +19,10 @@ package mv
 import (
 	"errors"
 	"fmt"
-	mb "mimixbox/internal/lib"
 	"os"
 	"path/filepath"
+
+	mb "github.com/nao1215/mimixbox/internal/lib"
 
 	"github.com/jessevdk/go-flags"
 )

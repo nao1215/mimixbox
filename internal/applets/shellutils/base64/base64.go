@@ -21,10 +21,11 @@ import (
 	"errors"
 	"fmt"
 	"io"
-	mb "mimixbox/internal/lib"
 	"os"
 	"strconv"
 	"strings"
+
+	mb "github.com/nao1215/mimixbox/internal/lib"
 
 	"github.com/jessevdk/go-flags"
 )

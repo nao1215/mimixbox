@@ -18,8 +18,9 @@ package nl
 
 import (
 	"fmt"
-	mb "mimixbox/internal/lib"
 	"os"
+
+	mb "github.com/nao1215/mimixbox/internal/lib"
 
 	"github.com/jessevdk/go-flags"
 )
