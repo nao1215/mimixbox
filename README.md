@@ -56,11 +56,20 @@ $ sudo chroot /tmp/mimixbox/jail /bin/bash   ※ Dive to jail
 - Step2. Increase the options for each commands (〜Version 1.x.x).
 - Step3. Change the command to modern specifications(〜Version 2.x.x)
   
-Now, Mimixbox has not implemented enough commands (currently supported command list is [here](./docs/introduction/en/CommandAppletList.md)). Therefore, as a project, we will increase the number of commands and aim for a state where dog fooding can be done with the highest priority.
+Now, Mimixbox has not implemented enough commands ([currently supported command list is here](./docs/introduction/en/CommandAppletList.md)). Therefore, as a project, we will increase the number of commands and aim for a state where dog fooding can be done with the highest priority.
     
 Then increase the command options to the same level as Coreutils and other packages. Note that MimixBox does not aim to create commands equivalent to Coreutils. However, we think it's better to have the options that Linux users expect.
   
 Finally, it's the phase that makes the Mimix Box unique. Extend commands to high functionality, like bat and lsd, which are reimplementations of cat and ls.
+
+# Original commands in MimixBox
+MimixBox has its own commands that don't exist in packages like Coreutils.
+|Command (Applet) Name | Description|
+|:--|:--|
+|[fakemovie](./docs/examples/fakemovie/en/fakemovie.md) | Adds a video playback button to the image|
+|[ghrdc](./docs/examples/ghrdc/en/ghrdc.md) | GitHub Relase Download Counter|
+|[path](./docs/examples/path/en/path.md) | Manipulate filename path|
+|[serial](./docs/examples/serial/en/serial.md) | Rename the file to the name with a serial number|
 
 # Contact
 If you would like to send comments such as "find a bug" or "request for additional features" to the developer, please use one of the following contacts.
