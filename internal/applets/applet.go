@@ -26,6 +26,7 @@ import (
 	"github.com/nao1215/mimixbox/internal/applets/textutils/head"
 	"github.com/nao1215/mimixbox/internal/applets/textutils/nl"
 	"github.com/nao1215/mimixbox/internal/applets/textutils/tac"
+	"github.com/nao1215/mimixbox/internal/applets/textutils/tail"
 
 	"github.com/nao1215/mimixbox/internal/applets/fileutils/cp"
 	"github.com/nao1215/mimixbox/internal/applets/fileutils/ln"
@@ -74,7 +75,7 @@ func init() {
 		"fakemovie": {fakemovie.Run, "Adds a video playback button to the image"},
 		"false":     {false.Run, "Do nothing. Return unsuccess(1)"},
 		"ghrdc":     {ghrdc.Run, "GitHub Relase Download Counter"},
-		"head":      {head.Run, ""},
+		"head":      {head.Run, "Print the first NUMBER(default=10) lines"},
 		"ischroot":  {ischroot.Run, "Detect if running in a chroot"},
 		"ln":        {ln.Run, "Create hard or symbolic link"},
 		"mbsh":      {mbsh.Run, "Mimix Box Shell"},
@@ -89,6 +90,7 @@ func init() {
 		"sh":        {mbsh.Run, "Mimix Box Shell"},
 		"sleep":     {sleep.Run, "Pause for NUMBER seconds(minutes, hours, days)"},
 		"tac":       {tac.Run, "Print the file contents from the end to the beginning"},
+		"tail":      {tail.Run, "Print the last NUMBER(default=10) lines"},
 		"touch":     {touch.Run, "Update the access and modification times of each FILE to the current time"},
 		"true":      {true.Run, "Do nothing. Return success(0)"},
 		"which":     {which.Run, "Returns the file path which would be executed in the current environment"},
