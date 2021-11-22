@@ -23,6 +23,7 @@ import (
 	"sort"
 	"strconv"
 
+	"github.com/nao1215/mimixbox/internal/applets/textutils/head"
 	"github.com/nao1215/mimixbox/internal/applets/textutils/nl"
 	"github.com/nao1215/mimixbox/internal/applets/textutils/tac"
 
@@ -73,6 +74,7 @@ func init() {
 		"fakemovie": {fakemovie.Run, "Adds a video playback button to the image"},
 		"false":     {false.Run, "Do nothing. Return unsuccess(1)"},
 		"ghrdc":     {ghrdc.Run, "GitHub Relase Download Counter"},
+		"head":      {head.Run, ""},
 		"ischroot":  {ischroot.Run, "Detect if running in a chroot"},
 		"ln":        {ln.Run, "Create hard or symbolic link"},
 		"mbsh":      {mbsh.Run, "Mimix Box Shell"},

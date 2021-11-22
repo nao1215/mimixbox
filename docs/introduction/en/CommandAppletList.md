@@ -11,6 +11,7 @@
 |fakemovie | Adds a video playback button to the image|
 |    false | Do nothing. Return unsuccess(1)|
 |    ghrdc | GitHub Relase Download Counter|
+|    head  | Print the first NUMBER(default=10) lines |
 |  ischroot| Detect if running in a chroot|
 |       ln | Create hard link or symbolic link|
 |     mbsh | Mimix Box Shell (In development)|

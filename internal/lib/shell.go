@@ -18,10 +18,13 @@ package mb
 
 import (
 	"fmt"
+	"io/ioutil"
 	"os"
 	"os/exec"
 	"path/filepath"
 	"strings"
+
+	"golang.org/x/crypto/ssh/terminal"
 )
 
 func ExistCmd(cmd string) bool {
@@ -157,4 +160,34 @@ func PrintStrListWithNumberLine(strList []string, countEmpryLine bool) {
 
 func PrintStrWithNumberLine(nl int, str string) {
 	fmt.Printf("%6d  %s", nl, str)
+}
+
+func FromPIPE() (string, error) {
+	if HasPipeData() {
+		b, err := ioutil.ReadAll(os.Stdin)
+		if err != nil {
+			return "", err
+		}
+		return string(b), nil
+	}
+	return "", nil
+}
+
+func HasPipeData() bool {
+	return !terminal.IsTerminal(0) // 0 = STDIN
+}
+
+func ChopAll(lines []string) []string {
+	var newLines []string
+	for _, v := range lines {
+		newLines = append(newLines, Chop(v))
+	}
+	return newLines
+}
+
+func Chop(line string) string {
+	if strings.HasSuffix(line, "\n") {
+		return strings.TrimRight(line, "\n")
+	}
+	return line
 }
