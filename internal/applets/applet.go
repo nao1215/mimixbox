@@ -38,6 +38,7 @@ import (
 	"github.com/nao1215/mimixbox/internal/applets/shellutils/base64"
 	"github.com/nao1215/mimixbox/internal/applets/shellutils/basename"
 	"github.com/nao1215/mimixbox/internal/applets/shellutils/chroot"
+	"github.com/nao1215/mimixbox/internal/applets/shellutils/defm"
 	"github.com/nao1215/mimixbox/internal/applets/shellutils/echo"
 	"github.com/nao1215/mimixbox/internal/applets/shellutils/false"
 	"github.com/nao1215/mimixbox/internal/applets/shellutils/ghrdc"
@@ -69,6 +70,7 @@ func init() {
 		"chroot":    {chroot.Run, "Run command or interactive shell with special root directory"},
 		"cp":        {cp.Run, "Copy file(s) otr Directory(s)"},
 		"echo":      {echo.Run, "Display a line of text"},
+		"defm":      {defm.Run, "Desktop Entry File Manager"},
 		"fakemovie": {fakemovie.Run, "Adds a video playback button to the image"},
 		"false":     {false.Run, "Do nothing. Return unsuccess(1)"},
 		"ghrdc":     {ghrdc.Run, "GitHub Relase Download Counter"},
