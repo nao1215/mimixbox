@@ -19,6 +19,7 @@ package cat
 import (
 	"fmt"
 	"os"
+	"strings"
 
 	mb "github.com/nao1215/mimixbox/internal/lib"
 
@@ -27,7 +28,7 @@ import (
 
 const cmdName string = "cat"
 
-const version = "1.0.4"
+const version = "1.0.5"
 
 var osExit = os.Exit
 
@@ -51,6 +52,11 @@ func Run() (int, error) {
 		return ExitFailuer, nil
 	}
 
+	if mb.HasPipeData() {
+		dump(mb.AddLineFeed(strings.Split(args[0], "\n")), opts.Number)
+		return ExitSuccess, nil
+	}
+
 	if len(args) == 0 || mb.Contains(args, "-") {
 		mb.Parrot(opts.Number)
 		return ExitSuccess, nil
@@ -61,15 +67,19 @@ func Run() (int, error) {
 		return ExitFailuer, nil
 	}
 
-	if opts.Number {
-		mb.PrintStrListWithNumberLine(strLisr, true)
-	} else {
-		for _, str := range strLisr {
-			fmt.Print(str)
-		}
-	}
+	dump(strLisr, opts.Number)
 
 	return ExitSuccess, nil
+}
+
+func dump(lines []string, withNumber bool) {
+	if withNumber {
+		mb.PrintStrListWithNumberLine(lines, true)
+	} else {
+		for _, line := range lines {
+			fmt.Print(line)
+		}
+	}
 }
 
 func parseArgs(opts *options) ([]string, error) {
@@ -78,6 +88,14 @@ func parseArgs(opts *options) ([]string, error) {
 	args, err := p.Parse()
 	if err != nil {
 		return nil, err
+	}
+
+	if mb.HasPipeData() {
+		stdin, err := mb.FromPIPE()
+		if err != nil {
+			return nil, err
+		}
+		return []string{stdin}, nil
 	}
 
 	if opts.Version {

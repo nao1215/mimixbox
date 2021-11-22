@@ -20,6 +20,7 @@ import (
 	"bufio"
 	"fmt"
 	"os"
+	"strings"
 
 	mb "github.com/nao1215/mimixbox/internal/lib"
 
@@ -28,7 +29,7 @@ import (
 
 const cmdName string = "tac"
 
-const version = "1.0.2"
+const version = "1.0.3"
 
 var osExit = os.Exit
 
@@ -49,6 +50,11 @@ func Run() (int, error) {
 
 	if args, err = parseArgs(&opts); err != nil {
 		return ExitFailuer, nil
+	}
+
+	if mb.HasPipeData() {
+		printFromTail(strings.Split(args[0], "\n"))
+		return ExitSuccess, nil
 	}
 
 	if len(args) == 0 || mb.Contains(args, "-") {
@@ -78,10 +84,14 @@ func tac(path string) error {
 	for scanner.Scan() {
 		lines = append(lines, scanner.Text())
 	}
+	printFromTail(lines)
+	return nil
+}
+
+func printFromTail(lines []string) {
 	for i := range lines {
 		fmt.Println(lines[len(lines)-i-1])
 	}
-	return nil
 }
 
 func tacUserInput() {
@@ -104,6 +114,14 @@ func parseArgs(opts *options) ([]string, error) {
 	args, err := p.Parse()
 	if err != nil {
 		return nil, err
+	}
+
+	if mb.HasPipeData() {
+		stdin, err := mb.FromPIPE()
+		if err != nil {
+			return nil, err
+		}
+		return []string{stdin}, nil
 	}
 
 	if opts.Version {
