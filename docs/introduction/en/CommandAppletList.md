@@ -12,6 +12,7 @@
 |    false | Do nothing. Return unsuccess(1)|
 |    ghrdc | GitHub Relase Download Counter|
 |  ischroot| Detect if running in a chroot|
+|       ln | Create hard link or symbolic link|
 |     mbsh | Mimix Box Shell (In development)|
 |    mkdir | Make directories|
 |    mkfifo | Make FIFO (Named pipe)|

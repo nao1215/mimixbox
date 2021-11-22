@@ -27,6 +27,7 @@ import (
 	"github.com/nao1215/mimixbox/internal/applets/textutils/tac"
 
 	"github.com/nao1215/mimixbox/internal/applets/fileutils/cp"
+	"github.com/nao1215/mimixbox/internal/applets/fileutils/ln"
 	"github.com/nao1215/mimixbox/internal/applets/fileutils/mkdir"
 	"github.com/nao1215/mimixbox/internal/applets/fileutils/mkfifo"
 	"github.com/nao1215/mimixbox/internal/applets/fileutils/mv"
@@ -73,6 +74,7 @@ func init() {
 		"false":     {false.Run, "Do nothing. Return unsuccess(1)"},
 		"ghrdc":     {ghrdc.Run, "GitHub Relase Download Counter"},
 		"ischroot":  {ischroot.Run, "Detect if running in a chroot"},
+		"ln":        {ln.Run, "Create hard or symbolic link"},
 		"mbsh":      {mbsh.Run, "Mimix Box Shell"},
 		"mkdir":     {mkdir.Run, "Make directories"},
 		"mkfifo":    {mkfifo.Run, "Make FIFO (named pipe)"},
