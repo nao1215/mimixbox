@@ -19,6 +19,7 @@ package nl
 import (
 	"fmt"
 	"os"
+	"strings"
 
 	mb "github.com/nao1215/mimixbox/internal/lib"
 
@@ -48,6 +49,11 @@ func Run() (int, error) {
 
 	if args, err = parseArgs(&opts); err != nil {
 		return ExitFailuer, nil
+	}
+
+	if mb.HasPipeData() {
+		mb.PrintStrListWithNumberLine(mb.AddLineFeed(strings.Split(args[0], "\n")), false)
+		return ExitSuccess, nil
 	}
 
 	if len(args) == 0 || mb.Contains(args, "-") {
@@ -82,6 +88,14 @@ func parseArgs(opts *options) ([]string, error) {
 	args, err := p.Parse()
 	if err != nil {
 		return nil, err
+	}
+
+	if mb.HasPipeData() {
+		stdin, err := mb.FromPIPE()
+		if err != nil {
+			return nil, err
+		}
+		return []string{stdin}, nil
 	}
 
 	if opts.Version {
