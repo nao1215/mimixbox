@@ -27,7 +27,7 @@ import (
 
 const cmdName string = "head"
 
-const version = "1.0.0"
+const version = "1.0.1"
 
 var osExit = os.Exit
 
@@ -72,7 +72,7 @@ func head(args []string, opts options) error {
 			printNameBanner(v)
 		}
 		if !mb.Exists(v) {
-			output = strings.Split(args[0], "\n")[:opts.Lines]
+			output = strings.Split(args[0], "\n")
 		} else if mb.IsDir(v) {
 			output = append(output, v+" is directory")
 		} else if mb.IsFile(v) {
@@ -80,7 +80,11 @@ func head(args []string, opts options) error {
 			if err != nil {
 				return err
 			}
-			output = mb.ChopAll(output[:opts.Lines])
+			output = mb.ChopAll(output)
+		}
+
+		if opts.Lines <= len(output) {
+			output = output[:opts.Lines]
 		}
 		dump(output)
 	}
@@ -115,6 +119,10 @@ func parseArgs(opts *options) ([]string, error) {
 	if opts.Version {
 		showVersion()
 		osExit(ExitSuccess)
+	}
+
+	if opts.Lines < 0 {
+		opts.Lines = 10
 	}
 
 	return args, nil

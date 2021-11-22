@@ -27,7 +27,7 @@ import (
 
 const cmdName string = "tail"
 
-const version = "1.0.0"
+const version = "1.0.1"
 
 var osExit = os.Exit
 
@@ -73,7 +73,6 @@ func tail(args []string, opts options) error {
 		}
 		if !mb.Exists(v) {
 			output = strings.Split(args[0], "\n")
-			output = output[len(output)-opts.Lines:]
 		} else if mb.IsDir(v) {
 			output = append(output, v+" is directory")
 		} else if mb.IsFile(v) {
@@ -81,7 +80,11 @@ func tail(args []string, opts options) error {
 			if err != nil {
 				return err
 			}
-			output = mb.ChopAll(output[len(output)-opts.Lines:])
+			output = mb.ChopAll(output)
+		}
+
+		if opts.Lines <= len(output) {
+			output = output[len(output)-opts.Lines:]
 		}
 		dump(output)
 	}
@@ -116,6 +119,10 @@ func parseArgs(opts *options) ([]string, error) {
 	if opts.Version {
 		showVersion()
 		osExit(ExitSuccess)
+	}
+
+	if opts.Lines < 0 {
+		opts.Lines = 10
 	}
 
 	return args, nil
