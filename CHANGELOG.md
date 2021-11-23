@@ -1,5 +1,8 @@
 # Changelog
 All notable changes to this project will be documented in this file. The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.0.0/), and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
+## [0.16.2] - 2021-11-23
+ ### Changed
+ - cowsay command to receive data from PIPE.
 ## [0.16.1] - 2021-11-23
 ### Added
  - cowsay command. The process of enclosing the message in a frame is incomplete.

@@ -26,7 +26,7 @@ import (
 
 const cmdName string = "cowsay"
 
-const version = "0.9.0"
+const version = "0.9.1"
 
 var osExit = os.Exit
 
@@ -45,9 +45,14 @@ const (
 
 func Run() (int, error) {
 	var messages string
-	args := parseArgs(os.Args)
+	args, err := parseArgs(os.Args)
+	if err != nil {
+		return ExitFailuer, nil
+	}
 
-	if len(args) == 0 {
+	if mb.HasPipeData() {
+		messages = strings.TrimRight(strings.Join(args, ""), "\n")
+	} else if len(args) == 0 {
 		messages = userInput()
 	} else {
 		messages = strings.Join(args, "")
@@ -76,7 +81,7 @@ func userInput() string {
 	return inputs
 }
 
-func parseArgs(args []string) []string {
+func parseArgs(args []string) ([]string, error) {
 
 	if mb.HasVersionOpt(args) {
 		showVersion()
@@ -88,7 +93,15 @@ func parseArgs(args []string) []string {
 		osExit(ExitSuccess)
 	}
 
-	return args[1:]
+	if mb.HasPipeData() {
+		stdin, err := mb.FromPIPE()
+		if err != nil {
+			return nil, err
+		}
+		return []string{stdin}, nil
+	}
+
+	return args[1:], nil
 }
 
 func showVersion() {
