@@ -23,6 +23,7 @@ import (
 	"os/exec"
 	"path/filepath"
 	"strings"
+	"syscall"
 
 	"golang.org/x/crypto/ssh/terminal"
 )
@@ -174,7 +175,7 @@ func FromPIPE() (string, error) {
 }
 
 func HasPipeData() bool {
-	return !terminal.IsTerminal(0) // 0 = STDIN
+	return !terminal.IsTerminal(syscall.Stdin)
 }
 
 func ChopAll(lines []string) []string {
