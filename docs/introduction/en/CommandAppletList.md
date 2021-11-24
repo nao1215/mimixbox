@@ -32,6 +32,7 @@
 |     true | Do nothing. Return success(0)|
 |  unix2dos| Change LF to CRLF|
 |    which | Returns the file path which would be executed in the current environment|
+|   whoami | Print login user name|
 
 If you want to see the list of supported commands on the terminal, use the --list option.
 

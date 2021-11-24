@@ -46,6 +46,7 @@ import (
 	"github.com/nao1215/mimixbox/internal/applets/shellutils/sleep"
 	"github.com/nao1215/mimixbox/internal/applets/shellutils/true"
 	"github.com/nao1215/mimixbox/internal/applets/shellutils/which"
+	"github.com/nao1215/mimixbox/internal/applets/shellutils/whoami"
 	"github.com/nao1215/mimixbox/internal/applets/textutils/cat"
 	"github.com/nao1215/mimixbox/internal/applets/textutils/dos2unix"
 	"github.com/nao1215/mimixbox/internal/applets/textutils/head"
@@ -97,6 +98,7 @@ func init() {
 		"true":      {true.Run, "Do nothing. Return success(0)"},
 		"unix2dos":  {unix2dos.Run, "Change LF to CRLF"},
 		"which":     {which.Run, "Returns the file path which would be executed in the current environment"},
+		"whoami":    {whoami.Run, "Print login user name"},
 	}
 }
 
