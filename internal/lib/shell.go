@@ -25,7 +25,7 @@ import (
 	"strings"
 	"syscall"
 
-	"golang.org/x/crypto/ssh/terminal"
+	"golang.org/x/term"
 )
 
 func ExistCmd(cmd string) bool {
@@ -175,7 +175,7 @@ func FromPIPE() (string, error) {
 }
 
 func HasPipeData() bool {
-	return !terminal.IsTerminal(syscall.Stdin)
+	return !term.IsTerminal(syscall.Stdin)
 }
 
 func ChopAll(lines []string) []string {
