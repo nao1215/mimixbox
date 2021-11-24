@@ -1,5 +1,5 @@
 build: deps ## Build mimixbox and make man-pages
-	CGO_ENABLED=0 go build "-ldflags=-s -w" -trimpath -o mimixbox cmd/mimixbox/main.go
+	go build "-ldflags=-s -w" -trimpath -o mimixbox cmd/mimixbox/main.go
 	$(MAKE) doc
 	$(MAKE) licenses
 
@@ -14,7 +14,8 @@ clean: ## Clean project
 doc: ## Make man-pages
 	./scripts/mkManpages.sh
 
-docker:build ## Run container for testing mimixbox 
+docker: ## Run container for testing mimixbox 
+	$(MAKE) build CGO_ENABLED=0 
 	docker image build -t mimixbox/test:latest .
 	docker container run --rm -it mimixbox/test:latest
 
