@@ -18,11 +18,13 @@ package mb
 
 import (
 	"bufio"
+	"errors"
 	"io"
 	"io/fs"
 	"os"
 	"path"
 	"path/filepath"
+	"sort"
 	"strings"
 )
 
@@ -153,6 +155,63 @@ func Copy(src string, dest string) error {
 	_, err = io.Copy(d, s)
 	if err != nil {
 		return err
+	}
+	return nil
+}
+
+func RemoveFile(path string, interactive bool) error {
+	if !IsFile(path) {
+		return errors.New(path + " is not file")
+	}
+	if interactive && !Question("Remove "+path+"?") {
+		return nil // Skip this file
+	}
+	if err := os.Remove(path); err != nil {
+		return err
+	}
+	return nil
+}
+
+func RemoveDir(dir string, interactive bool) error {
+	if !interactive {
+		if err := os.RemoveAll(dir); err != nil {
+			return err
+		}
+		return nil
+	}
+	if err := interactiveRemoveDir(dir); err != nil {
+		return err
+	}
+	return nil
+}
+
+func interactiveRemoveDir(dir string) error {
+	dirs, files, err := Walk(dir)
+	if err != nil {
+		return err
+	}
+
+	// Start with the deepest directory or file
+	sort.Sort(sort.Reverse(sort.StringSlice(dirs)))
+	sort.Sort(sort.Reverse(sort.StringSlice(files)))
+
+	for _, file := range files {
+		if !Question("Remove " + file + "?") {
+			continue
+		}
+		err := os.Remove(file)
+		if err != nil {
+			return err
+		}
+	}
+	for _, dir := range dirs {
+		if !Question("Remove " + dir + "?") {
+			continue
+		}
+		err := os.Remove(dir)
+		if err != nil {
+			return err
+		}
 	}
 	return nil
 }

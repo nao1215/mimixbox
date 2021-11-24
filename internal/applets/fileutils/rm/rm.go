@@ -20,7 +20,6 @@ import (
 	"errors"
 	"fmt"
 	"os"
-	"sort"
 
 	mb "github.com/nao1215/mimixbox/internal/lib"
 
@@ -29,7 +28,7 @@ import (
 
 const cmdName string = "rm"
 
-const version = "1.0.0"
+const version = "1.0.1"
 
 var osExit = os.Exit
 
@@ -74,64 +73,16 @@ func rm(path string, opts options) (int, error) {
 	}
 
 	if mb.IsFile(path) {
-		if opts.Interactive && !mb.Question("Remove "+path+"?") {
-			return ExitSuccess, nil // Skip this file
-		}
-		if err := os.Remove(path); err != nil {
+		if err := mb.RemoveFile(path, opts.Interactive); err != nil {
 			return ExitFailuer, err
 		}
-		return ExitSuccess, nil
 	}
 
-	if err := removeDir(path, opts.Interactive); err != nil {
+	if err := mb.RemoveDir(path, opts.Interactive); err != nil {
 		return ExitFailuer, err
 	}
 
 	return ExitSuccess, nil
-}
-
-func removeDir(dir string, interactive bool) error {
-	if !interactive {
-		if err := os.RemoveAll(dir); err != nil {
-			return err
-		}
-		return nil
-	}
-	if err := interactiveRemoveDir(dir); err != nil {
-		return err
-	}
-	return nil
-}
-
-func interactiveRemoveDir(dir string) error {
-	dirs, files, err := mb.Walk(dir)
-	if err != nil {
-		return err
-	}
-
-	// Start with the deepest directory or file
-	sort.Sort(sort.Reverse(sort.StringSlice(dirs)))
-	sort.Sort(sort.Reverse(sort.StringSlice(files)))
-
-	for _, file := range files {
-		if !mb.Question("Remove " + file + "?") {
-			continue
-		}
-		err := os.Remove(file)
-		if err != nil {
-			return err
-		}
-	}
-	for _, dir := range dirs {
-		if !mb.Question("Remove " + dir + "?") {
-			continue
-		}
-		err := os.Remove(dir)
-		if err != nil {
-			return err
-		}
-	}
-	return nil
 }
 
 func validBeforeRemove(path string, opts options) (int, error) {
