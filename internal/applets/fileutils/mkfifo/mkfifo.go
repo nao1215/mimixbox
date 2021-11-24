@@ -18,7 +18,6 @@ package mkfifo
 
 import (
 	"errors"
-	"fmt"
 	"os"
 	"syscall"
 
@@ -75,7 +74,7 @@ func parseArgs(opts *options) ([]string, error) {
 	}
 
 	if opts.Version {
-		showVersion()
+		mb.ShowVersion(cmdName, version)
 		osExit(ExitSuccess)
 	}
 
@@ -96,11 +95,6 @@ func initParser(opts *options) *flags.Parser {
 
 func isValidArgNr(args []string) bool {
 	return len(args) >= 1
-}
-
-func showVersion() {
-	description := cmdName + " version " + version + " (under Apache License verison 2.0)\n"
-	fmt.Print(description)
 }
 
 func showHelp(p *flags.Parser) {

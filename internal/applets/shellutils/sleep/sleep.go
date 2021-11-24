@@ -64,7 +64,7 @@ func Run() (int, error) {
 func parseArgs(args []string) []string {
 
 	if mb.HasVersionOpt(args) {
-		showVersion()
+		mb.ShowVersion(cmdName, version)
 		osExit(ExitSuccess)
 	}
 
@@ -133,11 +133,6 @@ func hasSuffix(input string) bool {
 func isValidArgNr(args []string) bool {
 	// 0:sleep, 1:numbers, 2:...
 	return len(args) >= 2
-}
-
-func showVersion() {
-	description := cmdName + " version " + version + " (under Apache License verison 2.0)\n"
-	fmt.Print(description)
 }
 
 func showHelp() {

@@ -147,7 +147,7 @@ func parseArgs(opts *options) []string {
 	}
 
 	if opts.Version {
-		showVersion()
+		mb.ShowVersion(cmdName, version)
 		osExit(ExitSuccess)
 	}
 
@@ -174,10 +174,6 @@ func initParser(opts *options) *flags.Parser {
 
 func isValidArgNr(args []string) bool {
 	return len(args) == 1
-}
-
-func showVersion() {
-	fmt.Printf("serial version %s\n", version)
 }
 
 func showHelp(p *flags.Parser) {

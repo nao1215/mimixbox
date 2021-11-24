@@ -17,11 +17,11 @@
 package echo
 
 import (
-	"fmt"
 	"os"
 	"strings"
 
 	"github.com/jessevdk/go-flags"
+	mb "github.com/nao1215/mimixbox/internal/lib"
 )
 
 const cmdName string = "echo"
@@ -68,7 +68,7 @@ func parseArgs(opts *options) ([]string, error) {
 	}
 
 	if opts.Version {
-		showVersion()
+		mb.ShowVersion(cmdName, version)
 		osExit(ExitSuccess)
 	}
 
@@ -81,9 +81,4 @@ func initParser(opts *options) *flags.Parser {
 	parser.Usage = "[OPTIONS] STRING"
 
 	return parser
-}
-
-func showVersion() {
-	description := cmdName + " version " + version + " (under Apache License verison 2.0)\n"
-	fmt.Print(description)
 }

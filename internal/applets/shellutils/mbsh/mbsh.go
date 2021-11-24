@@ -24,9 +24,9 @@ import (
 	"os/exec"
 	"strings"
 
-	"github.com/nao1215/mimixbox/internal/applets/shellutils/mbsh/builtin"
-
 	"github.com/jessevdk/go-flags"
+	"github.com/nao1215/mimixbox/internal/applets/shellutils/mbsh/builtin"
+	mb "github.com/nao1215/mimixbox/internal/lib"
 )
 
 const cmdName string = "mbsh"
@@ -99,7 +99,7 @@ func parseArgs() ([]string, options) {
 	}
 
 	if opts.Version {
-		showVersion()
+		mb.ShowVersion(cmdName, version)
 		osExit(ExitSuccess)
 	}
 
@@ -113,9 +113,4 @@ func initParser(opts *options) *flags.Parser {
 	parser.Usage = "[OPTIONS]"
 
 	return parser
-}
-
-// --versionオプション用の関数。Versionを表示する。
-func showVersion() {
-	fmt.Printf("%s version %s\n", cmdName, version)
 }

@@ -22,6 +22,7 @@ import (
 	"os/user"
 
 	"github.com/jessevdk/go-flags"
+	mb "github.com/nao1215/mimixbox/internal/lib"
 )
 
 const cmdName string = "who"
@@ -67,7 +68,7 @@ func parseArgs(opts *options) ([]string, error) {
 	}
 
 	if opts.Version {
-		showVersion()
+		mb.ShowVersion(cmdName, version)
 		osExit(ExitSuccess)
 	}
 

@@ -26,6 +26,7 @@ import (
 	"time"
 
 	"github.com/jessevdk/go-flags"
+	mb "github.com/nao1215/mimixbox/internal/lib"
 )
 
 const cmdName string = "ghrdc"
@@ -236,7 +237,7 @@ func parseArgs(opts *options) []string {
 	}
 
 	if opts.Version {
-		showVersion()
+		mb.ShowVersion(cmdName, version)
 		osExit(ExitSuccess)
 	}
 
@@ -257,10 +258,6 @@ func initParser(opts *options) *flags.Parser {
 
 func isValidArgNr(args []string) bool {
 	return len(args) == 1
-}
-
-func showVersion() {
-	fmt.Printf("%s version %s\n", cmdName, version)
 }
 
 func showHelp(p *flags.Parser) {

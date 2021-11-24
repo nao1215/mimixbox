@@ -17,10 +17,10 @@
 package false
 
 import (
-	"fmt"
 	"os"
 
 	"github.com/jessevdk/go-flags"
+	mb "github.com/nao1215/mimixbox/internal/lib"
 )
 
 const cmdName string = "false"
@@ -57,7 +57,7 @@ func parseArgs(opts *options) ([]string, error) {
 	}
 
 	if opts.Version {
-		showVersion()
+		mb.ShowVersion(cmdName, version)
 		osExit(ExitSuccess)
 	}
 	return args, nil
@@ -69,9 +69,4 @@ func initParser(opts *options) *flags.Parser {
 	parser.Usage = "[OPTIONS]"
 
 	return parser
-}
-
-func showVersion() {
-	description := cmdName + " version " + version + " (under Apache License verison 2.0)\n"
-	fmt.Print(description)
 }

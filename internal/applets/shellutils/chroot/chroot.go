@@ -17,7 +17,6 @@
 package chroot
 
 import (
-	"fmt"
 	"os"
 	"syscall"
 
@@ -110,7 +109,7 @@ func parseArgs(opts *options) {
 	p := initParser(opts)
 
 	if hasVersionOption() {
-		showVersion()
+		mb.ShowVersion(cmdName, version)
 		osExit(ExitSuccess)
 	}
 	if !isValidArgNr(os.Args) {
@@ -139,11 +138,6 @@ func initParser(opts *options) *flags.Parser {
 func isValidArgNr(args []string) bool {
 	// 0:chroot, 1:root dir, 2:command(option)
 	return len(args) >= 2
-}
-
-func showVersion() {
-	description := cmdName + " version " + version + " (under Apache License verison 2.0)\n"
-	fmt.Print(description)
 }
 
 func showHelp(p *flags.Parser) {

@@ -100,7 +100,7 @@ func parseArgs(opts *options) ([]string, error) {
 	}
 
 	if opts.Version {
-		showVersion()
+		mb.ShowVersion(cmdName, version)
 		osExit(ExitSuccess)
 	}
 
@@ -117,9 +117,4 @@ func initParser(opts *options) *flags.Parser {
 	parser.Usage = "[OPTIONS] FILE_NAME"
 
 	return parser
-}
-
-func showVersion() {
-	description := cmdName + " version " + version + " (under Apache License verison 2.0)\n"
-	fmt.Print(description)
 }

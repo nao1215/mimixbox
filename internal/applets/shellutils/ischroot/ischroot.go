@@ -17,7 +17,6 @@
 package ischroot
 
 import (
-	"fmt"
 	"os"
 	"strings"
 	"syscall"
@@ -153,7 +152,7 @@ func parseArgs(opts *options) ([]string, error) {
 	}
 
 	if opts.Version {
-		showVersion()
+		mb.ShowVersion(cmdName, version)
 		osExit(0)
 	}
 
@@ -166,13 +165,4 @@ func initParser(opts *options) *flags.Parser {
 	parser.Usage = "[OPTION]"
 
 	return parser
-}
-
-func showVersion() {
-	description := cmdName + " version " + version + " (under Apache License verison 2.0)\n"
-	fmt.Print(description)
-}
-
-func showHelp(p *flags.Parser) {
-	p.WriteHelp(os.Stdout)
 }

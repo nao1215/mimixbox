@@ -52,7 +52,7 @@ type options struct {
 
 var osExit = os.Exit
 
-const version = "0.20.0"
+const version = "0.20.1"
 
 const (
 	ExitSuccess int = iota // 0
@@ -123,7 +123,7 @@ func handleMimixBoxOptionsIfNeeded(parser *flags.Parser, opts *options) {
 	}
 
 	if len(args) == 0 && opts.Version {
-		showVersion()
+		mb.ShowVersion(cmdName, version)
 		osExit(ExitSuccess)
 	}
 
@@ -185,11 +185,6 @@ func initParser(opts *options) *flags.Parser {
 	parser.Usage = "[applet [arguments]...] [OPTIONS]"
 
 	return parser
-}
-
-func showVersion() {
-	description := cmdName + " version " + version + " (under Apache License verison 2.0)\n"
-	fmt.Print(description)
 }
 
 func showHelp(p *flags.Parser) {

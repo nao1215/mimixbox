@@ -84,7 +84,7 @@ func userInput() string {
 func parseArgs(args []string) ([]string, error) {
 
 	if mb.HasVersionOpt(args) {
-		showVersion()
+		mb.ShowVersion(cmdName, version)
 		osExit(ExitSuccess)
 	}
 
@@ -102,11 +102,6 @@ func parseArgs(args []string) ([]string, error) {
 	}
 
 	return args[1:], nil
-}
-
-func showVersion() {
-	description := cmdName + " version " + version + " (under Apache License verison 2.0)\n"
-	fmt.Print(description)
 }
 
 func showHelp() {
