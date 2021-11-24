@@ -14,6 +14,7 @@
 |    false | Do nothing. Return unsuccess(1)|
 |    ghrdc | GitHub Relase Download Counter|
 |    head  | Print the first NUMBER(default=10) lines |
+|       id | Print User ID and Group ID|
 |  ischroot| Detect if running in a chroot|
 |       ln | Create hard link or symbolic link|
 |     mbsh | Mimix Box Shell (In development)|

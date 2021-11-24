@@ -21,6 +21,7 @@ import (
 	"io/ioutil"
 	"os"
 	"os/exec"
+	"os/user"
 	"path/filepath"
 	"strings"
 	"syscall"
@@ -193,14 +194,6 @@ func Chop(line string) string {
 	return line
 }
 
-func AddLineFeed(lines []string) []string {
-	var newLines []string
-	for _, v := range lines {
-		newLines = append(newLines, v+"\n")
-	}
-	return newLines
-}
-
 func Dump(lines []string, withNumber bool) {
 	if withNumber {
 		PrintStrListWithNumberLine(lines, true)
@@ -209,4 +202,26 @@ func Dump(lines []string, withNumber bool) {
 			fmt.Print(line)
 		}
 	}
+}
+
+func Groups() ([]user.Group, error) {
+	u, err := user.Current()
+	if err != nil {
+		return nil, err
+	}
+
+	groups, err := u.GroupIds()
+	if err != nil {
+		return nil, err
+	}
+
+	var groupList []user.Group
+	for _, v := range groups {
+		group, err := user.LookupGroupId(v)
+		if err != nil {
+			return nil, err
+		}
+		groupList = append(groupList, *group)
+	}
+	return groupList, nil
 }

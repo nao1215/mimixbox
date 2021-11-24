@@ -4,6 +4,7 @@ All notable changes to this project will be documented in this file. The format 
 ### Added
  - dos2unix/unix2dos command.
  - expand/unexpand command.
+ - id command: Because GroupIds requires cgo, id command does not work docker environment.
  - whoami command.
  ### Changed
  - cowsay command to receive data from PIPE.

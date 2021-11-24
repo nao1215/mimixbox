@@ -1,0 +1,175 @@
+//
+// mimixbox/internal/applets/shellutils/id/id.go
+//
+// Copyright 2021 Naohiro CHIKAMATSU
+//
+// Licensed under the Apache License, Version 2.0 (the "License");
+// you may not use this file except in compliance with the License.
+// You may obtain a copy of the License at
+//
+//    http://www.apache.org/licenses/LICENSE-2.0
+//
+// Unless required by applicable law or agreed to in writing, software
+// distributed under the License is distributed on an "AS IS" BASIS,
+// WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
+// See the License for the specific language governing permissions and
+// limitations under the License.
+package id
+
+import (
+	"errors"
+	"fmt"
+	"os"
+	"os/user"
+	"strings"
+
+	"github.com/jessevdk/go-flags"
+	mb "github.com/nao1215/mimixbox/internal/lib"
+)
+
+const cmdName string = "id"
+const version = "1.0.0"
+
+var osExit = os.Exit
+
+type options struct {
+	Group    bool `short:"g" long:"group" description:"Print only the effective group ID"`
+	AllGroup bool `short:"G" long:"groups" description:"Print all group IDs"`
+	Name     bool `short:"n" long:"name" description:"Print the name instead of a number (for -ugG)"`
+	User     bool `short:"u" long:"user" description:"Print only the effective user ID"`
+	Version  bool `short:"v" long:"version" description:"Show id command version"`
+}
+
+// Exit code
+const (
+	ExitSuccess int = iota // 0
+	ExitFailuer
+)
+
+func Run() (int, error) {
+	var opts options
+	var err error
+
+	if _, err = parseArgs(&opts); err != nil {
+		return ExitSuccess, nil
+	}
+	return id(opts)
+}
+
+func id(opts options) (int, error) {
+	user, err := user.Current()
+	if err != nil {
+		return ExitFailuer, err
+	}
+
+	groups, err := mb.Groups()
+	if err != nil {
+		return ExitFailuer, err
+	}
+
+	if opts.Group {
+		fmt.Println(user.Gid)
+		return ExitSuccess, nil
+	}
+
+	if opts.AllGroup {
+		dumpGroups(groups, opts.Name)
+		return ExitSuccess, nil
+	}
+
+	err = dumpAllId(*user, groups)
+	if err != nil {
+		return ExitFailuer, err
+	}
+	return ExitSuccess, nil
+}
+
+func dumpAllId(u user.User, groups []user.Group) error {
+	var resultLine string = ""
+
+	g, err := user.LookupGroupId(u.Gid)
+	if err != nil {
+		return err
+	}
+	resultLine = "uid=" + u.Uid + "(" + u.Username + ") "
+	resultLine = resultLine + "gid=" + u.Gid + "(" + g.Name + ") "
+	resultLine = resultLine + "groups="
+
+	for _, v := range groups {
+		resultLine = resultLine + v.Gid + "(" + v.Name + "),"
+	}
+	fmt.Println(strings.TrimRight(resultLine, ","))
+	return nil
+}
+
+func dumpGroups(groups []user.Group, onlyName bool) {
+	var resultLine string = ""
+	if onlyName {
+		for _, g := range groups {
+			resultLine = resultLine + g.Name + " "
+		}
+
+	} else {
+		for _, g := range groups {
+			resultLine = resultLine + g.Gid + " "
+		}
+	}
+	fmt.Println(strings.TrimRight(resultLine, " "))
+}
+
+func parseArgs(opts *options) ([]string, error) {
+	p := initParser(opts)
+
+	args, err := p.Parse()
+	if err != nil {
+		return nil, err
+	}
+
+	if opts.Version {
+		mb.ShowVersion(cmdName, version)
+		osExit(ExitSuccess)
+	}
+
+	if !validSpecifiedSameTime(*opts) {
+		return nil, errors.New("-g, -u, -G option cannot be specified at the same time")
+	}
+
+	if !validNameOpt(*opts) {
+		return nil, errors.New("specify the -n option at the same time as -g, -u, -G")
+	}
+
+	return args, nil
+}
+
+func validSpecifiedSameTime(opts options) bool {
+	return countShowOnlyOneItemOpts(opts) <= 1
+}
+
+func validNameOpt(opts options) bool {
+	if opts.Name {
+		return countShowOnlyOneItemOpts(opts) == 1
+	}
+	return true
+}
+
+func countShowOnlyOneItemOpts(opts options) int {
+	var count int = 0
+	if opts.AllGroup {
+		count++
+	}
+	if opts.Group {
+		count++
+	}
+	if opts.User {
+		count++
+	}
+	return count
+}
+
+func initParser(opts *options) *flags.Parser {
+	parser := flags.NewParser(opts, flags.Default)
+	parser.Name = cmdName
+	parser.Usage = "[OPTIONS]"
+
+	return parser
+}

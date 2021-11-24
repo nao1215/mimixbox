@@ -39,6 +39,7 @@ import (
 	"github.com/nao1215/mimixbox/internal/applets/shellutils/echo"
 	"github.com/nao1215/mimixbox/internal/applets/shellutils/false"
 	"github.com/nao1215/mimixbox/internal/applets/shellutils/ghrdc"
+	"github.com/nao1215/mimixbox/internal/applets/shellutils/id"
 	"github.com/nao1215/mimixbox/internal/applets/shellutils/ischroot"
 	"github.com/nao1215/mimixbox/internal/applets/shellutils/mbsh"
 	"github.com/nao1215/mimixbox/internal/applets/shellutils/path"
@@ -81,6 +82,7 @@ func init() {
 		"fakemovie": {fakemovie.Run, "Adds a video playback button to the image"},
 		"false":     {false.Run, "Do nothing. Return unsuccess(1)"},
 		"ghrdc":     {ghrdc.Run, "GitHub Relase Download Counter"},
+		"id":        {id.Run, "Print User ID and Group ID"},
 		"head":      {head.Run, "Print the first NUMBER(default=10) lines"},
 		"ischroot":  {ischroot.Run, "Detect if running in a chroot"},
 		"ln":        {ln.Run, "Create hard or symbolic link"},

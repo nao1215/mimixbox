@@ -26,3 +26,11 @@ func ReplaceAll(lines []string, target string, after string) []string {
 	}
 	return replacedLines
 }
+
+func AddLineFeed(lines []string) []string {
+	var newLines []string
+	for _, v := range lines {
+		newLines = append(newLines, v+"\n")
+	}
+	return newLines
+}
