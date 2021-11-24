@@ -24,9 +24,9 @@ import (
 	"os/exec"
 	"strings"
 
-	"github.com/nao1215/mimixbox/internal/applets/shellutils/mbsh/builtin"
-
 	"github.com/jessevdk/go-flags"
+	"github.com/nao1215/mimixbox/internal/applets/shellutils/mbsh/builtin"
+	repl "github.com/nao1215/mimixbox/internal/applets/shellutils/mbsh/interpreter"
 )
 
 const cmdName string = "mbsh"
@@ -47,10 +47,6 @@ type options struct {
 	Version bool `short:"v" long:"version" description:"Show shell version"`
 }
 
-/*
-予約語 (reserved word)、単語 (word)、そして演算子 (operator
-*/
-
 func Run() (int, error) {
 	args, opts := parseArgs()
 
@@ -58,6 +54,7 @@ func Run() (int, error) {
 	printMimixBoxBanner()
 	reader := bufio.NewReader(os.Stdin)
 	for {
+		repl.Start(os.Stdin, os.Stdout)
 		fmt.Print("> ")
 		// Read the keyboad input.
 		input, err := reader.ReadString('\n')
