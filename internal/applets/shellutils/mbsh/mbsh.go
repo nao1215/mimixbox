@@ -47,11 +47,15 @@ type options struct {
 	Version bool `short:"v" long:"version" description:"Show shell version"`
 }
 
+/*
+予約語 (reserved word)、単語 (word)、そして演算子 (operator
+*/
+
 func Run() (int, error) {
 	args, opts := parseArgs()
 
 	fmt.Printf("Dummy(Not implement shell option): %s:%v\n", args, opts.Version)
-
+	printMimixBoxBanner()
 	reader := bufio.NewReader(os.Stdin)
 	for {
 		fmt.Print("> ")
@@ -66,6 +70,15 @@ func Run() (int, error) {
 			fmt.Fprintln(os.Stderr, err)
 		}
 	}
+}
+
+func printMimixBoxBanner() {
+	banner := `                   
+	---  - ---  - ----   --- --- ----
+	| M i m i x B o x     S h e l l |
+	--   --   ---  ------  --   -- -
+	`
+	fmt.Println(banner)
 }
 
 func execInput(input string) error {
