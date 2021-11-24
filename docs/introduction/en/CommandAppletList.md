@@ -7,6 +7,7 @@
 |		cawsay | Print message with cow's ASCII art|
 |   chroot | Run command or interactive shell with special root directory|
 |       cp | Copy file(s) otr Directory(s) |
+| dos2unix | Change CRLF to LF|
 |     echo | Display a line of text|
 |fakemovie | Adds a video playback button to the image|
 |    false | Do nothing. Return unsuccess(1)|
@@ -29,6 +30,7 @@
 |     tail |  Print the last NUMBER(default=10) lines|
 |    touch | Update the access and modification times of each FILE to the current time|
 |     true | Do nothing. Return success(0)|
+|  unix2dos| Change LF to CRLF|
 |    which | Returns the file path which would be executed in the current environment|
 
 If you want to see the list of supported commands on the terminal, use the --list option.

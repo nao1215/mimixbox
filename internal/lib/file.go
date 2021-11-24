@@ -233,3 +233,17 @@ func ReadFileToStrList(path string) ([]string, error) {
 	strList[len(strList)-1] = strings.TrimRight(strList[len(strList)-1], "\n")
 	return strList, nil
 }
+
+func ListToFile(filepath string, lines []string) error {
+	fp, err := os.Create(filepath)
+	if err != nil {
+		return err
+	}
+	defer fp.Close()
+
+	writer := bufio.NewWriter(fp)
+	for _, line := range lines {
+		writer.WriteString(line)
+	}
+	return writer.Flush()
+}

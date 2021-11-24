@@ -23,11 +23,6 @@ import (
 	"sort"
 	"strconv"
 
-	"github.com/nao1215/mimixbox/internal/applets/textutils/head"
-	"github.com/nao1215/mimixbox/internal/applets/textutils/nl"
-	"github.com/nao1215/mimixbox/internal/applets/textutils/tac"
-	"github.com/nao1215/mimixbox/internal/applets/textutils/tail"
-
 	"github.com/nao1215/mimixbox/internal/applets/fileutils/cp"
 	"github.com/nao1215/mimixbox/internal/applets/fileutils/ln"
 	"github.com/nao1215/mimixbox/internal/applets/fileutils/mkdir"
@@ -52,6 +47,12 @@ import (
 	"github.com/nao1215/mimixbox/internal/applets/shellutils/true"
 	"github.com/nao1215/mimixbox/internal/applets/shellutils/which"
 	"github.com/nao1215/mimixbox/internal/applets/textutils/cat"
+	"github.com/nao1215/mimixbox/internal/applets/textutils/dos2unix"
+	"github.com/nao1215/mimixbox/internal/applets/textutils/head"
+	"github.com/nao1215/mimixbox/internal/applets/textutils/nl"
+	"github.com/nao1215/mimixbox/internal/applets/textutils/tac"
+	"github.com/nao1215/mimixbox/internal/applets/textutils/tail"
+	"github.com/nao1215/mimixbox/internal/applets/textutils/unix2dos"
 )
 
 type EntryPoint func() (int, error)
@@ -71,6 +72,7 @@ func init() {
 		"cowsay":    {cowsay.Run, "Print message with cow's ASCII art"},
 		"chroot":    {chroot.Run, "Run command or interactive shell with special root directory"},
 		"cp":        {cp.Run, "Copy file(s) otr Directory(s)"},
+		"dos2unix":  {dos2unix.Run, "Change CRLF to LF"},
 		"echo":      {echo.Run, "Display a line of text"},
 		"fakemovie": {fakemovie.Run, "Adds a video playback button to the image"},
 		"false":     {false.Run, "Do nothing. Return unsuccess(1)"},
@@ -93,6 +95,7 @@ func init() {
 		"tail":      {tail.Run, "Print the last NUMBER(default=10) lines"},
 		"touch":     {touch.Run, "Update the access and modification times of each FILE to the current time"},
 		"true":      {true.Run, "Do nothing. Return success(0)"},
+		"unix2dos":  {unix2dos.Run, "Change LF to CRLF"},
 		"which":     {which.Run, "Returns the file path which would be executed in the current environment"},
 	}
 }
