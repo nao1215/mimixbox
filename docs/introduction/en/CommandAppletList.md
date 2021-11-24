@@ -9,6 +9,7 @@
 |       cp | Copy file(s) otr Directory(s) |
 | dos2unix | Change CRLF to LF|
 |     echo | Display a line of text|
+|   expand | Convert TAB to N space (default:N=8)|
 |fakemovie | Adds a video playback button to the image|
 |    false | Do nothing. Return unsuccess(1)|
 |    ghrdc | GitHub Relase Download Counter|
@@ -30,6 +31,7 @@
 |     tail |  Print the last NUMBER(default=10) lines|
 |    touch | Update the access and modification times of each FILE to the current time|
 |     true | Do nothing. Return success(0)|
+|  unexpand| Convert N space to TAB (default:N=8)|
 |  unix2dos| Change LF to CRLF|
 |    which | Returns the file path which would be executed in the current environment|
 |   whoami | Print login user name|

@@ -200,3 +200,13 @@ func AddLineFeed(lines []string) []string {
 	}
 	return newLines
 }
+
+func Dump(lines []string, withNumber bool) {
+	if withNumber {
+		PrintStrListWithNumberLine(lines, true)
+	} else {
+		for _, line := range lines {
+			fmt.Print(line)
+		}
+	}
+}

@@ -49,10 +49,12 @@ import (
 	"github.com/nao1215/mimixbox/internal/applets/shellutils/whoami"
 	"github.com/nao1215/mimixbox/internal/applets/textutils/cat"
 	"github.com/nao1215/mimixbox/internal/applets/textutils/dos2unix"
+	"github.com/nao1215/mimixbox/internal/applets/textutils/expand"
 	"github.com/nao1215/mimixbox/internal/applets/textutils/head"
 	"github.com/nao1215/mimixbox/internal/applets/textutils/nl"
 	"github.com/nao1215/mimixbox/internal/applets/textutils/tac"
 	"github.com/nao1215/mimixbox/internal/applets/textutils/tail"
+	"github.com/nao1215/mimixbox/internal/applets/textutils/unexpand"
 	"github.com/nao1215/mimixbox/internal/applets/textutils/unix2dos"
 )
 
@@ -75,6 +77,7 @@ func init() {
 		"cp":        {cp.Run, "Copy file(s) otr Directory(s)"},
 		"dos2unix":  {dos2unix.Run, "Change CRLF to LF"},
 		"echo":      {echo.Run, "Display a line of text"},
+		"expand":    {expand.Run, "Convert TAB to N space (default:N=8)"},
 		"fakemovie": {fakemovie.Run, "Adds a video playback button to the image"},
 		"false":     {false.Run, "Do nothing. Return unsuccess(1)"},
 		"ghrdc":     {ghrdc.Run, "GitHub Relase Download Counter"},
@@ -96,6 +99,7 @@ func init() {
 		"tail":      {tail.Run, "Print the last NUMBER(default=10) lines"},
 		"touch":     {touch.Run, "Update the access and modification times of each FILE to the current time"},
 		"true":      {true.Run, "Do nothing. Return success(0)"},
+		"unexpand":  {unexpand.Run, "Convert N space to TAB(default:N=8)"},
 		"unix2dos":  {unix2dos.Run, "Change LF to CRLF"},
 		"which":     {which.Run, "Returns the file path which would be executed in the current environment"},
 		"whoami":    {whoami.Run, "Print login user name"},

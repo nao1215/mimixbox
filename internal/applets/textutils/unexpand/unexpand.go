@@ -1,5 +1,5 @@
 //
-// mimixbox/internal/applets/textutils/cat/cat.go
+// mimixbox/internal/applets/textutils/expand/expand.go
 //
 // Copyright 2021 Naohiro CHIKAMATSU
 //
@@ -14,23 +14,26 @@
 // WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
 // See the License for the specific language governing permissions and
 // limitations under the License.
-package cat
+package unexpand
 
 import (
 	"fmt"
 	"os"
 	"strings"
 
-	mb "github.com/nao1215/mimixbox/internal/lib"
-
 	"github.com/jessevdk/go-flags"
+	mb "github.com/nao1215/mimixbox/internal/lib"
 )
 
-const cmdName string = "cat"
-
-const version = "1.0.5"
+const cmdName string = "unexpand"
+const version = "1.0.0"
 
 var osExit = os.Exit
+
+type options struct {
+	Tab     int  `short:"t" long:"tab" default:"8" description:"Convert N space to TAB(default:N=8)"`
+	Version bool `short:"v" long:"version" description:"Show unexpand command version"`
+}
 
 // Exit code
 const (
@@ -38,38 +41,46 @@ const (
 	ExitFailuer
 )
 
-type options struct {
-	Number  bool `short:"n" long:"number" description:"Print with line number"`
-	Version bool `short:"v" long:"version" description:"Show cat command version"`
-}
-
 func Run() (int, error) {
 	var opts options
-	var args []string
 	var err error
+	var args []string
 
 	if args, err = parseArgs(&opts); err != nil {
-		return ExitFailuer, nil
+		return ExitSuccess, nil
 	}
 
 	if mb.HasPipeData() {
-		mb.Dump(mb.AddLineFeed(strings.Split(args[0], "\n")), opts.Number)
+		mb.Dump(mb.AddLineFeed(strings.Split(args[0], "\n")), false)
 		return ExitSuccess, nil
 	}
 
 	if len(args) == 0 || mb.Contains(args, "-") {
-		mb.Parrot(opts.Number)
+		mb.Parrot(false)
 		return ExitSuccess, nil
 	}
 
-	strLisr, err := mb.Concatenate(args, false)
-	if err != nil {
-		return ExitFailuer, nil
+	return unexpand(args, opts)
+}
+
+func unexpand(args []string, opts options) (int, error) {
+	status := ExitSuccess
+	for _, file := range args {
+		if !mb.IsFile(file) {
+			fmt.Println(file + ": No such file. Skip it")
+			status = ExitFailuer
+			continue
+		}
+		lines, err := mb.ReadFileToStrList(file)
+		if err != nil {
+			fmt.Println(err)
+			status = ExitFailuer
+			continue
+		}
+
+		mb.Dump(mb.ReplaceAll(lines, strings.Repeat(" ", opts.Tab), "\t"), false)
 	}
-
-	mb.Dump(strLisr, opts.Number)
-
-	return ExitSuccess, nil
+	return status, nil
 }
 
 func parseArgs(opts *options) ([]string, error) {
@@ -93,13 +104,17 @@ func parseArgs(opts *options) ([]string, error) {
 		osExit(ExitSuccess)
 	}
 
+	if opts.Tab <= 0 {
+		opts.Tab = 8
+	}
+
 	return args, nil
 }
 
 func initParser(opts *options) *flags.Parser {
 	parser := flags.NewParser(opts, flags.Default)
 	parser.Name = cmdName
-	parser.Usage = "[OPTIONS] FILE_PATH"
+	parser.Usage = "[OPTIONS] FILE_NAME"
 
 	return parser
 }
