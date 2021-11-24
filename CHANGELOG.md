@@ -1,12 +1,15 @@
 # Changelog
 All notable changes to this project will be documented in this file. The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.0.0/), and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
-## [0.20.0] - 2021-11-24
+## [0.20.2] - 2021-11-25
 ### Added
  - dos2unix/unix2dos command.
  - expand/unexpand command.
  - whoami command.
  ### Changed
  - cowsay command to receive data from PIPE.
+ - Since the method to display Version(showVeriosn()) was duplicated, it was converted to a library method.
+ ### Deleted
+ - sh command. It is a command being implemented and is not planned to be POSIX compliant, so it was deleted.
 ## [0.16.1] - 2021-11-23
 ### Added
  - cowsay command. The process of enclosing the message in a frame is incomplete.

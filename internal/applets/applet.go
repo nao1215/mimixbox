@@ -93,7 +93,6 @@ func init() {
 		"rm":        {rm.Run, "Remove file(s) or directory(s)"},
 		"rmdir":     {rmdir.Run, "Remove directory"},
 		"serial":    {serial.Run, "Rename the file to the name with a serial number"},
-		"sh":        {mbsh.Run, "Mimix Box Shell"},
 		"sleep":     {sleep.Run, "Pause for NUMBER seconds(minutes, hours, days)"},
 		"tac":       {tac.Run, "Print the file contents from the end to the beginning"},
 		"tail":      {tail.Run, "Print the last NUMBER(default=10) lines"},
