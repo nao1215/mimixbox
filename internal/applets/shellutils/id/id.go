@@ -62,24 +62,36 @@ func id(opts options) (int, error) {
 		return ExitFailuer, err
 	}
 
-	groups, err := mb.Groups()
+	groups, err := mb.Groups(user.Username)
 	if err != nil {
 		return ExitFailuer, err
 	}
 
 	if opts.Group {
-		fmt.Println(user.Gid)
-		return ExitSuccess, nil
+		return dumpGid(*user, opts.Name)
 	}
 
 	if opts.AllGroup {
-		dumpGroups(groups, opts.Name)
+		mb.DumpGroups(groups, opts.Name)
 		return ExitSuccess, nil
 	}
 
 	err = dumpAllId(*user, groups)
 	if err != nil {
 		return ExitFailuer, err
+	}
+	return ExitSuccess, nil
+}
+
+func dumpGid(u user.User, showName bool) (int, error) {
+	if showName {
+		g, err := user.LookupGroup(u.Username)
+		if err != nil {
+			return ExitFailuer, err
+		}
+		fmt.Println(g.Name)
+	} else {
+		fmt.Println(u.Gid)
 	}
 	return ExitSuccess, nil
 }
@@ -100,21 +112,6 @@ func dumpAllId(u user.User, groups []user.Group) error {
 	}
 	fmt.Println(strings.TrimRight(resultLine, ","))
 	return nil
-}
-
-func dumpGroups(groups []user.Group, onlyName bool) {
-	var resultLine string = ""
-	if onlyName {
-		for _, g := range groups {
-			resultLine = resultLine + g.Name + " "
-		}
-
-	} else {
-		for _, g := range groups {
-			resultLine = resultLine + g.Gid + " "
-		}
-	}
-	fmt.Println(strings.TrimRight(resultLine, " "))
 }
 
 func parseArgs(opts *options) ([]string, error) {

@@ -204,8 +204,8 @@ func Dump(lines []string, withNumber bool) {
 	}
 }
 
-func Groups() ([]user.Group, error) {
-	u, err := user.Current()
+func Groups(uname string) ([]user.Group, error) {
+	u, err := user.Lookup(uname)
 	if err != nil {
 		return nil, err
 	}
@@ -224,4 +224,19 @@ func Groups() ([]user.Group, error) {
 		groupList = append(groupList, *group)
 	}
 	return groupList, nil
+}
+
+func DumpGroups(groups []user.Group, showName bool) {
+	var resultLine string = ""
+	if showName {
+		for _, g := range groups {
+			resultLine = resultLine + g.Name + " "
+		}
+
+	} else {
+		for _, g := range groups {
+			resultLine = resultLine + g.Gid + " "
+		}
+	}
+	fmt.Println(strings.TrimRight(resultLine, " "))
 }

@@ -13,6 +13,7 @@
 |fakemovie | Adds a video playback button to the image|
 |    false | Do nothing. Return unsuccess(1)|
 |    ghrdc | GitHub Relase Download Counter|
+|    groups | GitHub Relase Download Counter|
 |    head  | Print the first NUMBER(default=10) lines |
 |       id | Print User ID and Group ID|
 |  ischroot| Detect if running in a chroot|
