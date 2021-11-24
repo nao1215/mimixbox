@@ -76,7 +76,8 @@ If you would like to send comments such as "find a bug" or "request for addition
 
 - [GitHub Issue](https://github.com/nao1215/mimixbox/issues)
 - [mail@Naohiro CHIKAMATSU](n.chika156@gmail.com)
-- [Twitter@ARC_AED](https://twitter.com/ARC_AED)
+- [Twitter@mimixbox156](https://twitter.com/mimixbox156) ※ MimixBox project information
+- [Twitter@ARC_AED](https://twitter.com/ARC_AED) ※ Author
 
 # LICENSE
 The MimixBox project is licensed under the terms of the MIT license and Apache License 2.0.  
