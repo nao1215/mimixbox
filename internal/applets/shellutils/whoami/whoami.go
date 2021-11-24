@@ -82,8 +82,3 @@ func initParser(opts *options) *flags.Parser {
 
 	return parser
 }
-
-func showVersion() {
-	description := cmdName + " version " + version + " (under Apache License verison 2.0)\n"
-	fmt.Print(description)
-}
