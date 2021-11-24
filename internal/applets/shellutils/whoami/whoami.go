@@ -30,7 +30,7 @@ const version = "1.0.0"
 var osExit = os.Exit
 
 type options struct {
-	Version bool `short:"v" long:"version" description:"Show who command version"`
+	Version bool `short:"v" long:"version" description:"Show whoami command version"`
 }
 
 // Exit code
