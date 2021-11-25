@@ -13,8 +13,9 @@
 |fakemovie | Adds a video playback button to the image|
 |    false | Do nothing. Return unsuccess(1)|
 |    ghrdc | GitHub Relase Download Counter|
-|    groups | GitHub Relase Download Counter|
+|   groups | Print the groups to which USERNAME belongs|
 |    head  | Print the first NUMBER(default=10) lines |
+| hostid   | Print hostid (Host Identity Number, hex)|
 |       id | Print User ID and Group ID|
 |  ischroot| Detect if running in a chroot|
 |       ln | Create hard link or symbolic link|
