@@ -1,5 +1,5 @@
 //
-// mimixbox/internal/applets/shellutils/cowsay/cowsay.go
+// mimixbox/internal/applets/jokeutils/cowsay/cowsay.go
 //
 // Copyright 2021 Naohiro CHIKAMATSU
 //
