@@ -52,7 +52,7 @@ type options struct {
 
 var osExit = os.Exit
 
-const version = "0.24.0"
+const version = "0.24.1"
 
 const (
 	ExitSuccess int = iota // 0
@@ -88,7 +88,7 @@ func main() {
 
 	app := applets.Applets[os.Args[0]]
 	if status, err = app.Ep(); err != nil {
-		fmt.Println(err)
+		fmt.Fprintln(os.Stderr, err)
 		osExit(status)
 	}
 	osExit(status)
