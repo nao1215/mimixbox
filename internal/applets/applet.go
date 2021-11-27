@@ -55,7 +55,11 @@ import (
 	"github.com/nao1215/mimixbox/internal/applets/textutils/dos2unix"
 	"github.com/nao1215/mimixbox/internal/applets/textutils/expand"
 	"github.com/nao1215/mimixbox/internal/applets/textutils/head"
+	"github.com/nao1215/mimixbox/internal/applets/textutils/md5sum"
 	"github.com/nao1215/mimixbox/internal/applets/textutils/nl"
+	"github.com/nao1215/mimixbox/internal/applets/textutils/sha1sum"
+	"github.com/nao1215/mimixbox/internal/applets/textutils/sha256sum"
+	"github.com/nao1215/mimixbox/internal/applets/textutils/sha512sum"
 	"github.com/nao1215/mimixbox/internal/applets/textutils/tac"
 	"github.com/nao1215/mimixbox/internal/applets/textutils/tail"
 	"github.com/nao1215/mimixbox/internal/applets/textutils/unexpand"
@@ -92,6 +96,7 @@ func init() {
 		"ischroot":  {ischroot.Run, "Detect if running in a chroot"},
 		"ln":        {ln.Run, "Create hard or symbolic link"},
 		"mbsh":      {mbsh.Run, "Mimix Box Shell"},
+		"md5sum":    {md5sum.Run, "Calculate or Check md5sum message digest"},
 		"mkdir":     {mkdir.Run, "Make directories"},
 		"mkfifo":    {mkfifo.Run, "Make FIFO (named pipe)"},
 		"mv":        {mv.Run, "Rename SOURCE to DESTINATION, or move SOURCE(s) to DIRECTORY"},
@@ -100,6 +105,9 @@ func init() {
 		"rm":        {rm.Run, "Remove file(s) or directory(s)"},
 		"rmdir":     {rmdir.Run, "Remove directory"},
 		"serial":    {serial.Run, "Rename the file to the name with a serial number"},
+		"sha1sum":   {sha1sum.Run, "alculate or Check sercure hash 1 algorithm"},
+		"sha256sum": {sha256sum.Run, "alculate or Check sercure hash 256 algorithm"},
+		"sha512sum": {sha512sum.Run, "alculate or Check sercure hash 512 algorithm"},
 		"seq":       {seq.Run, "Print a column of numbers"},
 		"sleep":     {sleep.Run, "Pause for NUMBER seconds(minutes, hours, days)"},
 		"tac":       {tac.Run, "Print the file contents from the end to the beginning"},

@@ -20,6 +20,7 @@
 |  ischroot| Detect if running in a chroot|
 |       ln | Create hard link or symbolic link|
 |     mbsh | Mimix Box Shell (In development)|
+|    md5sum| Calculate or Check md5sum message digest|
 |    mkdir | Make directories|
 |    mkfifo | Make FIFO (Named pipe)|
 |       mv | Rename SOURCE to DESTINATION, or move SOURCE(s) to DIRECTORY|
@@ -29,6 +30,9 @@
 |     rmdir   | Remove directory|
 |   seq   | Print the column of numbers|
 |   serial | Rename the file to the name with a serial number|
+|    sha1sum| Calculate or Check sercure hash 1 algorithm|
+|    sha256sum| Calculate or Check sercure hash 256 algorithm|
+|    sha512sum| Calculate or Check sercure hash 512 algorithm|
 |    sleep | Pause for NUMBER seconds(minutes, hours, days)|
 |     tac  | Print the file contents from the end to the beginning|
 |     tail |  Print the last NUMBER(default=10) lines|
