@@ -27,7 +27,7 @@ import (
 )
 
 const cmdName string = "dos2unix"
-const version = "1.0.0"
+const version = "1.0.1"
 
 var osExit = os.Exit
 
@@ -68,21 +68,21 @@ func dos2unix(files []string) (int, error) {
 	status := ExitSuccess
 	for _, file := range files {
 		if !mb.IsFile(file) {
-			fmt.Println(file + ": No such file. Skip it")
+			fmt.Fprintln(os.Stderr, file+": No such file. Skip it")
 			status = ExitNoSuchFile
 			continue
 		}
 
 		lines, err := mb.ReadFileToStrList(file)
 		if err != nil {
-			fmt.Println(file + ": Can't read file and convert CRLF to LF")
+			fmt.Fprintln(os.Stderr, file+": Can't read file and convert CRLF to LF")
 			status = ExitFailuer
 			continue
 		}
 		lines = toLF(lines)
 
 		if err := mb.ListToFile(file, lines); err != nil {
-			fmt.Println(err)
+			fmt.Fprintln(os.Stderr, err)
 			status = ExitFailuer
 			continue
 		}

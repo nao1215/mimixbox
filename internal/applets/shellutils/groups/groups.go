@@ -26,7 +26,7 @@ import (
 )
 
 const cmdName string = "groups"
-const version = "1.0.0"
+const version = "1.0.1"
 
 var osExit = os.Exit
 
@@ -61,7 +61,7 @@ func groups(args []string) (int, error) {
 	for _, uname := range args {
 		groups, err := mb.Groups(uname)
 		if err != nil {
-			fmt.Println("can't get " + uname + " groups information")
+			fmt.Fprintln(os.Stderr, "can't get "+uname+" groups information")
 			status = ExitFailuer
 			continue
 		}

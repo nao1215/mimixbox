@@ -52,7 +52,7 @@ type options struct {
 
 var osExit = os.Exit
 
-const version = "0.25.0"
+const version = "0.25.1"
 
 const (
 	ExitSuccess int = iota // 0
@@ -80,8 +80,8 @@ func main() {
 
 	// If the specified command(applet) is not built in mimixbox.
 	if !hasAppletName() {
-		fmt.Printf("%s is not provided by mimixbox.\n\n", os.Args[0])
-		fmt.Println("[Commands supported by MimixBox]")
+		fmt.Fprintf(os.Stderr, "%s is not provided by mimixbox.\n\n", os.Args[0])
+		fmt.Fprintln(os.Stderr, "[Commands supported by MimixBox]")
 		applets.ShowAppletsBySpaceSeparated()
 		osExit(ExitFailuer)
 	}
@@ -207,7 +207,7 @@ func __install(mimixboxPath string, installPath string, full bool) error {
 
 	for applet := range applets.Applets {
 		if !full && mb.ExistCmd(applet) {
-			fmt.Printf("Same name command(%s) already exists. Not create symbolic link.\n", applet)
+			fmt.Fprintf(os.Stderr, "Same name command(%s) already exists. Not create symbolic link.\n", applet)
 			continue // if same name command already exists, not install for safety.
 		}
 
@@ -220,7 +220,7 @@ func __install(mimixboxPath string, installPath string, full bool) error {
 		if mb.IsSymlink(newPath) {
 			err := os.Remove(newPath) // Remove  even BusyBox's symbolic link
 			if err != nil {
-				fmt.Println(err)
+				fmt.Fprintln(os.Stderr, err)
 				continue
 			}
 			fmt.Printf("Delete              : %s\n", newPath)
@@ -228,7 +228,7 @@ func __install(mimixboxPath string, installPath string, full bool) error {
 
 		err = os.Symlink(mimixboxAbsPath, newPath)
 		if err != nil {
-			fmt.Println(err)
+			fmt.Fprintln(os.Stderr, err)
 			continue
 		}
 
