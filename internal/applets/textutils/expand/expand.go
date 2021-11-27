@@ -26,7 +26,7 @@ import (
 )
 
 const cmdName string = "expand"
-const version = "1.0.1"
+const version = "1.0.2"
 
 var osExit = os.Exit
 
@@ -66,12 +66,13 @@ func Run() (int, error) {
 func expand(args []string, opts options) (int, error) {
 	status := ExitSuccess
 	for _, file := range args {
-		if !mb.IsFile(file) {
-			fmt.Fprintln(os.Stderr, file+": No such file. Skip it")
+		target := os.ExpandEnv(file)
+		if !mb.IsFile(target) {
+			fmt.Fprintln(os.Stderr, target+": No such file. Skip it")
 			status = ExitFailuer
 			continue
 		}
-		lines, err := mb.ReadFileToStrList(file)
+		lines, err := mb.ReadFileToStrList(target)
 		if err != nil {
 			fmt.Fprintln(os.Stderr, err)
 			status = ExitFailuer

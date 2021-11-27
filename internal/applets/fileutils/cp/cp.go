@@ -29,7 +29,7 @@ import (
 
 const cmdName string = "cp"
 
-const version = "1.0.0"
+const version = "1.0.1"
 
 var osExit = os.Exit
 
@@ -64,23 +64,24 @@ func Run() (int, error) {
 }
 
 func cp(files []string, opts options) error {
-	dest := files[len(files)-1]
+	dest := os.ExpandEnv(files[len(files)-1])
 
 	for _, src := range files[:len(files)-1] {
-		if !mb.Exists(src) {
-			return errors.New(src + " does not exist")
+		s := os.ExpandEnv(src)
+		if !mb.Exists(s) {
+			return errors.New(s + " does not exist")
 		}
 
-		if mb.IsSamePath(src, dest) {
-			return errors.New(src + " and " + dest + " is same.")
+		if mb.IsSamePath(s, dest) {
+			return errors.New(s + " and " + dest + " is same.")
 		}
 
-		if mb.IsFile(src) {
-			if err := cpFile(src, dest, opts); err != nil {
+		if mb.IsFile(s) {
+			if err := cpFile(s, dest, opts); err != nil {
 				return err
 			}
 		} else {
-			if err := cpDir(src, dest, opts); err != nil {
+			if err := cpDir(s, dest, opts); err != nil {
 				return err
 			}
 		}

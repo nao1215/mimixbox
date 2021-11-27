@@ -26,7 +26,7 @@ import (
 )
 
 const cmdName string = "chroot"
-const version = "1.0.1"
+const version = "1.0.2"
 
 var osExit = os.Exit
 
@@ -54,7 +54,7 @@ func Run() (int, error) {
 
 	parseArgs(&opts)
 
-	err = syscall.Chroot(os.Args[1])
+	err = syscall.Chroot(os.ExpandEnv(os.Args[1]))
 	if err != nil {
 		return ExitFailuer, err
 	}

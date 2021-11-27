@@ -28,7 +28,7 @@ import (
 
 const cmdName string = "mkfifo"
 
-const version = "1.0.0"
+const version = "1.0.1"
 
 var osExit = os.Exit
 
@@ -55,10 +55,11 @@ func Run() (int, error) {
 	// If an error occurs even once, the process is interrupted.
 	// It behaves differently from Coreutils.
 	for _, path := range args {
-		if mb.Exists(path) {
-			return ExitFailuer, errors.New("Can't make " + path + ": already exist")
+		p := os.ExpandEnv(path)
+		if mb.Exists(p) {
+			return ExitFailuer, errors.New("Can't make " + p + ": already exist")
 		}
-		if err := syscall.Mkfifo(path, 0666); err != nil {
+		if err := syscall.Mkfifo(p, 0666); err != nil {
 			return ExitFailuer, err
 		}
 	}

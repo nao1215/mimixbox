@@ -27,7 +27,7 @@ import (
 
 const cmdName string = "ln"
 
-const version = "1.0.0"
+const version = "1.0.1"
 
 var osExit = os.Exit
 
@@ -65,7 +65,7 @@ func ln(args []string, opts options) error {
 		return errors.New("hard links to directories are not allowed")
 	}
 
-	src := args[0]
+	src := os.ExpandEnv(args[0])
 	dest := decideDestination(args)
 	if err := deleteFileIfNeeded(dest, opts.Force); err != nil {
 		return err
@@ -104,11 +104,11 @@ func decideDestination(args []string) string {
 	if len(args) == 1 {
 		return filepath.Base(args[0])
 	}
-	return args[1]
+	return os.ExpandEnv(args[1])
 }
 
 func isHardLinkForDir(args []string, symbolic bool) bool {
-	return !symbolic && mb.IsDir(args[0])
+	return !symbolic && mb.IsDir(os.ExpandEnv(args[0]))
 }
 
 func parseArgs(opts *options) ([]string, error) {

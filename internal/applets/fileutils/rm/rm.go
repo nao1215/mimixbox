@@ -27,7 +27,7 @@ import (
 
 const cmdName string = "rm"
 
-const version = "1.0.1"
+const version = "1.0.2"
 
 var osExit = os.Exit
 
@@ -67,17 +67,18 @@ func Run() (int, error) {
 }
 
 func rm(path string, opts options) (int, error) {
-	if status, err := validBeforeRemove(path, opts); status != ExitSuccess {
+	p := os.ExpandEnv(path)
+	if status, err := validBeforeRemove(p, opts); status != ExitSuccess {
 		return status, err
 	}
 
-	if mb.IsFile(path) {
-		if err := mb.RemoveFile(path, opts.Interactive); err != nil {
+	if mb.IsFile(p) {
+		if err := mb.RemoveFile(p, opts.Interactive); err != nil {
 			return ExitFailuer, err
 		}
 	}
 
-	if err := mb.RemoveDir(path, opts.Interactive); err != nil {
+	if err := mb.RemoveDir(p, opts.Interactive); err != nil {
 		return ExitFailuer, err
 	}
 

@@ -27,7 +27,7 @@ import (
 
 const cmdName string = "cat"
 
-const version = "1.0.5"
+const version = "1.0.6"
 
 var osExit = os.Exit
 

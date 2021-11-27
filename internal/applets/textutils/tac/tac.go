@@ -29,7 +29,7 @@ import (
 
 const cmdName string = "tac"
 
-const version = "1.0.4"
+const version = "1.0.5"
 
 var osExit = os.Exit
 
@@ -63,7 +63,8 @@ func Run() (int, error) {
 	}
 
 	for _, file := range args {
-		err := tac(file)
+		target := os.ExpandEnv(file)
+		err := tac(target)
 		if err != nil {
 			return ExitFailuer, err
 		}

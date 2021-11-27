@@ -52,7 +52,7 @@ type options struct {
 
 var osExit = os.Exit
 
-const version = "0.25.2"
+const version = "0.25.3"
 
 const (
 	ExitSuccess int = iota // 0
@@ -200,7 +200,8 @@ func fullInstall(mimixboxPath string, installPath string) error {
 }
 
 func __install(mimixboxPath string, installPath string, full bool) error {
-	mimixboxAbsPath, err := getMimixBoxAbsPath(mimixboxPath)
+	targetPath := os.ExpandEnv(mimixboxPath)
+	mimixboxAbsPath, err := getMimixBoxAbsPath(targetPath)
 	if err != nil {
 		return err
 	}
@@ -216,7 +217,7 @@ func __install(mimixboxPath string, installPath string, full bool) error {
 		// do not delete it. The former is likely to have been
 		// created by mimixbox, while the latter may be binaries
 		// provided by other packages.
-		newPath := filepath.Join(installPath, applet)
+		newPath := filepath.Join(targetPath, applet)
 		if mb.IsSymlink(newPath) {
 			err := os.Remove(newPath) // Remove  even BusyBox's symbolic link
 			if err != nil {
@@ -253,7 +254,7 @@ func getMimixBoxAbsPath(mimixboxPath string) (string, error) {
 
 func remove(installPath string) error {
 	for name := range applets.Applets {
-		symbolicPath := filepath.Join(installPath, name)
+		symbolicPath := filepath.Join(os.ExpandEnv(installPath), name)
 
 		if !mb.IsSymlink(symbolicPath) {
 			continue

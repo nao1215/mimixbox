@@ -25,7 +25,7 @@ import (
 
 const cmdName string = "mkdir"
 
-const version = "1.0.1"
+const version = "1.0.2"
 
 var osExit = os.Exit
 
@@ -48,7 +48,7 @@ func Run() (int, error) {
 	if args, err = parseArgs(&opts); err != nil {
 		return ExitFailuer, nil
 	}
-	path := args[0]
+	path := os.ExpandEnv(args[0])
 
 	if opts.Parent {
 		err = os.MkdirAll(path, 0755)

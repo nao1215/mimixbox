@@ -123,7 +123,7 @@ func Concatenate(path []string, lfAtTheJoint bool) ([]string, error) {
 	var index int
 
 	for _, file := range path {
-		list, err := ReadFileToStrList(file)
+		list, err := ReadFileToStrList(os.ExpandEnv(file))
 		if err != nil {
 			return nil, err
 		}

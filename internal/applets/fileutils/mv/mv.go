@@ -28,7 +28,7 @@ import (
 
 const cmdName string = "mv"
 
-const version = "1.0.0"
+const version = "1.0.1"
 
 var osExit = os.Exit
 
@@ -193,15 +193,16 @@ func interactiveMove(src string, dest string, opts options) error {
 }
 
 func decideDestAbsPath(src string, dest string, opts options) string {
-	destPath := dest
-	if mb.IsDir(src) && mb.IsDir(destPath) {
-		if (filepath.Base(src) == filepath.Base(destPath)) && opts.Backup {
+	destPath := os.ExpandEnv(dest)
+	srcPath := os.ExpandEnv(src)
+	if mb.IsDir(srcPath) && mb.IsDir(destPath) {
+		if (filepath.Base(srcPath) == filepath.Base(destPath)) && opts.Backup {
 			destPath = decideBackupFileName(destPath)
 		}
-	} else if mb.IsFile(src) && mb.IsFile(dest) && opts.Backup {
+	} else if mb.IsFile(srcPath) && mb.IsFile(dest) && opts.Backup {
 		destPath = decideBackupFileName(destPath)
-	} else if mb.IsFile(src) && mb.IsDir(dest) {
-		destPath = filepath.Join(dest, filepath.Base(src))
+	} else if mb.IsFile(srcPath) && mb.IsDir(dest) {
+		destPath = filepath.Join(dest, filepath.Base(srcPath))
 		if mb.IsFile(destPath) && opts.Backup {
 			destPath = decideBackupFileName(destPath)
 		}
@@ -228,7 +229,7 @@ func isSameFilePath(src string, dest string) bool {
 func getSrcAbsPaths(args []string) ([]string, error) {
 	var srcPaths []string
 	for _, arg := range args {
-		arg, err := filepath.Abs(arg)
+		arg, err := filepath.Abs(os.ExpandEnv(arg))
 		if err != nil {
 			return nil, err
 		}
@@ -240,7 +241,7 @@ func getSrcAbsPaths(args []string) ([]string, error) {
 
 // args don't have program name(= mv).
 func getDestAbsPath(args []string) (string, error) {
-	destPath, err := filepath.Abs(args[len(args)-1])
+	destPath, err := filepath.Abs(os.ExpandEnv(args[len(args)-1]))
 	if err != nil {
 		return "", err
 	}

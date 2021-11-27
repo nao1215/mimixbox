@@ -27,7 +27,7 @@ import (
 
 const cmdName string = "touch"
 
-const version = "1.0.0"
+const version = "1.0.1"
 
 var osExit = os.Exit
 
@@ -63,15 +63,16 @@ func Run() (int, error) {
 // ctime = change time
 // mtime = modify time
 func touch(file string, opts options) error {
-	if !mb.Exists(file) && !opts.NoCreate {
-		file, err := os.Create(file)
+	path := os.ExpandEnv(file)
+	if !mb.Exists(path) && !opts.NoCreate {
+		f, err := os.Create(path)
 		if err != nil {
 			return err
 		}
-		defer file.Close()
+		defer f.Close()
 	} else {
 		currentTime := time.Now().Local()
-		err := os.Chtimes(file, currentTime, currentTime)
+		err := os.Chtimes(path, currentTime, currentTime)
 		if err != nil {
 			return err
 		}

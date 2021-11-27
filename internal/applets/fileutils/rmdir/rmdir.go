@@ -29,7 +29,7 @@ import (
 
 const cmdName string = "rmdir"
 
-const version = "1.0.0"
+const version = "1.0.1"
 
 var osExit = os.Exit
 
@@ -66,15 +66,16 @@ func Run() (int, error) {
 }
 
 func rmdir(path string, opts options) (int, error) {
-	if err := validBeforeRemove(path); err != nil {
+	p := os.ExpandEnv(path)
+	if err := validBeforeRemove(p); err != nil {
 		return ExitFailuer, err
 	}
 
 	var target string
 	if opts.Parents {
-		target = ancestorDir(path)
+		target = ancestorDir(p)
 	} else {
-		target = path
+		target = p
 	}
 
 	_, files, err := mb.Walk(target)

@@ -81,7 +81,7 @@ const cmdName string = "fakemovie"
 
 var osExit = os.Exit
 
-const version = "1.0.3"
+const version = "1.0.4"
 
 // Exit code
 const (
@@ -99,8 +99,8 @@ type options struct {
 func Run() (int, error) {
 	var opts options
 	var args = parseArgs(&opts)
-	var inputFileName string = args[0]
-	var outputFileName string = opts.Output
+	var inputFileName string = os.ExpandEnv(args[0])
+	var outputFileName string = os.ExpandEnv(opts.Output)
 	var radius int = opts.Radius
 
 	if !isValidExt(inputFileName) {

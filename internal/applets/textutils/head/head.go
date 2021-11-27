@@ -27,7 +27,7 @@ import (
 
 const cmdName string = "head"
 
-const version = "1.0.2"
+const version = "1.0.3"
 
 var osExit = os.Exit
 
@@ -68,15 +68,16 @@ func head(args []string, opts options) error {
 	for _, v := range args {
 		var output []string
 		var err error
+		target := os.ExpandEnv(v)
 		if len(args) >= 2 {
-			printNameBanner(v)
+			printNameBanner(target)
 		}
-		if !mb.Exists(v) {
+		if !mb.Exists(target) {
 			output = strings.Split(args[0], "\n")
-		} else if mb.IsDir(v) {
-			output = append(output, v+" is directory")
-		} else if mb.IsFile(v) {
-			output, err = mb.ReadFileToStrList(v)
+		} else if mb.IsDir(target) {
+			output = append(output, target+" is directory")
+		} else if mb.IsFile(target) {
+			output, err = mb.ReadFileToStrList(target)
 			if err != nil {
 				return err
 			}
