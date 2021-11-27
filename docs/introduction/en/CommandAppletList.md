@@ -27,6 +27,7 @@
 |     path | Manipulate filename path|
 |     rm   | Remove file(s) or directory(s)|
 |     rmdir   | Remove directory|
+|   seq   | Print the column of numbers|
 |   serial | Rename the file to the name with a serial number|
 |    sleep | Pause for NUMBER seconds(minutes, hours, days)|
 |     tac  | Print the file contents from the end to the beginning|
