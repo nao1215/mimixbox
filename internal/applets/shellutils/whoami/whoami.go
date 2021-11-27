@@ -55,7 +55,7 @@ func whoami() (int, error) {
 	if err != nil {
 		return ExitFailuer, err
 	}
-	fmt.Println(user.Username)
+	fmt.Fprintln(os.Stdout, user.Username)
 	return ExitSuccess, nil
 }
 

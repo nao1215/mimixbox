@@ -26,7 +26,7 @@ import (
 )
 
 const cmdName string = "seq"
-const version = "1.0.0"
+const version = "1.0.1"
 
 var osExit = os.Exit
 
@@ -60,7 +60,7 @@ func seq(args []string) (int, error) {
 	}
 
 	for i := si.first.num; i <= si.last.num; i = increment(i, si.increment) {
-		fmt.Println(i)
+		fmt.Fprintln(os.Stdout, i)
 	}
 	return ExitSuccess, nil
 }
@@ -137,14 +137,14 @@ func parseArgs(args []string) []string {
 }
 
 func showHelp() {
-	fmt.Println("Usage:")
-	fmt.Println("  seq [OPTIONS] LAST                  or")
-	fmt.Println("  seq [OPTIONS] FIRST LAST            or")
-	fmt.Println("  seq [OPTIONS] FIRST INCREMENT LAS")
-	fmt.Println("")
-	fmt.Println("Application Options:")
-	fmt.Println("  -v, --version       Show seq command version")
-	fmt.Println("")
-	fmt.Println("Help Options:")
-	fmt.Println("  -h, --help          Show this help message")
+	fmt.Fprintln(os.Stdout, "Usage:")
+	fmt.Fprintln(os.Stdout, "  seq [OPTIONS] LAST                  or")
+	fmt.Fprintln(os.Stdout, "  seq [OPTIONS] FIRST LAST            or")
+	fmt.Fprintln(os.Stdout, "  seq [OPTIONS] FIRST INCREMENT LAS")
+	fmt.Fprintln(os.Stdout, "")
+	fmt.Fprintln(os.Stdout, "Application Options:")
+	fmt.Fprintln(os.Stdout, "  -v, --version       Show seq command version")
+	fmt.Fprintln(os.Stdout, "")
+	fmt.Fprintln(os.Stdout, "Help Options:")
+	fmt.Fprintln(os.Stdout, "  -h, --help          Show this help message")
 }

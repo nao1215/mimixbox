@@ -57,9 +57,9 @@ func CompareChecksum(h hash.Hash, paths []string) error {
 				return err
 			}
 			if s == data[0] {
-				fmt.Printf("%s: OK\n", data[1])
+				fmt.Fprintf(os.Stdout, "%s: OK\n", data[1])
 			} else {
-				fmt.Printf("%s: Fail\n", data[1])
+				fmt.Fprintf(os.Stdout, "%s: Fail\n", data[1])
 			}
 			h.Reset()
 		}
@@ -72,7 +72,7 @@ func ChecksumOutput(hash hash.Hash, r io.Reader, path string) error {
 	if err != nil {
 		return err
 	}
-	fmt.Printf("%s  %s\n", s, path)
+	fmt.Fprintf(os.Stdout, "%s  %s\n", s, path)
 	return nil
 }
 

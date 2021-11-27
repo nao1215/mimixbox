@@ -50,7 +50,7 @@ type options struct {
 func Run() (int, error) {
 	args, opts := parseArgs()
 
-	fmt.Printf("Dummy(Not implement shell option): %s:%v\n", args, opts.Version)
+	fmt.Fprintf(os.Stdout, "Dummy(Not implement shell option): %s:%v\n", args, opts.Version)
 
 	reader := bufio.NewReader(os.Stdin)
 	for {

@@ -49,14 +49,14 @@ func IsRootDir(path string) bool {
 func Question(ask string) bool {
 	var response string
 
-	fmt.Printf(ask + " [Y/n] ")
+	fmt.Fprintf(os.Stdout, ask+" [Y/n] ")
 	_, err := fmt.Scanln(&response)
 	if err != nil {
 		// If user input only enter.
 		if strings.Contains(err.Error(), "expected newline") {
 			return Question(ask)
 		}
-		fmt.Print(err.Error())
+		fmt.Fprint(os.Stderr, err.Error())
 		return false
 	}
 
@@ -84,7 +84,7 @@ func Parrot(withNl bool) {
 		if withNl {
 			PrintStrWithNumberLine(nl, response)
 		} else {
-			fmt.Println(response)
+			fmt.Fprintln(os.Stdout, response)
 		}
 	}
 }
@@ -152,7 +152,7 @@ func PrintStrListWithNumberLine(strList []string, countEmpryLine bool) {
 	var nl int = 1
 	for _, s := range strList {
 		if s == "\n" && !countEmpryLine {
-			fmt.Print(s)
+			fmt.Fprint(os.Stdout, s)
 			continue
 		}
 		PrintStrWithNumberLine(nl, s)
@@ -161,7 +161,7 @@ func PrintStrListWithNumberLine(strList []string, countEmpryLine bool) {
 }
 
 func PrintStrWithNumberLine(nl int, str string) {
-	fmt.Printf("%6d  %s", nl, str)
+	fmt.Fprintf(os.Stdout, "%6d  %s", nl, str)
 }
 
 func FromPIPE() (string, error) {
@@ -199,7 +199,7 @@ func Dump(lines []string, withNumber bool) {
 		PrintStrListWithNumberLine(lines, true)
 	} else {
 		for _, line := range lines {
-			fmt.Print(line)
+			fmt.Fprint(os.Stdout, line)
 		}
 	}
 }
@@ -238,5 +238,5 @@ func DumpGroups(groups []user.Group, showName bool) {
 			resultLine = resultLine + g.Gid + " "
 		}
 	}
-	fmt.Println(strings.TrimRight(resultLine, " "))
+	fmt.Fprintln(os.Stdout, strings.TrimRight(resultLine, " "))
 }

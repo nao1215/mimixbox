@@ -29,7 +29,7 @@ import (
 
 const cmdName string = "basename"
 
-const version = "1.0.0"
+const version = "1.0.1"
 
 var osExit = os.Exit
 
@@ -68,9 +68,9 @@ func Run() (int, error) {
 		}
 
 		if opts.Zero {
-			fmt.Printf("%s", basename)
+			fmt.Fprintf(os.Stdout, "%s", basename)
 		} else {
-			fmt.Println(basename)
+			fmt.Fprintln(os.Stdout, basename)
 		}
 	}
 	return ExitSuccess, nil

@@ -32,7 +32,7 @@ import (
 
 const cmdName string = "base64"
 
-const version = "1.0.0"
+const version = "1.0.1"
 
 var osExit = os.Exit
 
@@ -68,10 +68,10 @@ func Run() (int, error) {
 		if err != nil {
 			return ExitFailuer, err
 		}
-		fmt.Println(mb.WrapString(string(resultByte), opts.Wrap))
+		fmt.Fprintln(os.Stdout, mb.WrapString(string(resultByte), opts.Wrap))
 	} else {
 		resultStr = base64.StdEncoding.EncodeToString(input)
-		fmt.Println(mb.WrapString(resultStr, opts.Wrap))
+		fmt.Fprintln(os.Stdout, mb.WrapString(resultStr, opts.Wrap))
 	}
 	return ExitSuccess, nil
 }

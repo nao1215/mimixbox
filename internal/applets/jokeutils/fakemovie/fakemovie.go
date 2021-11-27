@@ -81,7 +81,7 @@ const cmdName string = "fakemovie"
 
 var osExit = os.Exit
 
-const version = "1.0.2"
+const version = "1.0.3"
 
 // Exit code
 const (
@@ -283,6 +283,6 @@ func isValidArgNr(args []string) bool {
 }
 
 func showHelp(p *flags.Parser) {
-	fmt.Printf("fakemovie adds fake-movie button to the image.\n\n")
+	fmt.Fprintf(os.Stdout, "fakemovie adds fake-movie button to the image.\n\n")
 	p.WriteHelp(os.Stdout)
 }

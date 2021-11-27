@@ -26,7 +26,7 @@ import (
 
 const cmdName string = "cowsay"
 
-const version = "0.9.1"
+const version = "0.9.2"
 
 var osExit = os.Exit
 
@@ -63,10 +63,10 @@ func Run() (int, error) {
 }
 
 func cowsay(msg string) {
-	fmt.Println("------------------------------------------------------------")
-	fmt.Printf("%s\n", mb.WrapString(msg, 60))
-	fmt.Println("------------------------------------------------------------")
-	fmt.Println(cow)
+	fmt.Fprintln(os.Stdout, "------------------------------------------------------------")
+	fmt.Fprintf(os.Stdout, "%s\n", mb.WrapString(msg, 60))
+	fmt.Fprintln(os.Stdout, "------------------------------------------------------------")
+	fmt.Fprintln(os.Stdout, cow)
 }
 
 func userInput() string {
@@ -105,12 +105,12 @@ func parseArgs(args []string) ([]string, error) {
 }
 
 func showHelp() {
-	fmt.Println("Usage:")
-	fmt.Println("  cowsay [OPTIONS] message")
-	fmt.Println("")
-	fmt.Println("Application Options:")
-	fmt.Println("  -v, --version       Show cowsay command version")
-	fmt.Println("")
-	fmt.Println("Help Options:")
-	fmt.Println("  -h, --help          Show this help message")
+	fmt.Fprintln(os.Stdout, "Usage:")
+	fmt.Fprintln(os.Stdout, "  cowsay [OPTIONS] message")
+	fmt.Fprintln(os.Stdout, "")
+	fmt.Fprintln(os.Stdout, "Application Options:")
+	fmt.Fprintln(os.Stdout, "  -v, --version       Show cowsay command version")
+	fmt.Fprintln(os.Stdout, "")
+	fmt.Fprintln(os.Stdout, "Help Options:")
+	fmt.Fprintln(os.Stdout, "  -h, --help          Show this help message")
 }

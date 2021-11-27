@@ -28,7 +28,7 @@ import (
 )
 
 const cmdName string = "sleep"
-const version = "1.0.0"
+const version = "1.0.1"
 
 var osExit = os.Exit
 
@@ -136,13 +136,13 @@ func isValidArgNr(args []string) bool {
 }
 
 func showHelp() {
-	fmt.Println("Usage:")
-	fmt.Println("  sleep [OPTIONS] NUMBER[SUFFIX]")
-	fmt.Println("  SUFFIX is s(seconds, default), m(minutes), h(hours), d(days)")
-	fmt.Println("")
-	fmt.Println("Application Options:")
-	fmt.Println("  -v, --version       Show sleep command version")
-	fmt.Println("")
-	fmt.Println("Help Options:")
-	fmt.Println("  -h, --help          Show this help message")
+	fmt.Fprintln(os.Stdout, "Usage:")
+	fmt.Fprintln(os.Stdout, "  sleep [OPTIONS] NUMBER[SUFFIX]")
+	fmt.Fprintln(os.Stdout, "  SUFFIX is s(seconds, default), m(minutes), h(hours), d(days)")
+	fmt.Fprintln(os.Stdout, "")
+	fmt.Fprintln(os.Stdout, "Application Options:")
+	fmt.Fprintln(os.Stdout, "  -v, --version       Show sleep command version")
+	fmt.Fprintln(os.Stdout, "")
+	fmt.Fprintln(os.Stdout, "Help Options:")
+	fmt.Fprintln(os.Stdout, "  -h, --help          Show this help message")
 }

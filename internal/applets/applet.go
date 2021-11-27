@@ -129,7 +129,7 @@ func HasApplet(target string) bool {
 func ListApplets() {
 	format := "%" + strconv.Itoa(longestAppletLength()) + "s - %s\n"
 	for _, key := range sortApplet() {
-		fmt.Printf(format, key, Applets[key].Desc)
+		fmt.Fprintf(os.Stdout, format, key, Applets[key].Desc)
 	}
 }
 

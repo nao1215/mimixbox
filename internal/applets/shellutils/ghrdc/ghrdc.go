@@ -33,7 +33,7 @@ const cmdName string = "ghrdc"
 
 var osExit = os.Exit
 
-const version = "1.0.1"
+const version = "1.0.2"
 
 // Exit code
 const (
@@ -150,10 +150,10 @@ func Run() (int, error) {
 		totalBinCnt += binCnt
 
 		if !opts.Total {
-			fmt.Printf("[Name(Version)]             :%s\n", d.Name)
-			fmt.Printf("[Release Date]              :%s\n", d.PublishedAt)
-			fmt.Printf("[Binary Download Count]     :%d\n", binCnt)
-			fmt.Printf("[Source Code Download Count]:%d\n", srcCnt)
+			fmt.Fprintf(os.Stdout, "[Name(Version)]             :%s\n", d.Name)
+			fmt.Fprintf(os.Stdout, "[Release Date]              :%s\n", d.PublishedAt)
+			fmt.Fprintf(os.Stdout, "[Binary Download Count]     :%d\n", binCnt)
+			fmt.Fprintf(os.Stdout, "[Source Code Download Count]:%d\n", srcCnt)
 		}
 		// In the default case, the latest result is displayed.
 		if !opts.All && !opts.Total {
@@ -162,15 +162,15 @@ func Run() (int, error) {
 
 		// Adjust line feed between results. If last result, not add line feed.
 		if (i+1) != len(data) && !opts.Total {
-			fmt.Println("")
+			fmt.Fprintln(os.Stdout, "")
 		}
 	}
 
 	if opts.Total {
-		fmt.Printf("[Name(Version)]                    :All release\n")
-		fmt.Printf("[Release Date]                     :-\n")
-		fmt.Printf("[Binary Download Count(total)]     :%d\n", totalBinCnt)
-		fmt.Printf("[Source Code Download Count(total)]:%d\n", totalSrcCnt)
+		fmt.Fprintf(os.Stdout, "[Name(Version)]                    :All release\n")
+		fmt.Fprintf(os.Stdout, "[Release Date]                     :-\n")
+		fmt.Fprintf(os.Stdout, "[Binary Download Count(total)]     :%d\n", totalBinCnt)
+		fmt.Fprintf(os.Stdout, "[Source Code Download Count(total)]:%d\n", totalSrcCnt)
 	}
 
 	return ExitSuccess, nil
@@ -182,20 +182,20 @@ func fetchGitHubReleaseData(repositoryName string) ([]GitHubReleaseData, error) 
 
 	resp, err := http.Get(repository)
 	if err != nil {
-		fmt.Println("Can't get response from GitHub.")
+		fmt.Fprintln(os.Stderr, "Can't get response from GitHub.")
 		return nil, err
 	}
 
 	defer resp.Body.Close()
 	body, err := ioutil.ReadAll(resp.Body)
 	if err != nil {
-		fmt.Println("Can't read response from GitHub.")
+		fmt.Fprintln(os.Stderr, "Can't read response from GitHub.")
 		return nil, err
 	}
 
 	var data []GitHubReleaseData
 	if err := json.Unmarshal(body, &data); err != nil {
-		fmt.Println("Can't convert json to structure data. Is the repository name correct?")
+		fmt.Fprintln(os.Stderr, "Can't convert json to structure data. Is the repository name correct?")
 		return nil, err
 	}
 	return data, nil
@@ -261,6 +261,6 @@ func isValidArgNr(args []string) bool {
 }
 
 func showHelp(p *flags.Parser) {
-	fmt.Printf("ghrdc command shows the number of release file downloads in the repository using GitHub API.\n\n")
+	fmt.Fprintf(os.Stdout, "ghrdc command shows the number of release file downloads in the repository using GitHub API.\n\n")
 	p.WriteHelp(os.Stdout)
 }

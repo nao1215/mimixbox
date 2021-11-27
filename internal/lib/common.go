@@ -16,9 +16,12 @@
 // limitations under the License.
 package mb
 
-import "fmt"
+import (
+	"fmt"
+	"os"
+)
 
 func ShowVersion(cmdName string, version string) {
 	description := cmdName + " version " + version + " (under Apache License verison 2.0)\n"
-	fmt.Print(description)
+	fmt.Fprintln(os.Stdout, description)
 }

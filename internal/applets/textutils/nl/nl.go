@@ -28,7 +28,7 @@ import (
 
 const cmdName string = "nl"
 
-const version = "1.0.0"
+const version = "1.0.1"
 
 var osExit = os.Exit
 
@@ -67,7 +67,7 @@ func Run() (int, error) {
 				mb.PrintStrWithNumberLine(nr, input+"\n")
 				nr++
 			} else {
-				fmt.Println("")
+				fmt.Fprintln(os.Stdout, "")
 			}
 		}
 		return ExitSuccess, nil

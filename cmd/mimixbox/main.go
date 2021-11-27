@@ -52,7 +52,7 @@ type options struct {
 
 var osExit = os.Exit
 
-const version = "0.25.1"
+const version = "0.25.2"
 
 const (
 	ExitSuccess int = iota // 0
@@ -134,7 +134,7 @@ func handleMimixBoxOptionsIfNeeded(parser *flags.Parser, opts *options) {
 
 	if len(args) == 1 && opts.Install {
 		if err = minimumInstall(mimixBoxPath, args[0]); err != nil {
-			fmt.Println(err)
+			fmt.Fprintln(os.Stderr, err)
 			osExit(ExitFailuer)
 		}
 		osExit(ExitSuccess)
@@ -142,7 +142,7 @@ func handleMimixBoxOptionsIfNeeded(parser *flags.Parser, opts *options) {
 
 	if len(args) == 1 && opts.Remove {
 		if err = remove(args[0]); err != nil {
-			fmt.Println(err)
+			fmt.Fprintln(os.Stderr, err)
 			osExit(ExitFailuer)
 		}
 		osExit(ExitSuccess)
@@ -150,7 +150,7 @@ func handleMimixBoxOptionsIfNeeded(parser *flags.Parser, opts *options) {
 
 	if len(args) == 1 && opts.FullInstall {
 		if err = fullInstall(mimixBoxPath, args[0]); err != nil {
-			fmt.Println(err)
+			fmt.Fprintln(os.Stderr, err)
 			osExit(ExitFailuer)
 		}
 		osExit(ExitSuccess)
@@ -223,7 +223,7 @@ func __install(mimixboxPath string, installPath string, full bool) error {
 				fmt.Fprintln(os.Stderr, err)
 				continue
 			}
-			fmt.Printf("Delete              : %s\n", newPath)
+			fmt.Fprintf(os.Stdout, "Delete              : %s\n", newPath)
 		}
 
 		err = os.Symlink(mimixboxAbsPath, newPath)
@@ -232,7 +232,7 @@ func __install(mimixboxPath string, installPath string, full bool) error {
 			continue
 		}
 
-		fmt.Printf("Create symbolic link: %s\n", newPath)
+		fmt.Fprintf(os.Stdout, "Create symbolic link: %s\n", newPath)
 	}
 	return nil
 }
@@ -261,18 +261,18 @@ func remove(installPath string) error {
 
 		realPath, err := os.Readlink(symbolicPath)
 		if err != nil {
-			fmt.Println(err)
+			fmt.Fprintln(os.Stderr, err)
 			continue
 		}
 
 		if strings.Contains(realPath, cmdName) {
 			err := os.Remove(symbolicPath)
 			if err != nil {
-				fmt.Println(err)
+				fmt.Fprintln(os.Stderr, err)
 				continue
 			}
 		}
-		fmt.Printf("Delete symbolic link: %s\n", symbolicPath)
+		fmt.Fprintf(os.Stdout, "Delete symbolic link: %s\n", symbolicPath)
 	}
 	return nil
 }

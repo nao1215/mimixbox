@@ -29,7 +29,7 @@ import (
 
 const cmdName string = "tac"
 
-const version = "1.0.3"
+const version = "1.0.4"
 
 var osExit = os.Exit
 
@@ -90,7 +90,7 @@ func tac(path string) error {
 
 func printFromTail(lines []string) {
 	for i := range lines {
-		fmt.Println(lines[len(lines)-i-1])
+		fmt.Fprintln(os.Stdout, lines[len(lines)-i-1])
 	}
 }
 
@@ -104,7 +104,7 @@ func tacUserInput() {
 		inputs = append(inputs, input)
 	}
 	for i := range inputs {
-		fmt.Println(inputs[len(inputs)-i-1])
+		fmt.Fprintln(os.Stdout, inputs[len(inputs)-i-1])
 	}
 }
 

@@ -17,6 +17,7 @@
 package echo
 
 import (
+	"fmt"
 	"os"
 	"strings"
 
@@ -25,7 +26,7 @@ import (
 )
 
 const cmdName string = "echo"
-const version = "1.0.1"
+const version = "1.0.2"
 
 var osExit = os.Exit
 
@@ -55,7 +56,7 @@ func Run() (int, error) {
 		output = os.Args[1:]
 	}
 
-	println(strings.Join(output, " "))
+	fmt.Fprintln(os.Stdout, strings.Join(output, " "))
 	return ExitSuccess, nil
 }
 

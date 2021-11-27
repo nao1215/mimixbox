@@ -34,7 +34,7 @@ const cmdName string = "serial"
 
 var osExit = os.Exit
 
-const version = "1.0.1"
+const version = "1.0.2"
 
 // Exit code
 const (
@@ -88,7 +88,7 @@ func rename(newFileNames map[string]string, dryRun bool) {
 	sort.Strings(keys)
 
 	for _, org := range keys {
-		fmt.Printf("Rename %s to %s\n", org, newFileNames[org])
+		fmt.Fprintf(os.Stdout, "Rename %s to %s\n", org, newFileNames[org])
 		if dryRun {
 			continue
 		}
@@ -110,7 +110,7 @@ func copy(newFileNames map[string]string, dryRun bool) {
 
 	for _, org := range keys {
 		dest = newFileNames[org]
-		fmt.Printf("Copy %s to %s\n", org, dest)
+		fmt.Fprintf(os.Stdout, "Copy %s to %s\n", org, dest)
 		if dryRun {
 			continue
 		}
@@ -177,7 +177,7 @@ func isValidArgNr(args []string) bool {
 }
 
 func showHelp(p *flags.Parser) {
-	fmt.Printf("serial command rename the file name to the name with a serial number.\n\n")
+	fmt.Fprintf(os.Stdout, "serial command rename the file name to the name with a serial number.\n\n")
 	p.WriteHelp(os.Stdout)
 }
 

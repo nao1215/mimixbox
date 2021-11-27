@@ -27,7 +27,7 @@ import (
 )
 
 const cmdName string = "hostid"
-const version = "0.9.0"
+const version = "0.9.1"
 
 var osExit = os.Exit
 
@@ -63,7 +63,7 @@ func hostid() (int, error) {
 	// I don't know the cause, so I'll deal with it later.
 	for _, ip := range ip4 {
 		ipList := strings.Split(ip, ".")
-		fmt.Printf("%02x%02x%02x%02x\n",
+		fmt.Fprintf(os.Stdout, "%02x%02x%02x%02x\n",
 			atoi(ipList[1]), atoi(ipList[0]), atoi(ipList[3]), atoi(ipList[2]))
 	}
 

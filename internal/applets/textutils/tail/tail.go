@@ -27,7 +27,7 @@ import (
 
 const cmdName string = "tail"
 
-const version = "1.0.1"
+const version = "1.0.2"
 
 var osExit = os.Exit
 
@@ -93,12 +93,12 @@ func tail(args []string, opts options) error {
 
 func dump(s []string) {
 	for _, v := range s {
-		fmt.Println(v)
+		fmt.Fprintln(os.Stdout, v)
 	}
 }
 
 func printNameBanner(path string) {
-	fmt.Printf("==> %s <==\n", path)
+	fmt.Fprintf(os.Stdout, "==> %s <==\n", path)
 }
 
 func parseArgs(opts *options) ([]string, error) {

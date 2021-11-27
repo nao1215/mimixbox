@@ -28,7 +28,7 @@ import (
 
 const cmdName string = "path"
 
-const version = "1.0.1"
+const version = "1.0.2"
 
 var osExit = os.Exit
 var errNotGetAbsPath = errors.New("can't get absolute path")
@@ -63,23 +63,23 @@ func Run() (int, error) {
 		if err != nil {
 			return ExitFailuer, errNotGetAbsPath
 		}
-		fmt.Printf("%s\n", abs)
+		fmt.Fprintf(os.Stdout, "%s\n", abs)
 	}
 
 	if opts.Base {
-		fmt.Printf("%s\n", filepath.Base(path))
+		fmt.Fprintf(os.Stdout, "%s\n", filepath.Base(path))
 	}
 
 	if opts.Canonical || isAllOptionsOff(opts) {
-		fmt.Printf("%s\n", filepath.Clean(path))
+		fmt.Fprintf(os.Stdout, "%s\n", filepath.Clean(path))
 	}
 
 	if opts.Dir {
-		fmt.Printf("%s\n", filepath.Dir(path))
+		fmt.Fprintf(os.Stdout, "%s\n", filepath.Dir(path))
 	}
 
 	if opts.Ext {
-		fmt.Printf("%s\n", filepath.Ext(path))
+		fmt.Fprintf(os.Stdout, "%s\n", filepath.Ext(path))
 	}
 
 	return ExitSuccess, nil

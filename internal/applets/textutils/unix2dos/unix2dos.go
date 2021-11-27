@@ -27,7 +27,7 @@ import (
 )
 
 const cmdName string = "dos2unix"
-const version = "1.0.1"
+const version = "1.0.2"
 
 var osExit = os.Exit
 
@@ -52,7 +52,7 @@ func Run() (int, error) {
 	}
 
 	if mb.HasPipeData() {
-		fmt.Print(toCRLF(strings.Split(args[0], "")))
+		fmt.Fprint(os.Stdout, toCRLF(strings.Split(args[0], "")))
 		return ExitSuccess, nil
 	}
 

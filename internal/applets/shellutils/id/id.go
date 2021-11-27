@@ -89,9 +89,9 @@ func dumpGid(u user.User, showName bool) (int, error) {
 		if err != nil {
 			return ExitFailuer, err
 		}
-		fmt.Println(g.Name)
+		fmt.Fprintln(os.Stdout, g.Name)
 	} else {
-		fmt.Println(u.Gid)
+		fmt.Fprintln(os.Stdout, u.Gid)
 	}
 	return ExitSuccess, nil
 }
@@ -110,7 +110,7 @@ func dumpAllId(u user.User, groups []user.Group) error {
 	for _, v := range groups {
 		resultLine = resultLine + v.Gid + "(" + v.Name + "),"
 	}
-	fmt.Println(strings.TrimRight(resultLine, ","))
+	fmt.Fprintln(os.Stdout, strings.TrimRight(resultLine, ","))
 	return nil
 }
 

@@ -26,7 +26,7 @@ import (
 )
 
 const cmdName string = "groups"
-const version = "1.0.1"
+const version = "1.0.2"
 
 var osExit = os.Exit
 
@@ -65,7 +65,7 @@ func groups(args []string) (int, error) {
 			status = ExitFailuer
 			continue
 		}
-		fmt.Print(uname + " : ")
+		fmt.Fprint(os.Stdout, uname+" : ")
 		mb.DumpGroups(groups, true)
 	}
 	return status, nil
