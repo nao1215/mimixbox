@@ -33,6 +33,7 @@
 |    sha1sum| Calculate or Check sercure hash 1 algorithm|
 |    sha256sum| Calculate or Check sercure hash 256 algorithm|
 |    sha512sum| Calculate or Check sercure hash 512 algorithm|
+|           sl| Cure your bad habit of mistyping|
 |    sleep | Pause for NUMBER seconds(minutes, hours, days)|
 |     tac  | Print the file contents from the end to the beginning|
 |     tail |  Print the last NUMBER(default=10) lines|

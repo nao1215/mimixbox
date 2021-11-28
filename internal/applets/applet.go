@@ -33,6 +33,7 @@ import (
 	"github.com/nao1215/mimixbox/internal/applets/fileutils/touch"
 	"github.com/nao1215/mimixbox/internal/applets/jokeutils/cowsay"
 	"github.com/nao1215/mimixbox/internal/applets/jokeutils/fakemovie"
+	"github.com/nao1215/mimixbox/internal/applets/jokeutils/sl"
 	"github.com/nao1215/mimixbox/internal/applets/shellutils/base64"
 	"github.com/nao1215/mimixbox/internal/applets/shellutils/basename"
 	"github.com/nao1215/mimixbox/internal/applets/shellutils/chroot"
@@ -109,6 +110,7 @@ func init() {
 		"sha256sum": {sha256sum.Run, "alculate or Check sercure hash 256 algorithm"},
 		"sha512sum": {sha512sum.Run, "alculate or Check sercure hash 512 algorithm"},
 		"seq":       {seq.Run, "Print a column of numbers"},
+		"sl":        {sl.Run, "Cure your bad habit of mistyping"},
 		"sleep":     {sleep.Run, "Pause for NUMBER seconds(minutes, hours, days)"},
 		"tac":       {tac.Run, "Print the file contents from the end to the beginning"},
 		"tail":      {tail.Run, "Print the last NUMBER(default=10) lines"},
