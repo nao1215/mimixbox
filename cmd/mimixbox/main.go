@@ -17,6 +17,7 @@
 package main
 
 import (
+	"errors"
 	"fmt"
 	"os"
 	"os/exec"
@@ -52,7 +53,7 @@ type options struct {
 
 var osExit = os.Exit
 
-const version = "0.27.1"
+const version = "0.27.2"
 
 const (
 	ExitSuccess int = iota // 0
@@ -155,6 +156,11 @@ func handleMimixBoxOptionsIfNeeded(parser *flags.Parser, opts *options) {
 		}
 		osExit(ExitSuccess)
 	}
+
+	if len(args) == 0 && (opts.FullInstall || opts.Install || opts.Remove) {
+		showHelp(parser)
+		osExit(ExitFailuer)
+	}
 }
 
 // If go-flags find the help option while parsing the option,
@@ -201,6 +207,10 @@ func fullInstall(mimixboxPath string, installPath string) error {
 
 func __install(mimixboxPath string, installPath string, full bool) error {
 	targetPath := os.ExpandEnv(installPath)
+	if !mb.IsDir(targetPath) {
+		return errors.New(targetPath + ": no such directory")
+	}
+
 	mimixboxAbsPath, err := getMimixBoxAbsPath(targetPath)
 	if err != nil {
 		return err
@@ -253,8 +263,14 @@ func getMimixBoxAbsPath(mimixboxPath string) (string, error) {
 }
 
 func remove(installPath string) error {
+	targetPath := os.ExpandEnv(installPath)
+
+	if !mb.IsDir(targetPath) {
+		return errors.New(targetPath + ": no such directory")
+	}
+
 	for name := range applets.Applets {
-		symbolicPath := filepath.Join(os.ExpandEnv(installPath), name)
+		symbolicPath := filepath.Join(targetPath, name)
 
 		if !mb.IsSymlink(symbolicPath) {
 			continue

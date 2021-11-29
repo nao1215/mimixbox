@@ -1,9 +1,13 @@
 # Changelog
 All notable changes to this project will be documented in this file. The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.0.0/), and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
-## [0.27.2] - 2021-11-30
+## [0.27.3] - 2021-11-30
 ### Added
  - Add ShellSpec tetsing framework for integration test.
  - ut(Unit Test)／it（Integration Test）target in Makefile
+### Changed
+ - MimixBox command.
+   - Display help message when --install, --full-install, --remove are specified and there is no optional argument.
+   - Make the error if the directory specified by the user does not exist when executing --install, --full-install, --remove.
 ## [0.27.1] - 2021-11-29
 ### Added
  - sl commad.

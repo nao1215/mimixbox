@@ -22,7 +22,7 @@ docker: ## Run container for testing mimixbox
 install: ## Install mimixbox and man-pages on your system
 	./scripts/installer.sh
 
-it: ## Integration test
+it: ## Integration Test
 	cd test && shellspec
 
 jail:  ## Make jail environment for testing chroot/ischroot
