@@ -22,8 +22,8 @@ jobs:
       run: curl -fsSL https://git.io/shellspec | sh -s -- --yes
       
     - name: FullInstallMimixBox
-      run: make build && sudo make install && \
-           mimixbox --remove /usr/local/bin/ && mimixbox --full-install /usr/local/bin/
+      run: make build && sudo install -v -m 0755 -D mimixbox /usr/local/bin/. && \
+           mimixbox --full-install /usr/local/bin/
       
     - name: IntegrationTest
       run: make it
