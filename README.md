@@ -22,8 +22,6 @@ $ make build
 The table below shows the tools used when developing the commands in the mimixbox project.
 | Tool | description |
 |:-----|:------|
-| dep   | Used for managing dependencies for Go projects|
-| gobump   | Used for command version control |
 | go-licenses | Used for license management of dependent libraries|
 | pandoc   | Convert markdown files to manpages |
 | make   | Used for build, run, test, etc |
