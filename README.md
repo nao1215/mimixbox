@@ -1,5 +1,5 @@
 <div align="center">
-<img src="../mimixbox/docs/images/logo.jpg" width="100">
+<img src="https://github.com/nao1215/mimixbox/blob/main/docs/images/logo.jpg" width="100">
 </div>
 
 [![Build](https://github.com/nao1215/mimixbox/actions/workflows/build.yml/badge.svg?branch=main)](https://github.com/nao1215/mimixbox/actions/workflows/build.yml)
