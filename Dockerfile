@@ -1,5 +1,6 @@
 FROM golang as builder
 ENV ROOT=/go/app
+ENV IT_SHELL=/home/mimixbox/do_integration_test.sh
 WORKDIR ${ROOT}
 
 # 1) Install mimixbox
@@ -14,8 +15,13 @@ RUN useradd mimixbox -m -s /bin/bash &&\
     echo 'mimixbox:password' |chpasswd
 
 # Copy ShellSpec installer
-COPY ./scripts/installShellSpecForDocker.sh .
-RUN  ./installShellSpecForDocker.sh
+COPY ./test /home/mimixbox/integration_tests
+RUN  git clone https://github.com/shellspec/shellspec.git && \
+    cd shellspec && make install
+
+RUN echo "#!/bin/bash" > ${IT_SHELL} && \
+    echo "cd /home/mimixbox/integration_tests && shellspec\n" >> ${IT_SHELL} && \
+    chmod a+x ${IT_SHELL}
 
 # If you want to administrator privileges, you become the root user.
 # RUN echo "mimixbox    ALL=(ALL)       ALL" >> /etc/sudoers
