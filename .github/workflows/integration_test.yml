@@ -8,7 +8,7 @@ on:
 
 jobs:
 
-  build:
+  integration_test:
     runs-on: ubuntu-latest
     steps:
     - uses: actions/checkout@v2
@@ -22,7 +22,7 @@ jobs:
       run: curl -fsSL https://git.io/shellspec | sh -s -- --yes
       
     - name: FullInstallMimixBox
-      run: make install && mimixbox --remove /usr/local/bin/ && mimixbox --full-install /usr/local/bin/
+      run: sudo make install && mimixbox --remove /usr/local/bin/ && mimixbox --full-install /usr/local/bin/
       
     - name: IntegrationTest
       run: make it
