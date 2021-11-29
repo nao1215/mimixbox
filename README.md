@@ -16,14 +16,8 @@ $ tar xf mimixbox-0.0.1-linux-arm64.tar.gz
 $ cd mimixbox-0.0.1-linux-arm64
 $ sudo ./installer.sh
 ```
-# Development (How to build)
-If you want to contribute to the mimixbox project, get the source code with the following command.
-```
-$ git clone https://github.com/nao1215/mimixbox.git
-$ cd mimixbox
-$ make build
-```
-
+# Development 
+### Tools
 The table below shows the tools used when developing the commands in the mimixbox project.
 | Tool | description |
 |:-----|:------|
@@ -31,9 +25,27 @@ The table below shows the tools used when developing the commands in the mimixbo
 | pandoc   | Convert markdown files to manpages |
 | make   | Used for build, run, test, etc |
 | gzip   | Used for compress man pages |
+| expect | Used for install ShellSpec in Docker|
 | install   | Used for install serial binary and document in the system |
 | docker| Used for testing Mimixbox inside Docker|
 | debootstrap| Used for testing Mimixbox inside jail envrioment|
+|  shellspec   | Used for integration test|  
+
+If you use Debian-based distribution (e.g. Debian／Ubuntu／Kali Linux／Raspberry Pi OS), You can install tools with the following command.
+
+```
+$ sudo apt install build-essential wget expect git pandoc gzip expect docker.io debootstrap
+$ go install github.com/google/go-licenses@latest
+$ curl -fsSL https://git.io/shellspec | sh
+```
+  
+### How to build
+If you want to contribute to the mimixbox project, get the source code with the following command.
+```
+$ git clone https://github.com/nao1215/mimixbox.git
+$ cd mimixbox
+$ make build
+```
 
 # Debugging
 ### How to create docker(testing) environment
