@@ -52,7 +52,7 @@ type options struct {
 
 var osExit = os.Exit
 
-const version = "0.27.0"
+const version = "0.27.1"
 
 const (
 	ExitSuccess int = iota // 0
@@ -200,7 +200,7 @@ func fullInstall(mimixboxPath string, installPath string) error {
 }
 
 func __install(mimixboxPath string, installPath string, full bool) error {
-	targetPath := os.ExpandEnv(mimixboxPath)
+	targetPath := os.ExpandEnv(installPath)
 	mimixboxAbsPath, err := getMimixBoxAbsPath(targetPath)
 	if err != nil {
 		return err

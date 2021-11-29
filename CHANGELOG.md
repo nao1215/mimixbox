@@ -1,6 +1,6 @@
 # Changelog
 All notable changes to this project will be documented in this file. The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.0.0/), and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
-## [0.27.0] - 2021-11-28
+## [0.27.1] - 2021-11-29
 ### Added
  - sl commad.
  - wc command.
@@ -8,6 +8,7 @@ All notable changes to this project will be documented in this file. The format 
 - expand environment variables in PATH specified by argument
   (mimixbox, cp, ln, mkdir, mkfifo, mv, rm, rmdir, touch, fakemovie, chroot,
    cat, dos2unix, expand, head, tac, tail, unexpand, unix2dos)
+- Fixed the bug that was using the wrong installation path.
 ## [0.25.1] - 2021-11-27
 ### Added
  - hostid commad(Does not work properly)
