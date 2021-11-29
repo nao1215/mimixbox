@@ -65,6 +65,7 @@ import (
 	"github.com/nao1215/mimixbox/internal/applets/textutils/tail"
 	"github.com/nao1215/mimixbox/internal/applets/textutils/unexpand"
 	"github.com/nao1215/mimixbox/internal/applets/textutils/unix2dos"
+	"github.com/nao1215/mimixbox/internal/applets/textutils/wc"
 )
 
 type EntryPoint func() (int, error)
@@ -118,6 +119,7 @@ func init() {
 		"true":      {true.Run, "Do nothing. Return success(0)"},
 		"unexpand":  {unexpand.Run, "Convert N space to TAB(default:N=8)"},
 		"unix2dos":  {unix2dos.Run, "Change LF to CRLF"},
+		"wc":        {wc.Run, "Word Count"},
 		"which":     {which.Run, "Returns the file path which would be executed in the current environment"},
 		"whoami":    {whoami.Run, "Print login user name"},
 	}

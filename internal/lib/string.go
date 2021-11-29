@@ -16,7 +16,9 @@
 // limitations under the License.
 package mb
 
-import "strings"
+import (
+	"strings"
+)
 
 func ReplaceAll(lines []string, target string, after string) []string {
 	var replacedLines []string
@@ -25,6 +27,16 @@ func ReplaceAll(lines []string, target string, after string) []string {
 		replacedLines = append(replacedLines, l)
 	}
 	return replacedLines
+}
+
+func Remove(strings []string, target string) []string {
+	result := []string{}
+	for _, v := range strings {
+		if v != target {
+			result = append(result, v)
+		}
+	}
+	return result
 }
 
 func AddLineFeed(lines []string) []string {
