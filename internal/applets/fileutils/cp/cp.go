@@ -19,6 +19,7 @@ package cp
 import (
 	"errors"
 	"os"
+	"path"
 	"path/filepath"
 	"strings"
 
@@ -29,7 +30,7 @@ import (
 
 const cmdName string = "cp"
 
-const version = "1.0.1"
+const version = "1.0.2"
 
 var osExit = os.Exit
 
@@ -95,6 +96,10 @@ func cpFile(src string, dest string, opts options) error {
 			return nil // Skip this file
 		}
 	}
+	if mb.IsDir(dest) {
+		dest = filepath.Join(dest, path.Base(src))
+	}
+
 	return mb.Copy(src, dest)
 }
 
