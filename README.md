@@ -9,7 +9,7 @@
 ![GitHub all releases](https://img.shields.io/github/downloads/nao1215/mimixbox/total)
 ![Lines of code](https://img.shields.io/tokei/lines/github/nao1215/mimixbox?style=plastic)
 
-[[日本語](docs/introduction/ja/README.ja.MD)]
+[[日本語](docs/introduction/ja/README.MD)]
 # MimixBox - mimic BusyBox on Linux
 MimixBox has many Unix commands in the single binary like BusyBox. However, MimixBox aim for the different uses from BusyBox. Specifically, it is supposed to be used in the desktop environment, not the embedded environment.  
 Also, the MimixBox project maintainer plan to have a wide range of built-in commands (applets) from basic command provided by Coreutils and others to experimental commands.
@@ -61,7 +61,7 @@ $ cd mimixbox
 $ make build
 ```
 
-# Debugging
+# [Debugging](docs/introduction/en/DebugAndTest.md)
 ## How to create docker environment
 ```
 $ make docker
@@ -88,7 +88,7 @@ Now, MimixBox has not implemented enough commands ([currently supported command 
     
 Then increase the command options to the same level as Coreutils and other packages. Note that MimixBox does not aim to create commands equivalent to Coreutils. However, we think it's better to have the options that Linux users expect.
   
-Finally, it's the phase that makes the Mimix Box unique. Extend commands to high functionality, like bat and lsd, which are reimplementations of cat and ls.
+Finally, it's the phase that makes the Mimix Box unique. Extend commands to high functionality, like [bat](https://github.com/sharkdp/bat) and [lsd](https://github.com/Peltoche/lsd), which are reimplementations of cat and ls.
 
 # Original commands in MimixBox
 MimixBox has its own commands that don't exist in packages like Coreutils.
@@ -103,9 +103,7 @@ MimixBox has its own commands that don't exist in packages like Coreutils.
 If you would like to send comments such as "find a bug" or "request for additional features" to the developer, please use one of the following contacts.
 
 - [GitHub Issue](https://github.com/nao1215/mimixbox/issues)
-- [mail@Naohiro CHIKAMATSU](n.chika156@gmail.com)
 - [Twitter@mimixbox156](https://twitter.com/mimixbox156) ※ MimixBox project information
-- [Twitter@ARC_AED](https://twitter.com/ARC_AED) ※ Author
 
 # LICENSE
 The MimixBox project is licensed under the terms of the MIT license and Apache License 2.0.  
