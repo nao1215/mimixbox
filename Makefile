@@ -26,10 +26,17 @@ docker: ## Run container for testing mimixbox
 	docker image build -t mimixbox/test:latest .
 	docker container run --rm -it mimixbox/test:latest
 
-install: ## Install mimixbox and man-pages on your system
+install: ## Install mimixbox (with symbolic link) and man-pages on your system
 	$(INSTALLER)
 
-it: ## Integration Test
+full-install: ## Full Install mimixbox (with symbolic link) and man-pages on your system
+	$(INSTALLER)
+	mimixbox --full-install /usr/local/bin
+
+remove: ## Remove mimixbox-symbolic link
+	mimixbox --remove /usr/local/bin
+
+it: ## Execute integration test
 	cd test && shellspec
 
 jail:  ## Make jail environment for testing chroot/ischroot
@@ -50,7 +57,7 @@ pre_ut:
 	@echo "Make files for test at test directory."
 	@$(PREPARE_UT)
 
-ut: pre_ut  ## Unit Test
+ut: pre_ut  ## Execute unit test
 	-@go test -cover ./... -v -coverpkg=./... -coverprofile=cover.out
 	-@go tool cover -html=cover.out -o cover.html
 	@echo "--------------------------------------------------------------------"

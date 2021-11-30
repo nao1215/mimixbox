@@ -3,7 +3,8 @@ All notable changes to this project will be documented in this file. The format 
 ## [0.27.5] - 2021-12-01
 ### Added
  - Add ShellSpec tetsing framework for integration test.
- - ut(Unit Test)／it（Integration Test）target in Makefile
+ - ut(Unit Test)／it（Integration Test）target in Makefile.
+ - full-install／remove target in Makefile.
 ### Changed
  - MimixBox command.
    - Display help message when --install, --full-install, --remove are specified and there is no optional argument.
