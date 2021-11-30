@@ -8,30 +8,39 @@
 ![GitHub](https://img.shields.io/github/license/nao1215/mimixbox)
 ![GitHub all releases](https://img.shields.io/github/downloads/nao1215/mimixbox/total)
 ![Lines of code](https://img.shields.io/tokei/lines/github/nao1215/mimixbox?style=plastic)
+
+[[日本語](docs/introduction/ja/README.ja.MD)]
 # MimixBox - mimic BusyBox on Linux
-MimixBox has many Unix commands in the single binary like BusyBox. However, mimixbox aim for the different uses from BusyBox. Specifically, it is supposed to be used in the desktop environment, not the embedded environment.  
-Also, the mimixbox project maintainer plan to have a wide range of built-in commands (applets) from basic command provided by Coreutils and others to experimental commands.
+MimixBox has many Unix commands in the single binary like BusyBox. However, MimixBox aim for the different uses from BusyBox. Specifically, it is supposed to be used in the desktop environment, not the embedded environment.  
+Also, the MimixBox project maintainer plan to have a wide range of built-in commands (applets) from basic command provided by Coreutils and others to experimental commands.
 
 # Installation.
-The source code and binaries are distributed on the Release Page in ZIP format or tar.gz format. Choose the binary that suits your OS and CPU architecture.
-For example, in the case of Linux (amd64), you can install the commands on your system with the following command:
+The source code and binaries are distributed on [the Release Page](https://github.com/nao1215/mimixbox/releases) in ZIP format and tar.gz format. Choose the binary that suits your OS and CPU architecture.
+For example, in the case of Linux (amd64), you can install the MimixBox and documents on your system with the following command:
 
 ```
 $ tar xf mimixbox-0.0.1-linux-arm64.tar.gz
 $ cd mimixbox-0.0.1-linux-arm64
 $ sudo ./installer.sh
 ```
+
+If you have a Golang development environment, you can also install it by the following method. This method does not install the documentation.
+
+```
+$ go install github.com/nao1215/mimixbox/cmd/mimixbox
+$ mimixbox --install /usr/local/bin
+```
 # Development 
-### Tools
-The table below shows the tools used when developing the commands in the mimixbox project.
+## Tools
+The table below shows the tools used when developing the commands in the MimixBox project.
 | Tool | description |
 |:-----|:------|
 | go-licenses | Used for license management of dependent libraries|
 | pandoc   | Convert markdown files to manpages |
-| make   | Used for build, run, test, etc |
+| make   | Used for build, test, release, etc |
 | gzip   | Used for compress man pages |
 | curl | Used for install ShellSpec |
-| install   | Used for install serial binary and document in the system |
+| install   | Used for install MimixBox binary and document in the system |
 | docker| Used for testing Mimixbox inside Docker|
 | debootstrap| Used for testing Mimixbox inside jail envrioment|
 |  shellspec   | Used for integration test|  
@@ -44,8 +53,8 @@ $ go install github.com/google/go-licenses@latest
 $ curl -fsSL https://git.io/shellspec | sh -s -- --yes
 ```
   
-### How to build
-If you want to contribute to the mimixbox project, get the source code with the following command.
+## How to build
+
 ```
 $ git clone https://github.com/nao1215/mimixbox.git
 $ cd mimixbox
@@ -53,15 +62,14 @@ $ make build
 ```
 
 # Debugging
-### How to create docker(testing) environment
+## How to create docker environment
 ```
-# sudo apt install docker.io  ※ If you have not installed Docker in Ubuntu.
 $ make docker
 
-(注釈) Once the Docker image build is complete, you'll be inside the container.
+※ Once the Docker image build is complete, you'll be inside the container.
 $ 
 ```
-### How to create jail(testing) environment
+## How to create jail environment
 ``` 
 $ sudo apt install debootstrap    ※ If you have not installed debootstrap in Ubuntu.
 $ make build                      ※ Build mimixbox binary
@@ -76,7 +84,7 @@ $ sudo chroot /tmp/mimixbox/jail /bin/bash   ※ Dive to jail
 - Step2. Increase the options for each commands (〜Version 1.x.x).
 - Step3. Change the command to modern specifications(〜Version 2.x.x)
   
-Now, Mimixbox has not implemented enough commands ([currently supported command list is here](./docs/introduction/en/CommandAppletList.md)). Therefore, as a project, we will increase the number of commands and aim for a state where dog fooding can be done with the highest priority.
+Now, MimixBox has not implemented enough commands ([currently supported command list is here](./docs/introduction/en/CommandAppletList.md)). Therefore, as a project, we will increase the number of commands and aim for a state where dog fooding can be done with the highest priority.
     
 Then increase the command options to the same level as Coreutils and other packages. Note that MimixBox does not aim to create commands equivalent to Coreutils. However, we think it's better to have the options that Linux users expect.
   
