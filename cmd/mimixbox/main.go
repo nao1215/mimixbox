@@ -53,7 +53,7 @@ type options struct {
 
 var osExit = os.Exit
 
-const version = "0.27.2"
+const version = "0.27.4"
 
 const (
 	ExitSuccess int = iota // 0

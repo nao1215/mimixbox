@@ -17,6 +17,7 @@
 package mkdir
 
 import (
+	"fmt"
 	"os"
 
 	"github.com/jessevdk/go-flags"
@@ -25,7 +26,7 @@ import (
 
 const cmdName string = "mkdir"
 
-const version = "1.0.2"
+const version = "1.0.3"
 
 var osExit = os.Exit
 
@@ -48,19 +49,22 @@ func Run() (int, error) {
 	if args, err = parseArgs(&opts); err != nil {
 		return ExitFailuer, nil
 	}
-	path := os.ExpandEnv(args[0])
 
-	if opts.Parent {
-		err = os.MkdirAll(path, 0755)
-	} else {
-		err = os.Mkdir(path, 0755)
+	status := ExitSuccess
+	for _, path := range args {
+		target := os.ExpandEnv(path)
+		if opts.Parent {
+			err = os.MkdirAll(target, 0755)
+		} else {
+			err = os.Mkdir(target, 0755)
+		}
+
+		if err != nil {
+			status = ExitFailuer
+			fmt.Fprintln(os.Stderr, err.Error())
+		}
 	}
-
-	if err != nil {
-		return ExitFailuer, err
-	}
-
-	return ExitSuccess, nil
+	return status, nil
 }
 
 func parseArgs(opts *options) ([]string, error) {
@@ -92,7 +96,7 @@ func initParser(opts *options) *flags.Parser {
 }
 
 func isValidArgNr(args []string) bool {
-	return len(args) == 1
+	return len(args) >= 1
 }
 
 func showHelp(p *flags.Parser) {
