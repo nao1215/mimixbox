@@ -61,6 +61,7 @@ $ make build
 ```
 
 # デバッグ方法
+[デバッグ方法の詳細はコチラ](DebugAndTest.md)
 ### Docker環境の作成方法
 ```
 $ make docker
@@ -77,7 +78,7 @@ $ sudo chroot /tmp/mimixbox/jail /bin/bash   ※ Jail環境の中へ移動
 # mimixbox --full-install /usr/local/bin     ※ MimixBox組み込みコマンドをJail内にインストール
 ```
 
-# Roadmap
+# ロードマップ
 - Step1. 多くのUnixコマンドを開発(〜Version 0.x.x).
 - Step2. コマンドオプションの拡充 (〜Version 1.x.x).
 - Step3. コマンドに近代的な仕様を追加(〜Version 2.x.x)
