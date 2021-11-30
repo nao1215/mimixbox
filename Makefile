@@ -1,5 +1,12 @@
+APP        := mimixbox
+PREPARE_UT := test/ut/prepareUnitTest.sh
+INSTALLER  := scripts/installer.sh
+MK_JAIL    := scripts/mkJailForDebianFamily.sh
+MK_MAN     := scripts/mkManpages.sh
+RELEASE    := scripts/release.sh
+
 build: deps ## Build mimixbox and make man-pages
-	go build "-ldflags=-s -w" -trimpath -o mimixbox cmd/mimixbox/main.go
+	go build "-ldflags=-s -w" -trimpath -o $(APP) cmd/mimixbox/main.go
 	$(MAKE) doc
 	$(MAKE) licenses
 
@@ -13,23 +20,23 @@ clean: ## Clean project
 	-find . -name "*.1.gz" | xargs rm -f
 
 doc: ## Make man-pages
-	./scripts/mkManpages.sh
+	$(MK_MAN)
 
 docker: ## Run container for testing mimixbox 
 	docker image build -t mimixbox/test:latest .
 	docker container run --rm -it mimixbox/test:latest
 
 install: ## Install mimixbox and man-pages on your system
-	./scripts/installer.sh
+	$(INSTALLER)
 
 it: ## Integration Test
 	cd test && shellspec
 
 jail:  ## Make jail environment for testing chroot/ischroot
-	./scripts/mkJailForDebianFamily.sh
+	$(MK_JAIL)
 
 release: ## Make release files.
-	./scripts/release.sh
+	$(RELEASE)
 
 licenses: ## Get licenses for dependent libraries
 	-@go-licenses save ./cmd/mimixbox --force --save_path "licenses/"
@@ -41,7 +48,7 @@ pre_ut:
 	@echo "Clean test directory."
 	-@rm -rf /tmp/mimixbox/ut/*
 	@echo "Make files for test at test directory."
-	@./scripts/prepareUnitTest.sh
+	@$(PREPARE_UT)
 
 ut: pre_ut  ## Unit Test
 	-@go test -cover ./... -v -coverprofile=cover.out
