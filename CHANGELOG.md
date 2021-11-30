@@ -8,6 +8,8 @@ All notable changes to this project will be documented in this file. The format 
  - MimixBox command.
    - Display help message when --install, --full-install, --remove are specified and there is no optional argument.
    - Make the error if the directory specified by the user does not exist when executing --install, --full-install, --remove.
+ - Makefile.
+   - Display accurate coverage by specifying "-coverpkg=./..." in the unit test.
 ## [0.27.1] - 2021-11-29
 ### Added
  - sl commad.

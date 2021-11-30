@@ -51,7 +51,7 @@ pre_ut:
 	@$(PREPARE_UT)
 
 ut: pre_ut  ## Unit Test
-	-@go test -cover ./... -v -coverprofile=cover.out
+	-@go test -cover ./... -v -coverpkg=./... -coverprofile=cover.out
 	-@go tool cover -html=cover.out -o cover.html
 	@echo "--------------------------------------------------------------------"
 	-@rm -rf /tmp/mimixbox/ut/*
