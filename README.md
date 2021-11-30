@@ -9,7 +9,7 @@
 ![GitHub all releases](https://img.shields.io/github/downloads/nao1215/mimixbox/total)
 ![Lines of code](https://img.shields.io/tokei/lines/github/nao1215/mimixbox?style=plastic)
 
-[[日本語](docs/introduction/ja/README.MD)]
+[[日本語](docs/introduction/ja/README.md)]
 # MimixBox - mimic BusyBox on Linux
 MimixBox has many Unix commands in the single binary like BusyBox. However, MimixBox aim for the different uses from BusyBox. Specifically, it is supposed to be used in the desktop environment, not the embedded environment.  
 Also, the MimixBox project maintainer plan to have a wide range of built-in commands (applets) from basic command provided by Coreutils and others to experimental commands.
