@@ -1,4 +1,4 @@
-export TEST_DIR=/tmp/mb/it
+export TEST_DIR=/tmp/mimixbox/it
 export TEST_FILE_GAMENAME=${TEST_DIR}/game.txt
 export TEST_FILE_METAL=${TEST_DIR}/metal.txt
 export EMPTY_FILE=${TEST_DIR}/empty.txt
@@ -35,32 +35,32 @@ CleanUp() {
 
 TestWcWithNoOption() {
     export TEST_FILE_GAMENAME=/tmp/mimixbox/it/game.txt
-    wc ${TEST_FILE_GAMENAME}
+    /bin/wc ${TEST_FILE_GAMENAME}
 }
 
 TestWcWithLinesOption() {
     export TEST_FILE_GAMENAME=/tmp/mimixbox/it/game.txt
-    wc -l ${TEST_FILE_GAMENAME}
+    /bin/wc  -l ${TEST_FILE_GAMENAME}
 }
 
 TestWcWithBytesOption() {
     export TEST_FILE_GAMENAME=/tmp/mimixbox/it/game.txt
-    wc -c ${TEST_FILE_GAMENAME}
+    /bin/wc  -c ${TEST_FILE_GAMENAME}
 }
 
 TestWcWithMaxLineLengthOption() {
     export TEST_FILE_GAMENAME=/tmp/mimixbox/it/game.txt
-    wc -L ${TEST_FILE_GAMENAME}
+    /bin/wc  -L ${TEST_FILE_GAMENAME}
 }
 
 TestWcReadingEmptyFile() {
     export EMPTY_FILE=/tmp/mimixbox/it/empty.txt
-    wc ${EMPTY_FILE}
+    /bin/wc  ${EMPTY_FILE}
 }
 
 TestWcReadingThreeFile() {
     export TEST_FILE_GAMENAME=/tmp/mimixbox/it/game.txt
     export TEST_FILE_METAL=/tmp/mimixbox/it/metal.txt
     export EMPTY_FILE=/tmp/mimixbox/it/empty.txt
-    wc ${EMPTY_FILE} ${TEST_FILE_GAMENAME} ${TEST_FILE_METAL}
+    /bin/wc ${EMPTY_FILE} ${TEST_FILE_GAMENAME} ${TEST_FILE_METAL}
 }
