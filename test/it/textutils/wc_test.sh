@@ -1,7 +1,7 @@
-export TEST_DIR=/tmp/mimixbox/it
-export TEST_FILE_GAMENAME=/tmp/mimixbox/it/game.txt
-export TEST_FILE_METAL=/tmp/mimixbox/it/metal.txt
-export EMPTY_FILE=/tmp/mimixbox/it/empty.txt
+export TEST_DIR=/tmp/mb/it
+export TEST_FILE_GAMENAME=${TEST_DIR}/game.txt
+export TEST_FILE_METAL=${TEST_DIR}/metal.txt
+export EMPTY_FILE=${TEST_DIR}/empty.txt
 
 Setup() {
     export TEST_DIR=/tmp/mimixbox/it
@@ -35,7 +35,7 @@ CleanUp() {
 
 TestWcWithNoOption() {
     export TEST_FILE_GAMENAME=/tmp/mimixbox/it/game.txt
-    wc /tmp/mimixbox/it/game.txt
+    wc ${TEST_FILE_GAMENAME}
 }
 
 TestWcWithLinesOption() {
