@@ -21,7 +21,6 @@ import (
 	"os"
 	"path"
 	"path/filepath"
-	"strings"
 
 	mb "github.com/nao1215/mimixbox/internal/lib"
 
@@ -30,7 +29,7 @@ import (
 
 const cmdName string = "cp"
 
-const version = "1.0.2"
+const version = "1.0.3"
 
 var osExit = os.Exit
 
@@ -113,11 +112,9 @@ func cpDir(src string, dest string, opts options) error {
 		return err
 	}
 
+	// Make destination directory
 	for _, dir := range srcDirs {
-		// dirs has a tree structure path from the source directory.
-		// Change the top directory name of this path to the destination name.
-		// Bad implementation.
-		dir = strings.Replace(dir, mb.TopDirName(dir), filepath.Base(dest), 1)
+		dir = path.Join(dest, dir)
 		err = os.MkdirAll(dir, 0755)
 		if err != nil {
 			return err
@@ -125,7 +122,7 @@ func cpDir(src string, dest string, opts options) error {
 	}
 
 	for _, src := range srcFiles {
-		destFile := strings.Replace(src, mb.TopDirName(src), filepath.Base(dest), 1)
+		destFile := path.Join(dest, src)
 		err := mb.Copy(src, destFile)
 		if err != nil {
 			return err
