@@ -29,6 +29,9 @@ jobs:
       
     - name: CreateSymbolicLink
       run: mimixbox --full-install /usr/local/bin/
+ 
+    - name: WarkAround
+      run: unlink /usr/local/bin/mkdir
       
     - name: IntegrationTest
       run: make it
