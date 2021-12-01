@@ -37,7 +37,7 @@ remove: ## Remove mimixbox-symbolic link
 	mimixbox --remove /usr/local/bin
 
 it: ## Execute integration test
-	cd test && shellspec --shell /bin/bash
+	cd test && shellspec
 
 jail:  ## Make jail environment for testing chroot/ischroot
 	$(MK_JAIL)

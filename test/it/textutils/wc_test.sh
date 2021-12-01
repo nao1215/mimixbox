@@ -9,20 +9,20 @@ Setup() {
     export TEST_FILE_METAL=/tmp/mimixbox/it/metal.txt
     export EMPTY_FILE=/tmp/mimixbox/it/empty.txt
 
-    mkdir -p ${TEST_DIR}
+    mkdir -p /tmp/mimixbox/it
 
-    echo "NieR Replicant ver.1.22474487139..." > ${TEST_FILE_GAMENAME}
-    echo "NieR:Automata" >>  ${TEST_FILE_GAMENAME}
-    echo "The Legend of Zelda: Majora's Mask" >>  ${TEST_FILE_GAMENAME}
-    echo "KICHIKUOU RANCE" >>  ${TEST_FILE_GAMENAME}
-    echo "DARK SOULS" >>  ${TEST_FILE_GAMENAME}
-    echo "SHADOW HEARTS" >>  ${TEST_FILE_GAMENAME}
+    echo "NieR Replicant ver.1.22474487139..." > /tmp/mimixbox/it/game.txt
+    echo "NieR:Automata" >>  /tmp/mimixbox/it/game.txt
+    echo "The Legend of Zelda: Majora's Mask" >>  /tmp/mimixbox/it/game.txt
+    echo "KICHIKUOU RANCE" >>  /tmp/mimixbox/it/game.txt
+    echo "DARK SOULS" >> /tmp/mimixbox/it/game.txt
+    echo "SHADOW HEARTS" >>  /tmp/mimixbox/it/game.txt
 
-    echo "MEGADETH" > ${TEST_FILE_METAL}
-    echo "GALNERYUS" >> ${TEST_FILE_METAL}
-    echo "SYSTEM OF A DOWN" >> ${TEST_FILE_METAL}
+    echo "MEGADETH" > $/tmp/mimixbox/it/metal.txt
+    echo "GALNERYUS" >> /tmp/mimixbox/it/metal.txt
+    echo "SYSTEM OF A DOWN" >> /tmp/mimixbox/it/metal.txt
     
-    touch ${EMPTY_FILE}
+    touch /tmp/mimixbox/it/empty.txt
 }
 
 CleanUp() {
@@ -30,37 +30,36 @@ CleanUp() {
     export TEST_FILE_METAL=/tmp/mimixbox/it/metal.txt
     export EMPTY_FILE=/tmp/mimixbox/it/empty.txt
 
-    rm  ${TEST_FILE_GAMENAME} ${EMPTY_FILE} ${TEST_FILE_METAL}
+    rm  /tmp/mimixbox/it/empty.txt /tmp/mimixbox/it/game.txt /tmp/mimixbox/it/empty.txt
 }
 
 TestWcWithNoOption() {
     export TEST_FILE_GAMENAME=/tmp/mimixbox/it/game.txt
-    /usr/local/bin/wc ${TEST_FILE_GAMENAME}
-}
+    wc /tmp/mimixbox/it/game.txt
 
 TestWcWithLinesOption() {
     export TEST_FILE_GAMENAME=/tmp/mimixbox/it/game.txt
-    /usr/local/bin/wc -l ${TEST_FILE_GAMENAME}
+    wc -l /tmp/mimixbox/it/game.txt
 }
 
 TestWcWithBytesOption() {
     export TEST_FILE_GAMENAME=/tmp/mimixbox/it/game.txt
-    /usr/local/bin/wc -c ${TEST_FILE_GAMENAME}
+    wc -c /tmp/mimixbox/it/game.txt
 }
 
 TestWcWithMaxLineLengthOption() {
     export TEST_FILE_GAMENAME=/tmp/mimixbox/it/game.txt
-    /usr/local/bin/wc -L ${TEST_FILE_GAMENAME}
+    wc -L /tmp/mimixbox/it/game.txt
 }
 
 TestWcReadingEmptyFile() {
     export EMPTY_FILE=/tmp/mimixbox/it/empty.txt
-    /usr/local/bin/wc ${EMPTY_FILE}
+    wc /tmp/mimixbox/it/empty.txt
 }
 
 TestWcReadingThreeFile() {
     export TEST_FILE_GAMENAME=/tmp/mimixbox/it/game.txt
     export TEST_FILE_METAL=/tmp/mimixbox/it/metal.txt
     export EMPTY_FILE=/tmp/mimixbox/it/empty.txt
-    /usr/local/bin/wc ${EMPTY_FILE} ${TEST_FILE_GAMENAME} ${TEST_FILE_METAL}
+    wc /tmp/mimixbox/it/empty.txt /tmp/mimixbox/it/game.txt /tmp/mimixbox/it/empty.txt
 }
