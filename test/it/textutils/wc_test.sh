@@ -35,7 +35,7 @@ CleanUp() {
 
 TestWcWithNoOption() {
     export TEST_FILE_GAMENAME=/tmp/mimixbox/it/game.txt
-    wc ${TEST_FILE_GAMENAME}
+    /bin/wc ${TEST_FILE_GAMENAME}
 }
 
 TestWcWithLinesOption() {
