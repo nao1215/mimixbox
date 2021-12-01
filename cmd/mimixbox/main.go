@@ -21,6 +21,7 @@ import (
 	"fmt"
 	"os"
 	"os/exec"
+	"path"
 	"path/filepath"
 	"strings"
 
@@ -53,7 +54,7 @@ type options struct {
 
 var osExit = os.Exit
 
-const version = "0.27.9"
+const version = "0.27.10"
 
 const (
 	ExitSuccess int = iota // 0
@@ -87,7 +88,7 @@ func main() {
 		osExit(ExitFailuer)
 	}
 
-	app := applets.Applets[os.Args[0]]
+	app := applets.Applets[path.Base(os.Args[0])]
 	if status, err = app.Ep(); err != nil {
 		fmt.Fprintln(os.Stderr, err)
 		osExit(status)
@@ -178,7 +179,7 @@ func hasHelpOption() bool {
 
 func hasAppletName() bool {
 	for _, app := range os.Args {
-		if applets.HasApplet(app) {
+		if applets.HasApplet(path.Base(app)) {
 			return true
 		}
 	}

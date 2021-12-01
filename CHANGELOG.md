@@ -1,6 +1,6 @@
 # Changelog
 All notable changes to this project will be documented in this file. The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.0.0/), and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
-## [0.27.9] - 2021-12-01
+## [0.27.10] - 2021-12-01
 ### Added
  - Add ShellSpec tetsing framework for integration test.
  - ut(Unit Test)／it（Integration Test）target in Makefile.
@@ -9,6 +9,7 @@ All notable changes to this project will be documented in this file. The format 
  - MimixBox command.
    - Display help message when --install, --full-install, --remove are specified and there is no optional argument.
    - Make the error if the directory specified by the user does not exist when executing --install, --full-install, --remove.
+   - Fixed the bug that always determines that the applet does not exist when the user specifies the applet with the full path.
  - Makefile.
    - Display accurate coverage by specifying "-coverpkg=./..." in the unit test.
  - Commands that read file (dos2unix, expand, head, tail, unexpand, wc)
