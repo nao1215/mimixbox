@@ -4,7 +4,7 @@ This document describes how to safely debug MimixBox and add tests. As a prerequ
 If MimixBox is used with Coreutils or BusyBox on the system, the system does not work properly.
 
 # Debugging environment (Dog fooding environment)
-MimixBox is safe to execute commands within the Docker environment. In [Current Docker Preferences] (../../../Dockerfile), all MimixBox built-in commands are symbolically linked under /usr/local/bin. If you add any command, follow the procedure below to check the operation.
+MimixBox is safe to execute commands within the Docker environment. In [Current Docker Preferences] (../../../Dockerfile), all MimixBox built-in commands are symbolically linked under /usr/local/bin. If you add any command, follow the procedure below to check the operation. However, there is a problem now and I haven't built MimixBox in Docker using locally modified code [(Issue # 4)] (https://github.com/nao1215/mimixbox/issues/4)
 ```
 $ make docker
 $ (here, in Docker) 
@@ -43,23 +43,11 @@ test/
 ```
 Like the unit test, the integration test can be easily executed with the make command (GitHub Action is also used).
 ```
-$ make it
+$ make build
+$ sudo make full-install   ※ Create symbolic link for mimixbox builtin commands for a limited time only.
+$ make it                  ※ Execute test
+$ sudo make remove         ※ Delete symblic link
 ```
-However, running the make command in an environment where MimixBox is not installed is only a Coreutils test. After confirming that the integration test works in the HOST environment, finally run it in the Docker environment.
-```
-$ make docker
-
-$ ls           ※ here, in docker
-do_integration_test.sh  integration_tests   ※ Test file copied from HOST environment
-
-$ ./do_integration_test.sh   ※ Integration test execution
-Running: /bin/sh [sh]
-......
-
-Finished in 0.07 seconds (user 0.05 seconds, sys 0.02 seconds)
-6 examples, 0 failures
-```
-
 # When installing MimixBox in the HOST environment
 ## Proper use of installation options
 MimixBox has two options for creating symbolic links to built-in commands.   

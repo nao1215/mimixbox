@@ -44,23 +44,11 @@ test/
 ```
 結合テストも単体テスト同様、makeコマンドで簡単に実行できます（GitHub Actionを使っている所も同様です）
 ```
-$ make it
+$ make build
+$ sudo make full-install   ※ システムに一時的にMimixBox組み込みコマンドのシンボリックリンクを作成
+$ make it                  ※ テスト実行
+$ sudo make remove         ※ シンボリックリンクの破棄
 ```
-ただし、MimixBoxがインストールされていない環境でmakeコマンドを実行しても、Coreutilsのテストにしかなりません。統合テストがHOST環境で動作することが確認できたら、最後にDocker環境で実行してください。
-```
-$ make docker
-
-$ ls           ※ ここからDocker環境
-do_integration_test.sh  integration_tests   ※ HOST環境からコピーされたテストファイル
-
-$ ./do_integration_test.sh   ※ 統合テスト実行
-Running: /bin/sh [sh]
-......
-
-Finished in 0.07 seconds (user 0.05 seconds, sys 0.02 seconds)
-6 examples, 0 failures
-```
-
 # HOST環境にMimixBoxをインストールする場合
 ## インストールオプションの使い分け
 MimixBoxは、組み込みコマンドに対するシンボリックリンクを作成するオプションを2つ提供します。  
