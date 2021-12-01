@@ -18,7 +18,7 @@ Setup() {
     echo "DARK SOULS" >> /tmp/mimixbox/it/game.txt
     echo "SHADOW HEARTS" >>  /tmp/mimixbox/it/game.txt
 
-    echo "MEGADETH" > $/tmp/mimixbox/it/metal.txt
+    echo "MEGADETH" > /tmp/mimixbox/it/metal.txt
     echo "GALNERYUS" >> /tmp/mimixbox/it/metal.txt
     echo "SYSTEM OF A DOWN" >> /tmp/mimixbox/it/metal.txt
     
@@ -30,12 +30,13 @@ CleanUp() {
     export TEST_FILE_METAL=/tmp/mimixbox/it/metal.txt
     export EMPTY_FILE=/tmp/mimixbox/it/empty.txt
 
-    rm  /tmp/mimixbox/it/empty.txt /tmp/mimixbox/it/game.txt /tmp/mimixbox/it/empty.txt
+    rm  /tmp/mimixbox/it/empty.txt /tmp/mimixbox/it/game.txt /tmp/mimixbox/it/metal.txt
 }
 
 TestWcWithNoOption() {
     export TEST_FILE_GAMENAME=/tmp/mimixbox/it/game.txt
     wc /tmp/mimixbox/it/game.txt
+}
 
 TestWcWithLinesOption() {
     export TEST_FILE_GAMENAME=/tmp/mimixbox/it/game.txt
@@ -61,5 +62,5 @@ TestWcReadingThreeFile() {
     export TEST_FILE_GAMENAME=/tmp/mimixbox/it/game.txt
     export TEST_FILE_METAL=/tmp/mimixbox/it/metal.txt
     export EMPTY_FILE=/tmp/mimixbox/it/empty.txt
-    wc /tmp/mimixbox/it/empty.txt /tmp/mimixbox/it/game.txt /tmp/mimixbox/it/empty.txt
+    wc /tmp/mimixbox/it/empty.txt /tmp/mimixbox/it/game.txt /tmp/mimixbox/it/metal.txt
 }
