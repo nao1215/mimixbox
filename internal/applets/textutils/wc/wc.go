@@ -65,7 +65,7 @@ func Run() (int, error) {
 	}
 
 	if mb.HasPipeData() {
-		result, err := wc(strings.Split(args[0], ""), "-", opts)
+		result, err := wc(args, "-", opts)
 		if err != nil {
 			return ExitFailuer, nil
 		}

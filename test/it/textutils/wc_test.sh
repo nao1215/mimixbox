@@ -11,16 +11,16 @@ Setup() {
 
     mkdir -p ${TEST_DIR}
 
-    echo "NieR Replicant ver.1.22474487139..." > ${TEST_FILE_GAMENAME}
-    echo "NieR:Automata" >>  ${TEST_FILE_GAMENAME}
-    echo "The Legend of Zelda: Majora's Mask" >>  ${TEST_FILE_GAMENAME}
-    echo "KICHIKUOU RANCE" >>  ${TEST_FILE_GAMENAME}
-    echo "DARK SOULS" >>  ${TEST_FILE_GAMENAME}
-    echo "SHADOW HEARTS" >>  ${TEST_FILE_GAMENAME}
+    builtin echo "NieR Replicant ver.1.22474487139..." > ${TEST_FILE_GAMENAME}
+    builtin echo "NieR:Automata" >>  ${TEST_FILE_GAMENAME}
+    builtin echo "The Legend of Zelda: Majora's Mask" >>  ${TEST_FILE_GAMENAME}
+    builtin echo "KICHIKUOU RANCE" >>  ${TEST_FILE_GAMENAME}
+    builtin echo "DARK SOULS" >>  ${TEST_FILE_GAMENAME}
+    builtin echo "SHADOW HEARTS" >>  ${TEST_FILE_GAMENAME}
 
-    echo "MEGADETH" > ${TEST_FILE_METAL}
-    echo "GALNERYUS" >> ${TEST_FILE_METAL}
-    echo "SYSTEM OF A DOWN" >> ${TEST_FILE_METAL}
+    builtin echo "MEGADETH" > ${TEST_FILE_METAL}
+    builtin echo "GALNERYUS" >> ${TEST_FILE_METAL}
+    builtin echo "SYSTEM OF A DOWN" >> ${TEST_FILE_METAL}
     
     touch ${EMPTY_FILE}
 }
@@ -35,8 +35,6 @@ CleanUp() {
 
 TestWcWithNoOption() {
     export TEST_FILE_GAMENAME=/tmp/mimixbox/it/game.txt
-    echo ${TEST_FILE_GAMENAME}
-    cat ${TEST_FILE_GAMENAME}
     wc ${TEST_FILE_GAMENAME}
 }
 
