@@ -1,24 +1,24 @@
 TestEchoNormal() {
-    mimixbox echo "Hello World!"
+    echo "Hello World!"
 }
 
 TestEchoVariable() {
-    mimixbox echo "Hello $1"
+    echo "Hello $1"
 }
 
 TestEchoEnvVariable() {
     export TEST_ENV="TEST_ENV_VAR"
-    mimixbox echo ${TEST_ENV}
+    echo ${TEST_ENV}
 }
 
 TestEchoPipeWithoutXargs() {
-    mimixbox echo "pipe" | mimixbox echo
+    echo "pipe" | echo
 }
 
 TestEchoPipeWithargs() {
-    mimixbox echo "pipe" | xargs mimixbox echo
+    echo "pipe" | xargs echo
 }
 
 TestEchoNoArg() {
-    mimixbox echo
+    echo
 }

@@ -1,9 +1,14 @@
-TEST_DIR=/tmp/mimixbox/it
-TEST_FILE_GAMENAME=/tmp/mimixbox/it/game.txt
-TEST_FILE_METAL=/tmp/mimixbox/it/metal.txt
-EMPTY_FILE=/tmp/mimixbox/it/empty.txt
+export TEST_DIR=/tmp/mimixbox/it
+export TEST_FILE_GAMENAME=/tmp/mimixbox/it/game.txt
+export TEST_FILE_METAL=/tmp/mimixbox/it/metal.txt
+export EMPTY_FILE=/tmp/mimixbox/it/empty.txt
 
 Setup() {
+    export TEST_DIR=/tmp/mimixbox/it
+    export TEST_FILE_GAMENAME=/tmp/mimixbox/it/game.txt
+    export TEST_FILE_METAL=/tmp/mimixbox/it/metal.txt
+    export EMPTY_FILE=/tmp/mimixbox/it/empty.txt
+
     mkdir -p ${TEST_DIR}
 
     echo "NieR Replicant ver.1.22474487139..." > ${TEST_FILE_GAMENAME}
@@ -21,29 +26,41 @@ Setup() {
 }
 
 CleanUp() {
-    rm  ${TEST_FILE_GAMENAME} ${EMPTY_FILE}
+    export TEST_FILE_GAMENAME=/tmp/mimixbox/it/game.txt
+    export TEST_FILE_METAL=/tmp/mimixbox/it/metal.txt
+    export EMPTY_FILE=/tmp/mimixbox/it/empty.txt
+
+    rm  ${TEST_FILE_GAMENAME} ${EMPTY_FILE} ${TEST_FILE_METAL}
 }
 
 TestWcWithNoOption() {
-    mimixbox wc ${TEST_FILE_GAMENAME}
+    export TEST_FILE_GAMENAME=/tmp/mimixbox/it/game.txt
+    wc ${TEST_FILE_GAMENAME}
 }
 
 TestWcWithLinesOption() {
-    mimixbox wc -l ${TEST_FILE_GAMENAME}
+    export TEST_FILE_GAMENAME=/tmp/mimixbox/it/game.txt
+    wc -l ${TEST_FILE_GAMENAME}
 }
 
 TestWcWithBytesOption() {
-    mimixbox wc -c ${TEST_FILE_GAMENAME}
+    export TEST_FILE_GAMENAME=/tmp/mimixbox/it/game.txt
+    wc -c ${TEST_FILE_GAMENAME}
 }
 
 TestWcWithMaxLineLengthOption() {
-    mimixbox wc -L ${TEST_FILE_GAMENAME}
+    export TEST_FILE_GAMENAME=/tmp/mimixbox/it/game.txt
+    wc -L ${TEST_FILE_GAMENAME}
 }
 
 TestWcReadingEmptyFile() {
-    mimixbox wc ${EMPTY_FILE}
+    export EMPTY_FILE=/tmp/mimixbox/it/empty.txt
+    wc ${EMPTY_FILE}
 }
 
 TestWcReadingThreeFile() {
-    mimixbox wc ${EMPTY_FILE} ${TEST_FILE_GAMENAME} ${TEST_FILE_METAL}
+    export TEST_FILE_GAMENAME=/tmp/mimixbox/it/game.txt
+    export TEST_FILE_METAL=/tmp/mimixbox/it/metal.txt
+    export EMPTY_FILE=/tmp/mimixbox/it/empty.txt
+    wc ${EMPTY_FILE} ${TEST_FILE_GAMENAME} ${TEST_FILE_METAL}
 }

@@ -29,7 +29,7 @@ import (
 )
 
 const cmdName string = "wc"
-const version = "1.0.2"
+const version = "1.0.3"
 
 var osExit = os.Exit
 
@@ -102,12 +102,12 @@ func wcAll(args []string, opts options) (int, error) {
 		target := os.ExpandEnv(file)
 
 		if mb.IsDir(target) {
-			fmt.Fprintf(os.Stderr, file+": this path is directory")
+			fmt.Fprintln(os.Stderr, file+": this path is directory")
 			status = ExitFailuer
 			continue
 		}
 		if !mb.IsFile(target) {
-			fmt.Fprintf(os.Stderr, file+": no such File")
+			fmt.Fprintln(os.Stderr, file+": no such File")
 			status = ExitFailuer
 			continue
 		}
