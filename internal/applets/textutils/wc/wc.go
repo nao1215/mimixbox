@@ -20,6 +20,7 @@ import (
 	"fmt"
 	"os"
 	"regexp"
+	"strconv"
 	"strings"
 
 	mb "github.com/nao1215/mimixbox/internal/lib"
@@ -28,7 +29,7 @@ import (
 )
 
 const cmdName string = "wc"
-const version = "1.0.0"
+const version = "1.0.1"
 
 var osExit = os.Exit
 
@@ -45,6 +46,7 @@ type wordCount struct {
 	words     int
 	bytes     int
 	maxLength int
+	filePath  string
 }
 
 // Exit code
@@ -63,28 +65,30 @@ func Run() (int, error) {
 	}
 
 	if mb.HasPipeData() {
-		_, err := wc(strings.Split(args[0], ""), "-", opts)
+		result, err := wc(strings.Split(args[0], ""), "-", opts)
 		if err != nil {
 			return ExitFailuer, nil
 		}
+		printWordCountData([]wordCount{result}, opts)
 		return ExitSuccess, nil
 	}
 
 	if len(args) == 0 || mb.Contains(args, "-") {
-		var data []string
+		var lines []string
 		for {
 			input, next := mb.Input()
 			if !next {
 				break
 			}
 			if input != "" {
-				data = append(data, input)
+				lines = append(lines, input)
 			}
 		}
-		_, err := wc(data, "-", opts)
+		result, err := wc(lines, "-", opts)
 		if err != nil {
 			return ExitFailuer, nil
 		}
+		printWordCountData([]wordCount{result}, opts)
 		return ExitSuccess, nil
 	}
 
@@ -124,40 +128,82 @@ func wcAll(args []string, opts options) (int, error) {
 		results = append(results, result)
 	}
 
-	if len(results) >= 2 {
-		printWordCountData(sum(results), "Total", opts)
+	if len(args) > 1 {
+		results = append(results, total(results))
 	}
+	printWordCountData(results, opts)
 
 	return status, nil
 }
 
 func wc(lines []string, path string, opts options) (wordCount, error) {
-	// Gnu Coreutils wc does not count the first line as the number of lines.
-	// So, initial value of line number is -1.
-	var result wordCount = wordCount{-1, 0, 0, 0}
+	var result wordCount = wordCount{0, 0, 0, 0, ""}
 
+	result.filePath = path
 	for _, line := range lines {
 		result.lines++
 		result.words += countWord(line)
 		result.bytes += len([]byte(line))
 	}
-	printWordCountData(result, path, opts)
+	// In Coreutils, it looks like the terminator is also counted as a Byte count.
+	result.bytes = result.bytes + 1
 	return result, nil
 }
 
-func printWordCountData(wc wordCount, path string, opts options) {
-	//TODO: Not supported when multiple options are specified
-	if opts.Bytes {
-		fmt.Fprintf(os.Stdout, "%d %s\n", wc.bytes, path)
-		return
-	} else if opts.Lines {
-		fmt.Fprintf(os.Stdout, "%d %s\n", wc.lines, path)
-		return
-	} else if opts.MaxLineLen {
-		fmt.Fprintf(os.Stdout, "%d %s\n", wc.maxLength, path)
-		return
+func printWordCountData(counts []wordCount, opts options) {
+	digit := maxDigit(counts, opts)
+	oneContent := "%" + strconv.Itoa(digit) + "d"
+	formatForOneContent := oneContent + " %s\n"
+	formatForAll := oneContent + " " + oneContent + " " + oneContent + " %s\n"
+
+	//TODO: Not supported when multiple options are specified.
+	for _, v := range counts {
+		if opts.Bytes {
+			fmt.Fprintf(os.Stdout, formatForOneContent, v.bytes, v.filePath)
+			return
+		} else if opts.Lines {
+			fmt.Fprintf(os.Stdout, formatForOneContent, v.lines, v.filePath)
+			return
+		} else if opts.MaxLineLen {
+			fmt.Fprintf(os.Stdout, formatForOneContent, v.maxLength, v.filePath)
+			return
+		}
+		fmt.Fprintf(os.Stdout, formatForAll, v.lines, v.words, v.bytes, v.filePath)
 	}
-	fmt.Fprintf(os.Stdout, "%d %d %d %s\n", wc.lines, wc.words, wc.bytes, path)
+}
+
+func maxDigit(counts []wordCount, opts options) int {
+	var maxDigit int = 0
+	for _, v := range counts {
+		bytes := len(strconv.Itoa(v.bytes))
+		lines := len(strconv.Itoa(v.lines))
+		length := len(strconv.Itoa(v.maxLength))
+		words := len(strconv.Itoa(v.words))
+
+		if opts.Bytes && maxDigit < bytes {
+			maxDigit = bytes
+		} else if opts.Lines && maxDigit < lines {
+			maxDigit = lines
+		} else if opts.MaxLineLen && maxDigit < length {
+			maxDigit = length
+		} else if opts.Words && maxDigit < words {
+			maxDigit = words
+		} else {
+			if maxDigit < bytes {
+				maxDigit = bytes
+			}
+			if maxDigit < lines {
+				maxDigit = lines
+			}
+			if maxDigit < length {
+				maxDigit = length
+			}
+			if maxDigit < words {
+				maxDigit = words
+			}
+		}
+	}
+	return maxDigit
 }
 
 func countWord(line string) int {
@@ -172,8 +218,8 @@ func countWord(line string) int {
 	return len(split)
 }
 
-func sum(wordCounts []wordCount) wordCount {
-	var total = wordCount{0, 0, 0, 0}
+func total(wordCounts []wordCount) wordCount {
+	var total = wordCount{0, 0, 0, 0, "total"}
 	for _, w := range wordCounts {
 		total.bytes += w.bytes
 		total.lines += w.lines
