@@ -29,7 +29,7 @@ import (
 )
 
 const cmdName string = "wc"
-const version = "1.0.1"
+const version = "1.0.2"
 
 var osExit = os.Exit
 
@@ -145,9 +145,26 @@ func wc(lines []string, path string, opts options) (wordCount, error) {
 		result.words += countWord(line)
 		result.bytes += len([]byte(line))
 	}
+	result.maxLength = getMaxLength(lines)
+
 	// In Coreutils, it looks like the terminator is also counted as a Byte count.
-	result.bytes = result.bytes + 1
+	if result.bytes != 0 {
+		result.bytes = result.bytes + 1
+	}
 	return result, nil
+}
+
+func getMaxLength(lines []string) int {
+	max := 0
+	for _, line := range lines {
+		if strings.HasSuffix(line, "\n") {
+			line = strings.TrimRight(line, "\n")
+		}
+		if len(line) > max {
+			max = len(line)
+		}
+	}
+	return max
 }
 
 func printWordCountData(counts []wordCount, opts options) {

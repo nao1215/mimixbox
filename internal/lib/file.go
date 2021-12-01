@@ -230,7 +230,9 @@ func ReadFileToStrList(path string) ([]string, error) {
 		strList = append(strList, scanner.Text()+"\n")
 	}
 
-	strList[len(strList)-1] = strings.TrimRight(strList[len(strList)-1], "\n")
+	if len(strList) >= 1 {
+		strList[len(strList)-1] = strings.TrimRight(strList[len(strList)-1], "\n")
+	}
 	return strList, nil
 }
 

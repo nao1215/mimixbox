@@ -27,7 +27,7 @@ import (
 
 const cmdName string = "head"
 
-const version = "1.0.3"
+const version = "1.0.4"
 
 var osExit = os.Exit
 

@@ -26,13 +26,13 @@ import (
 	"github.com/jessevdk/go-flags"
 )
 
-const cmdName string = "dos2unix"
-const version = "1.0.3"
+const cmdName string = "unix2dos"
+const version = "1.0.4"
 
 var osExit = os.Exit
 
 type options struct {
-	Version bool `short:"v" long:"version" description:"Show dos2unix command version"`
+	Version bool `short:"v" long:"version" description:"Show unix2dos command version"`
 }
 
 // Exit code
