@@ -36,6 +36,7 @@ CleanUp() {
 TestWcWithNoOption() {
     export TEST_FILE_GAMENAME=/tmp/mimixbox/it/game.txt
     echo ${TEST_FILE_GAMENAME}
+    cat ${TEST_FILE_GAMENAME}
     wc ${TEST_FILE_GAMENAME}
 }
 
