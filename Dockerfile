@@ -21,7 +21,8 @@ RUN  git clone https://github.com/shellspec/shellspec.git && \
 
 RUN echo "#!/bin/bash" > ${IT_SHELL} && \
     echo "cd /home/mimixbox/integration_tests && shellspec\n" >> ${IT_SHELL} && \
-    chmod a+x ${IT_SHELL}
+    chmod a+x ${IT_SHELL} && \
+    chown -R mimixbox:mimixbox /home/mimixbox/.
 
 # If you want to administrator privileges, you become the root user.
 # RUN echo "mimixbox    ALL=(ALL)       ALL" >> /etc/sudoers
