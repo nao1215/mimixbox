@@ -18,7 +18,6 @@ package cat
 
 import (
 	"os"
-	"strings"
 
 	mb "github.com/nao1215/mimixbox/internal/lib"
 
@@ -27,7 +26,7 @@ import (
 
 const cmdName string = "cat"
 
-const version = "1.0.6"
+const version = "1.0.7"
 
 var osExit = os.Exit
 
@@ -51,8 +50,8 @@ func Run() (int, error) {
 		return ExitFailuer, nil
 	}
 
-	if mb.HasPipeData() {
-		mb.Dump(mb.AddLineFeed(strings.Split(args[0], "\n")), opts.Number)
+	if mb.HasPipeData() && len(os.Args) == 1 {
+		mb.Dump(args, opts.Number)
 		return ExitSuccess, nil
 	}
 
@@ -79,7 +78,7 @@ func parseArgs(opts *options) ([]string, error) {
 		return nil, err
 	}
 
-	if mb.HasPipeData() {
+	if mb.HasPipeData() && len(args) == 0 {
 		stdin, err := mb.FromPIPE()
 		if err != nil {
 			return nil, err
