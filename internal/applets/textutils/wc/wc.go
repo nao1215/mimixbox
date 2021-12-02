@@ -60,11 +60,13 @@ func Run() (int, error) {
 	var args []string
 	var err error
 
+	fmt.Println(os.Args)
 	if args, err = parseArgs(&opts); err != nil {
 		return ExitFailuer, nil
 	}
 
 	if mb.HasPipeData() {
+		fmt.Println("Has Pipe")
 		result, err := wc(args, "-", opts)
 		if err != nil {
 			return ExitFailuer, nil
@@ -84,6 +86,7 @@ func Run() (int, error) {
 				lines = append(lines, input)
 			}
 		}
+		fmt.Println("No input")
 		result, err := wc(lines, "-", opts)
 		if err != nil {
 			return ExitFailuer, nil
