@@ -23,15 +23,9 @@ jobs:
       
     - name: Build
       run: make build
- 
-    - name: InstallMimixBox
-      run: sudo install -v -m 0755 -D mimixbox /usr/local/bin/.
       
     - name: CreateSymbolicLink
-      run: mimixbox --full-install /usr/local/bin/
- 
-    - name: WarkAround
-      run: unlink /usr/local/bin/mkdir
+      run: make full-install
       
     - name: IntegrationTest
       run: make it
