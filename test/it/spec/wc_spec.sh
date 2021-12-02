@@ -1,5 +1,5 @@
 Describe 'Word Count without options'
-    Include it/textutils/wc_test.sh
+    Include textutils/wc_test.sh
     BeforeEach 'Setup'
     AfterEach 'CleanUp'
     It 'says "  6  16 126 /tmp/mimixbox/it/game.txt"'
@@ -9,7 +9,7 @@ Describe 'Word Count without options'
 End
 
 Describe 'Word Count with --lines options'
-    Include it/textutils/wc_test.sh
+    Include textutils/wc_test.sh
     BeforeEach 'Setup'
     AfterEach 'CleanUp'
     It 'says "6 /tmp/mimixbox/it/game.txt"'
@@ -19,7 +19,7 @@ Describe 'Word Count with --lines options'
 End
 
 Describe 'Word Count with --bytes options'
-    Include it/textutils/wc_test.sh
+    Include textutils/wc_test.sh
     BeforeEach 'Setup'
     AfterEach 'CleanUp'
     It 'says "126 /tmp/mimixbox/it/game.txt"'
@@ -29,7 +29,7 @@ Describe 'Word Count with --bytes options'
 End
 
 Describe 'Word Count with --max-line-length options'
-    Include it/textutils/wc_test.sh
+    Include textutils/wc_test.sh
     BeforeEach 'Setup'
     AfterEach 'CleanUp'
     It 'says "35 /tmp/mimixbox/it/game.txt"'
@@ -39,7 +39,7 @@ Describe 'Word Count with --max-line-length options'
 End
 
 Describe 'Word Count for empty file'
-    Include it/textutils/wc_test.sh
+    Include textutils/wc_test.sh
     BeforeEach 'Setup'
     AfterEach 'CleanUp'
     It 'says "0 0 0 /tmp/mimixbox/it/empty.txt"'
@@ -49,7 +49,7 @@ Describe 'Word Count for empty file'
 End
 
 Describe 'Word Count for two file'
-    Include it/textutils/wc_test.sh
+    Include textutils/wc_test.sh
     BeforeEach 'Setup'
     AfterEach 'CleanUp'
 

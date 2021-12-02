@@ -1,5 +1,5 @@
 Describe 'Echo text without variable'
-    Include it/shellutils/echo_test.sh
+    Include shellutils/echo_test.sh
     It 'says Hello World!'
         When call TestEchoNormal
         The output should equal 'Hello World!'
@@ -7,7 +7,7 @@ Describe 'Echo text without variable'
 End
 
 Describe 'Echo text with variable'
-    Include it/shellutils/echo_test.sh
+    Include shellutils/echo_test.sh
     It 'says Hello World! $1=World!'
         When call TestEchoNormal "World!"
         The output should equal 'Hello World!'
@@ -15,7 +15,7 @@ Describe 'Echo text with variable'
 End
 
 Describe 'Echo text with environment variable'
-    Include it/shellutils/echo_test.sh
+    Include shellutils/echo_test.sh
     It 'says ${TEST_ENV}=TEST_ENV_VAR'
         When call TestEchoEnvVariable
         The output should equal 'TEST_ENV_VAR'
@@ -23,7 +23,7 @@ Describe 'Echo text with environment variable'
 End
 
 Describe 'Echo pipe data without xargs command'
-    Include it/shellutils/echo_test.sh
+    Include shellutils/echo_test.sh
     It 'says nothing'
         When call TestEchoPipeWithoutXargs
         The output should equal ''
@@ -31,7 +31,7 @@ Describe 'Echo pipe data without xargs command'
 End
 
 Describe 'Echo pipe data with xargs command'
-    Include it/shellutils/echo_test.sh
+    Include shellutils/echo_test.sh
     It 'says pipe'
         When call TestEchoPipeWithargs
         The output should equal 'pipe'
@@ -39,7 +39,7 @@ Describe 'Echo pipe data with xargs command'
 End
 
 Describe 'Echo with no arguments'
-    Include it/shellutils/echo_test.sh
+    Include shellutils/echo_test.sh
     It 'says nothing'
         When call TestEchoNoArg
         The output should equal ''

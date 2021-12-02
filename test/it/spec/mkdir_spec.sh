@@ -1,5 +1,5 @@
 Describe 'Make single directory'
-    Include it/fileutils/mkdir_test.sh
+    Include fileutils/mkdir_test.sh
     BeforeEach 'Setup'
     AfterEach 'Cleanup'
     It 'says single'
@@ -9,7 +9,7 @@ Describe 'Make single directory'
 End
 
 Describe 'Make parentes/child directory'
-    Include it/fileutils/mkdir_test.sh
+    Include fileutils/mkdir_test.sh
     BeforeEach 'Setup'
     AfterEach 'Cleanup'
     It 'says child'
@@ -19,7 +19,7 @@ Describe 'Make parentes/child directory'
 End
 
 Describe 'Make directory using pipe'
-    Include it/fileutils/mkdir_test.sh
+    Include fileutils/mkdir_test.sh
     BeforeEach 'Setup'
     AfterEach 'Cleanup'
     It 'says make directory using pipe'
@@ -29,7 +29,7 @@ Describe 'Make directory using pipe'
 End
 
 Describe 'Make directory without arguments'
-    Include it/fileutils/mkdir_test.sh
+    Include fileutils/mkdir_test.sh
     BeforeEach 'Setup'
     AfterEach 'Cleanup'
 
@@ -53,7 +53,7 @@ Describe 'Make directory without arguments'
 End
 
 Describe 'Make directory with --parents option and no arguments'
-    Include it/fileutils/mkdir_test.sh
+    Include fileutils/mkdir_test.sh
     BeforeEach 'Setup'
     AfterEach 'Cleanup'
 

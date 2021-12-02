@@ -15,7 +15,7 @@ RUN useradd mimixbox -m -s /bin/bash &&\
     echo 'mimixbox:password' |chpasswd
 
 # Copy ShellSpec installer
-COPY ./test /home/mimixbox/integration_tests
+COPY ./test/it /home/mimixbox/integration_tests
 RUN  git clone https://github.com/shellspec/shellspec.git && \
     cd shellspec && make install
 
