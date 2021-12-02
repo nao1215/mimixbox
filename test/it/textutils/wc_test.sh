@@ -65,3 +65,13 @@ TestWcReadingThreeFile() {
     export EMPTY_FILE=/tmp/mimixbox/it/empty.txt
     wc ${EMPTY_FILE} ${TEST_FILE_GAMENAME} ${TEST_FILE_METAL}
 }
+
+TestWcWithPipe() {
+    export TEST_FILE_GAMENAME=/tmp/mimixbox/it/game.txt
+    echo ${TEST_FILE_GAMENAME} | wc
+}
+
+TestWcWithPipeAndArgument() {
+    export TEST_FILE_GAMENAME=/tmp/mimixbox/it/game.txt
+    echo ${TEST_FILE_GAMENAME} | wc ${TEST_FILE_GAMENAME}
+}

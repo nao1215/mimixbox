@@ -5,7 +5,6 @@ Describe 'Word Count without options'
     It 'says "  6  16 126 /tmp/mimixbox/it/game.txt"'
         When call TestWcWithNoOption
         The output should equal '  6  16 126 /tmp/mimixbox/it/game.txt'
-        Dump
     End
 End
 
@@ -16,7 +15,6 @@ Describe 'Word Count with --lines options'
     It 'says "6 /tmp/mimixbox/it/game.txt"'
         When call TestWcWithLinesOption
         The output should equal '6 /tmp/mimixbox/it/game.txt'
-        Dump
     End
 End
 
@@ -27,7 +25,6 @@ Describe 'Word Count with --bytes options'
     It 'says "126 /tmp/mimixbox/it/game.txt"'
         When call TestWcWithBytesOption
         The output should equal '126 /tmp/mimixbox/it/game.txt'
-        Dump
     End
 End
 
@@ -38,7 +35,6 @@ Describe 'Word Count with --max-line-length options'
     It 'says "35 /tmp/mimixbox/it/game.txt"'
         When call TestWcWithMaxLineLengthOption
         The output should equal '35 /tmp/mimixbox/it/game.txt'
-        Dump
     End
 End
 
@@ -49,7 +45,6 @@ Describe 'Word Count for empty file'
     It 'says "0 0 0 /tmp/mimixbox/it/empty.txt"'
         When call TestWcReadingEmptyFile
         The output should equal '0 0 0 /tmp/mimixbox/it/empty.txt'
-        Dump
     End
 End
 
@@ -68,6 +63,27 @@ Describe 'Word Count for two file'
     It 'says "wc: three file results"'
         When call TestWcReadingThreeFile
         The output should equal "$(result)"
-        Dump
+    End
+End
+
+Describe 'Word Count from pipe'
+    Include textutils/wc_test.sh
+    BeforeEach 'Setup'
+    AfterEach 'CleanUp'
+
+    It 'count file from pipe'
+        When call TestWcWithPipe
+        The output should equal ' 1  1 26 '
+    End
+End
+
+Describe 'Word Count only file, not count pipe data'
+    Include textutils/wc_test.sh
+    BeforeEach 'Setup'
+    AfterEach 'CleanUp'
+
+    It 'read the file with the specified argument without reading the pipe data'
+        When call TestWcWithPipeAndArgument
+        The output should equal '  6  16 126 /tmp/mimixbox/it/game.txt'
     End
 End

@@ -29,7 +29,7 @@ import (
 )
 
 const cmdName string = "wc"
-const version = "1.0.3"
+const version = "1.0.4"
 
 var osExit = os.Exit
 
@@ -60,19 +60,12 @@ func Run() (int, error) {
 	var args []string
 	var err error
 
-	fmt.Println(os.Args)
 	if args, err = parseArgs(&opts); err != nil {
 		return ExitFailuer, nil
 	}
 
-	if mb.HasPipeData() {
-		fmt.Println("Has Pipe")
-		result, err := wc(args, "-", opts)
-		if err != nil {
-			return ExitFailuer, nil
-		}
-		printWordCountData([]wordCount{result}, opts)
-		return ExitSuccess, nil
+	if mb.HasPipeData() && len(os.Args) == 1 {
+		return wcPipe(args, opts)
 	}
 
 	if len(args) == 0 || mb.Contains(args, "-") {
@@ -86,7 +79,7 @@ func Run() (int, error) {
 				lines = append(lines, input)
 			}
 		}
-		fmt.Println("No input")
+
 		result, err := wc(lines, "-", opts)
 		if err != nil {
 			return ExitFailuer, nil
@@ -96,6 +89,18 @@ func Run() (int, error) {
 	}
 
 	return wcAll(args, opts)
+}
+
+func wcPipe(lines []string, opts options) (int, error) {
+	if len(lines) > 0 && strings.HasSuffix(lines[0], "\n") {
+		lines[0] = strings.TrimRight(lines[0], "\n")
+	}
+	result, err := wc(lines, "", opts)
+	if err != nil {
+		return ExitFailuer, nil
+	}
+	printWordCountData([]wordCount{result}, opts)
+	return ExitSuccess, nil
 }
 
 func wcAll(args []string, opts options) (int, error) {
@@ -257,7 +262,7 @@ func parseArgs(opts *options) ([]string, error) {
 		return nil, err
 	}
 
-	if mb.HasPipeData() {
+	if mb.HasPipeData() && len(args) == 0 {
 		stdin, err := mb.FromPIPE()
 		if err != nil {
 			return nil, err
