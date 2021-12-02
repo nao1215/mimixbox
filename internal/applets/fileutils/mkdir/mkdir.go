@@ -17,6 +17,7 @@
 package mkdir
 
 import (
+	"errors"
 	"fmt"
 	"os"
 
@@ -36,6 +37,8 @@ const (
 	ExitFailuer
 )
 
+var ErrNoOperand = errors.New("no operand")
+
 type options struct {
 	Parent  bool `short:"p" long:"parents" description:"No error if existing, make parent directories as needed"`
 	Version bool `short:"v" long:"version" description:"Show mkdir command version"`
@@ -47,6 +50,9 @@ func Run() (int, error) {
 	var err error
 
 	if args, err = parseArgs(&opts); err != nil {
+		if err == ErrNoOperand {
+			return ExitFailuer, err
+		}
 		return ExitFailuer, nil
 	}
 
@@ -81,8 +87,7 @@ func parseArgs(opts *options) ([]string, error) {
 	}
 
 	if !isValidArgNr(args) {
-		showHelp(p)
-		osExit(ExitFailuer)
+		return nil, ErrNoOperand
 	}
 	return args, nil
 }

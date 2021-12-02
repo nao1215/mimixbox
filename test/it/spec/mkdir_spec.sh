@@ -31,50 +31,24 @@ Describe 'Make directory using pipe'
     End
 End
 
-Describe 'Make directory without arguments'
+Describe 'Make directory without operand'
     Include fileutils/mkdir_test.sh
     BeforeEach 'Setup'
     AfterEach 'Cleanup'
-
-    result() { %text
-      #|Usage:
-      #|  mkdir [OPTIONS] PATH
-      #|
-      #|Application Options:
-      #|  -p, --parents  No error if existing, make parent directories as needed
-      #|  -v, --version  Show mkdir command version
-      #|
-      #|Help Options:
-      #|  -h, --help     Show this help message
-    }
-
-    It 'shows help message'
+    It 'print error message'
         When call TestMkdirNoArg
-        The stdout should equal "$(result)"
+        The error should equal 'no operand'
         The status should be failure
     End
 End
 
-Describe 'Make directory with --parents option and no arguments'
+Describe 'Make directory with --parents option and no operand'
     Include fileutils/mkdir_test.sh
     BeforeEach 'Setup'
     AfterEach 'Cleanup'
-
-    result() { %text
-      #|Usage:
-      #|  mkdir [OPTIONS] PATH
-      #|
-      #|Application Options:
-      #|  -p, --parents  No error if existing, make parent directories as needed
-      #|  -v, --version  Show mkdir command version
-      #|
-      #|Help Options:
-      #|  -h, --help     Show this help message
-    }
-
-    It 'shows help message'
+    It 'print error message'
         When call TestMkdirNoArgWithParentsOption
-        The stdout should equal "$(result)"
+        The error should equal 'no operand'
         The status should be failure
     End
 End
