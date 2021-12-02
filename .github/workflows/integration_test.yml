@@ -25,7 +25,7 @@ jobs:
       run: make build
       
     - name: CreateSymbolicLink
-      run: make full-install
+      run: sudo make full-install
       
     - name: IntegrationTest
       run: make it
