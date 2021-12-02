@@ -79,7 +79,7 @@ Describe 'Word Count from pipe'
 
     It 'count file from pipe'
         When call TestWcWithPipe
-        The output should equal ' 1  1 26 '
+        The output should equal '      1       1      26 '
         The status should be success
     End
 End
@@ -103,8 +103,8 @@ Describe 'Try word count directory'
 
     It 'can not read directory'
         When call TestWcNotFile
-        The error should equal '/tmp/mimixbox/it: this path is directory'
-        The output should equal '     0      0      0 /tmp/mimixbox/it'
+        The error should equal 'wc: /tmp/mimixbox/it: this path is directory'
+        The output should equal '      0       0       0 /tmp/mimixbox/it'
         The status should be failure
     End
 End
@@ -115,14 +115,14 @@ Describe 'Try word count directory and file same time.'
     AfterEach 'CleanUp'
 
     result() { %text
-      #|     0      0      0 /tmp/mimixbox/it
-      #|     6     16    126 /tmp/mimixbox/it/game.txt
-      #|     6     16    126 total
+      #|      0       0       0 /tmp/mimixbox/it
+      #|      6      16     126 /tmp/mimixbox/it/game.txt
+      #|      6      16     126 total
     }
 
     It 'count only file. Count data for directory is always 0'
         When call TestWcDirectoryAndFileSameTime
-        The error should equal '/tmp/mimixbox/it: this path is directory'
+        The error should equal 'wc: /tmp/mimixbox/it: this path is directory'
         The output should equal  "$(result)"
         The status should be failure
     End

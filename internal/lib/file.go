@@ -218,20 +218,22 @@ func interactiveRemoveDir(dir string) error {
 
 func ReadFileToStrList(path string) ([]string, error) {
 	var strList []string
-
 	f, err := os.Open(path)
 	if err != nil {
 		return nil, err
 	}
 	defer f.Close()
 
-	scanner := bufio.NewScanner(f)
-	for scanner.Scan() {
-		strList = append(strList, scanner.Text()+"\n")
-	}
-
-	if len(strList) >= 1 {
-		strList[len(strList)-1] = strings.TrimRight(strList[len(strList)-1], "\n")
+	r := bufio.NewReader(f)
+	for {
+		line, err := r.ReadString('\n')
+		if err != nil && err != io.EOF {
+			return nil, err
+		}
+		if err == io.EOF && len(line) == 0 {
+			break
+		}
+		strList = append(strList, line)
 	}
 	return strList, nil
 }

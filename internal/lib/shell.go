@@ -82,7 +82,7 @@ func Parrot(withNl bool) {
 			}
 		}
 		if withNl {
-			PrintStrWithNumberLine(nl, response)
+			PrintStrWithNumberLine(nl, "  %6d  %s", response) // respect Coreutils
 		} else {
 			fmt.Fprintln(os.Stdout, response)
 		}
@@ -137,7 +137,7 @@ func Concatenate(path []string, lfAtTheJoint bool) ([]string, error) {
 			list[len(list)-1] = list[len(list)-1] + "\n"
 			strList = append(strList, list...)
 		} else { // for cat command
-			if index > 0 {
+			if index > 0 && !strings.HasSuffix(strList[index], "\n") {
 				strList[index] = strList[index] + list[0]
 				strList = append(strList, list[1:]...)
 			} else {
@@ -155,13 +155,13 @@ func PrintStrListWithNumberLine(strList []string, countEmpryLine bool) {
 			fmt.Fprint(os.Stdout, s)
 			continue
 		}
-		PrintStrWithNumberLine(nl, s)
+		PrintStrWithNumberLine(nl, "%6d  %s", s)
 		nl++
 	}
 }
 
-func PrintStrWithNumberLine(nl int, str string) {
-	fmt.Fprintf(os.Stdout, "%6d  %s", nl, str)
+func PrintStrWithNumberLine(nl int, format string, message string) {
+	fmt.Fprintf(os.Stdout, format, nl, message)
 }
 
 func FromPIPE() (string, error) {

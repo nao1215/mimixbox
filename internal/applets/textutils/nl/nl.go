@@ -64,7 +64,7 @@ func Run() (int, error) {
 				break
 			}
 			if input != "" {
-				mb.PrintStrWithNumberLine(nr, input+"\n")
+				mb.PrintStrWithNumberLine(nr, "  %6d  %s", input+"\n")
 				nr++
 			} else {
 				fmt.Fprintln(os.Stdout, "")

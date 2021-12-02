@@ -1,14 +1,17 @@
 # Changelog
 All notable changes to this project will be documented in this file. The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.0.0/), and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
-## [0.27.15] - 2021-12-02
+## [0.27.16] - 2021-12-02
 ### Changed
  - mimixbox command.
    - When an error occurs, the name of the applet that caused the error is displayed.
  - wc command.
    - Fixed the bug that the file specified by the argument is not referenced when the wc command is connected by pipe.
    - Display the count result even if the argument is directory.
+   - When an error occurs, wc command display its name.
  - cat command. 
    - Fixed the bug that the cat command does not refer to the argument when pipe is used.
+   - Fixed the bug that some lines do not have line numbers when the --number option is specified and there is a line feed code in the file-to-file concatenation.
+   - Concatenate here documents and files.
  - mkdir command.
    - Output an error instead of a help message when no argument is specified.
 ## [0.27.10] - 2021-12-01

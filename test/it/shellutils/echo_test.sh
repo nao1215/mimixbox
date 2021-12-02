@@ -12,7 +12,7 @@ TestEchoEnvVariable() {
 }
 
 TestEchoPipeWithoutXargs() {
-    echo "pipe" | tail -n 1 | echo
+    echo "pipe" | echo
 }
 
 TestEchoPipeWithargs() {

@@ -29,7 +29,7 @@ import (
 )
 
 const cmdName string = "wc"
-const version = "1.0.4"
+const version = "1.0.5"
 
 var osExit = os.Exit
 
@@ -79,7 +79,7 @@ func Run() (int, error) {
 				lines = append(lines, input)
 			}
 		}
-		printWordCountData([]wordCount{wc(lines, "-", opts)}, opts, ExitSuccess)
+		printWordCountData([]wordCount{wc(lines, "-", opts)}, opts, 7)
 		return ExitSuccess, nil
 	}
 
@@ -87,11 +87,8 @@ func Run() (int, error) {
 }
 
 func wcPipe(lines []string, opts options) (int, error) {
-	if len(lines) > 0 && strings.HasSuffix(lines[0], "\n") {
-		lines[0] = strings.TrimRight(lines[0], "\n")
-	}
 	result := wc(lines, "", opts)
-	printWordCountData([]wordCount{result}, opts, ExitSuccess)
+	printWordCountData([]wordCount{result}, opts, 7)
 	return ExitSuccess, nil
 }
 
@@ -102,13 +99,13 @@ func wcAll(args []string, opts options) (int, error) {
 		target := os.ExpandEnv(file)
 
 		if mb.IsDir(target) {
-			fmt.Fprintln(os.Stderr, file+": this path is directory")
+			fmt.Fprintln(os.Stderr, "wc: "+target+": this path is directory")
 			status = ExitFailuer
 			results = append(results, wordCount{0, 0, 0, 0, target})
 			continue
 		}
 		if !mb.IsFile(target) {
-			fmt.Fprintln(os.Stderr, file+": no such File")
+			fmt.Fprintln(os.Stderr, "wc: "+target+": no such File")
 			status = ExitFailuer
 			results = append(results, wordCount{0, 0, 0, 0, target})
 			continue
@@ -116,7 +113,7 @@ func wcAll(args []string, opts options) (int, error) {
 
 		lines, err := mb.ReadFileToStrList(target)
 		if err != nil {
-			fmt.Fprintln(os.Stderr, target+": can't read file")
+			fmt.Fprintln(os.Stderr, "wc: "+target+": can't read file")
 			status = ExitFailuer
 			results = append(results, wordCount{0, 0, 0, 0, target})
 			continue
@@ -128,7 +125,12 @@ func wcAll(args []string, opts options) (int, error) {
 	if len(args) > 1 {
 		results = append(results, total(results))
 	}
-	printWordCountData(results, opts, status)
+
+	if status == ExitSuccess {
+		printWordCountData(results, opts, maxDigit(results, opts))
+	} else {
+		printWordCountData(results, opts, 7)
+	}
 
 	return status, nil
 }
@@ -144,10 +146,6 @@ func wc(lines []string, path string, opts options) wordCount {
 	}
 	result.maxLength = getMaxLength(lines)
 
-	// In Coreutils, it looks like the terminator is also counted as a Byte count.
-	if result.bytes != 0 {
-		result.bytes = result.bytes + 1
-	}
 	return result
 }
 
@@ -164,8 +162,7 @@ func getMaxLength(lines []string) int {
 	return max
 }
 
-func printWordCountData(counts []wordCount, opts options, status int) {
-	digit := decideDigit(counts, opts, status)
+func printWordCountData(counts []wordCount, opts options, digit int) {
 	oneContent := "%" + strconv.Itoa(digit) + "d"
 	formatForOneContent := oneContent + " %s\n"
 	formatForAll := oneContent + " " + oneContent + " " + oneContent + " %s\n"
@@ -184,16 +181,6 @@ func printWordCountData(counts []wordCount, opts options, status int) {
 		}
 		fmt.Fprintf(os.Stdout, formatForAll, v.lines, v.words, v.bytes, v.filePath)
 	}
-}
-
-func decideDigit(counts []wordCount, opts options, status int) int {
-	digit := 0
-	if status == ExitSuccess {
-		digit = maxDigit(counts, opts)
-	} else {
-		digit = 6 // respect coreutils.
-	}
-	return digit
 }
 
 func maxDigit(counts []wordCount, opts options) int {

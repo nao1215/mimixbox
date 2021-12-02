@@ -17,6 +17,7 @@
 package mb
 
 import (
+	"strconv"
 	"strings"
 )
 
@@ -45,4 +46,8 @@ func AddLineFeed(lines []string) []string {
 		newLines = append(newLines, v+"\n")
 	}
 	return newLines
+}
+
+func ListDigit(strList []string) string {
+	return strconv.Itoa(len(strconv.Itoa(len(strList))))
 }

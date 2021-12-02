@@ -26,7 +26,7 @@ import (
 
 const cmdName string = "cat"
 
-const version = "1.0.7"
+const version = "1.0.10"
 
 var osExit = os.Exit
 
@@ -57,12 +57,16 @@ func Run() (int, error) {
 
 	if len(args) == 0 || mb.Contains(args, "-") {
 		mb.Parrot(opts.Number)
-		return ExitSuccess, nil
+		if len(args) == 0 {
+			return ExitSuccess, nil
+		}
+		// If this case, Heredocuments and files may be concatenated.
+		args = mb.Remove(args, "-")
 	}
 
 	strLisr, err := mb.Concatenate(args, false)
 	if err != nil {
-		return ExitFailuer, nil
+		return ExitFailuer, err
 	}
 
 	mb.Dump(strLisr, opts.Number)
