@@ -22,3 +22,8 @@ TestEchoPipeWithargs() {
 TestEchoNoArg() {
     echo
 }
+
+TestEchoRedirect() {
+    echo "MimixBox" > /tmp/it/mimixbox/echo.txt
+    cat /tmp/it/mimixbox/echo.txt
+}

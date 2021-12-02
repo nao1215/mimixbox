@@ -45,3 +45,16 @@ Describe 'Echo with no arguments'
         The output should equal ''
     End
 End
+
+Describe 'Echo redirect'
+    Include shellutils/echo_test.sh
+    setup() { mkdir -p /tmp/it/mimixbox; }
+    cleanup() { rm /tmp/it/mimixbox/echo.txt; }
+    BeforeEach 'setup'
+    AfterEach 'cleanup'
+
+    It 'redirect'
+        When call TestEchoRedirect
+        The output should equal 'MimixBox'
+    End
+End
