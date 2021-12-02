@@ -23,9 +23,12 @@ jobs:
       
     - name: Build
       run: make build
+ 
+    - name: InstallMimixBox
+      run: sudo install -v -m 0755 -D mimixbox /usr/local/bin/.
       
     - name: CreateSymbolicLink
-      run: sudo make full-install
+      run: mimixbox --full-install /usr/local/bin/
       
     - name: IntegrationTest
       run: make it
