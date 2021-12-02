@@ -1,8 +1,3 @@
-export TEST_DIR=/tmp/mimixbox/it
-export TEST_FILE_GAMENAME=${TEST_DIR}/game.txt
-export TEST_FILE_METAL=${TEST_DIR}/metal.txt
-export EMPTY_FILE=${TEST_DIR}/empty.txt
-
 Setup() {
     export TEST_DIR=/tmp/mimixbox/it
     export TEST_FILE_GAMENAME=/tmp/mimixbox/it/game.txt
@@ -74,4 +69,14 @@ TestWcWithPipe() {
 TestWcWithPipeAndArgument() {
     export TEST_FILE_GAMENAME=/tmp/mimixbox/it/game.txt
     echo ${TEST_FILE_GAMENAME} | wc ${TEST_FILE_GAMENAME}
+}
+
+TestWcNotFile() {
+    export TEST_DIR=/tmp/mimixbox/it
+    wc ${TEST_DIR}
+}
+
+TestWcDirectoryAndFileSameTime() {
+    export TEST_DIR=/tmp/mimixbox/it
+    wc ${TEST_DIR} ${TEST_FILE_GAMENAME}
 }

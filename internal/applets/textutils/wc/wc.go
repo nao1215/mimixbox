@@ -79,12 +79,7 @@ func Run() (int, error) {
 				lines = append(lines, input)
 			}
 		}
-
-		result, err := wc(lines, "-", opts)
-		if err != nil {
-			return ExitFailuer, nil
-		}
-		printWordCountData([]wordCount{result}, opts)
+		printWordCountData([]wordCount{wc(lines, "-", opts)}, opts, ExitSuccess)
 		return ExitSuccess, nil
 	}
 
@@ -95,11 +90,8 @@ func wcPipe(lines []string, opts options) (int, error) {
 	if len(lines) > 0 && strings.HasSuffix(lines[0], "\n") {
 		lines[0] = strings.TrimRight(lines[0], "\n")
 	}
-	result, err := wc(lines, "", opts)
-	if err != nil {
-		return ExitFailuer, nil
-	}
-	printWordCountData([]wordCount{result}, opts)
+	result := wc(lines, "", opts)
+	printWordCountData([]wordCount{result}, opts, ExitSuccess)
 	return ExitSuccess, nil
 }
 
@@ -112,11 +104,13 @@ func wcAll(args []string, opts options) (int, error) {
 		if mb.IsDir(target) {
 			fmt.Fprintln(os.Stderr, file+": this path is directory")
 			status = ExitFailuer
+			results = append(results, wordCount{0, 0, 0, 0, target})
 			continue
 		}
 		if !mb.IsFile(target) {
 			fmt.Fprintln(os.Stderr, file+": no such File")
 			status = ExitFailuer
+			results = append(results, wordCount{0, 0, 0, 0, target})
 			continue
 		}
 
@@ -124,27 +118,22 @@ func wcAll(args []string, opts options) (int, error) {
 		if err != nil {
 			fmt.Fprintln(os.Stderr, target+": can't read file")
 			status = ExitFailuer
+			results = append(results, wordCount{0, 0, 0, 0, target})
 			continue
 		}
 
-		result, err := wc(lines, target, opts)
-		if err != nil {
-			fmt.Fprintln(os.Stderr, target+": can't read file")
-			status = ExitFailuer
-			continue
-		}
-		results = append(results, result)
+		results = append(results, wc(lines, target, opts))
 	}
 
 	if len(args) > 1 {
 		results = append(results, total(results))
 	}
-	printWordCountData(results, opts)
+	printWordCountData(results, opts, status)
 
 	return status, nil
 }
 
-func wc(lines []string, path string, opts options) (wordCount, error) {
+func wc(lines []string, path string, opts options) wordCount {
 	var result wordCount = wordCount{0, 0, 0, 0, ""}
 
 	result.filePath = path
@@ -159,7 +148,7 @@ func wc(lines []string, path string, opts options) (wordCount, error) {
 	if result.bytes != 0 {
 		result.bytes = result.bytes + 1
 	}
-	return result, nil
+	return result
 }
 
 func getMaxLength(lines []string) int {
@@ -175,8 +164,8 @@ func getMaxLength(lines []string) int {
 	return max
 }
 
-func printWordCountData(counts []wordCount, opts options) {
-	digit := maxDigit(counts, opts)
+func printWordCountData(counts []wordCount, opts options, status int) {
+	digit := decideDigit(counts, opts, status)
 	oneContent := "%" + strconv.Itoa(digit) + "d"
 	formatForOneContent := oneContent + " %s\n"
 	formatForAll := oneContent + " " + oneContent + " " + oneContent + " %s\n"
@@ -195,6 +184,16 @@ func printWordCountData(counts []wordCount, opts options) {
 		}
 		fmt.Fprintf(os.Stdout, formatForAll, v.lines, v.words, v.bytes, v.filePath)
 	}
+}
+
+func decideDigit(counts []wordCount, opts options, status int) int {
+	digit := 0
+	if status == ExitSuccess {
+		digit = maxDigit(counts, opts)
+	} else {
+		digit = 6 // respect coreutils.
+	}
+	return digit
 }
 
 func maxDigit(counts []wordCount, opts options) int {

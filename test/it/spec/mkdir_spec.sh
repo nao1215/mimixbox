@@ -5,6 +5,7 @@ Describe 'Make single directory'
     It 'says single'
         When call TestMkdirSingle
         The output should equal 'single'
+        The status should be success
     End
 End
 
@@ -15,6 +16,7 @@ Describe 'Make parentes/child directory'
     It 'says child'
         When call TestMkdirParent
         The output should equal 'child'
+        The status should be success
     End
 End
 
@@ -25,6 +27,7 @@ Describe 'Make directory using pipe'
     It 'says make directory using pipe'
         When call TestMkdirFromPipe
         The output should equal 'pipe'
+        The status should be success
     End
 End
 
