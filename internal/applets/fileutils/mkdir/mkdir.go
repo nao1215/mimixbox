@@ -103,7 +103,3 @@ func initParser(opts *options) *flags.Parser {
 func isValidArgNr(args []string) bool {
 	return len(args) >= 1
 }
-
-func showHelp(p *flags.Parser) {
-	p.WriteHelp(os.Stdout)
-}
