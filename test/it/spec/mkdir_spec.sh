@@ -37,7 +37,7 @@ Describe 'Make directory without operand'
     AfterEach 'Cleanup'
     It 'print error message'
         When call TestMkdirNoArg
-        The error should equal 'no operand'
+        The error should equal 'mkdir: no operand'
         The status should be failure
     End
 End
@@ -48,7 +48,7 @@ Describe 'Make directory with --parents option and no operand'
     AfterEach 'Cleanup'
     It 'print error message'
         When call TestMkdirNoArgWithParentsOption
-        The error should equal 'no operand'
+        The error should equal 'mkdir: no operand'
         The status should be failure
     End
 End
