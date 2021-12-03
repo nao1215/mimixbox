@@ -17,6 +17,15 @@ TestMkdirSingleStatus() {
     mkdir ${TEST_DIR}/single
 }
 
+TestMkdirThreeDirectory() {
+    mkdir ${TEST_DIR}/1 ${TEST_DIR}/2 ${TEST_DIR}/3
+    ls ${TEST_DIR}
+}
+
+TestMkdirThreeDirectoryStatus() {
+    mkdir ${TEST_DIR}/1 ${TEST_DIR}/2 ${TEST_DIR}/3
+}
+
 TestMkdirParent() {
     mkdir -p ${TEST_DIR}/parents/child
     ls ${TEST_DIR}/parents/
@@ -41,4 +50,13 @@ TestMkdirNoArg() {
 
 TestMkdirNoArgWithParentsOption() {
     mkdir -p
+}
+
+TestMkdirThreeDirAndOneIsFail() {
+    mkdir ${TEST_DIR}/1 /mkdir/2 ${TEST_DIR}/3
+    ls ${TEST_DIR}/
+}
+
+TestMkdirThreeDirAndOneIsFailStatus() {
+    mkdir ${TEST_DIR}/1 /mkdir/2 ${TEST_DIR}/3
 }
