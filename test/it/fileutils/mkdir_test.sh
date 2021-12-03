@@ -13,14 +13,26 @@ TestMkdirSingle() {
     ls ${TEST_DIR}
 }
 
+TestMkdirSingleStatus() {
+    mkdir ${TEST_DIR}/single
+}
+
 TestMkdirParent() {
     mkdir -p ${TEST_DIR}/parents/child
     ls ${TEST_DIR}/parents/
 }
 
+TestMkdirParentStatus() {
+    mkdir -p ${TEST_DIR}/parents/child
+}
+
 TestMkdirFromPipe() {
     echo "${TEST_DIR}/pipe" | xargs mkdir 
     ls ${TEST_DIR}
+}
+
+TestMkdirFromPipeStatus() {
+    echo "${TEST_DIR}/pipe" | xargs mkdir 
 }
 
 TestMkdirNoArg() {

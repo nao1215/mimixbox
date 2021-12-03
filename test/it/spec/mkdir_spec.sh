@@ -5,6 +5,15 @@ Describe 'Make single directory'
     It 'says single'
         When call TestMkdirSingle
         The output should equal 'single'
+    End
+End
+
+Describe 'Check status after making single directory'
+    Include fileutils/mkdir_test.sh
+    BeforeEach 'Setup'
+    AfterEach 'Cleanup'
+    It 'says success'
+        When call TestMkdirSingleStatus
         The status should be success
     End
 End
@@ -20,6 +29,16 @@ Describe 'Make parentes/child directory'
     End
 End
 
+Describe 'Check status after making parentes/child directory'
+    Include fileutils/mkdir_test.sh
+    BeforeEach 'Setup'
+    AfterEach 'Cleanup'
+    It 'says success'
+        When call TestMkdirParentStatus
+        The status should be success
+    End
+End
+
 Describe 'Make directory using pipe'
     Include fileutils/mkdir_test.sh
     BeforeEach 'Setup'
@@ -27,6 +46,16 @@ Describe 'Make directory using pipe'
     It 'says make directory using pipe'
         When call TestMkdirFromPipe
         The output should equal 'pipe'
+        The status should be success
+    End
+End
+
+Describe 'Make directory using pipe'
+    Include fileutils/mkdir_test.sh
+    BeforeEach 'Setup'
+    AfterEach 'Cleanup'
+    It 'says success'
+        When call TestMkdirFromPipeStatus
         The status should be success
     End
 End
