@@ -17,6 +17,7 @@
 package touch
 
 import (
+	"fmt"
 	"os"
 	"time"
 
@@ -27,7 +28,7 @@ import (
 
 const cmdName string = "touch"
 
-const version = "1.0.1"
+const version = "1.0.2"
 
 var osExit = os.Exit
 
@@ -51,12 +52,15 @@ func Run() (int, error) {
 		return ExitFailuer, nil
 	}
 
+	status := ExitSuccess
 	for _, file := range args {
-		if err := touch(file, opts); err != nil {
-			return ExitFailuer, err
+		if err = touch(file, opts); err != nil {
+			fmt.Fprintln(os.Stderr, "touch: "+err.Error())
+			status = ExitFailuer
+			continue
 		}
 	}
-	return ExitSuccess, nil
+	return status, nil
 }
 
 // atime = access time

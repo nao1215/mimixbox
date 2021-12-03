@@ -1,6 +1,6 @@
 # Changelog
 All notable changes to this project will be documented in this file. The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.0.0/), and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
-## [0.27.16] - 2021-12-02
+## [0.27.17] - 2021-12-03
 ### Changed
  - mimixbox command.
    - When an error occurs, the name of the applet that caused the error is displayed.
@@ -14,6 +14,8 @@ All notable changes to this project will be documented in this file. The format 
    - Concatenate here documents and files.
  - mkdir command.
    - Output an error instead of a help message when no argument is specified.
+ - touch command.
+   - Continue processing even if an error occurs
 ## [0.27.10] - 2021-12-01
 ### Added
  - Add ShellSpec tetsing framework for integration test.
