@@ -18,9 +18,11 @@ package cp
 
 import (
 	"errors"
+	"fmt"
 	"os"
 	"path"
 	"path/filepath"
+	"strings"
 
 	mb "github.com/nao1215/mimixbox/internal/lib"
 
@@ -29,7 +31,7 @@ import (
 
 const cmdName string = "cp"
 
-const version = "1.0.3"
+const version = "1.0.4"
 
 var osExit = os.Exit
 
@@ -72,6 +74,10 @@ func cp(files []string, opts options) error {
 			return errors.New(s + " does not exist")
 		}
 
+		if !opts.Recursive && mb.IsDir(s) {
+			return errors.New("--recursive is not specified: omitting directory: " + s)
+		}
+
 		if mb.IsSamePath(s, dest) {
 			return errors.New(s + " and " + dest + " is same.")
 		}
@@ -103,8 +109,8 @@ func cpFile(src string, dest string, opts options) error {
 }
 
 func cpDir(src string, dest string, opts options) error {
-	if !opts.Recursive {
-		return errors.New("--recursive is not specified: omitting directory: " + src)
+	if hasPathIncludeItself(dest, src) {
+		return errors.New("can not copy '" + src + "' to itself '" + dest + "'")
 	}
 
 	srcDirs, srcFiles, err := mb.Walk(src)
@@ -112,9 +118,10 @@ func cpDir(src string, dest string, opts options) error {
 		return err
 	}
 
+	unnecessaryPath := strings.TrimRight(src, path.Base(src))
 	// Make destination directory
 	for _, dir := range srcDirs {
-		dir = path.Join(dest, dir)
+		dir = path.Join(dest, strings.TrimLeft(dir, unnecessaryPath))
 		err = os.MkdirAll(dir, 0755)
 		if err != nil {
 			return err
@@ -122,13 +129,38 @@ func cpDir(src string, dest string, opts options) error {
 	}
 
 	for _, src := range srcFiles {
-		destFile := path.Join(dest, src)
-		err := mb.Copy(src, destFile)
+		d := path.Join(dest, strings.TrimLeft(src, unnecessaryPath))
+		err := mb.Copy(src, d)
 		if err != nil {
 			return err
 		}
 	}
 	return nil
+}
+
+func hasPathIncludeItself(src, dest string) bool {
+	srcAbs, err := filepath.Abs(src)
+	if err != nil {
+		fmt.Fprintln(os.Stderr, err)
+		return false
+	}
+
+	destAbs, err := filepath.Abs(dest)
+	if err != nil {
+		fmt.Fprintln(os.Stderr, err)
+		return false
+	}
+
+	for {
+		if srcAbs == destAbs {
+			return true
+		}
+		destAbs = path.Dir(destAbs)
+		if destAbs == "/" {
+			break
+		}
+	}
+	return false
 }
 
 func parseArgs(opts *options) ([]string, error) {

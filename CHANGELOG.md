@@ -1,6 +1,6 @@
 # Changelog
 All notable changes to this project will be documented in this file. The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.0.0/), and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
-## [0.27.17] - 2021-12-03
+## [0.27.18] - 2021-12-04
 ### Changed
  - mimixbox command.
    - When an error occurs, the name of the applet that caused the error is displayed.
@@ -16,6 +16,10 @@ All notable changes to this project will be documented in this file. The format 
    - Output an error instead of a help message when no argument is specified.
  - touch command.
    - Continue processing even if an error occurs
+ - cp command.
+   - Print error if the -r option is not attached when copying the directory.
+   - Print error if the copy destination is in the hierarchy below the copy source directory.
+   - Fixed the bug that the directory hierarchy of the source path is copied as it is when copying the directory. The correct process is to copy from the base name of the source path.
 ## [0.27.10] - 2021-12-01
 ### Added
  - Add ShellSpec tetsing framework for integration test.
