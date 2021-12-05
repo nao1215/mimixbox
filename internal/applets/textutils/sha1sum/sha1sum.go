@@ -28,7 +28,7 @@ import (
 
 const cmdName string = "sha1sum"
 
-const version = "1.0.0"
+const version = "1.0.1"
 
 var osExit = os.Exit
 
@@ -53,7 +53,7 @@ func Run() (int, error) {
 		return ExitFailuer, nil
 	}
 
-	if mb.HasPipeData() {
+	if mb.HasPipeData() && len(os.Args) == 1 {
 		err = mb.ChecksumOutput(hash, strings.NewReader(args[0]), "-")
 		if err != nil {
 			return ExitFailuer, err
@@ -77,20 +77,7 @@ func Run() (int, error) {
 		return ExitSuccess, nil
 	}
 
-	for _, path := range args {
-		p := os.ExpandEnv(path)
-		r, err := os.Open(p)
-		if err != nil {
-			return ExitFailuer, err
-		}
-		defer r.Close()
-
-		if err := mb.ChecksumOutput(hash, r, p); err != nil {
-			return ExitSuccess, nil
-		}
-		hash.Reset()
-	}
-	return ExitSuccess, nil
+	return mb.PrintChecksums(cmdName, hash, args)
 }
 
 func parseArgs(opts *options) ([]string, error) {
@@ -101,7 +88,7 @@ func parseArgs(opts *options) ([]string, error) {
 		return nil, err
 	}
 
-	if mb.HasPipeData() {
+	if mb.HasPipeData() && len(args) == 0 {
 		stdin, err := mb.FromPIPE()
 		if err != nil {
 			return nil, err
