@@ -1,0 +1,3 @@
+TestTrue() {
+    true
+}
