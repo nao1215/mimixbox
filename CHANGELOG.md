@@ -1,6 +1,6 @@
 # Changelog
 All notable changes to this project will be documented in this file. The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.0.0/), and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
-## [0.27.19] - 2021-12-05
+## [0.27.20] - 2021-12-06
 ### Changed
  - mimixbox command.
    - When an error occurs, the name of the applet that caused the error is displayed.
@@ -23,6 +23,9 @@ All notable changes to this project will be documented in this file. The format 
  - md5sum / sha1sum / sha256sum / sha512sum command.
    - Print the error if the argument is directory or non-existent file.
    - If PIPE and file path are passed at the same time, the PIPE data will be ignored.
+ - which command.
+   - Change exit-status frmo succes to error if which command can't find binary.
+   - Changed the specification that allows only one command to be searched.
 ## [0.27.10] - 2021-12-01
 ### Added
  - Add ShellSpec tetsing framework for integration test.

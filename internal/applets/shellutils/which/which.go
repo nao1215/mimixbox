@@ -27,7 +27,7 @@ import (
 
 const cmdName string = "which"
 
-const version = "1.0.1"
+const version = "1.0.2"
 
 var osExit = os.Exit
 
@@ -50,18 +50,21 @@ func Run() (int, error) {
 		return ExitFailuer, nil
 	}
 
+	status := ExitSuccess
 	for _, path := range args {
 		p, err := exec.LookPath(path)
 		if err != nil {
 			e, ok := err.(*exec.Error)
 			if ok && e.Err == exec.ErrNotFound {
-				continue // Ignore NotFound error
+				status = ExitFailuer
+				continue // Don't print error like coreutils.
 			}
-			return ExitFailuer, err
+			fmt.Fprintln(os.Stderr, e)
+			status = ExitFailuer
 		}
 		fmt.Fprintln(os.Stdout, p)
 	}
-	return ExitSuccess, nil
+	return status, nil
 }
 
 func parseArgs(opts *options) ([]string, error) {
@@ -78,8 +81,7 @@ func parseArgs(opts *options) ([]string, error) {
 	}
 
 	if !isValidArgNr(args) {
-		showHelp(p)
-		osExit(ExitFailuer)
+		osExit(ExitFailuer) // Do not display help messages because it behaves the same as Coreutils
 	}
 	return args, nil
 }
@@ -87,15 +89,11 @@ func parseArgs(opts *options) ([]string, error) {
 func initParser(opts *options) *flags.Parser {
 	parser := flags.NewParser(opts, flags.Default)
 	parser.Name = cmdName
-	parser.Usage = "[OPTIONS] COMMAN_NAME"
+	parser.Usage = "[OPTIONS] COMMAND_NAME"
 
 	return parser
 }
 
 func isValidArgNr(args []string) bool {
-	return len(args) == 1
-}
-
-func showHelp(p *flags.Parser) {
-	p.WriteHelp(os.Stdout)
+	return len(args) >= 1
 }
