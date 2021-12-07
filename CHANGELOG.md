@@ -1,6 +1,6 @@
 # Changelog
 All notable changes to this project will be documented in this file. The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.0.0/), and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
-## [0.27.20] - 2021-12-06
+## [0.27.21] - 2021-12-07
 ### Changed
  - mimixbox command.
    - When an error occurs, the name of the applet that caused the error is displayed.
@@ -26,6 +26,11 @@ All notable changes to this project will be documented in this file. The format 
  - which command.
    - Change exit-status frmo succes to error if which command can't find binary.
    - Changed the specification that allows only one command to be searched.
+ - nl command.
+   - Fixed the bug that the cat command does not refer to the argument when pipe is used.
+   - Delete unused line feed.
+   - Fixed a bug that line numbers do not match when concatenating PIPE data and files.
+   - Print the error when specifying the file that does not exist.
 ## [0.27.10] - 2021-12-01
 ### Added
  - Add ShellSpec tetsing framework for integration test.

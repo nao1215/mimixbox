@@ -19,7 +19,6 @@ package nl
 import (
 	"fmt"
 	"os"
-	"strings"
 
 	mb "github.com/nao1215/mimixbox/internal/lib"
 
@@ -28,7 +27,7 @@ import (
 
 const cmdName string = "nl"
 
-const version = "1.0.1"
+const version = "1.0.2"
 
 var osExit = os.Exit
 
@@ -51,11 +50,12 @@ func Run() (int, error) {
 		return ExitFailuer, nil
 	}
 
-	if mb.HasPipeData() {
-		mb.PrintStrListWithNumberLine(mb.AddLineFeed(strings.Split(args[0], "\n")), false)
+	if mb.HasPipeData() && len(os.Args) == 1 {
+		mb.PrintStrListWithNumberLine(args, true)
 		return ExitSuccess, nil
 	}
 
+	var pipeData []string
 	if len(args) == 0 || mb.Contains(args, "-") {
 		var nr int = 1
 		for {
@@ -63,21 +63,30 @@ func Run() (int, error) {
 			if !next {
 				break
 			}
-			if input != "" {
+			pipeData = append(pipeData, input+"\n")
+			if input != "" && len(args) == 0 {
 				mb.PrintStrWithNumberLine(nr, "  %6d  %s", input+"\n")
 				nr++
-			} else {
+			} else if input == "" && len(args) == 0 {
 				fmt.Fprintln(os.Stdout, "")
 			}
 		}
-		return ExitSuccess, nil
+		if len(args) == 0 {
+			return ExitSuccess, nil
+		}
+		// If this case, Heredocuments and files may be concatenated.
+		args = mb.Remove(args, "-")
 	}
 
-	str, err := mb.Concatenate(args, true)
+	lines, err := mb.Concatenate(args)
 	if err != nil {
-		return ExitFailuer, nil
+		return ExitFailuer, err
 	}
-	mb.PrintStrListWithNumberLine(str, false)
+
+	if len(pipeData) >= 1 {
+		lines = append(pipeData, lines...)
+	}
+	mb.PrintStrListWithNumberLine(lines, false)
 
 	return ExitSuccess, nil
 }
@@ -90,7 +99,7 @@ func parseArgs(opts *options) ([]string, error) {
 		return nil, err
 	}
 
-	if mb.HasPipeData() {
+	if mb.HasPipeData() && len(args) == 0 {
 		stdin, err := mb.FromPIPE()
 		if err != nil {
 			return nil, err

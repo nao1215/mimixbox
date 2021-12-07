@@ -64,7 +64,7 @@ func Run() (int, error) {
 		args = mb.Remove(args, "-")
 	}
 
-	strLisr, err := mb.Concatenate(args, false)
+	strLisr, err := mb.Concatenate(args)
 	if err != nil {
 		return ExitFailuer, err
 	}

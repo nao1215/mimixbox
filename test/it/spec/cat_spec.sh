@@ -127,3 +127,13 @@ Describe 'cat heardoc and redirect'
         The status should be success
     End
 End
+
+Describe 'cat does not exist file.'
+    Include textutils/cat_test.sh
+
+    It 'show error'
+        When call TestCatNoOperand
+        The error should equal "cat: open no_exist_file: no such file or directory"
+        The status should be failure
+    End
+End

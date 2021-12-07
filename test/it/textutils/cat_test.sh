@@ -61,3 +61,7 @@ zsh
 EOS
     cat ${TEST_FILE_CAT2}
 }
+
+TestCatNoOperand() {
+    cat no_exist_file
+}

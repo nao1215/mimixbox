@@ -118,7 +118,7 @@ func WrapString(src string, column int) string {
 	return strings.Join(buf, "\n")
 }
 
-func Concatenate(path []string, lfAtTheJoint bool) ([]string, error) {
+func Concatenate(path []string) ([]string, error) {
 	var strList []string
 	var index int
 
@@ -128,21 +128,12 @@ func Concatenate(path []string, lfAtTheJoint bool) ([]string, error) {
 			return nil, err
 		}
 
-		// In the case of the cat command, the beginning of the new file is
-		// concatenated to the end of the previous file.
-		// In the case of nl command, do not concatenate the new file at the end
-		// of the previous file. The end of file (EOF) is replaced with a newline.
 		index = len(strList) - 1
-		if lfAtTheJoint { // for nl command
-			list[len(list)-1] = list[len(list)-1] + "\n"
+		if index > 0 && !strings.HasSuffix(strList[index], "\n") {
+			strList[index] = strList[index] + list[0]
+			strList = append(strList, list[1:]...)
+		} else {
 			strList = append(strList, list...)
-		} else { // for cat command
-			if index > 0 && !strings.HasSuffix(strList[index], "\n") {
-				strList[index] = strList[index] + list[0]
-				strList = append(strList, list[1:]...)
-			} else {
-				strList = append(strList, list...)
-			}
 		}
 	}
 	return strList, nil
