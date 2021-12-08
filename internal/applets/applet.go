@@ -46,6 +46,7 @@ import (
 	"github.com/nao1215/mimixbox/internal/applets/shellutils/ischroot"
 	"github.com/nao1215/mimixbox/internal/applets/shellutils/mbsh"
 	"github.com/nao1215/mimixbox/internal/applets/shellutils/path"
+	"github.com/nao1215/mimixbox/internal/applets/shellutils/sddf"
 	"github.com/nao1215/mimixbox/internal/applets/shellutils/seq"
 	"github.com/nao1215/mimixbox/internal/applets/shellutils/serial"
 	"github.com/nao1215/mimixbox/internal/applets/shellutils/sleep"
@@ -106,6 +107,7 @@ func init() {
 		"path":      {path.Run, "Manipulate filename path"},
 		"rm":        {rm.Run, "Remove file(s) or directory(s)"},
 		"rmdir":     {rmdir.Run, "Remove directory"},
+		"sddf":      {sddf.Run, "Search & Delete Duplicated File"},
 		"serial":    {serial.Run, "Rename the file to the name with a serial number"},
 		"sha1sum":   {sha1sum.Run, "alculate or Check sercure hash 1 algorithm"},
 		"sha256sum": {sha256sum.Run, "alculate or Check sercure hash 256 algorithm"},

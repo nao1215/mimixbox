@@ -121,7 +121,7 @@ func Walk(dir string) ([]string, []string, error) {
 			return err
 		}
 
-		if info.IsDir() {
+		if info.IsDir() && IsDir(path) {
 			dirList = append(dirList, path)
 		} else {
 			fileList = append(fileList, path)

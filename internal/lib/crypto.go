@@ -116,3 +116,17 @@ func PrintChecksums(cmdName string, hash hash.Hash, paths []string) (int, error)
 	}
 	return status, nil
 }
+
+func CalcChecksum(hash hash.Hash, path string) (string, error) {
+	r, err := os.Open(path)
+	if err != nil {
+		return "", err
+	}
+	defer r.Close()
+
+	s, err := checksum(hash, r)
+	if err != nil {
+		return "", err
+	}
+	return s, nil
+}

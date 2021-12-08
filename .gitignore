@@ -8,6 +8,7 @@ mimixbox
 
 # Test binary, built with `go test -c`. And test directory
 *.test
+*.sddf
 
 # Output of the go coverage tool, specifically when used with LiteIDE
 *.out

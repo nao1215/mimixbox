@@ -1,7 +1,7 @@
 #!/bin/bash
 # Support OS and Arch info: https://golang.org/doc/install/source#environment
 PROJECT="mimixbox"
-ORG_COMMANDS="path serial ghrdc fakemovie"
+ORG_COMMANDS="path serial ghrdc fakemovie sddf"
 CWD=$(pwd)
 RELEASE=${CWD}/release
 BIN_INFO_TXT=${RELEASE}/binary_info.txt

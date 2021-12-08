@@ -28,6 +28,7 @@
 |     path | Manipulate filename path|
 |     rm   | Remove file(s) or directory(s)|
 |     rmdir   | Remove directory|
+|   sddf   | Search & Delete Dupulicated File|
 |   seq   | Print the column of numbers|
 |   serial | Rename the file to the name with a serial number|
 |    sha1sum| Calculate or Check sercure hash 1 algorithm|

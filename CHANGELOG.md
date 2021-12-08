@@ -1,6 +1,8 @@
 # Changelog
 All notable changes to this project will be documented in this file. The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.0.0/), and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
-## [0.27.21] - 2021-12-07
+## [0.28.00] - 2021-12-08
+### Added
+ - sddf command. Search & Delete Duplicated Files.
 ### Changed
  - mimixbox command.
    - When an error occurs, the name of the applet that caused the error is displayed.

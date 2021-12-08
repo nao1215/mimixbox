@@ -2,7 +2,7 @@
 # [Description]
 #  This shell script is the installer for the command.
 #  This is created to be stored in tar.gz or zip for release files.
-ORG_COMMANDS="path serial ghrdc fakemovie mimixbox"
+ORG_COMMANDS="path serial ghrdc fakemovie mimixbox sddf"
 DOC_INSTALL_DIR="/usr/share/doc/mimixbox"
 ROOT_DIR=$(git rev-parse --show-toplevel)
 
