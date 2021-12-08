@@ -78,7 +78,7 @@ func rmdir(path string, opts options) (int, error) {
 		target = p
 	}
 
-	_, files, err := mb.Walk(target)
+	_, files, err := mb.Walk(target, false)
 	if err != nil {
 		return ExitFailuer, err
 	}

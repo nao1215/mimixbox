@@ -22,7 +22,9 @@ import (
 	"fmt"
 	"os"
 	"path/filepath"
+	"strconv"
 	"strings"
+	"time"
 
 	"github.com/cheggaaa/pb/v3"
 	"github.com/jessevdk/go-flags"
@@ -34,7 +36,7 @@ const ext string = ".sddf"
 
 type Paths []string
 
-const version = "1.0.0"
+const version = "1.0.1"
 
 var osExit = os.Exit
 
@@ -88,7 +90,7 @@ func deleteFiles(df map[string]Paths) (int, error) {
 	var status int = ExitSuccess
 	var deleteFileList []string
 
-	fmt.Fprintln(os.Stdout, "Decide delete files")
+	fmt.Fprintln(os.Stdout, "Decide delete target files")
 	for _, v := range df {
 		list, err := decideDeleteTarget(v)
 		if err != nil {
@@ -97,16 +99,26 @@ func deleteFiles(df map[string]Paths) (int, error) {
 		deleteFileList = append(deleteFileList, list...)
 	}
 
-	fmt.Fprintln(os.Stdout, "Delete files")
+	fmt.Fprintln(os.Stdout, "Start deleting files")
+	var sumByteSize int64 = 0
 	for _, v := range deleteFileList {
-		err := mb.RemoveFile(v, false)
+		size, err := mb.Size(v)
+		if err != nil {
+			status = ExitFailuer
+			fmt.Fprintln(os.Stdout, "Delete(Failuer): "+v)
+			continue
+		}
+
+		err = mb.RemoveFile(v, false)
 		if err != nil {
 			status = ExitFailuer
 			fmt.Fprintln(os.Stdout, "Delete(Failuer): "+v)
 		} else {
-			fmt.Fprintln(os.Stdout, "Delete(Success): "+v)
+			fmt.Fprintln(os.Stdout, "Delete(Success): "+v+": "+strconv.FormatInt(sumByteSize, 10)+"Byte")
 		}
+		sumByteSize += size
 	}
+	fmt.Fprintln(os.Stdout, "End deleting files. Size="+strconv.FormatInt(sumByteSize, 10)+"Byte")
 	return status, nil
 }
 
@@ -134,13 +146,32 @@ func decideDeleteTarget(paths []string) ([]string, error) {
 	}
 
 	deleteTarget := []string{}
-	for k, _ := range fileModTime {
+	for k := range fileModTime {
 		if k == leaveKey {
 			continue
 		}
 		deleteTarget = append(deleteTarget, k)
 	}
 	return deleteTarget, nil
+}
+
+func processing(cancel chan struct{}) {
+	i := 0
+	for {
+		select {
+		case <-cancel:
+			fmt.Fprintf(os.Stdout, "\n\n")
+			return
+		default:
+			if i != 80 {
+				fmt.Fprintf(os.Stdout, ".")
+				time.Sleep(1 * time.Second)
+			} else {
+				fmt.Fprintln(os.Stdout, "")
+			}
+
+		}
+	}
 }
 
 func restore(path string) (map[string]Paths, error) {
@@ -183,17 +214,43 @@ func isChecksumLine(line string) bool {
 }
 
 func search(path string, opts options) (int, error) {
-	fmt.Fprintln(os.Stdout, "Get all file path at "+path)
-	_, files, err := mb.Walk(path)
-	if err != nil {
-		return ExitFailuer, nil
-	}
+	files := findFiles(path)
 
 	if len(files) == 0 {
-		fmt.Fprintf(os.Stdout, path+" has no file")
+		fmt.Fprintln(os.Stdout, path+" has no file")
 		return ExitSuccess, nil
 	}
 	return dumpToFile(getSameFiles(files), decideOutputFileName(opts.Output))
+}
+
+func findFiles(path string) []string {
+	fmt.Fprintln(os.Stdout, "Get all file path at "+path)
+
+	cancel := (make(chan struct{}))
+	go processing(cancel)
+	_, files, _ := mb.Walk(path, true)
+	files = excludeImportantFiles(files)
+	close(cancel)
+
+	return files
+}
+
+func excludeImportantFiles(files []string) []string {
+	ng := []string{"/boot", "/dev", "/etc", "/lib", "/lib32", "/lib64", "/libx32", "/lost+found",
+		"/proc", "/root", "/run", "/sys", "/bin", "/sbin"}
+
+	newFileList := []string{}
+	for _, path := range files {
+		for i, v := range ng {
+			if strings.HasPrefix(path, v) {
+				break
+			}
+			if (i + 1) == len(ng) {
+				newFileList = append(newFileList, path)
+			}
+		}
+	}
+	return newFileList
 }
 
 func dumpToFile(df map[string]Paths, output string) (int, error) {
@@ -242,19 +299,19 @@ func calcChecksum(files []string) map[string]Paths {
 	totalFileNum := len(files)
 	df := map[string]Paths{}
 
-	fmt.Fprintln(os.Stdout, "Check same file or not")
+	fmt.Fprintln(os.Stdout, "Find the same file on a file content basis")
 	bar := pb.Simple.Start(totalFileNum)
 	bar.SetMaxWidth(80)
 	for _, v := range files {
 		absPath, err := filepath.Abs(v)
 		if err != nil {
-			fmt.Fprintln(os.Stderr, cmdName+": "+err.Error())
+			//fmt.Fprintln(os.Stderr, cmdName+": "+err.Error())
 			continue
 		}
 
 		checksum, err := mb.CalcChecksum(md5.New(), v)
 		if err != nil {
-			fmt.Fprintln(os.Stderr, cmdName+": "+err.Error())
+			//fmt.Fprintln(os.Stderr, cmdName+": "+err.Error())
 			continue
 		}
 

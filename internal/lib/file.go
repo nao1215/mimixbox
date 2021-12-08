@@ -112,21 +112,20 @@ func BaseNameWithoutExt(path string) string {
 }
 
 // Wark return 1）directory List, 2) file list, 3) error
-func Walk(dir string) ([]string, []string, error) {
+func Walk(dir string, ignoreErr bool) ([]string, []string, error) {
 	fileList := []string{}
 	dirList := []string{}
 
 	err := filepath.Walk(dir, func(path string, info fs.FileInfo, err error) error {
-		if err != nil {
+		if err != nil && !ignoreErr {
 			return err
 		}
 
-		if info.IsDir() && IsDir(path) {
+		if IsDir(path) {
 			dirList = append(dirList, path)
 		} else {
 			fileList = append(fileList, path)
 		}
-
 		return nil
 	})
 	return dirList, fileList, err
@@ -186,7 +185,7 @@ func RemoveDir(dir string, interactive bool) error {
 }
 
 func interactiveRemoveDir(dir string) error {
-	dirs, files, err := Walk(dir)
+	dirs, files, err := Walk(dir, false)
 	if err != nil {
 		return err
 	}
@@ -250,4 +249,14 @@ func ListToFile(filepath string, lines []string) error {
 		writer.WriteString(line)
 	}
 	return writer.Flush()
+}
+
+// Return file size(Byte)
+func Size(path string) (int64, error) {
+	fileInfo, err := os.Stat(path)
+	if err != nil {
+		return 0, err
+	}
+
+	return fileInfo.Size(), nil
 }

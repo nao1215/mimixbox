@@ -113,7 +113,7 @@ func cpDir(src string, dest string, opts options) error {
 		return errors.New("can not copy '" + src + "' to itself '" + dest + "'")
 	}
 
-	srcDirs, srcFiles, err := mb.Walk(src)
+	srcDirs, srcFiles, err := mb.Walk(src, false)
 	if err != nil {
 		return err
 	}

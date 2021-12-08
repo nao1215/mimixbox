@@ -9,6 +9,11 @@ All notable changes to this project will be documented in this file. The format 
  - rm command.
    - Changed to receive data from pipe.
    - When removing multiple files, processing continues even if remove fails in the middle.
+ - sddf command.
+   - Changed to get the file path as much as possible without stopping the process even if an error occurs.
+   - Changed to output "." continuously while getting the file path.
+   - Changed to show the size of the deleted files.
+   - Important files under /dev and /boot and etc. are excluded from deletion.
 ## [0.28.00] - 2021-12-08
 ### Added
  - sddf command. Search & Delete Duplicated Files.
