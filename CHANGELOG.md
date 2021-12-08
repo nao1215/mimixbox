@@ -14,6 +14,7 @@ All notable changes to this project will be documented in this file. The format 
    - Changed to output "." continuously while getting the file path.
    - Changed to show the size of the deleted files.
    - Important files under /dev and /boot and etc. are excluded from deletion.
+   - Speeded up checksum calculation with goroutine.
 ## [0.28.00] - 2021-12-08
 ### Added
  - sddf command. Search & Delete Duplicated Files.

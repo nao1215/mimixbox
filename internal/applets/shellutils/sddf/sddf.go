@@ -36,7 +36,12 @@ const ext string = ".sddf"
 
 type Paths []string
 
-const version = "1.0.1"
+type fileInfo struct {
+	path     string
+	checksum string
+}
+
+const version = "1.0.2"
 
 var osExit = os.Exit
 
@@ -160,16 +165,17 @@ func processing(cancel chan struct{}) {
 	for {
 		select {
 		case <-cancel:
-			fmt.Fprintf(os.Stdout, "\n\n")
+			time.Sleep(1 * time.Second)
 			return
 		default:
 			if i != 80 {
 				fmt.Fprintf(os.Stdout, ".")
-				time.Sleep(1 * time.Second)
+				time.Sleep(100 * time.Millisecond)
+				i++
 			} else {
 				fmt.Fprintln(os.Stdout, "")
+				i = 0
 			}
-
 		}
 	}
 }
@@ -231,6 +237,7 @@ func findFiles(path string) []string {
 	_, files, _ := mb.Walk(path, true)
 	files = excludeImportantFiles(files)
 	close(cancel)
+	fmt.Fprintln(os.Stdout)
 
 	return files
 }
@@ -300,32 +307,57 @@ func calcChecksum(files []string) map[string]Paths {
 	df := map[string]Paths{}
 
 	fmt.Fprintln(os.Stdout, "Find the same file on a file content basis")
+
+	ch := make(chan fileInfo, totalFileNum)
+	if totalFileNum < 100 {
+		go calcChecksumThread(files, ch)
+	} else {
+		for n := 0; n < 10; n++ {
+			ratio := totalFileNum / 10
+			first := n * ratio
+			last := (n + 1) * ratio
+			if n == 9 {
+				last = totalFileNum
+			}
+			go calcChecksumThread(files[first:last], ch)
+		}
+	}
 	bar := pb.Simple.Start(totalFileNum)
 	bar.SetMaxWidth(80)
+	for n := 0; n < totalFileNum; n++ {
+		fi := <-ch
+		paths, ok := df[fi.checksum]
+		if ok {
+			paths = append(paths, fi.path)
+			df[fi.checksum] = paths
+		} else {
+			df[fi.checksum] = []string{fi.path}
+		}
+		bar.Increment()
+	}
+	close(ch)
+	bar.Finish()
+	return df
+}
+
+func calcChecksumThread(files []string, ch chan fileInfo) {
 	for _, v := range files {
+		var fi fileInfo
 		absPath, err := filepath.Abs(v)
 		if err != nil {
 			//fmt.Fprintln(os.Stderr, cmdName+": "+err.Error())
 			continue
 		}
+		fi.path = absPath
 
 		checksum, err := mb.CalcChecksum(md5.New(), v)
 		if err != nil {
 			//fmt.Fprintln(os.Stderr, cmdName+": "+err.Error())
 			continue
 		}
-
-		paths, ok := df[checksum]
-		if ok {
-			paths = append(paths, absPath)
-			df[checksum] = paths
-		} else {
-			df[checksum] = []string{absPath}
-		}
-		bar.Increment()
+		fi.checksum = checksum
+		ch <- fi
 	}
-	bar.Finish()
-	return df
 }
 
 func decideOutputFileName(output string) string {
