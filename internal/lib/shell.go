@@ -231,3 +231,23 @@ func DumpGroups(groups []user.Group, showName bool) {
 	}
 	fmt.Fprintln(os.Stdout, strings.TrimRight(resultLine, " "))
 }
+
+func HasOperand(args []string, cmdName string) bool {
+	for _, v := range args {
+		if strings.HasPrefix(v, "-") && len(v) == 2 {
+			continue
+		}
+		if strings.HasPrefix(v, "--") {
+			continue
+		}
+		if strings.Contains(v, cmdName) {
+			continue
+		}
+		return true
+	}
+	return false
+}
+
+func HasNoOperand(args []string, cmdName string) bool {
+	return !HasOperand(args, cmdName)
+}

@@ -64,7 +64,7 @@ func Run() (int, error) {
 		return ExitFailuer, nil
 	}
 
-	if mb.HasPipeData() && len(os.Args) == 1 {
+	if mb.HasPipeData() && mb.HasNoOperand(os.Args, cmdName) {
 		return wcPipe(args, opts)
 	}
 
@@ -88,7 +88,12 @@ func Run() (int, error) {
 
 func wcPipe(lines []string, opts options) (int, error) {
 	result := wc(lines, "", opts)
-	printWordCountData([]wordCount{result}, opts, 7)
+
+	digit := 7
+	if opts.Bytes || opts.Lines || opts.MaxLineLen || opts.Words {
+		digit = 1
+	}
+	printWordCountData([]wordCount{result}, opts, digit)
 	return ExitSuccess, nil
 }
 
@@ -253,7 +258,8 @@ func parseArgs(opts *options) ([]string, error) {
 		if err != nil {
 			return nil, err
 		}
-		return []string{stdin}, nil
+		lines := strings.Split(stdin, "\n")
+		return mb.AddLineFeed(lines[:len(lines)-1]), nil
 	}
 
 	if opts.Version {

@@ -127,3 +127,13 @@ Describe 'Try word count directory and file same time.'
         The status should be failure
     End
 End
+
+Describe 'Count line from pipe data'
+    Include textutils/wc_test.sh
+
+    It 'say 1'
+        When call TestWcNoExistFileNameFromPipeWithLinesOption
+        The output should equal '1 '
+        The status should be success
+    End
+End

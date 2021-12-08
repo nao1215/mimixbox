@@ -80,3 +80,7 @@ TestWcDirectoryAndFileSameTime() {
     export TEST_DIR=/tmp/mimixbox/it
     wc ${TEST_DIR} ${TEST_FILE_GAMENAME}
 }
+
+TestWcNoExistFileNameFromPipeWithLinesOption() {
+    echo "no_exist_file" | wc -l
+}
