@@ -119,7 +119,7 @@ func deleteFiles(df map[string]Paths) (int, error) {
 			status = ExitFailuer
 			fmt.Fprintln(os.Stdout, "Delete(Failuer): "+v)
 		} else {
-			fmt.Fprintln(os.Stdout, "Delete(Success): "+v+": "+strconv.FormatInt(sumByteSize, 10)+"Byte")
+			fmt.Fprintln(os.Stdout, "Delete(Success): "+v+": "+strconv.FormatInt(size, 10)+"Byte")
 		}
 		sumByteSize += size
 	}
