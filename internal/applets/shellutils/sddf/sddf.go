@@ -342,19 +342,21 @@ func calcChecksum(files []string) map[string]Paths {
 
 func calcChecksumThread(files []string, ch chan fileInfo) {
 	for _, v := range files {
-		var fi fileInfo
+		var fi fileInfo = fileInfo{"", ""}
 		absPath, err := filepath.Abs(v)
 		if err != nil {
 			//fmt.Fprintln(os.Stderr, cmdName+": "+err.Error())
+			ch <- fi
 			continue
 		}
-		fi.path = absPath
 
 		checksum, err := mb.CalcChecksum(md5.New(), v)
 		if err != nil {
 			//fmt.Fprintln(os.Stderr, cmdName+": "+err.Error())
+			ch <- fi
 			continue
 		}
+		fi.path = absPath
 		fi.checksum = checksum
 		ch <- fi
 	}
