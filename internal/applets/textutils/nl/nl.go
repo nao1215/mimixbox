@@ -50,7 +50,7 @@ func Run() (int, error) {
 		return ExitFailuer, nil
 	}
 
-	if mb.HasPipeData() && len(os.Args) == 1 {
+	if mb.HasPipeData() && mb.HasNoOperand(os.Args, cmdName) {
 		mb.PrintStrListWithNumberLine(args, true)
 		return ExitSuccess, nil
 	}

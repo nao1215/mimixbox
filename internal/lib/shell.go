@@ -240,7 +240,7 @@ func HasOperand(args []string, cmdName string) bool {
 		if strings.HasPrefix(v, "--") {
 			continue
 		}
-		if strings.Contains(v, cmdName) {
+		if v == cmdName && args[0] == cmdName {
 			continue
 		}
 		return true

@@ -37,7 +37,8 @@ TestCatFromPipeData() {
 
 TestCatOnlyOperandWithPipeData() {
     export TEST_FILE_CAT=/tmp/mimixbox/it/cat.txt
-    echo ${TEST_FILE_CAT} | cat ${TEST_FILE_CAT}
+    export TEST_FILE_CAT2=/tmp/mimixbox/it/cat2.txt
+    echo ${TEST_FILE_CAT2} | cat ${TEST_FILE_CAT}
 }
 
 TestCatConcatenateTwoFile() {

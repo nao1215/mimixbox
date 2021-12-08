@@ -53,7 +53,7 @@ func Run() (int, error) {
 		return ExitFailuer, nil
 	}
 
-	if mb.HasPipeData() && len(os.Args) == 1 {
+	if mb.HasPipeData() && mb.HasNoOperand(os.Args, cmdName) {
 		err = mb.ChecksumOutput(hash, strings.NewReader(args[0]), "-")
 		if err != nil {
 			return ExitFailuer, err

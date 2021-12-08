@@ -4,6 +4,8 @@ All notable changes to this project will be documented in this file. The format 
 ### Changed
  - wc command.
    - Fixed the bug that did not count the number of rows of data passed from PIPE correctly.
+ - cat / md5sum / sha1sum / sha256sum / sha512sum command.
+   - Fixed a bug that the way pipes are handled changes depending on whether there is an option or not.
 ## [0.28.00] - 2021-12-08
 ### Added
  - sddf command. Search & Delete Duplicated Files.
