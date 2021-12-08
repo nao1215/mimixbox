@@ -1,11 +1,14 @@
 # Changelog
 All notable changes to this project will be documented in this file. The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.0.0/), and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
-## [0.28.01] - 2021-12-08
+## [0.28.02] - 2021-12-08
 ### Changed
  - wc command.
    - Fixed the bug that did not count the number of rows of data passed from PIPE correctly.
  - cat / md5sum / sha1sum / sha256sum / sha512sum command.
    - Fixed a bug that the way pipes are handled changes depending on whether there is an option or not.
+ - rm command.
+   - Changed to receive data from pipe.
+   - When removing multiple files, processing continues even if remove fails in the middle.
 ## [0.28.00] - 2021-12-08
 ### Added
  - sddf command. Search & Delete Duplicated Files.

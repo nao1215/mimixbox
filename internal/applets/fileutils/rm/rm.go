@@ -18,7 +18,9 @@ package rm
 
 import (
 	"errors"
+	"fmt"
 	"os"
+	"strings"
 
 	mb "github.com/nao1215/mimixbox/internal/lib"
 
@@ -27,7 +29,7 @@ import (
 
 const cmdName string = "rm"
 
-const version = "1.0.2"
+const version = "1.0.3"
 
 var osExit = os.Exit
 
@@ -49,17 +51,16 @@ func Run() (int, error) {
 	var opts options
 	var args []string
 	var err error
-	var status int
+	status := ExitSuccess
 
 	if args, err = parseArgs(&opts); err != nil {
 		return ExitFailuer, nil
 	}
 
-	// Coremb will continue to delete files as much as possible.
-	// MimixBox stops processing if an error occurs even once.
 	for _, path := range args {
-		if status, err := rm(path, opts); err != nil {
-			return status, err
+		if s, err := rm(path, opts); err != nil {
+			fmt.Fprintln(os.Stderr, cmdName+": "+err.Error())
+			status = s
 		}
 	}
 
@@ -110,6 +111,15 @@ func parseArgs(opts *options) ([]string, error) {
 	args, err := p.Parse()
 	if err != nil {
 		return nil, err
+	}
+
+	if mb.HasPipeData() && len(args) == 0 {
+		stdin, err := mb.FromPIPE()
+		if err != nil {
+			return nil, err
+		}
+		lines := strings.Split(stdin, "\n")
+		return mb.AddLineFeed(lines[:len(lines)-1]), nil
 	}
 
 	if opts.Version {

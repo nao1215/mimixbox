@@ -28,6 +28,46 @@ TestRmOneStatus() {
 }
 
 TestRmFileWithWildcard() {
-    rm *.txt
+    rm ${TEST_DIR}/*.txt
     ls ${TEST_DIR}
+}
+
+TestRmFileWithWildcardStatus() {
+    rm ${TEST_DIR}/*.txt
+}
+
+TestRmThreeFileAtSameTime() {
+    rm ${TEST_DIR}/1.txt ${TEST_DIR}/2.txt ${TEST_DIR}/3.txt
+    ls ${TEST_DIR}
+}
+
+TestRmThreeFileAtSameTimeStatus() {
+    rm ${TEST_DIR}/1.txt ${TEST_DIR}/2.txt ${TEST_DIR}/3.txt
+}
+
+TestRmThreeFileWithNoExistFile() {
+    rm ${TEST_DIR}/1.txt ${TEST_DIR}/no_exist_file.txt ${TEST_DIR}/3.txt
+    ls ${TEST_DIR}
+}
+
+TestRmThreeFileWithNoExistFileStatus() {
+    rm ${TEST_DIR}/1.txt ${TEST_DIR}/no_exist_file.txt ${TEST_DIR}/3.txt
+}
+
+TestRmDirWithoutRecursiveOption() {
+    rm ${TEST_DIR}
+    ls ${TEST_DIR}
+}
+
+TestRmDirWithoutRecursiveOptionStatus() {
+    rm ${TEST_DIR}
+}
+
+TestRmDirWithRecursiveOption() {
+    rm -rf ${TEST_DIR}
+    ls /tmp/mimixbox/it
+}
+
+TestRmDirWithRecursiveOptionStatus() {
+    rm -rf ${TEST_DIR}
 }
