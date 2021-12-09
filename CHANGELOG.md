@@ -16,7 +16,7 @@ All notable changes to this project will be documented in this file. The format 
    - Important files under /dev and /boot and etc. are excluded from deletion.
    - Speeded up checksum calculation with goroutine.
    - Removed named PIPE from checksum calculation. 
-     - The checksum calculation for the named PIPE will stop unless there is writing to the named PIPE. It's looks like deadlock. To avoid this problem, exclude named PIPE.
+     - The checksum calculation for the named PIPE will stop unless there is writing to the named PIPE. It's looks like deadlock. To avoid this problem, exclude named PIPE from target file list.
 ## [0.28.00] - 2021-12-08
 ### Added
  - sddf command. Search & Delete Duplicated Files.
