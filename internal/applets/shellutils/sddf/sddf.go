@@ -21,7 +21,6 @@ import (
 	"errors"
 	"fmt"
 	"os"
-	"path/filepath"
 	"strconv"
 	"strings"
 	"time"
@@ -41,7 +40,7 @@ type fileInfo struct {
 	checksum string
 }
 
-const version = "1.0.2"
+const version = "1.0.3"
 
 var osExit = os.Exit
 
@@ -235,7 +234,7 @@ func findFiles(path string) []string {
 	cancel := (make(chan struct{}))
 	go processing(cancel)
 	_, files, _ := mb.Walk(path, true)
-	files = excludeImportantFiles(files)
+	files = excludeNamedPipe(excludeImportantFiles(files))
 	close(cancel)
 	fmt.Fprintln(os.Stdout)
 
@@ -260,7 +259,24 @@ func excludeImportantFiles(files []string) []string {
 	return newFileList
 }
 
+// Explain why we want to get rid of named PIPE.
+// sddf command calculates the checksums of all files to verify file identity.
+// The checksum calculation for the named PIPE will stop unless there is writing
+// to the named PIPE. It's looks like deadlock. To avoid this problem, exclude
+// named PIPE from target file list
+func excludeNamedPipe(files []string) []string {
+	newFileList := []string{}
+	for _, path := range files {
+		if mb.IsNamedPipe(path) {
+			continue
+		}
+		newFileList = append(newFileList, path)
+	}
+	return newFileList
+}
+
 func dumpToFile(df map[string]Paths, output string) (int, error) {
+	fmt.Fprintln(os.Stdout, "Write down duplicated file list to "+output)
 	f, err := os.Create(output)
 	if err != nil {
 		return ExitFailuer, err
@@ -303,25 +319,26 @@ func getSameFiles(files []string) map[string]Paths {
 }
 
 func calcChecksum(files []string) map[string]Paths {
-	totalFileNum := len(files)
-	df := map[string]Paths{}
-
 	fmt.Fprintln(os.Stdout, "Find the same file on a file content basis")
-
+	totalFileNum := len(files)
 	ch := make(chan fileInfo, totalFileNum)
+	defer close(ch)
+
 	if totalFileNum < 100 {
 		go calcChecksumThread(files, ch)
 	} else {
 		for n := 0; n < 10; n++ {
 			ratio := totalFileNum / 10
 			first := n * ratio
-			last := (n + 1) * ratio
+			last := ((n + 1) * ratio)
 			if n == 9 {
 				last = totalFileNum
 			}
 			go calcChecksumThread(files[first:last], ch)
 		}
 	}
+
+	df := map[string]Paths{}
 	bar := pb.Simple.Start(totalFileNum)
 	bar.SetMaxWidth(80)
 	for n := 0; n < totalFileNum; n++ {
@@ -335,28 +352,21 @@ func calcChecksum(files []string) map[string]Paths {
 		}
 		bar.Increment()
 	}
-	close(ch)
 	bar.Finish()
 	return df
 }
 
 func calcChecksumThread(files []string, ch chan fileInfo) {
+	var fi fileInfo = fileInfo{"", ""}
 	for _, v := range files {
-		var fi fileInfo = fileInfo{"", ""}
-		absPath, err := filepath.Abs(v)
-		if err != nil {
-			//fmt.Fprintln(os.Stderr, cmdName+": "+err.Error())
-			ch <- fi
-			continue
-		}
-
+		fi = fileInfo{"", ""}
 		checksum, err := mb.CalcChecksum(md5.New(), v)
 		if err != nil {
 			//fmt.Fprintln(os.Stderr, cmdName+": "+err.Error())
 			ch <- fi
 			continue
 		}
-		fi.path = absPath
+		fi.path = v
 		fi.checksum = checksum
 		ch <- fi
 	}

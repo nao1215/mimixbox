@@ -111,6 +111,11 @@ func BaseNameWithoutExt(path string) string {
 	return file[:len(file)-len(filepath.Ext(path))]
 }
 
+func IsNamedPipe(path string) bool {
+	stat, err := os.Stat(path)
+	return (err == nil) && ((stat.Mode() & fs.ModeNamedPipe) != 0)
+}
+
 // Wark return 1）directory List, 2) file list, 3) error
 func Walk(dir string, ignoreErr bool) ([]string, []string, error) {
 	fileList := []string{}
