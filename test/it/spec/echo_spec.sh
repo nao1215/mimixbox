@@ -25,15 +25,6 @@ Describe 'Echo text with environment variable'
     End
 End
 
-Describe 'Echo pipe data without xargs command'
-    Include shellutils/echo_test.sh
-    It 'says nothing'
-        When call TestEchoPipeWithoutXargs
-        The output should equal ''
-        The status should be success
-    End
-End
-
 Describe 'Echo pipe data with xargs command'
     Include shellutils/echo_test.sh
     It 'says pipe'

@@ -11,10 +11,6 @@ TestEchoEnvVariable() {
     echo ${TEST_ENV}
 }
 
-TestEchoPipeWithoutXargs() {
-    echo "pipe" | echo
-}
-
 TestEchoPipeWithargs() {
     echo "pipe" | xargs echo
 }
