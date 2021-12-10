@@ -28,7 +28,7 @@ import (
 )
 
 const cmdName string = "id"
-const version = "1.0.0"
+const version = "1.0.1"
 
 var osExit = os.Exit
 
@@ -110,7 +110,7 @@ func dumpAllId(u user.User, groups []user.Group) error {
 	for _, v := range groups {
 		resultLine = resultLine + v.Gid + "(" + v.Name + "),"
 	}
-	fmt.Fprintln(os.Stdout, strings.TrimRight(resultLine, ","))
+	fmt.Fprintln(os.Stdout, strings.TrimSuffix(resultLine, ","))
 	return nil
 }
 

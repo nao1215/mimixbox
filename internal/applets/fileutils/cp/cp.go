@@ -31,7 +31,7 @@ import (
 
 const cmdName string = "cp"
 
-const version = "1.0.4"
+const version = "1.0.5"
 
 var osExit = os.Exit
 
@@ -118,7 +118,7 @@ func cpDir(src string, dest string, opts options) error {
 		return err
 	}
 
-	unnecessaryPath := strings.TrimRight(src, path.Base(src))
+	unnecessaryPath := strings.TrimSuffix(src, path.Base(src))
 	// Make destination directory
 	for _, dir := range srcDirs {
 		dir = path.Join(dest, strings.TrimLeft(dir, unnecessaryPath))

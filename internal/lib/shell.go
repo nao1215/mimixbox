@@ -180,7 +180,7 @@ func ChopAll(lines []string) []string {
 
 func Chop(line string) string {
 	if strings.HasSuffix(line, "\n") {
-		return strings.TrimRight(line, "\n")
+		return strings.TrimSuffix(line, "\n")
 	}
 	return line
 }
@@ -229,7 +229,7 @@ func DumpGroups(groups []user.Group, showName bool) {
 			resultLine = resultLine + g.Gid + " "
 		}
 	}
-	fmt.Fprintln(os.Stdout, strings.TrimRight(resultLine, " "))
+	fmt.Fprintln(os.Stdout, strings.TrimSuffix(resultLine, " "))
 }
 
 func HasOperand(args []string, cmdName string) bool {

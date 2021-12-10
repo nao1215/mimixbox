@@ -29,7 +29,7 @@ import (
 )
 
 const cmdName string = "wc"
-const version = "1.0.5"
+const version = "1.0.6"
 
 var osExit = os.Exit
 
@@ -158,7 +158,7 @@ func getMaxLength(lines []string) int {
 	max := 0
 	for _, line := range lines {
 		if strings.HasSuffix(line, "\n") {
-			line = strings.TrimRight(line, "\n")
+			line = strings.TrimSuffix(line, "\n")
 		}
 		if len(line) > max {
 			max = len(line)

@@ -26,7 +26,7 @@ import (
 
 const cmdName string = "cowsay"
 
-const version = "0.9.2"
+const version = "0.9.3"
 
 var osExit = os.Exit
 
@@ -51,7 +51,7 @@ func Run() (int, error) {
 	}
 
 	if mb.HasPipeData() {
-		messages = strings.TrimRight(strings.Join(args, ""), "\n")
+		messages = strings.TrimSuffix(strings.Join(args, ""), "\n")
 	} else if len(args) == 0 {
 		messages = userInput()
 	} else {

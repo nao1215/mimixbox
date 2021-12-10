@@ -95,7 +95,7 @@ func getWaitTime(input []string) ([]duration, error) {
 		} else {
 			strList := strings.Split(v, "")
 			lastChar := strList[len(strList)-1]
-			onlyNumStr := strings.TrimRight(v, lastChar)
+			onlyNumStr := strings.TrimSuffix(v, lastChar)
 			if d.val, err = strconv.ParseFloat(onlyNumStr, 64); err != nil {
 				return nil, errors.New("Input format error :" + v)
 			}
