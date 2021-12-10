@@ -17,7 +17,6 @@
 package basename
 
 import (
-	"errors"
 	"fmt"
 	"os"
 	"path/filepath"
@@ -29,7 +28,7 @@ import (
 
 const cmdName string = "basename"
 
-const version = "1.0.1"
+const version = "1.0.2"
 
 var osExit = os.Exit
 
@@ -55,22 +54,26 @@ func Run() (int, error) {
 		return ExitFailuer, nil
 	}
 
-	// Different from Coreutils, MimixBox does not allow suffix
-	// specification without -s option.
-	if !opts.Multiple && len(args) >= 2 {
-		return ExitFailuer, errors.New("multiple PATHs specified (use --multiple)")
-	}
-
 	for _, path := range args {
 		basename := filepath.Base(path)
 		if opts.Suffix != "" && strings.HasSuffix(basename, opts.Suffix) {
-			basename = strings.TrimRight(basename, opts.Suffix)
+			basename = strings.TrimSuffix(basename, opts.Suffix)
+		}
+
+		// The result when the user specifies ""(empty string) is different from Coreutils.
+		// So change the result from "." to "" to match the result with Coreutils.
+		if path == "" && basename == "." {
+			basename = ""
 		}
 
 		if opts.Zero {
 			fmt.Fprintf(os.Stdout, "%s", basename)
 		} else {
 			fmt.Fprintln(os.Stdout, basename)
+		}
+
+		if !opts.Multiple {
+			break
 		}
 	}
 	return ExitSuccess, nil
@@ -90,7 +93,7 @@ func parseArgs(opts *options) ([]string, error) {
 	}
 
 	if !isValidArgNr(args) {
-		showHelp(p)
+		fmt.Fprintln(os.Stderr, "basename: no operand")
 		osExit(ExitFailuer)
 	}
 	return args, nil
@@ -106,8 +109,4 @@ func initParser(opts *options) *flags.Parser {
 
 func isValidArgNr(args []string) bool {
 	return len(args) >= 1
-}
-
-func showHelp(p *flags.Parser) {
-	p.WriteHelp(os.Stdout)
 }

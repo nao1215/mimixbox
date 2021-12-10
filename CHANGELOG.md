@@ -1,6 +1,6 @@
 # Changelog
 All notable changes to this project will be documented in this file. The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.0.0/), and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
-## [0.28.03] - 2021-12-09
+## [0.28.04] - 2021-12-10
 ### Changed
  - wc command.
    - Fixed the bug that did not count the number of rows of data passed from PIPE correctly.
@@ -17,6 +17,10 @@ All notable changes to this project will be documented in this file. The format 
    - Speeded up checksum calculation with goroutine.
    - Removed named PIPE from checksum calculation. 
      - The checksum calculation for the named PIPE will stop unless there is writing to the named PIPE. It's looks like deadlock. To avoid this problem, exclude named PIPE from target file list.
+ - basename command.
+   - Print error message if there is no argument.
+   - Matched the result with Coreutils when the user specified an empty string.
+   - Matched the result with Coreutils when the user specified multiple arguments.
 ## [0.28.00] - 2021-12-08
 ### Added
  - sddf command. Search & Delete Duplicated Files.
