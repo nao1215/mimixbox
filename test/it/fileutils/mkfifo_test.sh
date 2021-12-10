@@ -5,6 +5,7 @@ export TEST_FILE3=${TEST_DIR}/3
 
 Setup() {
     mkdir -p ${TEST_DIR}
+    chmod 775 ${TEST_DIR}
 }
 
 Cleanup() {
