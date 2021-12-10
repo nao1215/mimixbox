@@ -4,7 +4,7 @@ Describe 'Make one named pipe'
     AfterEach 'Cleanup'
     It 'make named pipe by prw-rw-r--'
         When call TestMkfifoOneFifo
-        The output should equal 'prw-rw-r--'
+        The output should equal 'prw-r--r--'
     End
 End
 
@@ -24,9 +24,9 @@ Describe 'Make three named pipe'
     AfterEach 'Cleanup'
 
     result() { %text
-        #|prw-rw-r--
-        #|prw-rw-r--
-        #|prw-rw-r--
+        #|prw-r--r--
+        #|prw-r--r--
+        #|prw-r--r--
     }
 
     It 'make three named pipe by prw-rw-r--'

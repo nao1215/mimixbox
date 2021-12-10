@@ -59,7 +59,7 @@ func Run() (int, error) {
 			fmt.Fprintln(os.Stderr, cmdName+": can't make "+p+": already exist")
 			continue
 		}
-		if err := syscall.Mkfifo(p, 0666); err != nil {
+		if err := syscall.Mkfifo(p, 0644); err != nil {
 			status = ExitFailuer
 			fmt.Fprintln(os.Stderr, cmdName+": "+p+": "+err.Error())
 			continue
