@@ -17,7 +17,7 @@
 package mkfifo
 
 import (
-	"errors"
+	"fmt"
 	"os"
 	"syscall"
 
@@ -28,7 +28,7 @@ import (
 
 const cmdName string = "mkfifo"
 
-const version = "1.0.1"
+const version = "1.0.2"
 
 var osExit = os.Exit
 
@@ -46,21 +46,23 @@ func Run() (int, error) {
 	var opts options
 	var args []string
 	var err error
-	var status int
+	status := ExitSuccess
 
 	if args, err = parseArgs(&opts); err != nil {
 		return ExitFailuer, nil
 	}
 
-	// If an error occurs even once, the process is interrupted.
-	// It behaves differently from Coreutils.
 	for _, path := range args {
 		p := os.ExpandEnv(path)
 		if mb.Exists(p) {
-			return ExitFailuer, errors.New("Can't make " + p + ": already exist")
+			status = ExitFailuer
+			fmt.Fprintln(os.Stderr, cmdName+": can't make "+p+": already exist")
+			continue
 		}
 		if err := syscall.Mkfifo(p, 0666); err != nil {
-			return ExitFailuer, err
+			status = ExitFailuer
+			fmt.Fprintln(os.Stderr, cmdName+": "+p+": "+err.Error())
+			continue
 		}
 	}
 	return status, nil
