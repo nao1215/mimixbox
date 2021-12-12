@@ -29,9 +29,6 @@ jobs:
       
     - name: CreateSymbolicLink
       run: mimixbox --full-install /usr/local/bin/
- 
-    - name: Dos2unix version
-      run: /usr/local/bin/dos2unix --version
       
     - name: IntegrationTest
-      run: make it
+      run: export PATH=$PATH:/usr/local/bin && make it
