@@ -20,36 +20,36 @@ Cleanup() {
 }
 
 TestDos2unixCRLF() {
-    /usr/local/bin/dos2unix ${TEST_FILE1}
+    dos2unix ${TEST_FILE1}
     file ${TEST_FILE1}
 }
 
 TestDos2unixCRLFStatus() {
-    /usr/local/bin/dos2unix ${TEST_FILE1}
+    dos2unix ${TEST_FILE1}
 }
 
 TestDos2unixThreeFileAtSameTime() {
-    /usr/local/bin/dos2unix ${TEST_FILE1} ${TEST_FILE2} ${TEST_FILE3}
+    dos2unix ${TEST_FILE1} ${TEST_FILE2} ${TEST_FILE3}
     file ${TEST_FILE1}
     file ${TEST_FILE2}
     file ${TEST_FILE3}
 }
 
 TestDos2unixThreeFileAtSameTime() {
-    /usr/local/bin/dos2unix ${TEST_FILE1} ${TEST_FILE2} ${TEST_FILE3}
+    dos2unix ${TEST_FILE1} ${TEST_FILE2} ${TEST_FILE3}
     file ${TEST_FILE1}
     file ${TEST_FILE2}
     file ${TEST_FILE3}
 }
 
 TestDos2unixThreeFileAtSameTimeStatus() {
-    /usr/local/bin/dos2unix ${TEST_FILE1} ${TEST_FILE2} ${TEST_FILE3}
+    dos2unix ${TEST_FILE1} ${TEST_FILE2} ${TEST_FILE3}
 }
 
 TestDos2unixDir() {
-    /usr/local/bin/dos2unix ${TEST_DIR}
+    dos2unix ${TEST_DIR}
 }
 
 TestDos2unixOneOfThreeFail() {
-    /usr/local/bin/dos2unix ${TEST_FILE1}  ${TEST_DIR} ${TEST_FILE3} 
+    dos2unix ${TEST_FILE1}  ${TEST_DIR} ${TEST_FILE3} 
 }
