@@ -20,36 +20,36 @@ Cleanup() {
 }
 
 TestDos2unixCRLF() {
-    mimixbox dos2unix ${TEST_FILE1}
+    /usr/local/bin/dos2unix ${TEST_FILE1}
     file ${TEST_FILE1}
 }
 
 TestDos2unixCRLFStatus() {
-    mimixbox dos2unix ${TEST_FILE1}
+    /usr/local/bin/dos2unix ${TEST_FILE1}
 }
 
 TestDos2unixThreeFileAtSameTime() {
-    mimixbox dos2unix ${TEST_FILE1} ${TEST_FILE2} ${TEST_FILE3}
+    /usr/local/bin/dos2unix ${TEST_FILE1} ${TEST_FILE2} ${TEST_FILE3}
     file ${TEST_FILE1}
     file ${TEST_FILE2}
     file ${TEST_FILE3}
 }
 
 TestDos2unixThreeFileAtSameTime() {
-    mimixbox dos2unix ${TEST_FILE1} ${TEST_FILE2} ${TEST_FILE3}
+    /usr/local/bin/dos2unix ${TEST_FILE1} ${TEST_FILE2} ${TEST_FILE3}
     file ${TEST_FILE1}
     file ${TEST_FILE2}
     file ${TEST_FILE3}
 }
 
 TestDos2unixThreeFileAtSameTimeStatus() {
-    mimixbox dos2unix ${TEST_FILE1} ${TEST_FILE2} ${TEST_FILE3}
+    /usr/local/bin/dos2unix ${TEST_FILE1} ${TEST_FILE2} ${TEST_FILE3}
 }
 
 TestDos2unixDir() {
-    mimixbox dos2unix ${TEST_DIR}
+    /usr/local/bin/dos2unix ${TEST_DIR}
 }
 
 TestDos2unixOneOfThreeFail() {
-    mimixbox dos2unix ${TEST_FILE1}  ${TEST_DIR} ${TEST_FILE3} 
+    /usr/local/bin/dos2unix ${TEST_FILE1}  ${TEST_DIR} ${TEST_FILE3} 
 }
