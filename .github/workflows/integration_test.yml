@@ -23,12 +23,15 @@ jobs:
       
     - name: Build
       run: make build
- 
+
     - name: InstallMimixBox
       run: sudo install -v -m 0755 -D mimixbox /usr/local/bin/.
       
     - name: CreateSymbolicLink
       run: mimixbox --full-install /usr/local/bin/
+ 
+    - name: Dos2unix version
+      run: /usr/local/bin/dos2unix --version
       
     - name: IntegrationTest
       run: make it
