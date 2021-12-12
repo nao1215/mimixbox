@@ -30,8 +30,8 @@ jobs:
     - name: CreateSymbolicLink
       run: mimixbox --full-install /usr/local/bin/
  
-    - name: Dos2unix version
-      run: /usr/local/bin/dos2unix --version
+    - name: Read bashrc
+      run: source ~/.bashrc
       
     - name: IntegrationTest
       run: make it
