@@ -30,7 +30,7 @@ install: ## Install mimixbox (with symbolic link) and man-pages on your system
 	$(INSTALLER)
 
 full-install: ## Full Install mimixbox (with symbolic link) and man-pages on your system
-	$(INSTALLER)
+	-$(INSTALLER)
 	mimixbox --full-install /usr/local/bin
 
 remove: ## Remove mimixbox-symbolic link
