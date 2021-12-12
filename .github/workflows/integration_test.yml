@@ -31,7 +31,7 @@ jobs:
       run: mimixbox --full-install /usr/local/bin/
  
     - name: Dos2unix version
-      run: ls -al /usr/local/bin/dos2unix
+      run: /usr/local/bin/dos2unix --version
       
     - name: IntegrationTest
       run: make it
