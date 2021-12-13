@@ -29,6 +29,9 @@ jobs:
       
     - name: CreateSymbolicLink
       run: mimixbox --full-install /usr/local/bin/
+
+    - name: CheckSymbolicLink
+      run: ls -la /usr/local/bin/
       
     - name: IntegrationTest
       run: export PATH=$PATH:/usr/local/bin && make it
