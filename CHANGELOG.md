@@ -1,9 +1,10 @@
 # Changelog
 All notable changes to this project will be documented in this file. The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.0.0/), and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
 
-## [0.28.07] - 2021-12-12
- - unix2dos command.
+## [0.28.09] - 2021-12-12
+ - unix2dos / dos2unix command.
    - Changed to print the message being converted.
+   - Fixed a bug that the way pipes are handled changes depending on whether there is an option or not.
  - mv command.
    - Change to be able to move multiple file at same time.
    - Changed to continue processing even if it fails while moving multiple files.

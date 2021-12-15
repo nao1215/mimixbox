@@ -27,7 +27,7 @@ import (
 )
 
 const cmdName string = "dos2unix"
-const version = "1.0.5"
+const version = "1.0.6"
 
 var osExit = os.Exit
 
@@ -51,7 +51,7 @@ func Run() (int, error) {
 		return ExitFailuer, nil
 	}
 
-	if mb.HasPipeData() {
+	if mb.HasPipeData() && mb.HasNoOperand(os.Args, cmdName) {
 		fmt.Fprint(os.Stdout, toLF(strings.Split(args[0], "")))
 		return ExitSuccess, nil
 	}
@@ -111,7 +111,7 @@ func parseArgs(opts *options) ([]string, error) {
 		return nil, err
 	}
 
-	if mb.HasPipeData() {
+	if mb.HasPipeData() && len(args) == 0 {
 		stdin, err := mb.FromPIPE()
 		if err != nil {
 			return nil, err
