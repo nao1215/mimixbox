@@ -31,7 +31,7 @@ jobs:
       run: mimixbox --full-install /usr/local/bin/
 
     - name: InstallDos2unix
-      run: apt-get update && apt-get install dos2unix
+      run: sudo apt-get update && sudo apt-get install dos2unix
       
     - name: IntegrationTest
       run: export PATH=$PATH:/usr/local/bin && make it
