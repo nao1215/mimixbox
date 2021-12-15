@@ -6,6 +6,9 @@ All notable changes to this project will be documented in this file. The format 
 ### Added
  - uuidgen command.
  - dirname command (with integration tests.)
+### Changed
+ - mimixbox
+   - Fixed the installation order to be in alphabetical order. Previously, the order of installing Applets was random. 
 ## [0.28.09] - 2021-12-14
 ### Changed
  - unix2dos / dos2unix command.

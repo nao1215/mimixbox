@@ -218,7 +218,7 @@ func __install(mimixboxPath string, installPath string, full bool) error {
 		return err
 	}
 
-	for applet := range applets.Applets {
+	for _, applet := range applets.SortApplet() {
 		if !full && mb.ExistCmd(applet) {
 			fmt.Fprintf(os.Stderr, "Same name command(%s) already exists. Not create symbolic link.\n", applet)
 			continue // if same name command already exists, not install for safety.
@@ -271,7 +271,7 @@ func remove(installPath string) error {
 		return errors.New(targetPath + ": no such directory")
 	}
 
-	for name := range applets.Applets {
+	for _, name := range applets.SortApplet() {
 		symbolicPath := filepath.Join(targetPath, name)
 
 		if !mb.IsSymlink(symbolicPath) {
