@@ -41,3 +41,8 @@ TestBasenameThreeArgWithMultipleAndZeroOption() {
 TestBasenameWithSuffixOption() {
     basename -s .txt /home/nao/test.txt
 }
+
+TestBasenameFilenameWithEnvVar() {
+    export TEST_DIR="/aaa/bbb/ccc"
+    basename $TEST_DIR/ddd.txt
+}

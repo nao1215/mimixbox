@@ -7,6 +7,7 @@
 |		cawsay | Print message with cow's ASCII art|
 |   chroot | Run command or interactive shell with special root directory|
 |       cp | Copy file(s) otr Directory(s) |
+|  dirname | Print only directory path |
 | dos2unix | Change CRLF to LF|
 |     echo | Display a line of text|
 |   expand | Convert TAB to N space (default:N=8)|

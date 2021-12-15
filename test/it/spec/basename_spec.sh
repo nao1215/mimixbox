@@ -88,7 +88,6 @@ Describe 'Get basename three arguments with multiple options'
         #|home
     }
 
-
     It 'show three basename(basename, nao, home)'
         When call TestBasenameThreeArgWithMultipleOption
         The output should equal "$(result)"
@@ -112,6 +111,16 @@ Describe 'Get basename with suffix options'
     It 'show basename without suffix'
         When call TestBasenameWithSuffixOption
         The output should equal "test"
+        The status should be success
+    End
+End
+
+Describe 'Get basename with environment variable'
+    Include shellutils/basename_test.sh
+
+    It 'show basename without suffix'
+        When call TestBasenameFilenameWithEnvVar
+        The output should equal "ddd.txt"
         The status should be success
     End
 End

@@ -37,6 +37,7 @@ import (
 	"github.com/nao1215/mimixbox/internal/applets/shellutils/base64"
 	"github.com/nao1215/mimixbox/internal/applets/shellutils/basename"
 	"github.com/nao1215/mimixbox/internal/applets/shellutils/chroot"
+	"github.com/nao1215/mimixbox/internal/applets/shellutils/dirname"
 	"github.com/nao1215/mimixbox/internal/applets/shellutils/echo"
 	"github.com/nao1215/mimixbox/internal/applets/shellutils/false"
 	"github.com/nao1215/mimixbox/internal/applets/shellutils/ghrdc"
@@ -87,6 +88,7 @@ func init() {
 		"cowsay":    {cowsay.Run, "Print message with cow's ASCII art"},
 		"chroot":    {chroot.Run, "Run command or interactive shell with special root directory"},
 		"cp":        {cp.Run, "Copy file(s) otr Directory(s)"},
+		"dirname":   {dirname.Run, "Print only directory path"},
 		"dos2unix":  {dos2unix.Run, "Change CRLF to LF"},
 		"echo":      {echo.Run, "Display a line of text"},
 		"expand":    {expand.Run, "Convert TAB to N space (default:N=8)"},

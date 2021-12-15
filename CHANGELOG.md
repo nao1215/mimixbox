@@ -3,7 +3,11 @@ All notable changes to this project will be documented in this file. The format 
 
 
 ## [0.29.00] - 2021-12-15
+### Added
+ - uuidgen command.
+ - dirname command (with integration tests.)
 ## [0.28.09] - 2021-12-14
+### Changed
  - unix2dos / dos2unix command.
    - Changed to print the message being converted.
    - Fixed a bug that the way pipes are handled changes depending on whether there is an option or not.
