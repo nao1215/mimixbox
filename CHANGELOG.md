@@ -5,6 +5,7 @@ All notable changes to this project will be documented in this file. The format 
 ## [0.29.00] - 2021-12-15
 ### Added
  - uuidgen command.
+ - chgrp command.
  - dirname command (with integration tests.)
 ### Changed
  - mimixbox
