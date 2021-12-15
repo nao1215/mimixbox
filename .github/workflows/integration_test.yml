@@ -30,8 +30,8 @@ jobs:
     - name: CreateSymbolicLink
       run: mimixbox --full-install /usr/local/bin/
 
-    - name: CheckSymbolicLink
-      run: ls -la /usr/local/bin/
+    - name: InstallDos2unix
+      run: apt update && apt install dos2unix
       
     - name: IntegrationTest
       run: export PATH=$PATH:/usr/local/bin && make it
