@@ -18,6 +18,7 @@ package mv
 
 import (
 	"errors"
+	"fmt"
 	"os"
 	"path/filepath"
 
@@ -28,7 +29,7 @@ import (
 
 const cmdName string = "mv"
 
-const version = "1.0.1"
+const version = "1.0.2"
 
 var osExit = os.Exit
 
@@ -69,11 +70,7 @@ func Run() (int, error) {
 		return ExitFailuer, err
 	}
 
-	if err := move(srcPaths, destPath, opts); err != nil {
-		return ExitFailuer, err
-	}
-
-	return ExitSuccess, nil
+	return move(srcPaths, destPath, opts)
 }
 
 func validArgs(srcPaths []string, destPath string, opts options) error {
@@ -95,44 +92,53 @@ func validArgs(srcPaths []string, destPath string, opts options) error {
 	return nil
 }
 
-func move(srcPaths []string, dest string, opts options) error {
+func move(srcPaths []string, dest string, opts options) (int, error) {
+	status := ExitSuccess
 	for _, src := range srcPaths {
 		if !mb.Exists(src) {
-			return errors.New(src + " doesn't exist")
+			fmt.Fprintln(os.Stderr, cmdName+": "+src+" doesn't exist")
+			status = ExitFailuer
+			continue
 		}
 
 		// If SRC and DEST are the same, the option(-f, -b, -i) is ignored.
 		if isSameFilePath(src, dest) {
-			return errors.New("Source and Destination is same: " + src)
+			fmt.Fprintln(os.Stderr, cmdName+": source '"+src+"' and destination '"+dest+"' is same")
+			status = ExitFailuer
+			continue
 		}
 
 		if opts.NoClobber {
 			if err := noclobberMove(src, dest); err != nil {
-				return err
+				fmt.Fprintln(os.Stderr, cmdName+": "+err.Error())
+				status = ExitFailuer
 			}
 			continue
 		}
 
 		if opts.Force || (opts.Backup && opts.Interactive) {
 			if err := forceMove(src, dest, opts); err != nil {
-				return err
+				fmt.Fprintln(os.Stderr, cmdName+": "+err.Error())
+				status = ExitFailuer
 			}
 			continue
 		}
 
 		if opts.Interactive {
 			if err := interactiveMove(src, dest, opts); err != nil {
-				return err
+				fmt.Fprintln(os.Stderr, cmdName+": "+err.Error())
+				status = ExitFailuer
 			}
 			continue
 		}
 
 		destPath := decideDestAbsPath(src, dest, opts)
 		if err := os.Rename(src, destPath); err != nil {
-			return err
+			fmt.Fprintln(os.Stderr, cmdName+": "+err.Error())
+			status = ExitFailuer
 		}
 	}
-	return nil
+	return status, nil
 }
 
 func noclobberMove(src string, dest string) error {
@@ -196,7 +202,8 @@ func decideDestAbsPath(src string, dest string, opts options) string {
 	destPath := os.ExpandEnv(dest)
 	srcPath := os.ExpandEnv(src)
 	if mb.IsDir(srcPath) && mb.IsDir(destPath) {
-		if (filepath.Base(srcPath) == filepath.Base(destPath)) && opts.Backup {
+		destPath = filepath.Join(dest, filepath.Base(srcPath))
+		if filepath.Base(srcPath) == filepath.Base(destPath) && opts.Backup {
 			destPath = decideBackupFileName(destPath)
 		}
 	} else if mb.IsFile(srcPath) && mb.IsFile(dest) && opts.Backup {

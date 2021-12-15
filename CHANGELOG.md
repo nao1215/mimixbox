@@ -4,6 +4,10 @@ All notable changes to this project will be documented in this file. The format 
 ## [0.28.07] - 2021-12-12
  - unix2dos command.
    - Changed to print the message being converted.
+ - mv command.
+   - Change to be able to move multiple file at same time.
+   - Changed to continue processing even if it fails while moving multiple files.
+   - Fixed the bug that the directory could not be copied due to an error in the copy destination path creation process.
 ## [0.28.06] - 2021-12-12
 ### Changed
  - wc command.
