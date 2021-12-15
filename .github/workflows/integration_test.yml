@@ -32,7 +32,7 @@ jobs:
       run: mimixbox --full-install /usr/local/bin/
 
     - name: InstallDos2unix
-      run: which dos2unix && echo $PATH
+      run: which dos2unix && echo $PATH && dos2unix README.md
       
     - name: IntegrationTest
       run: make it
