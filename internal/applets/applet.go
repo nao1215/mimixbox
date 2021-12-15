@@ -51,6 +51,7 @@ import (
 	"github.com/nao1215/mimixbox/internal/applets/shellutils/serial"
 	"github.com/nao1215/mimixbox/internal/applets/shellutils/sleep"
 	"github.com/nao1215/mimixbox/internal/applets/shellutils/true"
+	"github.com/nao1215/mimixbox/internal/applets/shellutils/uuidgen"
 	"github.com/nao1215/mimixbox/internal/applets/shellutils/which"
 	"github.com/nao1215/mimixbox/internal/applets/shellutils/whoami"
 	"github.com/nao1215/mimixbox/internal/applets/textutils/cat"
@@ -121,6 +122,7 @@ func init() {
 		"true":      {true.Run, "Do nothing. Return success(0)"},
 		"unexpand":  {unexpand.Run, "Convert N space to TAB(default:N=8)"},
 		"unix2dos":  {unix2dos.Run, "Change LF to CRLF"},
+		"uuidgen":   {uuidgen.Run, "Print UUID (Universal Unique IDentifier"},
 		"wc":        {wc.Run, "Word Count"},
 		"which":     {which.Run, "Returns the file path which would be executed in the current environment"},
 		"whoami":    {whoami.Run, "Print login user name"},

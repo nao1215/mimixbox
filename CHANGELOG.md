@@ -1,7 +1,9 @@
 # Changelog
 All notable changes to this project will be documented in this file. The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.0.0/), and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
 
-## [0.28.09] - 2021-12-12
+
+## [0.29.00] - 2021-12-15
+## [0.28.09] - 2021-12-14
  - unix2dos / dos2unix command.
    - Changed to print the message being converted.
    - Fixed a bug that the way pipes are handled changes depending on whether there is an option or not.

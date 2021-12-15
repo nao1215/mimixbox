@@ -42,6 +42,7 @@
 |     true | Do nothing. Return success(0)|
 |  unexpand| Convert N space to TAB (default:N=8)|
 |  unix2dos| Change LF to CRLF|
+|   uuidgeb| Print UUID (Universal Unique IDentifier|
 |    wc    |    Word Counter|
 |    which | Returns the file path which would be executed in the current environment|
 |   whoami | Print login user name|
