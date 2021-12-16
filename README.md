@@ -19,8 +19,8 @@ The source code and binaries are distributed on [the Release Page](https://githu
 For example, in the case of Linux (amd64), you can install the MimixBox and documents on your system with the following command:
 
 ```
-$ tar xf mimixbox-0.0.1-linux-arm64.tar.gz
-$ cd mimixbox-0.0.1-linux-arm64
+$ tar xf mimixbox-0.30.0-linux-amd64.tar.gz
+$ cd mimixbox-0.30.0-linux-amd64
 $ sudo ./installer.sh
 ```
 

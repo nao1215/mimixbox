@@ -56,23 +56,54 @@ If you want to see the list of supported commands on the terminal, use the --lis
 
 ```
 $ mimixbox --list
+   base64 - Base64 encode/decode from FILR(or STDIN) to STDOUT
+ basename - Print basename (PATH without"/") from file path
       cat - Concatenate files and print on the standard output
+    chgrp - Change the group of each FILE to GROUP
+    chown - Change the owner and/or group of each FILE to OWNER and/or GROUP
    chroot - Run command or interactive shell with special root directory
+   cowsay - Print message with cow's ASCII art
+       cp - Copy file(s) otr Directory(s)
+  dirname - Print only directory path
+ dos2unix - Change CRLF to LF
      echo - Display a line of text
+   expand - Convert TAB to N space (default:N=8)
 fakemovie - Adds a video playback button to the image
     false - Do nothing. Return unsuccess(1)
     ghrdc - GitHub Relase Download Counter
+   groups - Print the groups to which USERNAME belongs
+     head - Print the first NUMBER(default=10) lines
+   hostid - Print hostid (Host Identity Number, hex)!!!Does not work properly!!!
+       id - Print User ID and Group ID
  ischroot - Detect if running in a chroot
+     kill - Kill process or send signal to process
+       ln - Create hard or symbolic link
      mbsh - Mimix Box Shell
+   md5sum - Calculate or Check md5sum message digest
     mkdir - Make directories
    mkfifo - Make FIFO (named pipe)
        mv - Rename SOURCE to DESTINATION, or move SOURCE(s) to DIRECTORY
+       nl - Write each FILE to standard output with line numbers added
      path - Manipulate filename path
        rm - Remove file(s) or directory(s)
     rmdir - Remove directory
+     sddf - Search & Delete Duplicated File
+      seq - Print a column of numbers
    serial - Rename the file to the name with a serial number
-       sh - Mimix Box Shell
+  sha1sum - alculate or Check sercure hash 1 algorithm
+sha256sum - alculate or Check sercure hash 256 algorithm
+sha512sum - alculate or Check sercure hash 512 algorithm
+       sl - Cure your bad habit of mistyping
+    sleep - Pause for NUMBER seconds(minutes, hours, days)
+      tac - Print the file contents from the end to the beginning
+     tail - Print the last NUMBER(default=10) lines
     touch - Update the access and modification times of each FILE to the current time
      true - Do nothing. Return success(0)
+ unexpand - Convert N space to TAB(default:N=8)
+ unix2dos - Change LF to CRLF
+  uuidgen - Print UUID (Universal Unique IDentifier
+       wc - Word Count
+     wget - The non-interactive network downloader
     which - Returns the file path which would be executed in the current environment
+   whoami - Print login user name
 ```

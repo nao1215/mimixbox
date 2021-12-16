@@ -19,8 +19,8 @@ MimixBoxは、シングルバイナリの中に多数のUnixコマンドを持�
 例えば、Linux（amd64）の場合、次のコマンドでMimixBoxとドキュメントをインストールできます。
 
 ```
-$ tar xf mimixbox-0.0.1-linux-arm64.tar.gz
-$ cd mimixbox-0.0.1-linux-arm64
+$ tar xf mimixbox-0.30.0-linux-amd64.tar.gz
+$ cd mimixbox-0.30.0-linux-amd64
 $ sudo ./installer.sh
 ```
 
