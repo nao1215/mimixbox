@@ -55,6 +55,7 @@ import (
 	"github.com/nao1215/mimixbox/internal/applets/shellutils/sleep"
 	"github.com/nao1215/mimixbox/internal/applets/shellutils/true"
 	"github.com/nao1215/mimixbox/internal/applets/shellutils/uuidgen"
+	"github.com/nao1215/mimixbox/internal/applets/shellutils/wget"
 	"github.com/nao1215/mimixbox/internal/applets/shellutils/which"
 	"github.com/nao1215/mimixbox/internal/applets/shellutils/whoami"
 	"github.com/nao1215/mimixbox/internal/applets/textutils/cat"
@@ -130,6 +131,7 @@ func init() {
 		"unix2dos":  {unix2dos.Run, "Change LF to CRLF"},
 		"uuidgen":   {uuidgen.Run, "Print UUID (Universal Unique IDentifier"},
 		"wc":        {wc.Run, "Word Count"},
+		"wget":      {wget.Run, "The non-interactive network downloader"},
 		"which":     {which.Run, "Returns the file path which would be executed in the current environment"},
 		"whoami":    {whoami.Run, "Print login user name"},
 	}

@@ -4,6 +4,7 @@ All notable changes to this project will be documented in this file. The format 
 ## [0.30.00] - 2021-12-15
 ### Added
  - chown command.
+ - wget command.
 ## [0.29.00] - 2021-12-15
 ### Added
  - uuidgen command.
