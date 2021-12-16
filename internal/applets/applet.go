@@ -24,6 +24,7 @@ import (
 	"strconv"
 
 	"github.com/nao1215/mimixbox/internal/applets/fileutils/chgrp"
+	"github.com/nao1215/mimixbox/internal/applets/fileutils/chown"
 	"github.com/nao1215/mimixbox/internal/applets/fileutils/cp"
 	"github.com/nao1215/mimixbox/internal/applets/fileutils/ln"
 	"github.com/nao1215/mimixbox/internal/applets/fileutils/mkdir"
@@ -88,6 +89,7 @@ func init() {
 		"cat":       {cat.Run, "Concatenate files and print on the standard output"},
 		"cowsay":    {cowsay.Run, "Print message with cow's ASCII art"},
 		"chgrp":     {chgrp.Run, "Change the group of each FILE to GROUP"},
+		"chown":     {chown.Run, "Change the owner and/or group of each FILE to OWNER and/or GROUP"},
 		"chroot":    {chroot.Run, "Run command or interactive shell with special root directory"},
 		"cp":        {cp.Run, "Copy file(s) otr Directory(s)"},
 		"dirname":   {dirname.Run, "Print only directory path"},

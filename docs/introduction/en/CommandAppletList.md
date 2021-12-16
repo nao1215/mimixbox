@@ -6,6 +6,7 @@
 |      cat | Concatenate files and print on the standard output|
 |		cawsay | Print message with cow's ASCII art|
 |   chgrp  | Change the group of each FILE to GROUP|
+|   chown  | Change the owner and/or group of each FILE to OWNER and/or GROUP|
 |   chroot | Run command or interactive shell with special root directory|
 |       cp | Copy file(s) otr Directory(s) |
 |  dirname | Print only directory path |

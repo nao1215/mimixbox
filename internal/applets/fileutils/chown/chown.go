@@ -1,5 +1,5 @@
 //
-// mimixbox/internal/applets/fileutils/chgrp/chgrp.go
+// mimixbox/internal/applets/fileutils/chown/chown.go
 //
 // Copyright 2021 Naohiro CHIKAMATSU
 //
@@ -14,12 +14,13 @@
 // WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
 // See the License for the specific language governing permissions and
 // limitations under the License.
-package chgrp
+package chown
 
 import (
 	"fmt"
 	"os"
 	"path/filepath"
+	"strings"
 	"syscall"
 
 	mb "github.com/nao1215/mimixbox/internal/lib"
@@ -27,7 +28,7 @@ import (
 	"github.com/jessevdk/go-flags"
 )
 
-const cmdName string = "chgrp"
+const cmdName string = "chown"
 
 const version = "1.0.0"
 
@@ -39,14 +40,14 @@ const (
 	ExitFailuer
 )
 
-type groupInfo struct {
+type idInfo struct {
+	owner string
 	group string
-	files []string
 }
 
 type options struct {
 	Recursive bool `short:"R" long:"recursive" description:"Change file group IDs recursively"`
-	Version   bool `short:"v" long:"version" description:"Show chgrp command version"`
+	Version   bool `short:"v" long:"version" description:"Show chown command version"`
 }
 
 func Run() (int, error) {
@@ -58,56 +59,78 @@ func Run() (int, error) {
 		return ExitFailuer, nil
 	}
 
-	groupInfo := groupInfo{args[0], args[1:]}
-	return chgrp(groupInfo, opts)
+	return chown(ids(args[0]), args[1:], opts)
 }
 
-func chgrp(gInfo groupInfo, opts options) (int, error) {
-	gid, err := mb.LookupGid(gInfo.group)
+// ids is "owner:group" or "owner" or something.
+func ids(ids string) idInfo {
+	idInfo := idInfo{"", ""}
+	if strings.Contains(ids, ":") {
+		strList := strings.Split(ids, ":")
+		idInfo.owner = strList[0]
+		idInfo.group = strList[1]
+	} else {
+		idInfo.owner = ids
+	}
+	return idInfo
+}
+
+func chown(ids idInfo, files []string, opts options) (int, error) {
+	owner, err := mb.LookupUid(ids.owner)
 	if err != nil {
 		return ExitFailuer, err
 	}
 
+	var gid int = -1
+	if ids.group != "" {
+		gid, err = mb.LookupGid(ids.group)
+		if err != nil {
+			return ExitFailuer, err
+		}
+	}
+
 	status := ExitSuccess
-	for _, path := range gInfo.files {
+	for _, path := range files {
 		path = os.ExpandEnv(path)
+
+		if ids.group == "" {
+			var st syscall.Stat_t
+			if err := syscall.Stat(path, &st); err != nil {
+				status = ExitFailuer
+				fmt.Fprintln(os.Stderr, cmdName+": "+path+": "+err.Error())
+				continue
+			}
+			gid = int(st.Gid)
+		}
+
 		if opts.Recursive {
-			if err := changeGroupRecursive(path, gid); err != nil {
+			if err := changeOwnerRecursive(path, owner, gid); err != nil {
 				status = ExitFailuer
 				fmt.Fprintln(os.Stderr, cmdName+": "+path+": "+err.Error())
 				continue
 			}
 		} else {
-			if err := changeGroup(path, gid); err != nil {
+			if err := os.Chown(path, owner, gid); err != nil {
 				status = ExitFailuer
 				fmt.Fprintln(os.Stderr, cmdName+": "+path+": "+err.Error())
 				continue
 			}
 		}
-
 	}
 	return status, nil
 }
 
-func changeGroupRecursive(path string, gid int) error {
+func changeOwnerRecursive(path string, uid int, gid int) error {
 	err := filepath.Walk(path, func(p string, info os.FileInfo, err error) error {
 		if err != nil {
 			return err
 		}
-		if err := changeGroup(p, gid); err != nil {
+		if err := os.Chown(p, uid, gid); err != nil {
 			return err
 		}
 		return nil
 	})
 	return err
-}
-
-func changeGroup(path string, gid int) error {
-	var st syscall.Stat_t
-	if err := syscall.Stat(path, &st); err != nil {
-		return err
-	}
-	return os.Chown(path, int(st.Uid), gid)
 }
 
 func parseArgs(opts *options) ([]string, error) {
@@ -137,7 +160,7 @@ func parseArgs(opts *options) ([]string, error) {
 func initParser(opts *options) *flags.Parser {
 	parser := flags.NewParser(opts, flags.Default)
 	parser.Name = cmdName
-	parser.Usage = "[OPTIONS] GROUP FILES"
+	parser.Usage = "[OPTIONS] [OWNER][:GROUP] FILES"
 
 	return parser
 }
