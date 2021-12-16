@@ -46,7 +46,7 @@ type idInfo struct {
 }
 
 type options struct {
-	Recursive bool `short:"R" long:"recursive" description:"Change file group IDs recursively"`
+	Recursive bool `short:"R" long:"recursive" description:"Change file owner and/or group IDs recursively"`
 	Version   bool `short:"v" long:"version" description:"Show chown command version"`
 }
 
