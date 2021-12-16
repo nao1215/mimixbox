@@ -97,6 +97,7 @@ MimixBox has its own commands that don't exist in packages like Coreutils.
 |[fakemovie](./docs/examples/fakemovie/en/fakemovie.md) | Adds a video playback button to the image|
 |[ghrdc](./docs/examples/ghrdc/en/ghrdc.md) | GitHub Relase Download Counter|
 |[path](./docs/examples/path/en/path.md) | Manipulate filename path|
+|[sddf](./docs/examples/sddf/en/sddf.md) | Search & Delete Dupulicated File|
 |[serial](./docs/examples/serial/en/serial.md) | Rename the file to the name with a serial number|
 
 # Contact

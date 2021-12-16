@@ -93,10 +93,11 @@ $ sudo chroot /tmp/mimixbox/jail /bin/bash   ※ Jail環境の中へ移動
 MimixBoxは、Coreutilsのようなパッケージに含まれていないオリジナルコマンドがあります。
 |コマンド名 | 説明|
 |:--|:--|
-|[fakemovie](./docs/examples/fakemovie/en/fakemovie.md) | 画像にビデオ開始ボタンを付与|
-|[ghrdc](./docs/examples/ghrdc/en/ghrdc.md) | GitHub Relaseのダウンロード数をカウント|
-|[path](./docs/examples/path/en/path.md) | PATH情報を操作するコマンド|
-|[serial](./docs/examples/serial/en/serial.md) | ファイル名をシリアル番号付きにリネーム|
+|[fakemovie](../../examples/fakemovie/ja/fakemovie.md) | 画像にビデオ開始ボタンを付与|
+|[ghrdc](../../examples/ghrdc/ja/ghrdc.md) | GitHub Relaseのダウンロード数をカウント|
+|[path](../../examples/path/ja/path.md) | PATH情報を操作するコマンド|
+|[sddf](../../examples/sddf/ja/sddf.md) | 重複ファイルを削除すルコ万ド|
+|[serial](../../examples/serial/ja/serial.md) | ファイル名をシリアル番号付きにリネーム|
 
 # 連絡先
 「バグ発見」や「追加機能の要望」などのコメントを送りたい場合、以下の連絡先のいずれかを使用してください。
