@@ -1,5 +1,5 @@
 //
-// mimixbox/internal/applets/shellutils/clear/clear.go
+// mimixbox/internal/applets/console-tools/clear/clear.go
 //
 // Copyright 2021 Naohiro CHIKAMATSU
 //

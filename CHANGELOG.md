@@ -5,6 +5,8 @@ All notable changes to this project will be documented in this file. The format 
 ### Added
  - clear command.
  - halt command. However, this version can not shutdown system.
+### Changed
+ - the classification of directories under internal/applets.
 ## [0.30.00] - 2021-12-15
 ### Added
  - chown command.

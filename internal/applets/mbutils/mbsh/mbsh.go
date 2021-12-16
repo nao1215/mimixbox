@@ -1,5 +1,5 @@
 //
-// mimixbox/internal/applets/shellutils/mbsh/sh.go
+// mimixbox/internal/applets/mbutils/mbsh/sh.go
 //
 // Copyright 2021 Naohiro CHIKAMATSU
 //
@@ -25,7 +25,7 @@ import (
 	"strings"
 
 	"github.com/jessevdk/go-flags"
-	"github.com/nao1215/mimixbox/internal/applets/shellutils/mbsh/builtin"
+	"github.com/nao1215/mimixbox/internal/applets/mbutils/mbsh/builtin"
 	mb "github.com/nao1215/mimixbox/internal/lib"
 )
 

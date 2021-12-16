@@ -1,5 +1,5 @@
 //
-// mimixbox/internal/applets/shellutils/path/path.go
+// mimixbox/internal/applets/mbutils/path/path.go
 //
 // Copyright 2021 Naohiro CHIKAMATSU
 //

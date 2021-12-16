@@ -1,5 +1,5 @@
 //
-// mimixbox/internal/applets/shellutils/ischroot/ischroot.go
+// mimixbox/internal/applets/debianutils/ischroot/ischroot.go
 //
 // Copyright 2021 Naohiro CHIKAMATSU
 //
