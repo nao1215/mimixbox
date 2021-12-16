@@ -45,6 +45,7 @@ import (
 	"github.com/nao1215/mimixbox/internal/applets/shellutils/false"
 	"github.com/nao1215/mimixbox/internal/applets/shellutils/ghrdc"
 	"github.com/nao1215/mimixbox/internal/applets/shellutils/groups"
+	"github.com/nao1215/mimixbox/internal/applets/shellutils/halt"
 	"github.com/nao1215/mimixbox/internal/applets/shellutils/hostid"
 	"github.com/nao1215/mimixbox/internal/applets/shellutils/id"
 	"github.com/nao1215/mimixbox/internal/applets/shellutils/ischroot"
@@ -104,6 +105,7 @@ func init() {
 		"false":     {false.Run, "Do nothing. Return unsuccess(1)"},
 		"ghrdc":     {ghrdc.Run, "GitHub Relase Download Counter"},
 		"groups":    {groups.Run, "Print the groups to which USERNAME belongs"},
+		"halt":      {halt.Run, "Halt the system"},
 		"head":      {head.Run, "Print the first NUMBER(default=10) lines"},
 		"hostid":    {hostid.Run, "Print hostid (Host Identity Number, hex)!!!Does not work properly!!!"},
 		"id":        {id.Run, "Print User ID and Group ID"},

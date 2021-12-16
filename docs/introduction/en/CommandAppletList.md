@@ -18,6 +18,7 @@
 |    false | Do nothing. Return unsuccess(1)|
 |    ghrdc | GitHub Relase Download Counter|
 |   groups | Print the groups to which USERNAME belongs|
+|   halt   | Halt the system|
 |    head  | Print the first NUMBER(default=10) lines |
 | hostid   | Print hostid (Host Identity Number, hex)|
 |       id | Print User ID and Group ID|
