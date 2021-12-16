@@ -4,7 +4,8 @@ All notable changes to this project will be documented in this file. The format 
 ## [0.31.00] - 2021-12-17
 ### Added
  - clear command.
- - halt command. However, this version can not shutdown system.
+ - halt command. However, this version can not shutdown system (Bug).
+ - reset command.
 ### Changed
  - the classification of directories under internal/applets.
 ## [0.30.00] - 2021-12-15

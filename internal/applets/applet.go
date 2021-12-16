@@ -24,6 +24,7 @@ import (
 	"strconv"
 
 	"github.com/nao1215/mimixbox/internal/applets/console-tools/clear"
+	"github.com/nao1215/mimixbox/internal/applets/console-tools/reset"
 	"github.com/nao1215/mimixbox/internal/applets/debianutils/ischroot"
 	"github.com/nao1215/mimixbox/internal/applets/fileutils/chgrp"
 	"github.com/nao1215/mimixbox/internal/applets/fileutils/chown"
@@ -119,6 +120,7 @@ func init() {
 		"mv":        {mv.Run, "Rename SOURCE to DESTINATION, or move SOURCE(s) to DIRECTORY"},
 		"nl":        {nl.Run, "Write each FILE to standard output with line numbers added"},
 		"path":      {path.Run, "Manipulate filename path"},
+		"reset":     {reset.Run, "Reset terminal"},
 		"rm":        {rm.Run, "Remove file(s) or directory(s)"},
 		"rmdir":     {rmdir.Run, "Remove directory"},
 		"sddf":      {sddf.Run, "Search & Delete Duplicated File"},
