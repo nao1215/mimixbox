@@ -39,6 +39,7 @@ import (
 	"github.com/nao1215/mimixbox/internal/applets/shellutils/base64"
 	"github.com/nao1215/mimixbox/internal/applets/shellutils/basename"
 	"github.com/nao1215/mimixbox/internal/applets/shellutils/chroot"
+	"github.com/nao1215/mimixbox/internal/applets/shellutils/clear"
 	"github.com/nao1215/mimixbox/internal/applets/shellutils/dirname"
 	"github.com/nao1215/mimixbox/internal/applets/shellutils/echo"
 	"github.com/nao1215/mimixbox/internal/applets/shellutils/false"
@@ -93,6 +94,7 @@ func init() {
 		"chgrp":     {chgrp.Run, "Change the group of each FILE to GROUP"},
 		"chown":     {chown.Run, "Change the owner and/or group of each FILE to OWNER and/or GROUP"},
 		"chroot":    {chroot.Run, "Run command or interactive shell with special root directory"},
+		"clear":     {clear.Run, "Clear terminal"},
 		"cp":        {cp.Run, "Copy file(s) otr Directory(s)"},
 		"dirname":   {dirname.Run, "Print only directory path"},
 		"dos2unix":  {dos2unix.Run, "Change CRLF to LF"},
