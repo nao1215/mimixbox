@@ -21,6 +21,7 @@
 | hostid   | Print hostid (Host Identity Number, hex)|
 |       id | Print User ID and Group ID|
 |  ischroot| Detect if running in a chroot|
+|   kill   | Kill process or send signal to process|
 |       ln | Create hard link or symbolic link|
 |     mbsh | Mimix Box Shell (In development)|
 |    md5sum| Calculate or Check md5sum message digest|

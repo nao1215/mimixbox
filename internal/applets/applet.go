@@ -47,6 +47,7 @@ import (
 	"github.com/nao1215/mimixbox/internal/applets/shellutils/hostid"
 	"github.com/nao1215/mimixbox/internal/applets/shellutils/id"
 	"github.com/nao1215/mimixbox/internal/applets/shellutils/ischroot"
+	"github.com/nao1215/mimixbox/internal/applets/shellutils/kill"
 	"github.com/nao1215/mimixbox/internal/applets/shellutils/mbsh"
 	"github.com/nao1215/mimixbox/internal/applets/shellutils/path"
 	"github.com/nao1215/mimixbox/internal/applets/shellutils/sddf"
@@ -101,10 +102,11 @@ func init() {
 		"false":     {false.Run, "Do nothing. Return unsuccess(1)"},
 		"ghrdc":     {ghrdc.Run, "GitHub Relase Download Counter"},
 		"groups":    {groups.Run, "Print the groups to which USERNAME belongs"},
+		"head":      {head.Run, "Print the first NUMBER(default=10) lines"},
 		"hostid":    {hostid.Run, "Print hostid (Host Identity Number, hex)!!!Does not work properly!!!"},
 		"id":        {id.Run, "Print User ID and Group ID"},
-		"head":      {head.Run, "Print the first NUMBER(default=10) lines"},
 		"ischroot":  {ischroot.Run, "Detect if running in a chroot"},
+		"kill":      {kill.Run, "Kill process or send signal to process"},
 		"ln":        {ln.Run, "Create hard or symbolic link"},
 		"mbsh":      {mbsh.Run, "Mimix Box Shell"},
 		"md5sum":    {md5sum.Run, "Calculate or Check md5sum message digest"},
