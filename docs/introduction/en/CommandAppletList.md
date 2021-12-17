@@ -55,6 +55,7 @@
 |  unexpand| Convert N space to TAB (default:N=8)|
 |  unix2dos| Change LF to CRLF|
 |   uuidgeb| Print UUID (Universal Unique IDentifier|
+|  valid-shell| Verify if /etc/shells is valid|
 |    wc    |    Word Counter|
 |    wget  | The non-interactive network downloader|
 |    which | Returns the file path which would be executed in the current environment|

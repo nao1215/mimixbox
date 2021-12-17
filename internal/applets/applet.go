@@ -47,6 +47,7 @@ import (
 	"github.com/nao1215/mimixbox/internal/applets/mbutils/path"
 	"github.com/nao1215/mimixbox/internal/applets/mbutils/sddf"
 	"github.com/nao1215/mimixbox/internal/applets/mbutils/serial"
+	validShell "github.com/nao1215/mimixbox/internal/applets/mbutils/valid-shell"
 	"github.com/nao1215/mimixbox/internal/applets/shellutils/base64"
 	"github.com/nao1215/mimixbox/internal/applets/shellutils/basename"
 	"github.com/nao1215/mimixbox/internal/applets/shellutils/chroot"
@@ -148,6 +149,7 @@ func init() {
 		"unexpand":     {unexpand.Run, "Convert N space to TAB(default:N=8)"},
 		"unix2dos":     {unix2dos.Run, "Change LF to CRLF"},
 		"uuidgen":      {uuidgen.Run, "Print UUID (Universal Unique IDentifier"},
+		"valid-shell":  {validShell.Run, "Verify if /etc/shells is valid"},
 		"wc":           {wc.Run, "Word Count"},
 		"wget":         {wget.Run, "The non-interactive network downloader"},
 		"which":        {which.Run, "Returns the file path which would be executed in the current environment"},

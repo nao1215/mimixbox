@@ -11,6 +11,7 @@ All notable changes to this project will be documented in this file. The format 
  - remove-shell command.
  - reset command.
  - sync command.
+ - valid-shell command.
 ### Changed
  - Project
    - the classification of directories under internal/applets.
