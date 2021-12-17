@@ -32,6 +32,7 @@
 |       mv | Rename SOURCE to DESTINATION, or move SOURCE(s) to DIRECTORY|
 |       nl| Write each FILE to standard output with line numbers added|
 |     path | Manipulate filename path|
+|     pwd  | Print Working Directory|
 |     reset| Reset terminal|
 |     rm   | Remove file(s) or directory(s)|
 |     rmdir   | Remove directory|

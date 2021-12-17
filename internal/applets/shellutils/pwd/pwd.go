@@ -1,5 +1,5 @@
 //
-// mimixbox/internal/applets/debianutils/which/which.go
+// mimixbox/internal/applets/shellutils/pwd/pwd.go
 //
 // Copyright 2021 Naohiro CHIKAMATSU
 //
@@ -14,26 +14,23 @@
 // WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
 // See the License for the specific language governing permissions and
 // limitations under the License.
-package which
+package pwd
 
 import (
 	"fmt"
 	"os"
-	"os/exec"
+	"path/filepath"
+
+	mb "github.com/nao1215/mimixbox/internal/lib"
 
 	"github.com/jessevdk/go-flags"
-	mb "github.com/nao1215/mimixbox/internal/lib"
 )
 
-const cmdName string = "which"
+const cmdName string = "pwd"
 
-const version = "1.0.2"
+const version = "1.0.0"
 
 var osExit = os.Exit
-
-type options struct {
-	Version bool `short:"v" long:"version" description:"Show which command version"`
-}
 
 // Exit code
 const (
@@ -41,30 +38,37 @@ const (
 	ExitFailuer
 )
 
+type options struct {
+	Logical  bool `short:"L"  description:"print the value of $PWD if it names the current working directory (default)"`
+	Physical bool `short:"P"  description:"print the physical directory, without any symbolic links"`
+	Version  bool `short:"v" long:"version" description:"Show pwd command version"`
+}
+
 func Run() (int, error) {
 	var opts options
-	var args []string
 	var err error
 
-	if args, err = parseArgs(&opts); err != nil {
+	if _, err = parseArgs(&opts); err != nil {
 		return ExitFailuer, nil
 	}
+	return pwd(opts)
+}
 
-	status := ExitSuccess
-	for _, path := range args {
-		p, err := exec.LookPath(path)
+func pwd(opts options) (int, error) {
+	if !opts.Logical && !opts.Physical {
+		fmt.Fprintln(os.Stdout, os.Getenv("PWD"))
+	} else if opts.Logical && opts.Physical {
+		fmt.Fprintln(os.Stdout, os.Getenv("PWD"))
+	} else if opts.Logical {
+		fmt.Fprintln(os.Stdout, os.Getenv("PWD"))
+	} else if opts.Physical {
+		path, err := filepath.EvalSymlinks(os.Getenv("PWD"))
 		if err != nil {
-			e, ok := err.(*exec.Error)
-			if ok && e.Err == exec.ErrNotFound {
-				status = ExitFailuer
-				continue // Don't print error like coreutils.
-			}
-			fmt.Fprintln(os.Stderr, e)
-			status = ExitFailuer
+			return ExitFailuer, err
 		}
-		fmt.Fprintln(os.Stdout, p)
+		fmt.Fprintln(os.Stdout, path)
 	}
-	return status, nil
+	return ExitSuccess, nil
 }
 
 func parseArgs(opts *options) ([]string, error) {
@@ -80,20 +84,13 @@ func parseArgs(opts *options) ([]string, error) {
 		osExit(ExitSuccess)
 	}
 
-	if !isValidArgNr(args) {
-		osExit(ExitFailuer) // Do not display help messages because it behaves the same as Coreutils
-	}
 	return args, nil
 }
 
 func initParser(opts *options) *flags.Parser {
 	parser := flags.NewParser(opts, flags.Default)
 	parser.Name = cmdName
-	parser.Usage = "[OPTIONS] COMMAND_NAME"
+	parser.Usage = "[OPTIONS]"
 
 	return parser
-}
-
-func isValidArgNr(args []string) bool {
-	return len(args) >= 1
 }
