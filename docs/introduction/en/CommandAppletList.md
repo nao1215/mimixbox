@@ -43,6 +43,7 @@
 |    sha512sum| Calculate or Check sercure hash 512 algorithm|
 |           sl| Cure your bad habit of mistyping|
 |    sleep | Pause for NUMBER seconds(minutes, hours, days)|
+|   sync   | Synchronize cached writes to persistent storage|
 |     tac  | Print the file contents from the end to the beginning|
 |     tail |  Print the last NUMBER(default=10) lines|
 |    touch | Update the access and modification times of each FILE to the current time|
@@ -58,13 +59,14 @@
 If you want to see the list of supported commands on the terminal, use the --list option.
 
 ```
-$ mimixbox --list
+$ ./mimixbox --list
    base64 - Base64 encode/decode from FILR(or STDIN) to STDOUT
  basename - Print basename (PATH without"/") from file path
       cat - Concatenate files and print on the standard output
     chgrp - Change the group of each FILE to GROUP
     chown - Change the owner and/or group of each FILE to OWNER and/or GROUP
    chroot - Run command or interactive shell with special root directory
+    clear - Clear terminal
    cowsay - Print message with cow's ASCII art
        cp - Copy file(s) otr Directory(s)
   dirname - Print only directory path
@@ -75,6 +77,7 @@ fakemovie - Adds a video playback button to the image
     false - Do nothing. Return unsuccess(1)
     ghrdc - GitHub Relase Download Counter
    groups - Print the groups to which USERNAME belongs
+     halt - Halt the system
      head - Print the first NUMBER(default=10) lines
    hostid - Print hostid (Host Identity Number, hex)!!!Does not work properly!!!
        id - Print User ID and Group ID
@@ -88,6 +91,7 @@ fakemovie - Adds a video playback button to the image
        mv - Rename SOURCE to DESTINATION, or move SOURCE(s) to DIRECTORY
        nl - Write each FILE to standard output with line numbers added
      path - Manipulate filename path
+    reset - Reset terminal
        rm - Remove file(s) or directory(s)
     rmdir - Remove directory
      sddf - Search & Delete Duplicated File
@@ -98,6 +102,7 @@ sha256sum - alculate or Check sercure hash 256 algorithm
 sha512sum - alculate or Check sercure hash 512 algorithm
        sl - Cure your bad habit of mistyping
     sleep - Pause for NUMBER seconds(minutes, hours, days)
+     sync - Synchronize cached writes to persistent storage
       tac - Print the file contents from the end to the beginning
      tail - Print the last NUMBER(default=10) lines
     touch - Update the access and modification times of each FILE to the current time

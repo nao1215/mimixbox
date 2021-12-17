@@ -57,6 +57,7 @@ import (
 	"github.com/nao1215/mimixbox/internal/applets/shellutils/kill"
 	"github.com/nao1215/mimixbox/internal/applets/shellutils/seq"
 	"github.com/nao1215/mimixbox/internal/applets/shellutils/sleep"
+	"github.com/nao1215/mimixbox/internal/applets/shellutils/sync"
 	"github.com/nao1215/mimixbox/internal/applets/shellutils/true"
 	"github.com/nao1215/mimixbox/internal/applets/shellutils/uuidgen"
 	"github.com/nao1215/mimixbox/internal/applets/shellutils/wget"
@@ -131,6 +132,7 @@ func init() {
 		"seq":       {seq.Run, "Print a column of numbers"},
 		"sl":        {sl.Run, "Cure your bad habit of mistyping"},
 		"sleep":     {sleep.Run, "Pause for NUMBER seconds(minutes, hours, days)"},
+		"sync":      {sync.Run, "Synchronize cached writes to persistent storage"},
 		"tac":       {tac.Run, "Print the file contents from the end to the beginning"},
 		"tail":      {tail.Run, "Print the last NUMBER(default=10) lines"},
 		"touch":     {touch.Run, "Update the access and modification times of each FILE to the current time"},
