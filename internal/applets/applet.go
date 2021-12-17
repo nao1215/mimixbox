@@ -23,6 +23,7 @@ import (
 	"sort"
 	"strconv"
 
+	gzipCmd "github.com/nao1215/mimixbox/internal/applets/archival/gzip"
 	"github.com/nao1215/mimixbox/internal/applets/console-tools/clear"
 	"github.com/nao1215/mimixbox/internal/applets/console-tools/reset"
 	addShell "github.com/nao1215/mimixbox/internal/applets/debianutils/add-shell"
@@ -113,6 +114,7 @@ func init() {
 		"false":        {false.Run, "Do nothing. Return unsuccess(1)"},
 		"ghrdc":        {ghrdc.Run, "GitHub Relase Download Counter"},
 		"groups":       {groups.Run, "Print the groups to which USERNAME belongs"},
+		"gzip":         {gzipCmd.Run, "Compress or uncompress FILEs (by default, compress FILES in-place)"},
 		"halt":         {halt.Run, "Halt the system"},
 		"head":         {head.Run, "Print the first NUMBER(default=10) lines"},
 		"hostid":       {hostid.Run, "Print hostid (Host Identity Number, hex)!!!Does not work properly!!!"},

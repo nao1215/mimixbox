@@ -19,6 +19,7 @@
 |    false | Do nothing. Return unsuccess(1)|
 |    ghrdc | GitHub Relase Download Counter|
 |   groups | Print the groups to which USERNAME belongs|
+|   gzip   | Compress or uncompress FILEs (by default, compress FILES in-place)|
 |   halt   | Halt the system|
 |    head  | Print the first NUMBER(default=10) lines |
 | hostid   | Print hostid (Host Identity Number, hex)|
