@@ -56,6 +56,7 @@ import (
 	"github.com/nao1215/mimixbox/internal/applets/shellutils/hostid"
 	"github.com/nao1215/mimixbox/internal/applets/shellutils/id"
 	"github.com/nao1215/mimixbox/internal/applets/shellutils/kill"
+	"github.com/nao1215/mimixbox/internal/applets/shellutils/printenv"
 	"github.com/nao1215/mimixbox/internal/applets/shellutils/pwd"
 	"github.com/nao1215/mimixbox/internal/applets/shellutils/seq"
 	"github.com/nao1215/mimixbox/internal/applets/shellutils/sleep"
@@ -122,6 +123,7 @@ func init() {
 		"mv":        {mv.Run, "Rename SOURCE to DESTINATION, or move SOURCE(s) to DIRECTORY"},
 		"nl":        {nl.Run, "Write each FILE to standard output with line numbers added"},
 		"path":      {path.Run, "Manipulate filename path"},
+		"printenv":  {printenv.Run, "Print environment variable"},
 		"pwd":       {pwd.Run, "Print Working Directory"},
 		"reset":     {reset.Run, "Reset terminal"},
 		"rm":        {rm.Run, "Remove file(s) or directory(s)"},

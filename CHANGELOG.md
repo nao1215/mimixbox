@@ -5,6 +5,7 @@ All notable changes to this project will be documented in this file. The format 
 ### Added
  - clear command.
  - halt command. However, this version can not shutdown system (halt have the bug).
+ - printenv command.
  - pwd command.
  - reset command.
  - sync command.
