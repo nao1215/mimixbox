@@ -1,6 +1,7 @@
 # Command (Applet) List
 |Command (Applet) Name | Description|
 |:--|:--|
+| add-shell| Write down shell name to /etc/shells |
 |    base64| Base64 encode/decode from FILR(or STDIN) to STDOUT|
 |  basename| Print basename (PATH without "/") from file path |
 |      cat | Concatenate files and print on the standard output|

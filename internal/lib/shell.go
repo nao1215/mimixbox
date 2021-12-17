@@ -29,6 +29,12 @@ import (
 	"golang.org/x/term"
 )
 
+const ShellsFilePath = "/etc/shells"
+
+func TmpShellsFile() string {
+	return ShellsFilePath + ".tmp"
+}
+
 func ExistCmd(cmd string) bool {
 	_, err := exec.LookPath(cmd)
 	return err == nil

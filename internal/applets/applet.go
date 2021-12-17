@@ -25,6 +25,7 @@ import (
 
 	"github.com/nao1215/mimixbox/internal/applets/console-tools/clear"
 	"github.com/nao1215/mimixbox/internal/applets/console-tools/reset"
+	addShell "github.com/nao1215/mimixbox/internal/applets/debianutils/add-shell"
 	"github.com/nao1215/mimixbox/internal/applets/debianutils/ischroot"
 	"github.com/nao1215/mimixbox/internal/applets/debianutils/which"
 	"github.com/nao1215/mimixbox/internal/applets/fileutils/chgrp"
@@ -92,6 +93,7 @@ var Applets map[string]Applet
 
 func init() {
 	Applets = map[string]Applet{
+		"add-shell": {addShell.Run, "Add shell name to /etc/shells"},
 		"base64":    {base64.Run, "Base64 encode/decode from FILR(or STDIN) to STDOUT"},
 		"basename":  {basename.Run, "Print basename (PATH without\"/\") from file path"},
 		"cat":       {cat.Run, "Concatenate files and print on the standard output"},

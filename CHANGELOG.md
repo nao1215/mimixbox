@@ -3,6 +3,7 @@ All notable changes to this project will be documented in this file. The format 
 
 ## [0.31.00] - 2021-12-17
 ### Added
+ - add-shell command
  - clear command.
  - halt command. However, this version can not shutdown system (halt have the bug).
  - printenv command.
