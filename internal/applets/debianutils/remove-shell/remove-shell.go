@@ -1,5 +1,5 @@
 //
-// mimixbox/internal/applets/debianutils/add-shell/add-shell.go
+// mimixbox/internal/applets/debianutils/remove-shell/remove-shell.go
 //
 // Copyright 2021 Naohiro CHIKAMATSU
 //
@@ -14,7 +14,7 @@
 // WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
 // See the License for the specific language governing permissions and
 // limitations under the License.
-package addShell
+package removeShell
 
 import (
 	"fmt"
@@ -24,14 +24,14 @@ import (
 	mb "github.com/nao1215/mimixbox/internal/lib"
 )
 
-const cmdName string = "add-shell"
+const cmdName string = "remove-shell"
 
 const version = "1.0.0"
 
 var osExit = os.Exit
 
 type options struct {
-	Version bool `short:"v" long:"version" description:"Show add-shell command version"`
+	Version bool `short:"v" long:"version" description:"Show remove-shell command version"`
 }
 
 // Exit code
@@ -48,30 +48,32 @@ func Run() (int, error) {
 	if args, err = parseArgs(&opts); err != nil {
 		return ExitFailuer, nil
 	}
-
-	return addShell(args)
+	return removeShell(args)
 }
 
-func addShell(args []string) (int, error) {
-	// The original add-shell command has poor error checking.
-	// add-shell can also write the names of non-existent shells in /etc/shells.
-	err := mb.Copy(mb.ShellsFilePath, mb.TmpShellsFile())
-	if err != nil {
-		return ExitFailuer, err
-	}
-	f, err := os.OpenFile(mb.TmpShellsFile(), os.O_APPEND|os.O_WRONLY, 0644)
+func removeShell(args []string) (int, error) {
+	f, err := os.OpenFile(mb.TmpShellsFile(), os.O_CREATE|os.O_WRONLY, 0644)
 	if err != nil {
 		return ExitFailuer, err
 	}
 	defer f.Close()
 
-	for _, v := range args {
+	lines, err := mb.ReadFileToStrList(mb.ShellsFilePath)
+	if err != nil {
+		return ExitFailuer, err
+	}
+
+	lines = mb.ChopAll(lines)
+	for _, shell := range args {
+		lines = mb.Remove(lines, shell)
+	}
+	for _, v := range lines {
 		fmt.Fprintln(f, v)
 	}
 
 	err = mb.Copy(mb.TmpShellsFile(), mb.ShellsFilePath)
 	if err != nil {
-		mb.RemoveFile(mb.TmpShellsFile(), false) // Original add-shell does not remove tmp file.
+		mb.RemoveFile(mb.TmpShellsFile(), false)
 		return ExitFailuer, err
 	}
 

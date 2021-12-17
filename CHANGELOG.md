@@ -1,17 +1,21 @@
 # Changelog
 All notable changes to this project will be documented in this file. The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.0.0/), and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
 
-## [0.31.00] - 2021-12-17
+## [0.31.1] - 2021-12-17
 ### Added
  - add-shell command
  - clear command.
  - halt command. However, this version can not shutdown system (halt have the bug).
  - printenv command.
  - pwd command.
+ - remove-shell command.
  - reset command.
  - sync command.
 ### Changed
- - the classification of directories under internal/applets.
+ - Project
+   - the classification of directories under internal/applets.
+ - mimixbox command
+   - Fixed a bug that the mimixbox command causes a runtime error. A runtime error occurred when args[0] is an applet name that does not exist and args[1:] contains the applet name.
 ## [0.30.00] - 2021-12-15
 ### Added
  - chown command.

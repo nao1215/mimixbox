@@ -54,7 +54,7 @@ type options struct {
 
 var osExit = os.Exit
 
-const version = "0.31.0"
+const version = "0.31.1"
 
 const (
 	ExitSuccess int = iota // 0
@@ -82,19 +82,27 @@ func main() {
 
 	// If the specified command(applet) is not built in mimixbox.
 	if !hasAppletName() {
-		fmt.Fprintf(os.Stderr, "%s is not provided by mimixbox.\n\n", os.Args[0])
-		fmt.Fprintln(os.Stderr, "[Commands supported by MimixBox]")
-		applets.ShowAppletsBySpaceSeparated()
-		osExit(ExitFailuer)
+		showSupportAppletAndExitFailure(os.Args[0])
 	}
 
 	applet := path.Base(os.Args[0])
-	app := applets.Applets[applet]
+	app, ok := applets.Applets[applet]
+	if !ok {
+		showSupportAppletAndExitFailure(os.Args[0])
+	}
+
 	if status, err = app.Ep(); err != nil {
 		fmt.Fprintln(os.Stderr, applet+": "+err.Error())
 		osExit(status)
 	}
 	osExit(status)
+}
+
+func showSupportAppletAndExitFailure(userInputCmdName string) {
+	fmt.Fprintf(os.Stderr, "%s is not provided by mimixbox.\n\n", userInputCmdName)
+	fmt.Fprintln(os.Stderr, "[Commands supported by MimixBox]")
+	applets.ShowAppletsBySpaceSeparated()
+	osExit(ExitFailuer)
 }
 
 // If the mimixbox option exists, execute the processing for the option and exit.
