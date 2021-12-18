@@ -69,6 +69,12 @@ func killInitProcess() error {
 	if err != nil {
 		return err
 	}
+	syscall.Sync()
+	// 0x4321fedc == LINUX_REBOOT_CMD_POWER_OFF; see reboot(2)
+	// LINUX_REBOOT_CMD_HALT is semantically correct, but
+	// implementations vary (halt(8)), and most users will
+	// want power off.
+	syscall.Reboot(0x4321fedc)
 	return nil
 }
 
