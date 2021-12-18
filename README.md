@@ -8,6 +8,7 @@
 ![GitHub](https://img.shields.io/github/license/nao1215/mimixbox)
 ![GitHub all releases](https://img.shields.io/github/downloads/nao1215/mimixbox/total)
 ![Lines of code](https://img.shields.io/tokei/lines/github/nao1215/mimixbox?style=plastic)
+[![Support me on Patreon](https://img.shields.io/endpoint.svg?url=https%3A%2F%2Fshieldsio-patreon.vercel.app%2Fapi%3Fusername%3Dmimixbox%26type%3Dpatrons&style=flat-square)](https://patreon.com/mimixbox)
 
 [[日本語](docs/introduction/ja/README.md)]
 # MimixBox - mimic BusyBox on Linux
@@ -102,10 +103,12 @@ MimixBox has its own commands that don't exist in packages like Coreutils.
 |[serial](./docs/examples/serial/en/serial.md) | Rename the file to the name with a serial number|
 
 # Contact
-If you would like to send comments such as "find a bug" or "request for additional features" to the developer, please use one of the following contacts.
+If you would like to send comments such as "find a bug" or "request for additional features" to the developer, please use one of the following contacts. 
+We are also looking forward to sponsorship.
 
 - [GitHub Issue](https://github.com/nao1215/mimixbox/issues)
 - [Twitter@mimixbox156](https://twitter.com/mimixbox156) ※ MimixBox project information
+- [Patreon](https://www.patreon.com/mimixbox?fan_landing=true)
 
 # LICENSE
 The MimixBox project is licensed under the terms of the MIT license and Apache License 2.0.  
