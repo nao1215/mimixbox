@@ -43,6 +43,8 @@ import (
 	"github.com/nao1215/mimixbox/internal/applets/jokeutils/cowsay"
 	"github.com/nao1215/mimixbox/internal/applets/jokeutils/fakemovie"
 	"github.com/nao1215/mimixbox/internal/applets/jokeutils/sl"
+
+	//"github.com/nao1215/mimixbox/internal/applets/loginutils/chsh"
 	"github.com/nao1215/mimixbox/internal/applets/mbutils/ghrdc"
 	"github.com/nao1215/mimixbox/internal/applets/mbutils/mbsh"
 	"github.com/nao1215/mimixbox/internal/applets/mbutils/path"
@@ -96,14 +98,15 @@ var Applets map[string]Applet
 
 func init() {
 	Applets = map[string]Applet{
-		"add-shell":    {addShell.Run, "Add shell name to /etc/shells"},
-		"base64":       {base64.Run, "Base64 encode/decode from FILR(or STDIN) to STDOUT"},
-		"basename":     {basename.Run, "Print basename (PATH without\"/\") from file path"},
-		"cat":          {cat.Run, "Concatenate files and print on the standard output"},
-		"cowsay":       {cowsay.Run, "Print message with cow's ASCII art"},
-		"chgrp":        {chgrp.Run, "Change the group of each FILE to GROUP"},
-		"chown":        {chown.Run, "Change the owner and/or group of each FILE to OWNER and/or GROUP"},
-		"chroot":       {chroot.Run, "Run command or interactive shell with special root directory"},
+		"add-shell": {addShell.Run, "Add shell name to /etc/shells"},
+		"base64":    {base64.Run, "Base64 encode/decode from FILR(or STDIN) to STDOUT"},
+		"basename":  {basename.Run, "Print basename (PATH without\"/\") from file path"},
+		"cat":       {cat.Run, "Concatenate files and print on the standard output"},
+		"cowsay":    {cowsay.Run, "Print message with cow's ASCII art"},
+		"chgrp":     {chgrp.Run, "Change the group of each FILE to GROUP"},
+		"chown":     {chown.Run, "Change the owner and/or group of each FILE to OWNER and/or GROUP"},
+		"chroot":    {chroot.Run, "Run command or interactive shell with special root directory"},
+		//"chsh":         {chsh.Run, "Cqhange login shell"},
 		"clear":        {clear.Run, "Clear terminal"},
 		"cp":           {cp.Run, "Copy file(s) otr Directory(s)"},
 		"dirname":      {dirname.Run, "Print only directory path"},

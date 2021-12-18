@@ -31,7 +31,7 @@ $ go install github.com/nao1215/mimixbox/cmd/mimixbox
 $ mimixbox --install /usr/local/bin
 ```
 # Development 
-## Tools
+## Tools & Libraries
 The table below shows the tools used when developing the commands in the MimixBox project.
 | Tool | description |
 |:-----|:------|
@@ -44,11 +44,12 @@ The table below shows the tools used when developing the commands in the MimixBo
 | docker| Used for testing Mimixbox inside Docker|
 | debootstrap| Used for testing Mimixbox inside jail envrioment|
 |  shellspec   | Used for integration test|  
+| libpam0g-dev(pam-devel)| PAM (Pluggable Authentication Modules) library|
 
 If you use Debian-based distribution (e.g. Debian／Ubuntu／Kali Linux／Raspberry Pi OS), You can install tools with the following command.
 
 ```
-$ sudo apt install build-essential curl git pandoc gzip docker.io debootstrap
+$ sudo apt install build-essential curl git pandoc gzip docker.io debootstrap libpam0g-dev
 $ go install github.com/google/go-licenses@latest
 $ curl -fsSL https://git.io/shellspec | sh -s -- --yes
 ```

@@ -9,6 +9,7 @@
 |   chgrp  | Change the group of each FILE to GROUP|
 |   chown  | Change the owner and/or group of each FILE to OWNER and/or GROUP|
 |   chroot | Run command or interactive shell with special root directory|
+|chsh      | Change login shell|
 |   clear  | Clear teminal |
 |       cp | Copy file(s) otr Directory(s) |
 |  dirname | Print only directory path |
