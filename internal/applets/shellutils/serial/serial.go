@@ -1,5 +1,5 @@
 //
-//  mimixbox/internal/applets/mbutils/serial/serial.go
+//  mimixbox/internal/applets/shellutils/serial/serial.go
 //
 // Copyright 2021 Naohiro CHIKAMATSU
 //

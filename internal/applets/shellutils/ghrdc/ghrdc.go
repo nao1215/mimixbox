@@ -1,5 +1,5 @@
 //
-// mimixbox/internal/applets/mbutils/ghrdc/ghrdc.go
+// mimixbox/internal/applets/shellutils/ghrdc/ghrdc.go
 //
 // Copyright 2021 Naohiro CHIKAMATSU
 //

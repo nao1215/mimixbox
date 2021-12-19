@@ -1,5 +1,5 @@
 //
-// mimixbox/internal/applets/mbutils/mbsh/builtin/cd.go
+// mimixbox/internal/applets/shellutils/mbsh/builtin/cd.go
 //
 // Copyright 2021 Naohiro CHIKAMATSU
 //

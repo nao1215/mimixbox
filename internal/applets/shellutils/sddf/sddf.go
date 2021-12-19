@@ -1,5 +1,5 @@
 //
-// mimixbox/internal/applets/mbutils/sddf/sddf.go
+// mimixbox/internal/applets/shellutils/sddf/sddf.go
 //
 // Copyright 2021 Naohiro CHIKAMATSU
 //
