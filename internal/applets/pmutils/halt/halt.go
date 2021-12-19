@@ -17,6 +17,7 @@
 package halt
 
 import (
+	"errors"
 	"fmt"
 	"os"
 	"syscall"
@@ -26,9 +27,9 @@ import (
 	"github.com/jessevdk/go-flags"
 )
 
-const cmdName string = "halt"
+var cmdName string = "halt"
 
-const version = "1.0.0"
+const version = "1.0.1"
 
 var osExit = os.Exit
 
@@ -38,29 +39,70 @@ const (
 	ExitFailuer
 )
 
-type options struct {
+type haltOpts struct {
 	Version bool `short:"v" long:"version" description:"Show halt command version"`
 }
 
-func Run() (int, error) {
-	var opts options
-	var err error
-
-	if _, err = parseArgs(&opts); err != nil {
-		return ExitFailuer, nil
-	}
-	return halt()
+type poweroffOpts struct {
+	Version bool `short:"v" long:"version" description:"Show poweroff command version"`
 }
 
-func halt() (int, error) {
+type rebootOpts struct {
+	Version bool `short:"v" long:"version" description:"Show reboot command version"`
+}
+
+type allOptions struct {
+	halt   haltOpts
+	po     poweroffOpts
+	reboot rebootOpts
+}
+
+func Run() (int, error) {
+	var allOpts allOptions = allOptions{}
+	var args []string
+	var err error
+
+	setCmdName(os.Args[0])
+	if args, err = parseArgs(&allOpts); err != nil {
+		return ExitFailuer, nil
+	}
+
+	switch cmdName {
+	case "halt":
+		return halt(args, allOpts.halt)
+	case "poweroff":
+		return poweroff(args, allOpts.po)
+	case "reboot":
+		return reboot(args, allOpts.reboot)
+	}
+	return ExitFailuer, errors.New("mimixbox failed to parse the argument (not halt, poweroff, reboot error)")
+}
+
+func halt(args []string, opts haltOpts) (int, error) {
 	fmt.Fprintln(os.Stdout, "The system is going down NOW !!")
-	if err := killInitProcess(); err != nil {
+
+	recordWtmp()
+	if err := powerOffSystem(); err != nil {
 		return ExitFailuer, err
 	}
 	return ExitSuccess, nil
 }
 
-func killInitProcess() error {
+func poweroff(args []string, opts poweroffOpts) (int, error) {
+	if err := powerOffSystem(); err != nil {
+		return ExitFailuer, err
+	}
+	return ExitSuccess, nil
+}
+
+func reboot(args []string, opts rebootOpts) (int, error) {
+	if err := rebootSystem(); err != nil {
+		return ExitFailuer, err
+	}
+	return ExitSuccess, nil
+}
+
+func powerOffSystem() error {
 	process, err := os.FindProcess(1)
 	if err != nil {
 		return err
@@ -74,30 +116,51 @@ func killInitProcess() error {
 	// LINUX_REBOOT_CMD_HALT is semantically correct, but
 	// implementations vary (halt(8)), and most users will
 	// want power off.
-	syscall.Reboot(0x4321fedc)
-	return nil
+	return syscall.Reboot(syscall.LINUX_REBOOT_CMD_POWER_OFF)
 }
 
-func parseArgs(opts *options) ([]string, error) {
+func rebootSystem() error {
+	process, err := os.FindProcess(1)
+	if err != nil {
+		return err
+	}
+	err = process.Signal(syscall.Signal(mb.ConvSignalNameToNum("SIGUSR2")))
+	if err != nil {
+		return err
+	}
+	syscall.Sync()
+	return syscall.Reboot(syscall.LINUX_REBOOT_CMD_RESTART)
+}
+
+func recordWtmp() {
+	return // TODO:
+}
+
+func setCmdName(name string) {
+	cmdName = name
+}
+
+func parseArgs(opts *allOptions) ([]string, error) {
 	p := initParser(opts)
 
 	args, err := p.Parse()
 	if err != nil {
 		return nil, err
 	}
-
-	if opts.Version {
-		mb.ShowVersion(cmdName, version)
-		osExit(ExitSuccess)
-	}
-
+	showVersionAndExitIfNeeded(opts)
 	return args, nil
 }
 
-func initParser(opts *options) *flags.Parser {
+func initParser(opts *allOptions) *flags.Parser {
 	parser := flags.NewParser(opts, flags.Default)
 	parser.Name = cmdName
 	parser.Usage = "[OPTIONS]"
-
 	return parser
+}
+
+func showVersionAndExitIfNeeded(opts *allOptions) {
+	if opts.halt.Version || opts.po.Version || opts.reboot.Version {
+		mb.ShowVersion(cmdName, version)
+		osExit(ExitSuccess)
+	}
 }

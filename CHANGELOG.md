@@ -3,8 +3,10 @@ All notable changes to this project will be documented in this file. The format 
 
 ## [0.32.1] - 2021-12-19
 ### Added
- - tr command.
  - gzip command.
+ - tr command.
+ - poweroff command.
+ - reboot command.
 ### Changed
  - halt command.
    - Fix bug(GitHub Issue #33)

@@ -35,8 +35,10 @@
 |       mv | Rename SOURCE to DESTINATION, or move SOURCE(s) to DIRECTORY|
 |       nl| Write each FILE to standard output with line numbers added|
 |     path | Manipulate filename path|
+|    poweroff| Power off the system|
 |    printenv| Print environment variable|
 |     pwd  | Print Working Directory|
+|    reboot| Reboot the system|
 |   remove-shell|Remove shell name from /etc/shells|
 |     reset| Reset terminal|
 |     rm   | Remove file(s) or directory(s)|
