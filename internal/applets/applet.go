@@ -40,6 +40,7 @@ import (
 	"github.com/nao1215/mimixbox/internal/applets/fileutils/rm"
 	"github.com/nao1215/mimixbox/internal/applets/fileutils/rmdir"
 	"github.com/nao1215/mimixbox/internal/applets/fileutils/touch"
+	"github.com/nao1215/mimixbox/internal/applets/games/lifegame"
 	"github.com/nao1215/mimixbox/internal/applets/jokeutils/cowsay"
 	"github.com/nao1215/mimixbox/internal/applets/jokeutils/fakemovie"
 	"github.com/nao1215/mimixbox/internal/applets/jokeutils/sl"
@@ -126,6 +127,7 @@ func init() {
 		"id":           {id.Run, "Print User ID and Group ID"},
 		"ischroot":     {ischroot.Run, "Detect if running in a chroot"},
 		"kill":         {kill.Run, "Kill process or send signal to process"},
+		"lifegame":     {lifegame.Run, "Life game (Conway's Game of Life)"},
 		"ln":           {ln.Run, "Create hard or symbolic link"},
 		"mbsh":         {mbsh.Run, "Mimix Box Shell"},
 		"md5sum":       {md5sum.Run, "Calculate or Check md5sum message digest"},
