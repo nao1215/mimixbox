@@ -1,5 +1,5 @@
 //
-// mimixbox/internal/applets/shellutils/halt/halt.go
+// mimixbox/internal/applets/pmutils/halt/halt.go
 //
 // Copyright 2021 Naohiro CHIKAMATSU, polynomialspace
 //
