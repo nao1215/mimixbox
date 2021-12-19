@@ -2,7 +2,7 @@
 name: Add new command
 about: ToDo List for adding command.
 title: "[Add] XXX/YYY command "
-labels: good firest issue
+labels: "good first issue"
 assignees: ''
 
 ---
