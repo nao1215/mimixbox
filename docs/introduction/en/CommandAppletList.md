@@ -53,6 +53,7 @@
 |     tac  | Print the file contents from the end to the beginning|
 |     tail |  Print the last NUMBER(default=10) lines|
 |    touch | Update the access and modification times of each FILE to the current time|
+|    tr    | Translate or delete characters|
 |     true | Do nothing. Return success(0)|
 |  unexpand| Convert N space to TAB (default:N=8)|
 |  unix2dos| Change LF to CRLF|

@@ -83,7 +83,7 @@ import (
 	"github.com/nao1215/mimixbox/internal/applets/textutils/tac"
 	"github.com/nao1215/mimixbox/internal/applets/textutils/tail"
 
-	//"github.com/nao1215/mimixbox/internal/applets/textutils/tr"
+	"github.com/nao1215/mimixbox/internal/applets/textutils/tr"
 	"github.com/nao1215/mimixbox/internal/applets/textutils/unexpand"
 	"github.com/nao1215/mimixbox/internal/applets/textutils/unix2dos"
 	"github.com/nao1215/mimixbox/internal/applets/textutils/wc"
@@ -152,16 +152,16 @@ func init() {
 		"tac":          {tac.Run, "Print the file contents from the end to the beginning"},
 		"tail":         {tail.Run, "Print the last NUMBER(default=10) lines"},
 		"touch":        {touch.Run, "Update the access and modification times of each FILE to the current time"},
-		//"tr":           {tr.Run, "Translate or delete characters"},
-		"true":        {true.Run, "Do nothing. Return success(0)"},
-		"unexpand":    {unexpand.Run, "Convert N space to TAB(default:N=8)"},
-		"unix2dos":    {unix2dos.Run, "Change LF to CRLF"},
-		"uuidgen":     {uuidgen.Run, "Print UUID (Universal Unique IDentifier"},
-		"valid-shell": {validShell.Run, "Verify if /etc/shells is valid"},
-		"wc":          {wc.Run, "Word Count"},
-		"wget":        {wget.Run, "The non-interactive network downloader"},
-		"which":       {which.Run, "Returns the file path which would be executed in the current environment"},
-		"whoami":      {whoami.Run, "Print login user name"},
+		"tr":           {tr.Run, "Translate or delete characters"},
+		"true":         {true.Run, "Do nothing. Return success(0)"},
+		"unexpand":     {unexpand.Run, "Convert N space to TAB(default:N=8)"},
+		"unix2dos":     {unix2dos.Run, "Change LF to CRLF"},
+		"uuidgen":      {uuidgen.Run, "Print UUID (Universal Unique IDentifier"},
+		"valid-shell":  {validShell.Run, "Verify if /etc/shells is valid"},
+		"wc":           {wc.Run, "Word Count"},
+		"wget":         {wget.Run, "The non-interactive network downloader"},
+		"which":        {which.Run, "Returns the file path which would be executed in the current environment"},
+		"whoami":       {whoami.Run, "Print login user name"},
 	}
 }
 

@@ -51,3 +51,7 @@ func AddLineFeed(lines []string) []string {
 func ListDigit(strList []string) string {
 	return strconv.Itoa(len(strconv.Itoa(len(strList))))
 }
+
+func WithSingleCoat(str string) string {
+	return "'" + str + "'"
+}
