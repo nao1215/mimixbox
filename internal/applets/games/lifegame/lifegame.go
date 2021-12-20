@@ -1,7 +1,7 @@
 //
 // mimixbox/internal/applets/games/lifegame/lifegame.go
 //
-// Copyright 2021 Naohiro CHIKAMATSU, polynomialspace
+// Copyright 2021 Naohiro CHIKAMATSU
 //
 // Licensed under the Apache License, Version 2.0 (the "License");
 // you may not use this file except in compliance with the License.
