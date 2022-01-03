@@ -39,30 +39,24 @@ type options struct {
 	Version bool `short:"v" long:"version" description:"Show wget command version"`
 }
 
-// Exit code
-const (
-	ExitSuccess int = iota // 0
-	ExitFailure
-)
-
 func Run() (int, error) {
 	var opts options
 	var args []string
 	var err error
 
 	if args, err = parseArgs(&opts); err != nil {
-		return ExitFailure, nil
+		return mb.ExitFailure, nil
 	}
 	return wget(args)
 }
 
 func wget(args []string) (int, error) {
-	status := ExitSuccess
+	status := mb.ExitSuccess
 	for _, v := range args {
 		target, err := openTargetFile(v)
 		if err != nil {
 			fmt.Fprintln(os.Stderr, cmdName+": "+err.Error()+": v")
-			status = ExitFailure
+			status = mb.ExitFailure
 			continue
 		}
 		defer target.Close()
@@ -71,7 +65,7 @@ func wget(args []string) (int, error) {
 		response, err := client.Get(v)
 		if err != nil {
 			fmt.Fprintln(os.Stderr, cmdName+": "+err.Error()+": v")
-			status = ExitFailure
+			status = mb.ExitFailure
 			continue
 		}
 		defer response.Body.Close()
@@ -79,7 +73,7 @@ func wget(args []string) (int, error) {
 		_, err = io.Copy(target, response.Body)
 		if err != nil {
 			fmt.Fprintln(os.Stderr, cmdName+": "+err.Error()+": v")
-			status = ExitFailure
+			status = mb.ExitFailure
 			continue
 		}
 	}
@@ -132,12 +126,12 @@ func parseArgs(opts *options) ([]string, error) {
 
 	if opts.Version {
 		mb.ShowVersion(cmdName, version)
-		osExit(ExitSuccess)
+		osExit(mb.ExitSuccess)
 	}
 
 	if !isValidArgNr(args) {
 		fmt.Fprintln(os.Stderr, "wget: missing URL")
-		osExit(ExitFailure)
+		osExit(mb.ExitFailure)
 	}
 
 	return args, nil

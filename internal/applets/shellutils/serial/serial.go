@@ -36,12 +36,6 @@ var osExit = os.Exit
 
 const version = "1.0.2"
 
-// Exit code
-const (
-	ExitSuccess int = iota // 0
-	ExitFailure
-)
-
 type options struct {
 	DryRun  bool   `short:"d" long:"dry-run" description:"Output the file renaming result to standard output (do not update the file)"`
 	Force   bool   `short:"f" long:"force" description:"Forcibly overwrite and save even if a file with the same name exists"`
@@ -59,13 +53,13 @@ func Run() (int, error) {
 
 	if !mb.Exists(dirPath) {
 		err := fmt.Errorf("%s doesn't exist.", dirPath)
-		return ExitFailure, err
+		return mb.ExitFailure, err
 	}
 
 	var files = getFilePathsInDir(dirPath)
 	if len(files) == 0 {
 		err := fmt.Errorf("No files in %s directory.", dirPath)
-		return ExitFailure, err
+		return mb.ExitFailure, err
 	}
 
 	newFileNames := newNames(opts, files)
@@ -77,7 +71,7 @@ func Run() (int, error) {
 	} else {
 		rename(newFileNames, opts.DryRun)
 	}
-	return ExitSuccess, nil
+	return mb.ExitSuccess, nil
 }
 
 func rename(newFileNames map[string]string, dryRun bool) {
@@ -127,13 +121,13 @@ func copy(newFileNames map[string]string, dryRun bool) {
 		if mb.Exists(dest) {
 			if err := os.Remove(dest); err != nil {
 				fmt.Fprintf(os.Stderr, "Can't copy %s to %s\n", org, dest)
-				osExit(ExitFailure)
+				osExit(mb.ExitFailure)
 			}
 		}
 
 		if err := os.Link(org, dest); err != nil {
 			fmt.Fprintf(os.Stderr, "Can't copy %s to %s\n", org, dest)
-			osExit(ExitFailure)
+			osExit(mb.ExitFailure)
 		}
 	}
 }
@@ -143,22 +137,22 @@ func parseArgs(opts *options) []string {
 
 	args, err := p.Parse()
 	if err != nil {
-		osExit(ExitFailure)
+		osExit(mb.ExitFailure)
 	}
 
 	if opts.Version {
 		mb.ShowVersion(cmdName, version)
-		osExit(ExitSuccess)
+		osExit(mb.ExitSuccess)
 	}
 
 	if len(opts.Name) != 0 && !existFilenameInPath(opts.Name) {
 		showHelp(p)
-		osExit(ExitFailure)
+		osExit(mb.ExitFailure)
 	}
 
 	if !isValidArgNr(args) {
 		showHelp(p)
-		osExit(ExitFailure)
+		osExit(mb.ExitFailure)
 	}
 
 	return args
@@ -191,7 +185,7 @@ func getFilePathsInDir(dir string) []string {
 	files, err := ioutil.ReadDir(dir)
 	if err != nil {
 		fmt.Fprintf(os.Stderr, "Can't get file list.")
-		osExit(ExitFailure)
+		osExit(mb.ExitFailure)
 	}
 
 	var path string
@@ -260,7 +254,7 @@ func dieIfExistSameNameFile(force bool, fileNames map[string]string) {
 			fmt.Fprintf(os.Stderr, "%s (file name which is after renaming) is already exists.\n", file)
 			fmt.Fprintf(os.Stderr, "Renaming may erase the contents of the file. ")
 			fmt.Fprintf(os.Stderr, "So, nothing to do.\n")
-			osExit(ExitFailure)
+			osExit(mb.ExitFailure)
 		}
 	}
 }
@@ -274,6 +268,6 @@ func makeDirIfNeeded(filePath string) {
 
 	if err := os.MkdirAll(dirPath, 0755); err != nil {
 		fmt.Fprintf(os.Stderr, "Can't make %s directory\n", dirPath)
-		osExit(ExitFailure)
+		osExit(mb.ExitFailure)
 	}
 }

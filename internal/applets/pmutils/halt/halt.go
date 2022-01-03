@@ -33,12 +33,6 @@ const version = "1.0.1"
 
 var osExit = os.Exit
 
-// Exit code
-const (
-	ExitSuccess int = iota // 0
-	ExitFailure
-)
-
 type haltOpts struct {
 	Version bool `short:"v" long:"version" description:"Show halt command version"`
 }
@@ -64,7 +58,7 @@ func Run() (int, error) {
 
 	setCmdName(os.Args[0])
 	if args, err = parseArgs(&allOpts); err != nil {
-		return ExitFailure, nil
+		return mb.ExitFailure, nil
 	}
 
 	switch cmdName {
@@ -75,7 +69,7 @@ func Run() (int, error) {
 	case "reboot":
 		return reboot(args, allOpts.reboot)
 	}
-	return ExitFailure, errors.New("mimixbox failed to parse the argument (not halt, poweroff, reboot error)")
+	return mb.ExitFailure, errors.New("mimixbox failed to parse the argument (not halt, poweroff, reboot error)")
 }
 
 func halt(args []string, opts haltOpts) (int, error) {
@@ -83,23 +77,23 @@ func halt(args []string, opts haltOpts) (int, error) {
 
 	recordWtmp()
 	if err := powerOffSystem(); err != nil {
-		return ExitFailure, err
+		return mb.ExitFailure, err
 	}
-	return ExitSuccess, nil
+	return mb.ExitSuccess, nil
 }
 
 func poweroff(args []string, opts poweroffOpts) (int, error) {
 	if err := powerOffSystem(); err != nil {
-		return ExitFailure, err
+		return mb.ExitFailure, err
 	}
-	return ExitSuccess, nil
+	return mb.ExitSuccess, nil
 }
 
 func reboot(args []string, opts rebootOpts) (int, error) {
 	if err := rebootSystem(); err != nil {
-		return ExitFailure, err
+		return mb.ExitFailure, err
 	}
-	return ExitSuccess, nil
+	return mb.ExitSuccess, nil
 }
 
 func powerOffSystem() error {
@@ -161,6 +155,6 @@ func initParser(opts *allOptions) *flags.Parser {
 func showVersionAndExitIfNeeded(opts *allOptions) {
 	if opts.halt.Version || opts.po.Version || opts.reboot.Version {
 		mb.ShowVersion(cmdName, version)
-		osExit(ExitSuccess)
+		osExit(mb.ExitSuccess)
 	}
 }

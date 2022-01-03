@@ -31,12 +31,6 @@ const version = "1.0.0"
 
 var osExit = os.Exit
 
-// Exit code
-const (
-	ExitSuccess int = iota // 0
-	ExitFailure
-)
-
 type options struct {
 	Null    bool `short:"0" long:"null" description:"End each output line with NULL temination, not newline"`
 	Version bool `short:"v" long:"version" description:"Show printenv command version"`
@@ -48,7 +42,7 @@ func Run() (int, error) {
 	var args []string
 
 	if args, err = parseArgs(&opts); err != nil {
-		return ExitFailure, nil
+		return mb.ExitFailure, nil
 	}
 	return printenv(args, opts)
 }
@@ -64,7 +58,7 @@ func printenv(args []string, opts options) (int, error) {
 			fmt.Fprintln(os.Stdout, os.Getenv(v))
 		}
 	}
-	return ExitSuccess, nil
+	return mb.ExitSuccess, nil
 }
 
 func printAllEnvironmentVar(opts options) (int, error) {
@@ -75,7 +69,7 @@ func printAllEnvironmentVar(opts options) (int, error) {
 			fmt.Fprintln(os.Stdout, e)
 		}
 	}
-	return ExitSuccess, nil
+	return mb.ExitSuccess, nil
 }
 
 func parseArgs(opts *options) ([]string, error) {
@@ -88,7 +82,7 @@ func parseArgs(opts *options) ([]string, error) {
 
 	if opts.Version {
 		mb.ShowVersion(cmdName, version)
-		osExit(ExitSuccess)
+		osExit(mb.ExitSuccess)
 	}
 	return args, nil
 }

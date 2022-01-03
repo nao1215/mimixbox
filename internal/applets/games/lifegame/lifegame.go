@@ -33,12 +33,6 @@ const version = "1.0.0"
 
 var osExit = os.Exit
 
-// Exit code
-const (
-	ExitSuccess int = iota // 0
-	ExitFailure
-)
-
 type options struct {
 	Version bool `short:"v" long:"version" description:"Show lifegame command version"`
 }
@@ -70,14 +64,14 @@ func Run() (int, error) {
 	var err error
 
 	if args, err = parseArgs(&opts); err != nil {
-		return ExitFailure, nil
+		return mb.ExitFailure, nil
 	}
 	return lifegame(args, opts)
 }
 
 func lifegame(args []string, opts options) (int, error) {
 	if err := termbox.Init(); err != nil {
-		return ExitFailure, err
+		return mb.ExitFailure, err
 	}
 	defer termbox.Close()
 
@@ -111,7 +105,7 @@ func (g *Game) start() (int, error) {
 		select {
 		case ev := <-g.queue:
 			if isGameEnd(ev.Key) {
-				return ExitSuccess, nil
+				return mb.ExitSuccess, nil
 			}
 		default:
 			time.Sleep(Interval)
@@ -239,7 +233,7 @@ func parseArgs(opts *options) ([]string, error) {
 
 	if opts.Version {
 		mb.ShowVersion(cmdName, version)
-		osExit(ExitSuccess)
+		osExit(mb.ExitSuccess)
 	}
 
 	return args, nil

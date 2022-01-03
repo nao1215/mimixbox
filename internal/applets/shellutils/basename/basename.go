@@ -32,12 +32,6 @@ const version = "1.0.2"
 
 var osExit = os.Exit
 
-// Exit code
-const (
-	ExitSuccess int = iota // 0
-	ExitFailure
-)
-
 type options struct {
 	Multiple bool   `short:"a" long:"multiple" description:"Process for multiple PATHs"`
 	Suffix   string `short:"s" long:"suffix" default:"" description:"Delete suffix"`
@@ -51,7 +45,7 @@ func Run() (int, error) {
 	var err error
 
 	if args, err = parseArgs(&opts); err != nil {
-		return ExitFailure, nil
+		return mb.ExitFailure, nil
 	}
 
 	for _, path := range args {
@@ -76,7 +70,7 @@ func Run() (int, error) {
 			break
 		}
 	}
-	return ExitSuccess, nil
+	return mb.ExitSuccess, nil
 }
 
 func parseArgs(opts *options) ([]string, error) {
@@ -89,12 +83,12 @@ func parseArgs(opts *options) ([]string, error) {
 
 	if opts.Version {
 		mb.ShowVersion(cmdName, version)
-		osExit(ExitSuccess)
+		osExit(mb.ExitSuccess)
 	}
 
 	if !isValidArgNr(args) {
 		fmt.Fprintln(os.Stderr, "basename: no operand")
-		osExit(ExitFailure)
+		osExit(mb.ExitFailure)
 	}
 	return args, nil
 }

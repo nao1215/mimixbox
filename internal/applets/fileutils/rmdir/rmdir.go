@@ -33,12 +33,6 @@ const version = "1.0.1"
 
 var osExit = os.Exit
 
-// Exit code
-const (
-	ExitSuccess int = iota // 0
-	ExitFailure
-)
-
 type options struct {
 	Ignore  bool `short:"i" long:"ignore-fail-on-non-empty" description:"Ignore the error if the directory is not empty"`
 	Parents bool `short:"p" long:"parents" description:"Remove DIRECTORY and its parents"`
@@ -52,7 +46,7 @@ func Run() (int, error) {
 	var status int
 
 	if args, err = parseArgs(&opts); err != nil {
-		return ExitFailure, nil
+		return mb.ExitFailure, nil
 	}
 
 	// Coremb will continue to delete files as much as possible.
@@ -68,7 +62,7 @@ func Run() (int, error) {
 func rmdir(path string, opts options) (int, error) {
 	p := os.ExpandEnv(path)
 	if err := validBeforeRemove(p); err != nil {
-		return ExitFailure, err
+		return mb.ExitFailure, err
 	}
 
 	var target string
@@ -80,20 +74,20 @@ func rmdir(path string, opts options) (int, error) {
 
 	_, files, err := mb.Walk(target, false)
 	if err != nil {
-		return ExitFailure, err
+		return mb.ExitFailure, err
 	}
 	if len(files) != 0 {
 		if opts.Ignore {
-			return ExitSuccess, nil
+			return mb.ExitSuccess, nil
 		}
-		return ExitFailure, errors.New("Can't remove " + path + ": It's not empty directory")
+		return mb.ExitFailure, errors.New("Can't remove " + path + ": It's not empty directory")
 	}
 
 	// The contents of the directory are empty. Delete directories at once
 	if err := os.RemoveAll(target); err != nil {
-		return ExitFailure, err
+		return mb.ExitFailure, err
 	}
-	return ExitSuccess, nil
+	return mb.ExitSuccess, nil
 }
 
 func ancestorDir(path string) string {
@@ -123,12 +117,12 @@ func parseArgs(opts *options) ([]string, error) {
 
 	if opts.Version {
 		mb.ShowVersion(cmdName, version)
-		osExit(ExitSuccess)
+		osExit(mb.ExitSuccess)
 	}
 
 	if !isValidArgNr(args) {
 		showHelp(p)
-		osExit(ExitFailure)
+		osExit(mb.ExitFailure)
 	}
 	return args, nil
 }

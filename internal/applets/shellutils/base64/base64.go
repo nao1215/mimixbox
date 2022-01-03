@@ -36,12 +36,6 @@ const version = "1.0.1"
 
 var osExit = os.Exit
 
-// Exit code
-const (
-	ExitSuccess int = iota // 0
-	ExitFailure
-)
-
 type options struct {
 	Decode  bool `short:"d" long:"decode" description:"Decode data (Default is encode)"`
 	Wrap    int  `short:"w" long:"wrap" default:"76" description:"Line break at the Nth character. If N=0, not line break"`
@@ -56,24 +50,24 @@ func Run() (int, error) {
 	var resultByte []byte
 
 	if args, err = parseArgs(&opts); err != nil {
-		return ExitFailure, nil
+		return mb.ExitFailure, nil
 	}
 
 	input, err := inputByte(args)
 	if err != nil {
-		return ExitFailure, err
+		return mb.ExitFailure, err
 	}
 	if opts.Decode {
 		resultByte, err = base64.StdEncoding.DecodeString(string(input))
 		if err != nil {
-			return ExitFailure, err
+			return mb.ExitFailure, err
 		}
 		fmt.Fprintln(os.Stdout, mb.WrapString(string(resultByte), opts.Wrap))
 	} else {
 		resultStr = base64.StdEncoding.EncodeToString(input)
 		fmt.Fprintln(os.Stdout, mb.WrapString(resultStr, opts.Wrap))
 	}
-	return ExitSuccess, nil
+	return mb.ExitSuccess, nil
 }
 
 func inputByte(args []string) ([]byte, error) {
@@ -128,12 +122,12 @@ func parseArgs(opts *options) ([]string, error) {
 
 	if opts.Version {
 		mb.ShowVersion(cmdName, version)
-		osExit(ExitSuccess)
+		osExit(mb.ExitSuccess)
 	}
 
 	if !isValidArgNr(args) {
 		showHelp(p)
-		osExit(ExitFailure)
+		osExit(mb.ExitFailure)
 	}
 
 	if opts.Wrap < 0 {

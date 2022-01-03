@@ -44,12 +44,6 @@ const version = "1.0.3"
 
 var osExit = os.Exit
 
-// Exit code
-const (
-	ExitSuccess int = iota // 0
-	ExitFailure
-)
-
 type options struct {
 	Output  string `short:"o" long:"output" default:"duplicated-file.sddf" description:"Change output file-name without extension"`
 	Version bool   `short:"v" long:"version" description:"Show sddf command version"`
@@ -61,14 +55,14 @@ func Run() (int, error) {
 	var err error
 
 	if args, err = parseArgs(&opts); err != nil {
-		return ExitFailure, nil
+		return mb.ExitFailure, nil
 	}
 	return sddfMainSeq(os.ExpandEnv(args[0]), opts)
 }
 
 func sddfMainSeq(path string, opts options) (int, error) {
 	if !mb.Exists(path) {
-		return ExitFailure, errors.New(path + " does not exists")
+		return mb.ExitFailure, errors.New(path + " does not exists")
 	}
 
 	if mb.IsFile(path) {
@@ -79,26 +73,26 @@ func sddfMainSeq(path string, opts options) (int, error) {
 
 func restoreAndDelete(path string) (int, error) {
 	if !strings.HasSuffix(path, ext) {
-		return ExitFailure, errors.New(path + ": file format is not *.sddf")
+		return mb.ExitFailure, errors.New(path + ": file format is not *.sddf")
 	}
 
 	df, err := restore(path)
 	if err != nil {
-		return ExitFailure, err
+		return mb.ExitFailure, err
 	}
 
 	return deleteFiles(df)
 }
 
 func deleteFiles(df map[string]Paths) (int, error) {
-	var status int = ExitSuccess
+	var status int = mb.ExitSuccess
 	var deleteFileList []string
 
 	fmt.Fprintln(os.Stdout, "Decide delete target files")
 	for _, v := range df {
 		list, err := decideDeleteTarget(v)
 		if err != nil {
-			return ExitFailure, err
+			return mb.ExitFailure, err
 		}
 		deleteFileList = append(deleteFileList, list...)
 	}
@@ -108,14 +102,14 @@ func deleteFiles(df map[string]Paths) (int, error) {
 	for _, v := range deleteFileList {
 		size, err := mb.Size(v)
 		if err != nil {
-			status = ExitFailure
+			status = mb.ExitFailure
 			fmt.Fprintln(os.Stdout, "Delete(Failure): "+v)
 			continue
 		}
 
 		err = mb.RemoveFile(v, false)
 		if err != nil {
-			status = ExitFailure
+			status = mb.ExitFailure
 			fmt.Fprintln(os.Stdout, "Delete(Failure): "+v)
 		} else {
 			fmt.Fprintln(os.Stdout, "Delete(Success): "+v+": "+strconv.FormatInt(size, 10)+"Byte")
@@ -223,7 +217,7 @@ func search(path string, opts options) (int, error) {
 
 	if len(files) == 0 {
 		fmt.Fprintln(os.Stdout, path+" has no file")
-		return ExitSuccess, nil
+		return mb.ExitSuccess, nil
 	}
 	return dumpToFile(getSameFiles(files), decideOutputFileName(opts.Output))
 }
@@ -279,7 +273,7 @@ func dumpToFile(df map[string]Paths, output string) (int, error) {
 	fmt.Fprintln(os.Stdout, "Write down duplicated file list to "+output)
 	f, err := os.Create(output)
 	if err != nil {
-		return ExitFailure, err
+		return mb.ExitFailure, err
 	}
 	defer f.Close()
 
@@ -299,13 +293,13 @@ func dumpToFile(df map[string]Paths, output string) (int, error) {
 	b := []byte(data)
 	_, err = f.Write(b)
 	if err != nil {
-		return ExitFailure, err
+		return mb.ExitFailure, err
 	}
 
 	fmt.Fprintln(os.Stdout, "See duplicated file list: "+output)
 	fmt.Fprintln(os.Stdout, "If you delete files, execute the following command.")
 	fmt.Fprintln(os.Stdout, "$ sddf "+output)
-	return ExitSuccess, nil
+	return mb.ExitSuccess, nil
 }
 
 func getSameFiles(files []string) map[string]Paths {
@@ -389,12 +383,12 @@ func parseArgs(opts *options) ([]string, error) {
 
 	if opts.Version {
 		mb.ShowVersion(cmdName, version)
-		osExit(ExitSuccess)
+		osExit(mb.ExitSuccess)
 	}
 
 	if !isValidArg(args, *opts) {
 		showHelp(p)
-		osExit(ExitFailure)
+		osExit(mb.ExitFailure)
 	}
 
 	return args, nil

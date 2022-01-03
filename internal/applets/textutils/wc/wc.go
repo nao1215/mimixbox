@@ -49,19 +49,13 @@ type wordCount struct {
 	filePath  string
 }
 
-// Exit code
-const (
-	ExitSuccess int = iota // 0
-	ExitFailure
-)
-
 func Run() (int, error) {
 	var opts options
 	var args []string
 	var err error
 
 	if args, err = parseArgs(&opts); err != nil {
-		return ExitFailure, nil
+		return mb.ExitFailure, nil
 	}
 
 	if mb.HasPipeData() && mb.HasNoOperand(os.Args, cmdName) {
@@ -80,7 +74,7 @@ func Run() (int, error) {
 			}
 		}
 		printWordCountData([]wordCount{wc(lines, "-", opts)}, opts, 7)
-		return ExitSuccess, nil
+		return mb.ExitSuccess, nil
 	}
 
 	return wcAll(args, opts)
@@ -94,24 +88,24 @@ func wcPipe(lines []string, opts options) (int, error) {
 		digit = 1
 	}
 	printWordCountData([]wordCount{result}, opts, digit)
-	return ExitSuccess, nil
+	return mb.ExitSuccess, nil
 }
 
 func wcAll(args []string, opts options) (int, error) {
-	status := ExitSuccess
+	status := mb.ExitSuccess
 	var results []wordCount
 	for _, file := range args {
 		target := os.ExpandEnv(file)
 
 		if mb.IsDir(target) {
 			fmt.Fprintln(os.Stderr, "wc: "+target+": this path is directory")
-			status = ExitFailure
+			status = mb.ExitFailure
 			results = append(results, wordCount{0, 0, 0, 0, target})
 			continue
 		}
 		if !mb.IsFile(target) {
 			fmt.Fprintln(os.Stderr, "wc: "+target+": no such File")
-			status = ExitFailure
+			status = mb.ExitFailure
 			results = append(results, wordCount{0, 0, 0, 0, target})
 			continue
 		}
@@ -119,7 +113,7 @@ func wcAll(args []string, opts options) (int, error) {
 		lines, err := mb.ReadFileToStrList(target)
 		if err != nil {
 			fmt.Fprintln(os.Stderr, "wc: "+target+": can't read file")
-			status = ExitFailure
+			status = mb.ExitFailure
 			results = append(results, wordCount{0, 0, 0, 0, target})
 			continue
 		}
@@ -131,7 +125,7 @@ func wcAll(args []string, opts options) (int, error) {
 		results = append(results, total(results))
 	}
 
-	if status == ExitSuccess {
+	if status == mb.ExitSuccess {
 		printWordCountData(results, opts, maxDigit(results, opts))
 	} else {
 		printWordCountData(results, opts, 7)
@@ -264,7 +258,7 @@ func parseArgs(opts *options) ([]string, error) {
 
 	if opts.Version {
 		mb.ShowVersion(cmdName, version)
-		osExit(ExitSuccess)
+		osExit(mb.ExitSuccess)
 	}
 
 	return args, nil

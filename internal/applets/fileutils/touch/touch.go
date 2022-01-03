@@ -32,12 +32,6 @@ const version = "1.0.2"
 
 var osExit = os.Exit
 
-// Exit code
-const (
-	ExitSuccess int = iota // 0
-	ExitFailure
-)
-
 type options struct {
 	NoCreate bool `short:"c" long:"no-create" description:"Not create file"`
 	Version  bool `short:"v" long:"version" description:"Show touch command version"`
@@ -49,14 +43,14 @@ func Run() (int, error) {
 	var err error
 
 	if args, err = parseArgs(&opts); err != nil {
-		return ExitFailure, nil
+		return mb.ExitFailure, nil
 	}
 
-	status := ExitSuccess
+	status := mb.ExitSuccess
 	for _, file := range args {
 		if err = touch(file, opts); err != nil {
 			fmt.Fprintln(os.Stderr, "touch: "+err.Error())
-			status = ExitFailure
+			status = mb.ExitFailure
 			continue
 		}
 	}
@@ -94,12 +88,12 @@ func parseArgs(opts *options) ([]string, error) {
 
 	if opts.Version {
 		mb.ShowVersion(cmdName, version)
-		osExit(ExitSuccess)
+		osExit(mb.ExitSuccess)
 	}
 
 	if !isValidArgNr(args) {
 		showHelp(p)
-		osExit(ExitFailure)
+		osExit(mb.ExitFailure)
 	}
 	return args, nil
 }

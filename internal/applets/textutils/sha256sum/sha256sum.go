@@ -32,12 +32,6 @@ const version = "1.0.1"
 
 var osExit = os.Exit
 
-// Exit code
-const (
-	ExitSuccess int = iota // 0
-	ExitFailure
-)
-
 type options struct {
 	Check   bool `short:"c" long:"check" description:"Check if the SHA1 value matches the file"`
 	Version bool `short:"v" long:"version" description:"Show sha256sum command version"`
@@ -50,31 +44,31 @@ func Run() (int, error) {
 	hash := sha256.New()
 
 	if args, err = parseArgs(&opts); err != nil {
-		return ExitFailure, nil
+		return mb.ExitFailure, nil
 	}
 
 	if mb.HasPipeData() && mb.HasNoOperand(os.Args, cmdName) {
 		err = mb.ChecksumOutput(hash, strings.NewReader(args[0]), "-")
 		if err != nil {
-			return ExitFailure, err
+			return mb.ExitFailure, err
 		}
-		return ExitSuccess, nil
+		return mb.ExitSuccess, nil
 	}
 
 	if len(args) == 0 || mb.Contains(args, "-") {
 		err = mb.ChecksumOutput(hash, os.Stdin, "-")
 		if err != nil {
-			return ExitSuccess, nil
+			return mb.ExitSuccess, nil
 		}
-		return ExitSuccess, nil
+		return mb.ExitSuccess, nil
 	}
 
 	if opts.Check {
 		err = mb.CompareChecksum(hash, args)
 		if err != nil {
-			return ExitFailure, err
+			return mb.ExitFailure, err
 		}
-		return ExitSuccess, nil
+		return mb.ExitSuccess, nil
 	}
 
 	return mb.PrintChecksums(cmdName, hash, args)
@@ -98,7 +92,7 @@ func parseArgs(opts *options) ([]string, error) {
 
 	if opts.Version {
 		mb.ShowVersion(cmdName, version)
-		osExit(ExitSuccess)
+		osExit(mb.ExitSuccess)
 	}
 
 	return args, nil

@@ -35,12 +35,6 @@ const version = "1.0.0"
 
 var osExit = os.Exit
 
-// Exit code
-const (
-	ExitSuccess int = iota // 0
-	ExitFailure
-)
-
 type options struct {
 	Decomp  bool `short:"d" long:"decompress" description:"Decompress gzip file"`
 	Force   bool `short:"f" long:"force" description:"Overwrite file if same name file already exists"`
@@ -53,13 +47,13 @@ func Run() (int, error) {
 	var args []string
 
 	if args, err = parseArgs(&opts); err != nil {
-		return ExitFailure, nil
+		return mb.ExitFailure, nil
 	}
 	return __gzip(args, opts)
 }
 
 func __gzip(args []string, opts options) (int, error) {
-	status := ExitSuccess
+	status := mb.ExitSuccess
 	for _, v := range args {
 		path := os.ExpandEnv(v)
 
@@ -69,13 +63,13 @@ func __gzip(args []string, opts options) (int, error) {
 
 		if !mb.Exists(path) {
 			fmt.Fprintln(os.Stderr, cmdName+": No such file or directory")
-			status = ExitFailure
+			status = mb.ExitFailure
 			continue
 		}
 
 		if mb.IsDir(path) {
 			fmt.Fprintln(os.Stderr, cmdName+": "+v+" is a directory -- ignored")
-			status = ExitFailure
+			status = mb.ExitFailure
 			continue
 		}
 
@@ -83,13 +77,13 @@ func __gzip(args []string, opts options) (int, error) {
 			err := decompress(path, opts)
 			if err != nil {
 				fmt.Fprintln(os.Stderr, cmdName+": "+err.Error())
-				status = ExitFailure
+				status = mb.ExitFailure
 			}
 		} else {
 			err := compress(path, opts)
 			if err != nil {
 				fmt.Fprintln(os.Stderr, cmdName+": "+err.Error())
-				status = ExitFailure
+				status = mb.ExitFailure
 			}
 		}
 	}
@@ -190,11 +184,11 @@ func parseArgs(opts *options) ([]string, error) {
 
 	if opts.Version {
 		mb.ShowVersion(cmdName, version)
-		osExit(ExitSuccess)
+		osExit(mb.ExitSuccess)
 	}
 	if !isValidArgNr(args) {
 		fmt.Fprintln(os.Stderr, cmdName+": compressed data not written to a terminal")
-		osExit(ExitFailure)
+		osExit(mb.ExitFailure)
 	}
 	return args, nil
 }

@@ -33,12 +33,6 @@ const version = "1.0.0"
 
 var osExit = os.Exit
 
-// Exit code
-const (
-	ExitSuccess int = iota // 0
-	ExitFailure
-)
-
 type groupInfo struct {
 	group string
 	files []string
@@ -55,7 +49,7 @@ func Run() (int, error) {
 	var err error
 
 	if args, err = parseArgs(&opts); err != nil {
-		return ExitFailure, nil
+		return mb.ExitFailure, nil
 	}
 
 	groupInfo := groupInfo{args[0], args[1:]}
@@ -65,21 +59,21 @@ func Run() (int, error) {
 func chgrp(gInfo groupInfo, opts options) (int, error) {
 	gid, err := mb.LookupGid(gInfo.group)
 	if err != nil {
-		return ExitFailure, err
+		return mb.ExitFailure, err
 	}
 
-	status := ExitSuccess
+	status := mb.ExitSuccess
 	for _, path := range gInfo.files {
 		path = os.ExpandEnv(path)
 		if opts.Recursive {
 			if err := changeGroupRecursive(path, gid); err != nil {
-				status = ExitFailure
+				status = mb.ExitFailure
 				fmt.Fprintln(os.Stderr, cmdName+": "+path+": "+err.Error())
 				continue
 			}
 		} else {
 			if err := changeGroup(path, gid); err != nil {
-				status = ExitFailure
+				status = mb.ExitFailure
 				fmt.Fprintln(os.Stderr, cmdName+": "+path+": "+err.Error())
 				continue
 			}
@@ -120,7 +114,7 @@ func parseArgs(opts *options) ([]string, error) {
 
 	if opts.Version {
 		mb.ShowVersion(cmdName, version)
-		osExit(ExitSuccess)
+		osExit(mb.ExitSuccess)
 	}
 
 	if !isValidArgNr(args) {
@@ -129,7 +123,7 @@ func parseArgs(opts *options) ([]string, error) {
 		} else if len(args) == 1 {
 			fmt.Fprintln(os.Stderr, cmdName+": no operand after "+args[0])
 		}
-		osExit(ExitFailure)
+		osExit(mb.ExitFailure)
 	}
 	return args, nil
 }

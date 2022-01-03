@@ -32,12 +32,6 @@ const version = "1.0.1"
 
 var osExit = os.Exit
 
-// Exit code
-const (
-	ExitSuccess int = iota // 0
-	ExitFailure
-)
-
 type duration struct {
 	val  float64
 	unit time.Duration
@@ -51,31 +45,31 @@ func Run() (int, error) {
 	args = parseArgs(os.Args)
 
 	if waitTime, err = getWaitTime(args); err != nil {
-		return ExitFailure, err
+		return mb.ExitFailure, err
 	}
 
 	for _, d := range waitTime {
 		time.Sleep(time.Duration(d.val) * d.unit)
 	}
 
-	return ExitSuccess, nil
+	return mb.ExitSuccess, nil
 }
 
 func parseArgs(args []string) []string {
 
 	if mb.HasVersionOpt(args) {
 		mb.ShowVersion(cmdName, version)
-		osExit(ExitSuccess)
+		osExit(mb.ExitSuccess)
 	}
 
 	if mb.HasHelpOpt(args) {
 		showHelp()
-		osExit(ExitSuccess)
+		osExit(mb.ExitSuccess)
 	}
 
 	if !isValidArgNr(args) {
 		showHelp()
-		osExit(ExitSuccess)
+		osExit(mb.ExitSuccess)
 	}
 
 	return args[1:]

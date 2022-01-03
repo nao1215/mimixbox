@@ -31,12 +31,6 @@ const version = "1.0.1"
 
 var osExit = os.Exit
 
-// Exit code
-const (
-	ExitSuccess int = iota // 0
-	ExitFailure
-)
-
 type options struct {
 	Force    bool `short:"f" long:"force" description:"If file exists, forcibly overwrite it"`
 	Symbolic bool `short:"s" long:"symbolic" description:"Create symbolic link"`
@@ -49,15 +43,15 @@ func Run() (int, error) {
 	var err error
 
 	if args, err = parseArgs(&opts); err != nil {
-		return ExitFailure, nil
+		return mb.ExitFailure, nil
 	}
 
 	err = ln(args, opts)
 	if err != nil {
-		return ExitFailure, err
+		return mb.ExitFailure, err
 	}
 
-	return ExitSuccess, nil
+	return mb.ExitSuccess, nil
 }
 
 func ln(args []string, opts options) error {
@@ -121,12 +115,12 @@ func parseArgs(opts *options) ([]string, error) {
 
 	if opts.Version {
 		mb.ShowVersion(cmdName, version)
-		osExit(ExitSuccess)
+		osExit(mb.ExitSuccess)
 	}
 
 	if !isValidArgNr(args) {
 		showHelp(p)
-		osExit(ExitFailure)
+		osExit(mb.ExitFailure)
 	}
 	return args, nil
 }

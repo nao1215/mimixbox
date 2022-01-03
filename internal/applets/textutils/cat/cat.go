@@ -30,12 +30,6 @@ const version = "1.0.10"
 
 var osExit = os.Exit
 
-// Exit code
-const (
-	ExitSuccess int = iota // 0
-	ExitFailure
-)
-
 type options struct {
 	Number  bool `short:"n" long:"number" description:"Print with line number"`
 	Version bool `short:"v" long:"version" description:"Show cat command version"`
@@ -47,18 +41,18 @@ func Run() (int, error) {
 	var err error
 
 	if args, err = parseArgs(&opts); err != nil {
-		return ExitFailure, nil
+		return mb.ExitFailure, nil
 	}
 
 	if mb.HasPipeData() && mb.HasNoOperand(os.Args, cmdName) {
 		mb.Dump(args, opts.Number)
-		return ExitSuccess, nil
+		return mb.ExitSuccess, nil
 	}
 
 	if len(args) == 0 || mb.Contains(args, "-") {
 		mb.Parrot(opts.Number)
 		if len(args) == 0 {
-			return ExitSuccess, nil
+			return mb.ExitSuccess, nil
 		}
 		// If this case, Heredocuments and files may be concatenated.
 		args = mb.Remove(args, "-")
@@ -66,12 +60,12 @@ func Run() (int, error) {
 
 	strLisr, err := mb.Concatenate(args)
 	if err != nil {
-		return ExitFailure, err
+		return mb.ExitFailure, err
 	}
 
 	mb.Dump(strLisr, opts.Number)
 
-	return ExitSuccess, nil
+	return mb.ExitSuccess, nil
 }
 
 func parseArgs(opts *options) ([]string, error) {
@@ -92,7 +86,7 @@ func parseArgs(opts *options) ([]string, error) {
 
 	if opts.Version {
 		mb.ShowVersion(cmdName, version)
-		osExit(ExitSuccess)
+		osExit(mb.ExitSuccess)
 	}
 
 	return args, nil

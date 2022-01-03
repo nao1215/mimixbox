@@ -38,18 +38,12 @@ type options struct {
 	Version bool `short:"v" long:"version" description:"Show valid-shell command version"`
 }
 
-// Exit code
-const (
-	ExitSuccess int = iota // 0
-	ExitFailure
-)
-
 func Run() (int, error) {
 	var opts options
 	var err error
 
 	if _, err = parseArgs(&opts); err != nil {
-		return ExitFailure, nil
+		return mb.ExitFailure, nil
 	}
 
 	return validShell(opts)
@@ -67,24 +61,24 @@ func validShell(opts options) (int, error) {
 func printShellsFile() (int, error) {
 	lines, err := mb.ReadFileToStrList(mb.ShellsFilePath)
 	if err != nil {
-		return ExitFailure, err
+		return mb.ExitFailure, err
 	}
 	for _, v := range lines {
 		fmt.Fprintf(os.Stdout, "%s", v)
 	}
-	return ExitSuccess, nil
+	return mb.ExitSuccess, nil
 }
 
 func fix() (int, error) {
 	f, err := os.OpenFile(mb.TmpShellsFile(), os.O_CREATE|os.O_WRONLY, 0644)
 	if err != nil {
-		return ExitFailure, err
+		return mb.ExitFailure, err
 	}
 	defer f.Close()
 
 	lines, err := mb.ReadFileToStrList(mb.ShellsFilePath)
 	if err != nil {
-		return ExitFailure, err
+		return mb.ExitFailure, err
 	}
 
 	lines = mb.ChopAll(lines)
@@ -104,17 +98,17 @@ func fix() (int, error) {
 	err = mb.Copy(mb.TmpShellsFile(), mb.ShellsFilePath)
 	if err != nil {
 		mb.RemoveFile(mb.TmpShellsFile(), false)
-		return ExitFailure, err
+		return mb.ExitFailure, err
 	}
 	mb.RemoveFile(mb.TmpShellsFile(), false)
 
-	return ExitSuccess, nil
+	return mb.ExitSuccess, nil
 }
 
 func valid() (int, error) {
 	lines, err := mb.ReadFileToStrList(mb.ShellsFilePath)
 	if err != nil {
-		return ExitFailure, err
+		return mb.ExitFailure, err
 	}
 
 	lines = mb.ChopAll(lines)
@@ -132,7 +126,7 @@ func valid() (int, error) {
 			fmt.Fprintf(os.Stdout, "NG: %s (not exist in the system)\n", v)
 		}
 	}
-	return ExitSuccess, nil
+	return mb.ExitSuccess, nil
 }
 
 func isFalseCmd(str string) bool {
@@ -153,7 +147,7 @@ func parseArgs(opts *options) ([]string, error) {
 
 	if opts.Version {
 		mb.ShowVersion(cmdName, version)
-		osExit(ExitSuccess)
+		osExit(mb.ExitSuccess)
 	}
 
 	return args, nil

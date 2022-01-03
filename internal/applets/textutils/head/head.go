@@ -31,12 +31,6 @@ const version = "1.0.4"
 
 var osExit = os.Exit
 
-// Exit code
-const (
-	ExitSuccess int = iota // 0
-	ExitFailure
-)
-
 type options struct {
 	Lines   int  `short:"n" long:"lines" default:"10" description:"Print the first NUM lines instead of the first 10"`
 	Version bool `short:"v" long:"version" description:"Show head command version"`
@@ -48,20 +42,20 @@ func Run() (int, error) {
 	var err error
 
 	if args, err = parseArgs(&opts); err != nil {
-		return ExitFailure, nil
+		return mb.ExitFailure, nil
 	}
 
 	if len(args) == 0 || mb.Contains(args, "-") {
 		mb.Parrot(false)
-		return ExitSuccess, nil
+		return mb.ExitSuccess, nil
 	}
 
 	err = head(args, opts)
 	if err != nil {
-		return ExitFailure, err
+		return mb.ExitFailure, err
 	}
 
-	return ExitSuccess, nil
+	return mb.ExitSuccess, nil
 }
 
 func head(args []string, opts options) error {
@@ -119,7 +113,7 @@ func parseArgs(opts *options) ([]string, error) {
 
 	if opts.Version {
 		mb.ShowVersion(cmdName, version)
-		osExit(ExitSuccess)
+		osExit(mb.ExitSuccess)
 	}
 
 	if opts.Lines < 0 {

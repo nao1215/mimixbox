@@ -37,17 +37,11 @@ const cow = `   \
             ||----w |
             ||     ||`
 
-// Exit code
-const (
-	ExitSuccess int = iota // 0
-	ExitFailure
-)
-
 func Run() (int, error) {
 	var messages string
 	args, err := parseArgs(os.Args)
 	if err != nil {
-		return ExitFailure, nil
+		return mb.ExitFailure, nil
 	}
 
 	if mb.HasPipeData() {
@@ -59,7 +53,7 @@ func Run() (int, error) {
 	}
 	cowsay(messages)
 
-	return ExitSuccess, nil
+	return mb.ExitSuccess, nil
 }
 
 func cowsay(msg string) {
@@ -85,12 +79,12 @@ func parseArgs(args []string) ([]string, error) {
 
 	if mb.HasVersionOpt(args) {
 		mb.ShowVersion(cmdName, version)
-		osExit(ExitSuccess)
+		osExit(mb.ExitSuccess)
 	}
 
 	if mb.HasHelpOpt(args) {
 		showHelp()
-		osExit(ExitSuccess)
+		osExit(mb.ExitSuccess)
 	}
 
 	if mb.HasPipeData() {

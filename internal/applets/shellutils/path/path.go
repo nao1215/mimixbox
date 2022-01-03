@@ -33,12 +33,6 @@ const version = "1.0.2"
 var osExit = os.Exit
 var errNotGetAbsPath = errors.New("can't get absolute path")
 
-// Exit code
-const (
-	ExitSuccess int = iota // 0
-	ExitFailure
-)
-
 type options struct {
 	Abs       bool `short:"a" long:"absolute" description:"Print absolute path"`
 	Base      bool `short:"b" long:"basename" description:"Print basename (filename)"`
@@ -54,14 +48,14 @@ func Run() (int, error) {
 	var err error
 
 	if args, err = parseArgs(&opts); err != nil {
-		return ExitFailure, nil
+		return mb.ExitFailure, nil
 	}
 	path := args[0]
 
 	if opts.Abs {
 		abs, err := filepath.Abs(path)
 		if err != nil {
-			return ExitFailure, errNotGetAbsPath
+			return mb.ExitFailure, errNotGetAbsPath
 		}
 		fmt.Fprintf(os.Stdout, "%s\n", abs)
 	}
@@ -82,7 +76,7 @@ func Run() (int, error) {
 		fmt.Fprintf(os.Stdout, "%s\n", filepath.Ext(path))
 	}
 
-	return ExitSuccess, nil
+	return mb.ExitSuccess, nil
 }
 
 func parseArgs(opts *options) ([]string, error) {
@@ -95,12 +89,12 @@ func parseArgs(opts *options) ([]string, error) {
 
 	if opts.Version {
 		mb.ShowVersion(cmdName, version)
-		osExit(ExitSuccess)
+		osExit(mb.ExitSuccess)
 	}
 
 	if !isValidArgNr(args) {
 		showHelp(p)
-		osExit(ExitFailure)
+		osExit(mb.ExitFailure)
 	}
 	return args, nil
 }

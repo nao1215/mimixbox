@@ -37,12 +37,6 @@ const version = "1.0.0"
 
 var osExit = os.Exit
 
-// Exit code
-const (
-	ExitSuccess int = iota // 0
-	ExitFailure
-)
-
 type options struct {
 	Version bool `short:"v" long:"version" description:"Show chsh command version"`
 }
@@ -53,13 +47,13 @@ func Run() (int, error) {
 	var args []string
 
 	if args, err = parseArgs(&opts); err != nil {
-		return ExitFailure, nil
+		return mb.ExitFailure, nil
 	}
 	return chsh(args, opts)
 }
 
 func chsh(args []string, opts options) (int, error) {
-	status := ExitSuccess
+	status := mb.ExitSuccess
 
 	if len(args) == 0 {
 		interactiveChangeShell(opts)
@@ -72,13 +66,13 @@ func interactiveChangeShell(opts options) (int, error) {
 	/*
 		user, err := user.Current()
 		if err != nil {
-			return ExitFailure, err
+			return mb.ExitFailure, err
 		}
 			if err = mb.AuthByPasswordWithPam(user.Username); err != nil {
-				return ExitFailure, err
+				return mb.ExitFailure, err
 			}
 	*/
-	return ExitSuccess, nil
+	return mb.ExitSuccess, nil
 }
 
 func parseArgs(opts *options) ([]string, error) {
@@ -91,7 +85,7 @@ func parseArgs(opts *options) ([]string, error) {
 
 	if opts.Version {
 		mb.ShowVersion(cmdName, version)
-		osExit(ExitSuccess)
+		osExit(mb.ExitSuccess)
 	}
 	return args, nil
 }

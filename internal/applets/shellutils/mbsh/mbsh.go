@@ -38,11 +38,6 @@ var ErrNoPath = errors.New("path required")
 
 const version = "0.0.2"
 
-const (
-	ExitSuccess int = iota // 0
-	ExitFailure
-)
-
 type options struct {
 	Version bool `short:"v" long:"version" description:"Show shell version"`
 }
@@ -95,12 +90,12 @@ func parseArgs() ([]string, options) {
 
 	args, err := p.Parse()
 	if err != nil {
-		osExit(ExitFailure)
+		osExit(mb.ExitFailure)
 	}
 
 	if opts.Version {
 		mb.ShowVersion(cmdName, version)
-		osExit(ExitSuccess)
+		osExit(mb.ExitSuccess)
 	}
 
 	return args, opts

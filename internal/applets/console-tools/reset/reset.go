@@ -33,12 +33,6 @@ const version = "1.0.0"
 
 var osExit = os.Exit
 
-// Exit code
-const (
-	ExitSuccess int = iota // 0
-	ExitFailure
-)
-
 type options struct {
 	Version bool `short:"v" long:"version" description:"Show reset command version"`
 }
@@ -48,7 +42,7 @@ func Run() (int, error) {
 	var err error
 
 	if _, err = parseArgs(&opts); err != nil {
-		return ExitFailure, nil
+		return mb.ExitFailure, nil
 	}
 	return reset()
 }
@@ -63,7 +57,7 @@ func reset() (int, error) {
 	if term.IsTerminal(syscall.Stdin) {
 		fmt.Fprintf(os.Stdout, "\033c\033(B\033[m\033[J\033[?25h")
 	}
-	return ExitSuccess, nil
+	return mb.ExitSuccess, nil
 }
 
 func parseArgs(opts *options) ([]string, error) {
@@ -76,7 +70,7 @@ func parseArgs(opts *options) ([]string, error) {
 
 	if opts.Version {
 		mb.ShowVersion(cmdName, version)
-		osExit(ExitSuccess)
+		osExit(mb.ExitSuccess)
 	}
 
 	return args, nil

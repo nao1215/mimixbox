@@ -31,12 +31,6 @@ const version = "1.0.3"
 
 var osExit = os.Exit
 
-// Exit code
-const (
-	ExitSuccess int = iota // 0
-	ExitFailure
-)
-
 var ErrNoOperand = errors.New("no operand")
 
 type options struct {
@@ -51,12 +45,12 @@ func Run() (int, error) {
 
 	if args, err = parseArgs(&opts); err != nil {
 		if err == ErrNoOperand {
-			return ExitFailure, err
+			return mb.ExitFailure, err
 		}
-		return ExitFailure, nil
+		return mb.ExitFailure, nil
 	}
 
-	status := ExitSuccess
+	status := mb.ExitSuccess
 	for _, path := range args {
 		target := os.ExpandEnv(path)
 		if opts.Parent {
@@ -66,7 +60,7 @@ func Run() (int, error) {
 		}
 
 		if err != nil {
-			status = ExitFailure
+			status = mb.ExitFailure
 			fmt.Fprintln(os.Stderr, err.Error())
 		}
 	}
@@ -83,7 +77,7 @@ func parseArgs(opts *options) ([]string, error) {
 
 	if opts.Version {
 		mb.ShowVersion(cmdName, version)
-		osExit(ExitSuccess)
+		osExit(mb.ExitSuccess)
 	}
 
 	if !isValidArgNr(args) {

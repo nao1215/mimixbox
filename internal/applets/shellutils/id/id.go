@@ -40,19 +40,13 @@ type options struct {
 	Version  bool `short:"v" long:"version" description:"Show id command version"`
 }
 
-// Exit code
-const (
-	ExitSuccess int = iota // 0
-	ExitFailure
-)
-
 func Run() (int, error) {
 	var opts options
 	var err error
 
 	if _, err = parseArgs(&opts); err != nil {
 		fmt.Fprintln(os.Stderr, err)
-		return ExitFailure, nil
+		return mb.ExitFailure, nil
 	}
 	return id(opts)
 }
@@ -60,12 +54,12 @@ func Run() (int, error) {
 func id(opts options) (int, error) {
 	user, err := user.Current()
 	if err != nil {
-		return ExitFailure, err
+		return mb.ExitFailure, err
 	}
 
 	groups, err := mb.Groups(user.Username)
 	if err != nil {
-		return ExitFailure, err
+		return mb.ExitFailure, err
 	}
 
 	switch {
@@ -73,16 +67,16 @@ func id(opts options) (int, error) {
 		return dumpGid(*user, opts.Name)
 	case opts.AllGroup:
 		mb.DumpGroups(groups, opts.Name)
-		return ExitSuccess, nil
+		return mb.ExitSuccess, nil
 	case opts.User:
 		return dumpUid(*user, opts.Name)
 	default:
 		if err := dumpAllId(*user, groups); err != nil {
-			return ExitFailure, err
+			return mb.ExitFailure, err
 		}
 	}
 
-	return ExitSuccess, nil
+	return mb.ExitSuccess, nil
 }
 
 func dumpUid(u user.User, showName bool) (int, error) {
@@ -95,22 +89,22 @@ func dumpUid(u user.User, showName bool) (int, error) {
 	}
 
 	if err != nil {
-		return ExitFailure, err
+		return mb.ExitFailure, err
 	}
-	return ExitSuccess, err
+	return mb.ExitSuccess, err
 }
 
 func dumpGid(u user.User, showName bool) (int, error) {
 	if showName {
 		g, err := user.LookupGroup(u.Username)
 		if err != nil {
-			return ExitFailure, err
+			return mb.ExitFailure, err
 		}
 		fmt.Fprintln(os.Stdout, g.Name)
 	} else {
 		fmt.Fprintln(os.Stdout, u.Gid)
 	}
-	return ExitSuccess, nil
+	return mb.ExitSuccess, nil
 }
 
 func dumpAllId(u user.User, groups []user.Group) error {
@@ -141,7 +135,7 @@ func parseArgs(opts *options) ([]string, error) {
 
 	if opts.Version {
 		mb.ShowVersion(cmdName, version)
-		osExit(ExitSuccess)
+		osExit(mb.ExitSuccess)
 	}
 
 	if !validSpecifiedSameTime(*opts) {

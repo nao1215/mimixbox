@@ -34,12 +34,6 @@ const version = "1.0.0"
 
 var osExit = os.Exit
 
-// Exit code
-const (
-	ExitSuccess int = iota // 0
-	ExitFailure
-)
-
 type idInfo struct {
 	owner string
 	group string
@@ -56,7 +50,7 @@ func Run() (int, error) {
 	var err error
 
 	if args, err = parseArgs(&opts); err != nil {
-		return ExitFailure, nil
+		return mb.ExitFailure, nil
 	}
 
 	return chown(ids(args[0]), args[1:], opts)
@@ -78,25 +72,25 @@ func ids(ids string) idInfo {
 func chown(ids idInfo, files []string, opts options) (int, error) {
 	owner, err := mb.LookupUid(ids.owner)
 	if err != nil {
-		return ExitFailure, err
+		return mb.ExitFailure, err
 	}
 
 	var gid int = -1
 	if ids.group != "" {
 		gid, err = mb.LookupGid(ids.group)
 		if err != nil {
-			return ExitFailure, err
+			return mb.ExitFailure, err
 		}
 	}
 
-	status := ExitSuccess
+	status := mb.ExitSuccess
 	for _, path := range files {
 		path = os.ExpandEnv(path)
 
 		if ids.group == "" {
 			var st syscall.Stat_t
 			if err := syscall.Stat(path, &st); err != nil {
-				status = ExitFailure
+				status = mb.ExitFailure
 				fmt.Fprintln(os.Stderr, cmdName+": "+path+": "+err.Error())
 				continue
 			}
@@ -105,13 +99,13 @@ func chown(ids idInfo, files []string, opts options) (int, error) {
 
 		if opts.Recursive {
 			if err := changeOwnerRecursive(path, owner, gid); err != nil {
-				status = ExitFailure
+				status = mb.ExitFailure
 				fmt.Fprintln(os.Stderr, cmdName+": "+path+": "+err.Error())
 				continue
 			}
 		} else {
 			if err := os.Chown(path, owner, gid); err != nil {
-				status = ExitFailure
+				status = mb.ExitFailure
 				fmt.Fprintln(os.Stderr, cmdName+": "+path+": "+err.Error())
 				continue
 			}
@@ -143,7 +137,7 @@ func parseArgs(opts *options) ([]string, error) {
 
 	if opts.Version {
 		mb.ShowVersion(cmdName, version)
-		osExit(ExitSuccess)
+		osExit(mb.ExitSuccess)
 	}
 
 	if !isValidArgNr(args) {
@@ -152,7 +146,7 @@ func parseArgs(opts *options) ([]string, error) {
 		} else if len(args) == 1 {
 			fmt.Fprintln(os.Stderr, cmdName+": no operand after "+args[0])
 		}
-		osExit(ExitFailure)
+		osExit(mb.ExitFailure)
 	}
 	return args, nil
 }

@@ -35,18 +35,12 @@ type options struct {
 	Version bool `short:"v" long:"version" description:"Show hostid command version"`
 }
 
-// Exit code
-const (
-	ExitSuccess int = iota // 0
-	ExitFailure
-)
-
 func Run() (int, error) {
 	var opts options
 	var err error
 
 	if _, err = parseArgs(&opts); err != nil {
-		return ExitSuccess, nil
+		return mb.ExitSuccess, nil
 	}
 	return hostid()
 }
@@ -54,7 +48,7 @@ func Run() (int, error) {
 func hostid() (int, error) {
 	ip4, err := mb.Ip4()
 	if err != nil {
-		return ExitFailure, err
+		return mb.ExitFailure, err
 	}
 
 	//TODO: The output doesn't match the Coreutils version of hostid command.
@@ -67,7 +61,7 @@ func hostid() (int, error) {
 			atoi(ipList[1]), atoi(ipList[0]), atoi(ipList[3]), atoi(ipList[2]))
 	}
 
-	return ExitSuccess, nil
+	return mb.ExitSuccess, nil
 }
 
 func atoi(decimal string) int {
@@ -85,7 +79,7 @@ func parseArgs(opts *options) ([]string, error) {
 
 	if opts.Version {
 		mb.ShowVersion(cmdName, version)
-		osExit(ExitSuccess)
+		osExit(mb.ExitSuccess)
 	}
 
 	return args, nil

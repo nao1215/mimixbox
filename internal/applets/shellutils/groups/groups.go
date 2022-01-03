@@ -34,19 +34,13 @@ type options struct {
 	Version bool `short:"v" long:"version" description:"Show groups command version"`
 }
 
-// Exit code
-const (
-	ExitSuccess int = iota // 0
-	ExitFailure
-)
-
 func Run() (int, error) {
 	var opts options
 	var err error
 	var args []string
 
 	if args, err = parseArgs(&opts); err != nil {
-		return ExitSuccess, nil
+		return mb.ExitSuccess, nil
 	}
 	return groups(args)
 }
@@ -57,12 +51,12 @@ func groups(args []string) (int, error) {
 		return showCurrentUserGroups()
 	}
 
-	var status int = ExitSuccess
+	var status int = mb.ExitSuccess
 	for _, uname := range args {
 		groups, err := mb.Groups(uname)
 		if err != nil {
 			fmt.Fprintln(os.Stderr, "can't get "+uname+" groups information")
-			status = ExitFailure
+			status = mb.ExitFailure
 			continue
 		}
 		fmt.Fprint(os.Stdout, uname+" : ")
@@ -74,15 +68,15 @@ func groups(args []string) (int, error) {
 func showCurrentUserGroups() (int, error) {
 	u, err := user.Current()
 	if err != nil {
-		return ExitFailure, err
+		return mb.ExitFailure, err
 	}
 
 	groups, err := mb.Groups(u.Username)
 	if err != nil {
-		return ExitFailure, err
+		return mb.ExitFailure, err
 	}
 	mb.DumpGroups(groups, true)
-	return ExitSuccess, nil
+	return mb.ExitSuccess, nil
 }
 
 func parseArgs(opts *options) ([]string, error) {
@@ -95,7 +89,7 @@ func parseArgs(opts *options) ([]string, error) {
 
 	if opts.Version {
 		mb.ShowVersion(cmdName, version)
-		osExit(ExitSuccess)
+		osExit(mb.ExitSuccess)
 	}
 
 	return args, nil

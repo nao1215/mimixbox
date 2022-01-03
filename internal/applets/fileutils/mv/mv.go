@@ -33,12 +33,6 @@ const version = "1.0.2"
 
 var osExit = os.Exit
 
-// Exit code
-const (
-	ExitSuccess int = iota // 0
-	ExitFailure
-)
-
 type options struct {
 	Backup      bool `short:"b" long:"backup" description:"Backup file if same name file already exists"`
 	Force       bool `short:"f" long:"force" description:"Forcibly overwrite if same name file already exists"`
@@ -53,21 +47,21 @@ func Run() (int, error) {
 	var err error
 
 	if args, err = parseArgs(&opts); err != nil {
-		return ExitFailure, nil
+		return mb.ExitFailure, nil
 	}
 
 	srcPaths, err := getSrcAbsPaths(args)
 	if err != nil {
-		return ExitFailure, err
+		return mb.ExitFailure, err
 	}
 
 	destPath, err := getDestAbsPath(args)
 	if err != nil {
-		return ExitFailure, err
+		return mb.ExitFailure, err
 	}
 
 	if err := validArgs(srcPaths, destPath, opts); err != nil {
-		return ExitFailure, err
+		return mb.ExitFailure, err
 	}
 
 	return move(srcPaths, destPath, opts)
@@ -93,25 +87,25 @@ func validArgs(srcPaths []string, destPath string, opts options) error {
 }
 
 func move(srcPaths []string, dest string, opts options) (int, error) {
-	status := ExitSuccess
+	status := mb.ExitSuccess
 	for _, src := range srcPaths {
 		if !mb.Exists(src) {
 			fmt.Fprintln(os.Stderr, cmdName+": "+src+" doesn't exist")
-			status = ExitFailure
+			status = mb.ExitFailure
 			continue
 		}
 
 		// If SRC and DEST are the same, the option(-f, -b, -i) is ignored.
 		if isSameFilePath(src, dest) {
 			fmt.Fprintln(os.Stderr, cmdName+": source '"+src+"' and destination '"+dest+"' is same")
-			status = ExitFailure
+			status = mb.ExitFailure
 			continue
 		}
 
 		if opts.NoClobber {
 			if err := noclobberMove(src, dest); err != nil {
 				fmt.Fprintln(os.Stderr, cmdName+": "+err.Error())
-				status = ExitFailure
+				status = mb.ExitFailure
 			}
 			continue
 		}
@@ -119,7 +113,7 @@ func move(srcPaths []string, dest string, opts options) (int, error) {
 		if opts.Force || (opts.Backup && opts.Interactive) {
 			if err := forceMove(src, dest, opts); err != nil {
 				fmt.Fprintln(os.Stderr, cmdName+": "+err.Error())
-				status = ExitFailure
+				status = mb.ExitFailure
 			}
 			continue
 		}
@@ -127,7 +121,7 @@ func move(srcPaths []string, dest string, opts options) (int, error) {
 		if opts.Interactive {
 			if err := interactiveMove(src, dest, opts); err != nil {
 				fmt.Fprintln(os.Stderr, cmdName+": "+err.Error())
-				status = ExitFailure
+				status = mb.ExitFailure
 			}
 			continue
 		}
@@ -135,7 +129,7 @@ func move(srcPaths []string, dest string, opts options) (int, error) {
 		destPath := decideDestAbsPath(src, dest, opts)
 		if err := os.Rename(src, destPath); err != nil {
 			fmt.Fprintln(os.Stderr, cmdName+": "+err.Error())
-			status = ExitFailure
+			status = mb.ExitFailure
 		}
 	}
 	return status, nil
@@ -265,12 +259,12 @@ func parseArgs(opts *options) ([]string, error) {
 
 	if opts.Version {
 		mb.ShowVersion(cmdName, version)
-		osExit(ExitSuccess)
+		osExit(mb.ExitSuccess)
 	}
 
 	if !isValidArgNr(args) {
 		showHelp(p)
-		osExit(ExitFailure)
+		osExit(mb.ExitFailure)
 	}
 	return args, nil
 }

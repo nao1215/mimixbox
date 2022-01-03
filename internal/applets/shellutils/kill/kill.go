@@ -31,12 +31,6 @@ const version = "1.0.0"
 
 var osExit = os.Exit
 
-// Exit code
-const (
-	ExitSuccess int = iota // 0
-	ExitFailure
-)
-
 type options struct {
 	nameFlg      bool
 	signalName   string
@@ -58,26 +52,26 @@ func Run() (int, error) {
 		} else {
 			mb.PrintSignal(opts.list)
 		}
-		osExit(ExitSuccess)
+		osExit(mb.ExitSuccess)
 	}
 
 	return kill(process, opts)
 }
 
 func kill(process []string, opts options) (int, error) {
-	status := ExitSuccess
+	status := mb.ExitSuccess
 	for _, v := range process {
 		pid, err := strconv.Atoi(v)
 		if err != nil {
 			fmt.Fprintln(os.Stderr, "kill: "+err.Error()+": "+v)
-			status = ExitFailure
+			status = mb.ExitFailure
 			continue
 		}
 
 		p, err := os.FindProcess(pid)
 		if err != nil {
 			fmt.Fprintln(os.Stderr, "kill: "+err.Error()+": "+v)
-			status = ExitFailure
+			status = mb.ExitFailure
 			continue
 		}
 
@@ -85,7 +79,7 @@ func kill(process []string, opts options) (int, error) {
 		err = p.Signal(syscall.Signal(signal))
 		if err != nil {
 			fmt.Fprintln(os.Stderr, "kill: "+err.Error())
-			status = ExitFailure
+			status = mb.ExitFailure
 			continue
 		}
 	}
@@ -116,33 +110,33 @@ func decideSignal(opts options) int32 {
 func valid(process []string, opts options) {
 	if len(process) == 0 && !opts.listFlg {
 		showHelp()
-		osExit(ExitFailure)
+		osExit(mb.ExitFailure)
 	}
 	if opts.nameFlg && !mb.IsSignalName(opts.signalName) {
 		fmt.Fprintln(os.Stderr, "kill: -s: invalid signal specification:"+opts.signalName)
-		osExit(ExitFailure)
+		osExit(mb.ExitFailure)
 	}
 	if opts.numberFlg && !mb.IsSignalName(opts.signalNumber) {
 		fmt.Fprintln(os.Stderr, "kill: -n: invalid signal specification:"+opts.signalNumber)
-		osExit(ExitFailure)
+		osExit(mb.ExitFailure)
 	}
 
 	trim := strings.TrimLeft(opts.direct, "-")
 	if opts.directFlg && !mb.IsSignalName(trim) && !mb.IsSignalNumber(trim) {
 		fmt.Fprintln(os.Stderr, "kill: "+opts.direct+": invalid signal specification")
-		osExit(ExitFailure)
+		osExit(mb.ExitFailure)
 	}
 }
 
 func parseArgs(args []string) ([]string, options) {
 	if mb.HasVersionOpt(args) {
 		mb.ShowVersion(cmdName, version)
-		osExit(ExitSuccess)
+		osExit(mb.ExitSuccess)
 	}
 
 	if mb.HasHelpOpt(args) {
 		showHelp()
-		osExit(ExitSuccess)
+		osExit(mb.ExitSuccess)
 	}
 
 	var opts options = options{false, "", false, "", false, "", false, ""}
@@ -154,7 +148,7 @@ func parseArgs(args []string) ([]string, options) {
 				opts.signalName = args[i+1]
 			} else {
 				fmt.Fprintln(os.Stderr, "kill: -s: option requires an argument")
-				osExit(ExitFailure)
+				osExit(mb.ExitFailure)
 			}
 			continue
 		} else if v == "-n" {
@@ -163,7 +157,7 @@ func parseArgs(args []string) ([]string, options) {
 				opts.signalNumber = args[i+1]
 			} else {
 				fmt.Fprintln(os.Stderr, "kill: -n: option requires an argument")
-				osExit(ExitFailure)
+				osExit(mb.ExitFailure)
 			}
 			continue
 		} else if v == "-l" {

@@ -35,32 +35,26 @@ type options struct {
 	Version bool `short:"v" long:"version" description:"Show which command version"`
 }
 
-// Exit code
-const (
-	ExitSuccess int = iota // 0
-	ExitFailure
-)
-
 func Run() (int, error) {
 	var opts options
 	var args []string
 	var err error
 
 	if args, err = parseArgs(&opts); err != nil {
-		return ExitFailure, nil
+		return mb.ExitFailure, nil
 	}
 
-	status := ExitSuccess
+	status := mb.ExitSuccess
 	for _, path := range args {
 		p, err := exec.LookPath(path)
 		if err != nil {
 			e, ok := err.(*exec.Error)
 			if ok && e.Err == exec.ErrNotFound {
-				status = ExitFailure
+				status = mb.ExitFailure
 				continue // Don't print error like coreutils.
 			}
 			fmt.Fprintln(os.Stderr, e)
-			status = ExitFailure
+			status = mb.ExitFailure
 		}
 		fmt.Fprintln(os.Stdout, p)
 	}
@@ -77,11 +71,11 @@ func parseArgs(opts *options) ([]string, error) {
 
 	if opts.Version {
 		mb.ShowVersion(cmdName, version)
-		osExit(ExitSuccess)
+		osExit(mb.ExitSuccess)
 	}
 
 	if !isValidArgNr(args) {
-		osExit(ExitFailure) // Do not display help messages because it behaves the same as Coreutils
+		osExit(mb.ExitFailure) // Do not display help messages because it behaves the same as Coreutils
 	}
 	return args, nil
 }

@@ -33,12 +33,6 @@ const version = "1.0.5"
 
 var osExit = os.Exit
 
-// Exit code
-const (
-	ExitSuccess int = iota // 0
-	ExitFailure
-)
-
 type options struct {
 	Version bool `short:"v" long:"version" description:"Show cat command version"`
 }
@@ -49,28 +43,28 @@ func Run() (int, error) {
 	var err error
 
 	if args, err = parseArgs(&opts); err != nil {
-		return ExitFailure, nil
+		return mb.ExitFailure, nil
 	}
 
 	if mb.HasPipeData() {
 		printFromTail(strings.Split(args[0], "\n"))
-		return ExitSuccess, nil
+		return mb.ExitSuccess, nil
 	}
 
 	if len(args) == 0 || mb.Contains(args, "-") {
 		tacUserInput()
-		return ExitSuccess, nil
+		return mb.ExitSuccess, nil
 	}
 
 	for _, file := range args {
 		target := os.ExpandEnv(file)
 		err := tac(target)
 		if err != nil {
-			return ExitFailure, err
+			return mb.ExitFailure, err
 		}
 	}
 
-	return ExitSuccess, nil
+	return mb.ExitSuccess, nil
 }
 
 func tac(path string) error {
@@ -127,7 +121,7 @@ func parseArgs(opts *options) ([]string, error) {
 
 	if opts.Version {
 		mb.ShowVersion(cmdName, version)
-		osExit(ExitSuccess)
+		osExit(mb.ExitSuccess)
 	}
 
 	return args, nil

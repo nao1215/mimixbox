@@ -32,20 +32,14 @@ type options struct {
 	Version bool `short:"v" long:"version" description:"Show false command version"`
 }
 
-// Exit code
-const (
-	ExitSuccess int = iota // 0
-	ExitFailure
-)
-
 func Run() (int, error) {
 	var opts options
 	var err error
 
 	if _, err = parseArgs(&opts); err != nil {
-		return ExitFailure, nil
+		return mb.ExitFailure, nil
 	}
-	return ExitFailure, nil
+	return mb.ExitFailure, nil
 }
 
 func parseArgs(opts *options) ([]string, error) {
@@ -58,7 +52,7 @@ func parseArgs(opts *options) ([]string, error) {
 
 	if opts.Version {
 		mb.ShowVersion(cmdName, version)
-		osExit(ExitSuccess)
+		osExit(mb.ExitSuccess)
 	}
 	return args, nil
 }

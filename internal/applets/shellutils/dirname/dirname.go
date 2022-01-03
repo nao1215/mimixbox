@@ -31,12 +31,6 @@ const version = "1.0.0"
 
 var osExit = os.Exit
 
-// Exit code
-const (
-	ExitSuccess int = iota // 0
-	ExitFailure
-)
-
 type options struct {
 	Version bool `short:"v" long:"version" description:"Show dirname command version"`
 	Zero    bool `short:"z" long:"zero" description:"Print each output line without line feed"`
@@ -48,14 +42,14 @@ func Run() (int, error) {
 	var err error
 
 	if args, err = parseArgs(&opts); err != nil {
-		return ExitFailure, nil
+		return mb.ExitFailure, nil
 	}
 
 	return dirname(args, opts)
 }
 
 func dirname(args []string, opts options) (int, error) {
-	status := ExitSuccess
+	status := mb.ExitSuccess
 	for _, path := range args {
 		dirname := filepath.Dir(os.ExpandEnv(path))
 		if opts.Zero {
@@ -77,12 +71,12 @@ func parseArgs(opts *options) ([]string, error) {
 
 	if opts.Version {
 		mb.ShowVersion(cmdName, version)
-		osExit(ExitSuccess)
+		osExit(mb.ExitSuccess)
 	}
 
 	if !isValidArgNr(args) {
 		fmt.Fprintln(os.Stderr, "dirname: no operand")
-		osExit(ExitFailure)
+		osExit(mb.ExitFailure)
 	}
 	return args, nil
 }

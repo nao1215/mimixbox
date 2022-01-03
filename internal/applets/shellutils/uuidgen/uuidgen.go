@@ -35,18 +35,12 @@ type options struct {
 	Version bool `short:"v" long:"version" description:"Show uuidgen command version"`
 }
 
-// Exit code
-const (
-	ExitSuccess int = iota // 0
-	ExitFailure
-)
-
 func Run() (int, error) {
 	var opts options
 	var err error
 
 	if _, err = parseArgs(&opts); err != nil {
-		return ExitFailure, nil
+		return mb.ExitFailure, nil
 	}
 	return uuidgen()
 }
@@ -61,7 +55,7 @@ func parseArgs(opts *options) ([]string, error) {
 
 	if opts.Version {
 		mb.ShowVersion(cmdName, version)
-		osExit(ExitSuccess)
+		osExit(mb.ExitSuccess)
 	}
 	return args, nil
 }
@@ -88,16 +82,16 @@ func initParser(opts *options) *flags.Parser {
 func uuidgen() (int, error) {
 	fp, err := os.Open("/proc/sys/kernel/random/uuid")
 	if err != nil {
-		return ExitFailure, err
+		return mb.ExitFailure, err
 	}
 	defer fp.Close()
 
 	reader := bufio.NewReaderSize(fp, 38) // UUID's format sample: 333f899e-5dbf-41ec-8c42-e3b3ddbe2e68
 	line, _, err := reader.ReadLine()
 	if err != nil {
-		return ExitFailure, err
+		return mb.ExitFailure, err
 	}
 
 	fmt.Fprintln(os.Stdout, string(line))
-	return ExitSuccess, nil
+	return mb.ExitSuccess, nil
 }

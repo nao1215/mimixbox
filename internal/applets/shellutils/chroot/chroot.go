@@ -35,12 +35,6 @@ type options struct {
 	Help    bool `short:"h" long:"help" description:"Show this message"`
 }
 
-// Exit code
-const (
-	ExitSuccess int = iota // 0
-	ExitFailure
-)
-
 type command struct {
 	name       string
 	withOption []string
@@ -56,13 +50,13 @@ func Run() (int, error) {
 
 	err = syscall.Chroot(os.ExpandEnv(os.Args[1]))
 	if err != nil {
-		return ExitFailure, err
+		return mb.ExitFailure, err
 	}
 
 	//----------------From here, in the prison-------------------
 	err = os.Chdir("/")
 	if err != nil {
-		return ExitFailure, err
+		return mb.ExitFailure, err
 	}
 
 	decideExecCommand(&cmd)
@@ -73,9 +67,9 @@ func Run() (int, error) {
 
 	err = syscall.Exec(cmd.name, cmd.withOption, cmd.env)
 	if err != nil {
-		return ExitFailure, err
+		return mb.ExitFailure, err
 	}
-	return ExitSuccess, nil
+	return mb.ExitSuccess, nil
 }
 
 // Execute this method after chroot.
@@ -110,11 +104,11 @@ func parseArgs(opts *options) {
 
 	if hasVersionOption() {
 		mb.ShowVersion(cmdName, version)
-		osExit(ExitSuccess)
+		osExit(mb.ExitSuccess)
 	}
 	if !isValidArgNr(os.Args) {
 		showHelp(p)
-		osExit(ExitFailure)
+		osExit(mb.ExitFailure)
 	}
 }
 

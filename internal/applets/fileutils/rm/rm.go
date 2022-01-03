@@ -33,12 +33,6 @@ const version = "1.0.3"
 
 var osExit = os.Exit
 
-// Exit code
-const (
-	ExitSuccess int = iota // 0
-	ExitFailure
-)
-
 type options struct {
 	Force       bool `short:"f" long:"force" description:"Ignore non-existent files, not prompt"`
 	Interactive bool `short:"i" long:"interactive" description:"Ask every time if you want to remove"`
@@ -51,10 +45,10 @@ func Run() (int, error) {
 	var opts options
 	var args []string
 	var err error
-	status := ExitSuccess
+	status := mb.ExitSuccess
 
 	if args, err = parseArgs(&opts); err != nil {
-		return ExitFailure, nil
+		return mb.ExitFailure, nil
 	}
 
 	for _, path := range args {
@@ -69,40 +63,40 @@ func Run() (int, error) {
 
 func rm(path string, opts options) (int, error) {
 	p := os.ExpandEnv(path)
-	if status, err := validBeforeRemove(p, opts); status != ExitSuccess {
+	if status, err := validBeforeRemove(p, opts); status != mb.ExitSuccess {
 		return status, err
 	}
 
 	if mb.IsFile(p) {
 		if err := mb.RemoveFile(p, opts.Interactive); err != nil {
-			return ExitFailure, err
+			return mb.ExitFailure, err
 		}
 	}
 
 	if err := mb.RemoveDir(p, opts.Interactive); err != nil {
-		return ExitFailure, err
+		return mb.ExitFailure, err
 	}
 
-	return ExitSuccess, nil
+	return mb.ExitSuccess, nil
 }
 
 func validBeforeRemove(path string, opts options) (int, error) {
 	if mb.IsRootDir(path) && !opts.NoPreserve {
-		return ExitFailure, errors.New("do not remove the root directory")
+		return mb.ExitFailure, errors.New("do not remove the root directory")
 	}
 
 	if !mb.Exists(path) {
 		if !opts.Force {
-			return ExitFailure, errors.New("can't remove " + path + ": No such file or directory exists")
+			return mb.ExitFailure, errors.New("can't remove " + path + ": No such file or directory exists")
 		}
-		return ExitFailure, nil
+		return mb.ExitFailure, nil
 	}
 
 	if mb.IsDir(path) && !opts.Recursive {
-		return ExitFailure, errors.New("can't remove " + path + ": It's directory")
+		return mb.ExitFailure, errors.New("can't remove " + path + ": It's directory")
 	}
 
-	return ExitSuccess, nil
+	return mb.ExitSuccess, nil
 }
 
 func parseArgs(opts *options) ([]string, error) {
@@ -124,12 +118,12 @@ func parseArgs(opts *options) ([]string, error) {
 
 	if opts.Version {
 		mb.ShowVersion(cmdName, version)
-		osExit(ExitSuccess)
+		osExit(mb.ExitSuccess)
 	}
 
 	if !isValidArgNr(args) {
 		showHelp(p)
-		osExit(ExitFailure)
+		osExit(mb.ExitFailure)
 	}
 	return args, nil
 }

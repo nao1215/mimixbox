@@ -83,12 +83,6 @@ var osExit = os.Exit
 
 const version = "1.0.4"
 
-// Exit code
-const (
-	ExitSuccess int = iota // 0
-	ExitFailure
-)
-
 type options struct {
 	Output  string `short:"o" long:"output" value-name:"<output-file-name>" description:"Output file name(default: Added suffix \"_fake\" to original name)"`
 	Phub    bool   `short:"p" long:"phub" description:"Put p-hub button(default: Color similar to twitter button)"`
@@ -105,12 +99,12 @@ func Run() (int, error) {
 
 	if !isValidExt(inputFileName) {
 		err := errors.New("fakemovie command only support jpg or png")
-		return ExitFailure, err
+		return mb.ExitFailure, err
 	}
 
 	img, err := openImage(inputFileName)
 	if err != nil {
-		return ExitFailure, err
+		return mb.ExitFailure, err
 	}
 
 	if radius <= 0 {
@@ -128,10 +122,10 @@ func Run() (int, error) {
 	}
 	err = writeImage(img, outputFileName)
 	if err != nil {
-		return ExitFailure, err
+		return mb.ExitFailure, err
 	}
 
-	return ExitSuccess, nil
+	return mb.ExitSuccess, nil
 }
 
 func openImage(imageFileName string) (image.Image, error) {
@@ -255,17 +249,17 @@ func parseArgs(opts *options) []string {
 
 	args, err := p.Parse()
 	if err != nil {
-		osExit(ExitFailure)
+		osExit(mb.ExitFailure)
 	}
 
 	if opts.Version {
 		mb.ShowVersion(cmdName, version)
-		osExit(ExitSuccess)
+		osExit(mb.ExitSuccess)
 	}
 
 	if !isValidArgNr(args) {
 		showHelp(p)
-		osExit(ExitFailure)
+		osExit(mb.ExitFailure)
 	}
 	return args
 }

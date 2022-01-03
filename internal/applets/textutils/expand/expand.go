@@ -35,47 +35,41 @@ type options struct {
 	Version bool `short:"v" long:"version" description:"Show expand command version"`
 }
 
-// Exit code
-const (
-	ExitSuccess int = iota // 0
-	ExitFailure
-)
-
 func Run() (int, error) {
 	var opts options
 	var err error
 	var args []string
 
 	if args, err = parseArgs(&opts); err != nil {
-		return ExitSuccess, nil
+		return mb.ExitSuccess, nil
 	}
 
 	if mb.HasPipeData() {
 		mb.Dump(mb.AddLineFeed(strings.Split(args[0], "\n")), false)
-		return ExitSuccess, nil
+		return mb.ExitSuccess, nil
 	}
 
 	if len(args) == 0 || mb.Contains(args, "-") {
 		mb.Parrot(false)
-		return ExitSuccess, nil
+		return mb.ExitSuccess, nil
 	}
 
 	return expand(args, opts)
 }
 
 func expand(args []string, opts options) (int, error) {
-	status := ExitSuccess
+	status := mb.ExitSuccess
 	for _, file := range args {
 		target := os.ExpandEnv(file)
 		if !mb.IsFile(target) {
 			fmt.Fprintln(os.Stderr, target+": No such file. Skip it")
-			status = ExitFailure
+			status = mb.ExitFailure
 			continue
 		}
 		lines, err := mb.ReadFileToStrList(target)
 		if err != nil {
 			fmt.Fprintln(os.Stderr, err)
-			status = ExitFailure
+			status = mb.ExitFailure
 			continue
 		}
 
@@ -102,7 +96,7 @@ func parseArgs(opts *options) ([]string, error) {
 
 	if opts.Version {
 		mb.ShowVersion(cmdName, version)
-		osExit(ExitSuccess)
+		osExit(mb.ExitSuccess)
 	}
 
 	if opts.Tab <= 0 {

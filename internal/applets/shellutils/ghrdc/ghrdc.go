@@ -35,12 +35,6 @@ var osExit = os.Exit
 
 const version = "1.0.2"
 
-// Exit code
-const (
-	ExitSuccess int = iota // 0
-	ExitFailure
-)
-
 type options struct {
 	All     bool `short:"a" long:"all" description:"Show total number of downloads per release"`
 	Total   bool `short:"t" long:"total" description:"Show total number of downloads for all releases"`
@@ -129,7 +123,7 @@ func Run() (int, error) {
 	var repository string = args[0]
 	data, err := fetchGitHubReleaseData(repository)
 	if err != nil {
-		return ExitFailure, err
+		return mb.ExitFailure, err
 	}
 	if len(data) == 0 {
 		// Because the ghrdc command does not authenticate with GitHub API,
@@ -139,7 +133,7 @@ func Run() (int, error) {
 		// URL: https://github.com/google/go-github
 		err := fmt.Errorf("Release Data is nothing. If %s is organization repository,\n"+
 			"gdrdc commant can't get release data.\n", repository)
-		return ExitFailure, err
+		return mb.ExitFailure, err
 	}
 
 	var totalSrcCnt int = 0
@@ -173,7 +167,7 @@ func Run() (int, error) {
 		fmt.Fprintf(os.Stdout, "[Source Code Download Count(total)]:%d\n", totalSrcCnt)
 	}
 
-	return ExitSuccess, nil
+	return mb.ExitSuccess, nil
 }
 
 // fetchGitHubReleaseData () runs the GitHub Web API. Convert the acquired json to a structure.
@@ -233,17 +227,17 @@ func parseArgs(opts *options) []string {
 
 	args, err := p.Parse()
 	if err != nil {
-		osExit(ExitFailure)
+		osExit(mb.ExitFailure)
 	}
 
 	if opts.Version {
 		mb.ShowVersion(cmdName, version)
-		osExit(ExitSuccess)
+		osExit(mb.ExitSuccess)
 	}
 
 	if !isValidArgNr(args) {
 		showHelp(p)
-		osExit(ExitFailure)
+		osExit(mb.ExitFailure)
 	}
 	return args
 }

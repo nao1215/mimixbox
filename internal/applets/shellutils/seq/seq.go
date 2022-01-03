@@ -41,12 +41,6 @@ type seqInfo struct {
 	last      seqElem
 }
 
-// Exit code
-const (
-	ExitSuccess int = iota // 0
-	ExitFailure
-)
-
 // Not support arguments containing float numbers
 func Run() (int, error) {
 	args := parseArgs(os.Args)
@@ -56,13 +50,13 @@ func Run() (int, error) {
 func seq(args []string) (int, error) {
 	si, err := parseSeqInfo(args)
 	if err != nil {
-		return ExitFailure, err
+		return mb.ExitFailure, err
 	}
 
 	for i := si.first.num; i <= si.last.num; i = increment(i, si.increment) {
 		fmt.Fprintln(os.Stdout, i)
 	}
-	return ExitSuccess, nil
+	return mb.ExitSuccess, nil
 }
 
 func increment(now int, se seqElem) int {
@@ -76,7 +70,7 @@ func parseSeqInfo(args []string) (seqInfo, error) {
 
 	if len(args) == 0 || len(args) > 3 {
 		showHelp()
-		osExit(ExitSuccess)
+		osExit(mb.ExitSuccess)
 	} else if len(args) == 1 {
 		setSeqElem(args[0], &si.last)
 	} else if len(args) == 2 {
@@ -125,12 +119,12 @@ func setSeqElem(val string, se *seqElem) {
 func parseArgs(args []string) []string {
 	if mb.HasVersionOpt(args) {
 		mb.ShowVersion(cmdName, version)
-		osExit(ExitSuccess)
+		osExit(mb.ExitSuccess)
 	}
 
 	if mb.HasHelpOpt(args) {
 		showHelp()
-		osExit(ExitSuccess)
+		osExit(mb.ExitSuccess)
 	}
 
 	return args[1:]

@@ -32,12 +32,6 @@ const version = "1.0.2"
 
 var osExit = os.Exit
 
-// Exit code
-const (
-	ExitSuccess int = iota // 0
-	ExitFailure
-)
-
 type options struct {
 	Version bool `short:"v" long:"version" description:"Show mkfifo command version"`
 }
@@ -46,21 +40,21 @@ func Run() (int, error) {
 	var opts options
 	var args []string
 	var err error
-	status := ExitSuccess
+	status := mb.ExitSuccess
 
 	if args, err = parseArgs(&opts); err != nil {
-		return ExitFailure, nil
+		return mb.ExitFailure, nil
 	}
 
 	for _, path := range args {
 		p := os.ExpandEnv(path)
 		if mb.Exists(p) {
-			status = ExitFailure
+			status = mb.ExitFailure
 			fmt.Fprintln(os.Stderr, cmdName+": can't make "+p+": already exist")
 			continue
 		}
 		if err := syscall.Mkfifo(p, 0644); err != nil {
-			status = ExitFailure
+			status = mb.ExitFailure
 			fmt.Fprintln(os.Stderr, cmdName+": "+p+": "+err.Error())
 			continue
 		}
@@ -78,12 +72,12 @@ func parseArgs(opts *options) ([]string, error) {
 
 	if opts.Version {
 		mb.ShowVersion(cmdName, version)
-		osExit(ExitSuccess)
+		osExit(mb.ExitSuccess)
 	}
 
 	if !isValidArgNr(args) {
 		showHelp(p)
-		osExit(ExitFailure)
+		osExit(mb.ExitFailure)
 	}
 	return args, nil
 }

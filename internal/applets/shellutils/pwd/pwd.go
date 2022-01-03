@@ -32,12 +32,6 @@ const version = "1.0.0"
 
 var osExit = os.Exit
 
-// Exit code
-const (
-	ExitSuccess int = iota // 0
-	ExitFailure
-)
-
 type options struct {
 	Logical  bool `short:"L"  description:"print the value of $PWD if it names the current working directory (default)"`
 	Physical bool `short:"P"  description:"print the physical directory, without any symbolic links"`
@@ -49,7 +43,7 @@ func Run() (int, error) {
 	var err error
 
 	if _, err = parseArgs(&opts); err != nil {
-		return ExitFailure, nil
+		return mb.ExitFailure, nil
 	}
 	return pwd(opts)
 }
@@ -64,11 +58,11 @@ func pwd(opts options) (int, error) {
 	} else if opts.Physical {
 		path, err := filepath.EvalSymlinks(os.Getenv("PWD"))
 		if err != nil {
-			return ExitFailure, err
+			return mb.ExitFailure, err
 		}
 		fmt.Fprintln(os.Stdout, path)
 	}
-	return ExitSuccess, nil
+	return mb.ExitSuccess, nil
 }
 
 func parseArgs(opts *options) ([]string, error) {
@@ -81,7 +75,7 @@ func parseArgs(opts *options) ([]string, error) {
 
 	if opts.Version {
 		mb.ShowVersion(cmdName, version)
-		osExit(ExitSuccess)
+		osExit(mb.ExitSuccess)
 	}
 
 	return args, nil

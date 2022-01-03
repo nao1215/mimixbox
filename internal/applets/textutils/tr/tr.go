@@ -41,19 +41,13 @@ type convert struct {
 	after  string
 }
 
-// Exit code
-const (
-	ExitSuccess int = iota // 0
-	ExitFailure
-)
-
 func Run() (int, error) {
 	var opts options
 	var err error
 	var args []string
 
 	if args, err = parseArgs(&opts); err != nil {
-		return ExitSuccess, nil
+		return mb.ExitSuccess, nil
 	}
 
 	return tr(args, opts)
@@ -69,7 +63,7 @@ func tr(args []string, opts options) (int, error) {
 func fileterTranslate(args []string, opts options) (int, error) {
 	cnv, err := parseConvertCharSet(args, opts)
 	if err != nil {
-		return ExitFailure, err
+		return mb.ExitFailure, err
 	}
 
 	data := args[len(args)-1]
@@ -79,13 +73,13 @@ func fileterTranslate(args []string, opts options) (int, error) {
 	} else {
 		fmt.Fprintln(os.Stdout, strings.TrimRight(translate(data, cnv), "\n"))
 	}
-	return ExitSuccess, nil
+	return mb.ExitSuccess, nil
 }
 
 func interactiveTranslate(args []string, opts options) (int, error) {
 	cnv, err := parseConvertCharSet(args, opts)
 	if err != nil {
-		return ExitFailure, err
+		return mb.ExitFailure, err
 	}
 
 	for {
@@ -100,7 +94,7 @@ func interactiveTranslate(args []string, opts options) (int, error) {
 			fmt.Fprintln(os.Stdout, strings.TrimRight(translate(input, cnv), "\n"))
 		}
 	}
-	return ExitSuccess, nil
+	return mb.ExitSuccess, nil
 }
 
 func delete(s string, del string) string {
@@ -183,7 +177,7 @@ func parseArgs(opts *options) ([]string, error) {
 
 	if opts.Version {
 		mb.ShowVersion(cmdName, version)
-		osExit(ExitSuccess)
+		osExit(mb.ExitSuccess)
 	}
 
 	if mb.HasPipeData() {

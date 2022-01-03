@@ -34,18 +34,12 @@ type options struct {
 	Version bool `short:"v" long:"version" description:"Show whoami command version"`
 }
 
-// Exit code
-const (
-	ExitSuccess int = iota // 0
-	ExitFailure
-)
-
 func Run() (int, error) {
 	var opts options
 	var err error
 
 	if _, err = parseArgs(&opts); err != nil {
-		return ExitSuccess, nil
+		return mb.ExitSuccess, nil
 	}
 	return whoami()
 }
@@ -53,10 +47,10 @@ func Run() (int, error) {
 func whoami() (int, error) {
 	user, err := user.Current()
 	if err != nil {
-		return ExitFailure, err
+		return mb.ExitFailure, err
 	}
 	fmt.Fprintln(os.Stdout, user.Username)
-	return ExitSuccess, nil
+	return mb.ExitSuccess, nil
 }
 
 func parseArgs(opts *options) ([]string, error) {
@@ -69,7 +63,7 @@ func parseArgs(opts *options) ([]string, error) {
 
 	if opts.Version {
 		mb.ShowVersion(cmdName, version)
-		osExit(ExitSuccess)
+		osExit(mb.ExitSuccess)
 	}
 
 	return args, nil

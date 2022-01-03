@@ -38,12 +38,6 @@ type options struct {
 	Version bool `short:"v" long:"version" description:"Show sl command version"`
 }
 
-// Exit code
-const (
-	ExitSuccess int = iota // 0
-	ExitFailure
-)
-
 var slAA = [][][]string{
 	{
 		{
@@ -118,7 +112,7 @@ func Run() (int, error) {
 
 	_, err := parseArgs(&opts)
 	if err != nil {
-		return ExitFailure, nil
+		return mb.ExitFailure, nil
 	}
 	return sl()
 }
@@ -126,11 +120,11 @@ func Run() (int, error) {
 func sl() (int, error) {
 	width, _, err := term.GetSize(0)
 	if err != nil {
-		return ExitFailure, err
+		return mb.ExitFailure, err
 	}
 
 	if width < 80 {
-		return ExitFailure, errors.New("terminal width is too small")
+		return mb.ExitFailure, errors.New("terminal width is too small")
 	}
 	for _, ll := range slAA {
 		for _, l := range ll {
@@ -158,7 +152,7 @@ func sl() (int, error) {
 			break
 		}
 	}
-	return ExitSuccess, nil
+	return mb.ExitSuccess, nil
 }
 
 func parseArgs(opts *options) ([]string, error) {
@@ -171,7 +165,7 @@ func parseArgs(opts *options) ([]string, error) {
 
 	if opts.Version {
 		mb.ShowVersion(cmdName, version)
-		osExit(ExitSuccess)
+		osExit(mb.ExitSuccess)
 	}
 
 	return args, nil

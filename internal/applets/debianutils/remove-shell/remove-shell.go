@@ -34,19 +34,13 @@ type options struct {
 	Version bool `short:"v" long:"version" description:"Show remove-shell command version"`
 }
 
-// Exit code
-const (
-	ExitSuccess int = iota // 0
-	ExitFailure
-)
-
 func Run() (int, error) {
 	var opts options
 	var args []string
 	var err error
 
 	if args, err = parseArgs(&opts); err != nil {
-		return ExitFailure, nil
+		return mb.ExitFailure, nil
 	}
 	return removeShell(args)
 }
@@ -54,13 +48,13 @@ func Run() (int, error) {
 func removeShell(args []string) (int, error) {
 	f, err := os.OpenFile(mb.TmpShellsFile(), os.O_CREATE|os.O_WRONLY, 0644)
 	if err != nil {
-		return ExitFailure, err
+		return mb.ExitFailure, err
 	}
 	defer f.Close()
 
 	lines, err := mb.ReadFileToStrList(mb.ShellsFilePath)
 	if err != nil {
-		return ExitFailure, err
+		return mb.ExitFailure, err
 	}
 
 	lines = mb.ChopAll(lines)
@@ -74,11 +68,11 @@ func removeShell(args []string) (int, error) {
 	err = mb.Copy(mb.TmpShellsFile(), mb.ShellsFilePath)
 	if err != nil {
 		mb.RemoveFile(mb.TmpShellsFile(), false)
-		return ExitFailure, err
+		return mb.ExitFailure, err
 	}
 
 	mb.RemoveFile(mb.TmpShellsFile(), false)
-	return ExitSuccess, nil
+	return mb.ExitSuccess, nil
 }
 
 func parseArgs(opts *options) ([]string, error) {
@@ -91,12 +85,12 @@ func parseArgs(opts *options) ([]string, error) {
 
 	if opts.Version {
 		mb.ShowVersion(cmdName, version)
-		osExit(ExitSuccess)
+		osExit(mb.ExitSuccess)
 	}
 
 	if !isValidArgNr(args) {
 		fmt.Fprintln(os.Stderr, cmdName+": shellname [shellname ...]")
-		osExit(ExitFailure)
+		osExit(mb.ExitFailure)
 	}
 	return args, nil
 }
