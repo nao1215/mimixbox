@@ -3,6 +3,9 @@ All notable changes to this project will be documented in this file. The format 
 ## [0.33.0] - 2021-12-20
 ### Added
  - lifegame command.
+### Changed
+ - id command.
+   - Enabled to get the execution user ID with the -u option(#82).
 ## [0.32.1] - 2021-12-19
 ### Added
  - gzip command.
