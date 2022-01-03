@@ -51,7 +51,8 @@ func Run() (int, error) {
 	var err error
 
 	if _, err = parseArgs(&opts); err != nil {
-		return ExitSuccess, nil
+		fmt.Fprintln(os.Stderr, err)
+		return ExitFailuer, nil
 	}
 	return id(opts)
 }
@@ -67,20 +68,36 @@ func id(opts options) (int, error) {
 		return ExitFailure, err
 	}
 
-	if opts.Group {
+	switch {
+	case opts.Group:
 		return dumpGid(*user, opts.Name)
-	}
-
-	if opts.AllGroup {
+	case opts.AllGroup:
 		mb.DumpGroups(groups, opts.Name)
 		return ExitSuccess, nil
+	case opts.User:
+		return dumpUid(*user, opts.Name)
+	default:
+		if err := dumpAllId(*user, groups); err != nil {
+			return ExitFailuer, err
+		}
 	}
 
-	err = dumpAllId(*user, groups)
+	return ExitSuccess, nil
+}
+
+func dumpUid(u user.User, showName bool) (int, error) {
+	var err error
+
+	if showName {
+		_, err = fmt.Fprintln(os.Stdout, u.Username)
+	} else {
+		_, err = fmt.Fprintln(os.Stdout, u.Uid)
+	}
+
 	if err != nil {
 		return ExitFailure, err
 	}
-	return ExitSuccess, nil
+	return ExitSuccess, err
 }
 
 func dumpGid(u user.User, showName bool) (int, error) {
