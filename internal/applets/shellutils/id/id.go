@@ -52,7 +52,7 @@ func Run() (int, error) {
 
 	if _, err = parseArgs(&opts); err != nil {
 		fmt.Fprintln(os.Stderr, err)
-		return ExitFailuer, nil
+		return ExitFailure, nil
 	}
 	return id(opts)
 }
@@ -78,7 +78,7 @@ func id(opts options) (int, error) {
 		return dumpUid(*user, opts.Name)
 	default:
 		if err := dumpAllId(*user, groups); err != nil {
-			return ExitFailuer, err
+			return ExitFailure, err
 		}
 	}
 
