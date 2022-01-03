@@ -86,7 +86,7 @@ const version = "1.0.4"
 // Exit code
 const (
 	ExitSuccess int = iota // 0
-	ExitFailuer
+	ExitFailure
 )
 
 type options struct {
@@ -105,12 +105,12 @@ func Run() (int, error) {
 
 	if !isValidExt(inputFileName) {
 		err := errors.New("fakemovie command only support jpg or png")
-		return ExitFailuer, err
+		return ExitFailure, err
 	}
 
 	img, err := openImage(inputFileName)
 	if err != nil {
-		return ExitFailuer, err
+		return ExitFailure, err
 	}
 
 	if radius <= 0 {
@@ -128,7 +128,7 @@ func Run() (int, error) {
 	}
 	err = writeImage(img, outputFileName)
 	if err != nil {
-		return ExitFailuer, err
+		return ExitFailure, err
 	}
 
 	return ExitSuccess, nil
@@ -255,7 +255,7 @@ func parseArgs(opts *options) []string {
 
 	args, err := p.Parse()
 	if err != nil {
-		osExit(ExitFailuer)
+		osExit(ExitFailure)
 	}
 
 	if opts.Version {
@@ -265,7 +265,7 @@ func parseArgs(opts *options) []string {
 
 	if !isValidArgNr(args) {
 		showHelp(p)
-		osExit(ExitFailuer)
+		osExit(ExitFailure)
 	}
 	return args
 }

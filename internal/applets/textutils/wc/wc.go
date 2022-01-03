@@ -52,7 +52,7 @@ type wordCount struct {
 // Exit code
 const (
 	ExitSuccess int = iota // 0
-	ExitFailuer
+	ExitFailure
 )
 
 func Run() (int, error) {
@@ -61,7 +61,7 @@ func Run() (int, error) {
 	var err error
 
 	if args, err = parseArgs(&opts); err != nil {
-		return ExitFailuer, nil
+		return ExitFailure, nil
 	}
 
 	if mb.HasPipeData() && mb.HasNoOperand(os.Args, cmdName) {
@@ -105,13 +105,13 @@ func wcAll(args []string, opts options) (int, error) {
 
 		if mb.IsDir(target) {
 			fmt.Fprintln(os.Stderr, "wc: "+target+": this path is directory")
-			status = ExitFailuer
+			status = ExitFailure
 			results = append(results, wordCount{0, 0, 0, 0, target})
 			continue
 		}
 		if !mb.IsFile(target) {
 			fmt.Fprintln(os.Stderr, "wc: "+target+": no such File")
-			status = ExitFailuer
+			status = ExitFailure
 			results = append(results, wordCount{0, 0, 0, 0, target})
 			continue
 		}
@@ -119,7 +119,7 @@ func wcAll(args []string, opts options) (int, error) {
 		lines, err := mb.ReadFileToStrList(target)
 		if err != nil {
 			fmt.Fprintln(os.Stderr, "wc: "+target+": can't read file")
-			status = ExitFailuer
+			status = ExitFailure
 			results = append(results, wordCount{0, 0, 0, 0, target})
 			continue
 		}

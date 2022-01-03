@@ -44,7 +44,7 @@ type seqInfo struct {
 // Exit code
 const (
 	ExitSuccess int = iota // 0
-	ExitFailuer
+	ExitFailure
 )
 
 // Not support arguments containing float numbers
@@ -56,7 +56,7 @@ func Run() (int, error) {
 func seq(args []string) (int, error) {
 	si, err := parseSeqInfo(args)
 	if err != nil {
-		return ExitFailuer, err
+		return ExitFailure, err
 	}
 
 	for i := si.first.num; i <= si.last.num; i = increment(i, si.increment) {

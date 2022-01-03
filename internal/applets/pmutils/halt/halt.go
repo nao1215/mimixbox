@@ -36,7 +36,7 @@ var osExit = os.Exit
 // Exit code
 const (
 	ExitSuccess int = iota // 0
-	ExitFailuer
+	ExitFailure
 )
 
 type haltOpts struct {
@@ -64,7 +64,7 @@ func Run() (int, error) {
 
 	setCmdName(os.Args[0])
 	if args, err = parseArgs(&allOpts); err != nil {
-		return ExitFailuer, nil
+		return ExitFailure, nil
 	}
 
 	switch cmdName {
@@ -75,7 +75,7 @@ func Run() (int, error) {
 	case "reboot":
 		return reboot(args, allOpts.reboot)
 	}
-	return ExitFailuer, errors.New("mimixbox failed to parse the argument (not halt, poweroff, reboot error)")
+	return ExitFailure, errors.New("mimixbox failed to parse the argument (not halt, poweroff, reboot error)")
 }
 
 func halt(args []string, opts haltOpts) (int, error) {
@@ -83,21 +83,21 @@ func halt(args []string, opts haltOpts) (int, error) {
 
 	recordWtmp()
 	if err := powerOffSystem(); err != nil {
-		return ExitFailuer, err
+		return ExitFailure, err
 	}
 	return ExitSuccess, nil
 }
 
 func poweroff(args []string, opts poweroffOpts) (int, error) {
 	if err := powerOffSystem(); err != nil {
-		return ExitFailuer, err
+		return ExitFailure, err
 	}
 	return ExitSuccess, nil
 }
 
 func reboot(args []string, opts rebootOpts) (int, error) {
 	if err := rebootSystem(); err != nil {
-		return ExitFailuer, err
+		return ExitFailure, err
 	}
 	return ExitSuccess, nil
 }

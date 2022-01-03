@@ -38,7 +38,7 @@ type options struct {
 // Exit code
 const (
 	ExitSuccess int = iota // 0
-	ExitFailuer
+	ExitFailure
 )
 
 func Run() (int, error) {
@@ -46,7 +46,7 @@ func Run() (int, error) {
 	var err error
 
 	if _, err = parseArgs(&opts); err != nil {
-		return ExitFailuer, nil
+		return ExitFailure, nil
 	}
 	return uuidgen()
 }
@@ -88,14 +88,14 @@ func initParser(opts *options) *flags.Parser {
 func uuidgen() (int, error) {
 	fp, err := os.Open("/proc/sys/kernel/random/uuid")
 	if err != nil {
-		return ExitFailuer, err
+		return ExitFailure, err
 	}
 	defer fp.Close()
 
 	reader := bufio.NewReaderSize(fp, 38) // UUID's format sample: 333f899e-5dbf-41ec-8c42-e3b3ddbe2e68
 	line, _, err := reader.ReadLine()
 	if err != nil {
-		return ExitFailuer, err
+		return ExitFailure, err
 	}
 
 	fmt.Fprintln(os.Stdout, string(line))

@@ -35,7 +35,7 @@ var osExit = os.Exit
 // Exit code
 const (
 	ExitSuccess int = iota // 0
-	ExitFailuer
+	ExitFailure
 )
 
 type options struct {
@@ -49,14 +49,14 @@ func Run() (int, error) {
 	var err error
 
 	if args, err = parseArgs(&opts); err != nil {
-		return ExitFailuer, nil
+		return ExitFailure, nil
 	}
 
 	status := ExitSuccess
 	for _, file := range args {
 		if err = touch(file, opts); err != nil {
 			fmt.Fprintln(os.Stderr, "touch: "+err.Error())
-			status = ExitFailuer
+			status = ExitFailure
 			continue
 		}
 	}
@@ -99,7 +99,7 @@ func parseArgs(opts *options) ([]string, error) {
 
 	if !isValidArgNr(args) {
 		showHelp(p)
-		osExit(ExitFailuer)
+		osExit(ExitFailure)
 	}
 	return args, nil
 }

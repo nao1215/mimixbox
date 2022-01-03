@@ -38,7 +38,7 @@ type options struct {
 // Exit code
 const (
 	ExitSuccess int = iota // 0
-	ExitFailuer
+	ExitFailure
 )
 
 func Run() (int, error) {
@@ -69,13 +69,13 @@ func unexpand(args []string, opts options) (int, error) {
 		target := os.ExpandEnv(file)
 		if !mb.IsFile(target) {
 			fmt.Fprintln(os.Stderr, target+": No such file. Skip it")
-			status = ExitFailuer
+			status = ExitFailure
 			continue
 		}
 		lines, err := mb.ReadFileToStrList(target)
 		if err != nil {
 			fmt.Fprintln(os.Stderr, err)
-			status = ExitFailuer
+			status = ExitFailure
 			continue
 		}
 

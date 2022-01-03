@@ -37,7 +37,7 @@ var osExit = os.Exit
 // Exit code
 const (
 	ExitSuccess int = iota // 0
-	ExitFailuer
+	ExitFailure
 )
 
 type idInfo struct {
@@ -56,7 +56,7 @@ func Run() (int, error) {
 	var err error
 
 	if args, err = parseArgs(&opts); err != nil {
-		return ExitFailuer, nil
+		return ExitFailure, nil
 	}
 
 	return chown(ids(args[0]), args[1:], opts)
@@ -78,14 +78,14 @@ func ids(ids string) idInfo {
 func chown(ids idInfo, files []string, opts options) (int, error) {
 	owner, err := mb.LookupUid(ids.owner)
 	if err != nil {
-		return ExitFailuer, err
+		return ExitFailure, err
 	}
 
 	var gid int = -1
 	if ids.group != "" {
 		gid, err = mb.LookupGid(ids.group)
 		if err != nil {
-			return ExitFailuer, err
+			return ExitFailure, err
 		}
 	}
 
@@ -96,7 +96,7 @@ func chown(ids idInfo, files []string, opts options) (int, error) {
 		if ids.group == "" {
 			var st syscall.Stat_t
 			if err := syscall.Stat(path, &st); err != nil {
-				status = ExitFailuer
+				status = ExitFailure
 				fmt.Fprintln(os.Stderr, cmdName+": "+path+": "+err.Error())
 				continue
 			}
@@ -105,13 +105,13 @@ func chown(ids idInfo, files []string, opts options) (int, error) {
 
 		if opts.Recursive {
 			if err := changeOwnerRecursive(path, owner, gid); err != nil {
-				status = ExitFailuer
+				status = ExitFailure
 				fmt.Fprintln(os.Stderr, cmdName+": "+path+": "+err.Error())
 				continue
 			}
 		} else {
 			if err := os.Chown(path, owner, gid); err != nil {
-				status = ExitFailuer
+				status = ExitFailure
 				fmt.Fprintln(os.Stderr, cmdName+": "+path+": "+err.Error())
 				continue
 			}
@@ -152,7 +152,7 @@ func parseArgs(opts *options) ([]string, error) {
 		} else if len(args) == 1 {
 			fmt.Fprintln(os.Stderr, cmdName+": no operand after "+args[0])
 		}
-		osExit(ExitFailuer)
+		osExit(ExitFailure)
 	}
 	return args, nil
 }

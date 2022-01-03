@@ -35,7 +35,7 @@ var osExit = os.Exit
 // Exit code
 const (
 	ExitSuccess int = iota // 0
-	ExitFailuer
+	ExitFailure
 )
 
 type duration struct {
@@ -51,7 +51,7 @@ func Run() (int, error) {
 	args = parseArgs(os.Args)
 
 	if waitTime, err = getWaitTime(args); err != nil {
-		return ExitFailuer, err
+		return ExitFailure, err
 	}
 
 	for _, d := range waitTime {

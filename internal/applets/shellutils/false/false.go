@@ -35,7 +35,7 @@ type options struct {
 // Exit code
 const (
 	ExitSuccess int = iota // 0
-	ExitFailuer
+	ExitFailure
 )
 
 func Run() (int, error) {
@@ -43,9 +43,9 @@ func Run() (int, error) {
 	var err error
 
 	if _, err = parseArgs(&opts); err != nil {
-		return ExitFailuer, nil
+		return ExitFailure, nil
 	}
-	return ExitFailuer, nil
+	return ExitFailure, nil
 }
 
 func parseArgs(opts *options) ([]string, error) {

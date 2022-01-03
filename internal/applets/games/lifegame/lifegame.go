@@ -36,7 +36,7 @@ var osExit = os.Exit
 // Exit code
 const (
 	ExitSuccess int = iota // 0
-	ExitFailuer
+	ExitFailure
 )
 
 type options struct {
@@ -70,14 +70,14 @@ func Run() (int, error) {
 	var err error
 
 	if args, err = parseArgs(&opts); err != nil {
-		return ExitFailuer, nil
+		return ExitFailure, nil
 	}
 	return lifegame(args, opts)
 }
 
 func lifegame(args []string, opts options) (int, error) {
 	if err := termbox.Init(); err != nil {
-		return ExitFailuer, err
+		return ExitFailure, err
 	}
 	defer termbox.Close()
 

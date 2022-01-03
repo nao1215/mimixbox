@@ -34,7 +34,7 @@ var osExit = os.Exit
 // Exit code
 const (
 	ExitSuccess int = iota // 0
-	ExitFailuer
+	ExitFailure
 )
 
 var ErrNoOperand = errors.New("no operand")
@@ -51,9 +51,9 @@ func Run() (int, error) {
 
 	if args, err = parseArgs(&opts); err != nil {
 		if err == ErrNoOperand {
-			return ExitFailuer, err
+			return ExitFailure, err
 		}
-		return ExitFailuer, nil
+		return ExitFailure, nil
 	}
 
 	status := ExitSuccess
@@ -66,7 +66,7 @@ func Run() (int, error) {
 		}
 
 		if err != nil {
-			status = ExitFailuer
+			status = ExitFailure
 			fmt.Fprintln(os.Stderr, err.Error())
 		}
 	}

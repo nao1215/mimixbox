@@ -36,7 +36,7 @@ var osExit = os.Exit
 // Exit code
 const (
 	ExitSuccess int = iota // 0
-	ExitFailuer
+	ExitFailure
 )
 
 type groupInfo struct {
@@ -55,7 +55,7 @@ func Run() (int, error) {
 	var err error
 
 	if args, err = parseArgs(&opts); err != nil {
-		return ExitFailuer, nil
+		return ExitFailure, nil
 	}
 
 	groupInfo := groupInfo{args[0], args[1:]}
@@ -65,7 +65,7 @@ func Run() (int, error) {
 func chgrp(gInfo groupInfo, opts options) (int, error) {
 	gid, err := mb.LookupGid(gInfo.group)
 	if err != nil {
-		return ExitFailuer, err
+		return ExitFailure, err
 	}
 
 	status := ExitSuccess
@@ -73,13 +73,13 @@ func chgrp(gInfo groupInfo, opts options) (int, error) {
 		path = os.ExpandEnv(path)
 		if opts.Recursive {
 			if err := changeGroupRecursive(path, gid); err != nil {
-				status = ExitFailuer
+				status = ExitFailure
 				fmt.Fprintln(os.Stderr, cmdName+": "+path+": "+err.Error())
 				continue
 			}
 		} else {
 			if err := changeGroup(path, gid); err != nil {
-				status = ExitFailuer
+				status = ExitFailure
 				fmt.Fprintln(os.Stderr, cmdName+": "+path+": "+err.Error())
 				continue
 			}
@@ -129,7 +129,7 @@ func parseArgs(opts *options) ([]string, error) {
 		} else if len(args) == 1 {
 			fmt.Fprintln(os.Stderr, cmdName+": no operand after "+args[0])
 		}
-		osExit(ExitFailuer)
+		osExit(ExitFailure)
 	}
 	return args, nil
 }

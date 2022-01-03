@@ -39,7 +39,7 @@ var osExit = os.Exit
 // Exit code
 const (
 	ExitSuccess int = iota // 0
-	ExitFailuer
+	ExitFailure
 )
 
 type options struct {
@@ -56,17 +56,17 @@ func Run() (int, error) {
 	var resultByte []byte
 
 	if args, err = parseArgs(&opts); err != nil {
-		return ExitFailuer, nil
+		return ExitFailure, nil
 	}
 
 	input, err := inputByte(args)
 	if err != nil {
-		return ExitFailuer, err
+		return ExitFailure, err
 	}
 	if opts.Decode {
 		resultByte, err = base64.StdEncoding.DecodeString(string(input))
 		if err != nil {
-			return ExitFailuer, err
+			return ExitFailure, err
 		}
 		fmt.Fprintln(os.Stdout, mb.WrapString(string(resultByte), opts.Wrap))
 	} else {
@@ -133,7 +133,7 @@ func parseArgs(opts *options) ([]string, error) {
 
 	if !isValidArgNr(args) {
 		showHelp(p)
-		osExit(ExitFailuer)
+		osExit(ExitFailure)
 	}
 
 	if opts.Wrap < 0 {

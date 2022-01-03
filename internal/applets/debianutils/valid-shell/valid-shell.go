@@ -41,7 +41,7 @@ type options struct {
 // Exit code
 const (
 	ExitSuccess int = iota // 0
-	ExitFailuer
+	ExitFailure
 )
 
 func Run() (int, error) {
@@ -49,7 +49,7 @@ func Run() (int, error) {
 	var err error
 
 	if _, err = parseArgs(&opts); err != nil {
-		return ExitFailuer, nil
+		return ExitFailure, nil
 	}
 
 	return validShell(opts)
@@ -67,7 +67,7 @@ func validShell(opts options) (int, error) {
 func printShellsFile() (int, error) {
 	lines, err := mb.ReadFileToStrList(mb.ShellsFilePath)
 	if err != nil {
-		return ExitFailuer, err
+		return ExitFailure, err
 	}
 	for _, v := range lines {
 		fmt.Fprintf(os.Stdout, "%s", v)
@@ -78,13 +78,13 @@ func printShellsFile() (int, error) {
 func fix() (int, error) {
 	f, err := os.OpenFile(mb.TmpShellsFile(), os.O_CREATE|os.O_WRONLY, 0644)
 	if err != nil {
-		return ExitFailuer, err
+		return ExitFailure, err
 	}
 	defer f.Close()
 
 	lines, err := mb.ReadFileToStrList(mb.ShellsFilePath)
 	if err != nil {
-		return ExitFailuer, err
+		return ExitFailure, err
 	}
 
 	lines = mb.ChopAll(lines)
@@ -104,7 +104,7 @@ func fix() (int, error) {
 	err = mb.Copy(mb.TmpShellsFile(), mb.ShellsFilePath)
 	if err != nil {
 		mb.RemoveFile(mb.TmpShellsFile(), false)
-		return ExitFailuer, err
+		return ExitFailure, err
 	}
 	mb.RemoveFile(mb.TmpShellsFile(), false)
 
@@ -114,7 +114,7 @@ func fix() (int, error) {
 func valid() (int, error) {
 	lines, err := mb.ReadFileToStrList(mb.ShellsFilePath)
 	if err != nil {
-		return ExitFailuer, err
+		return ExitFailure, err
 	}
 
 	lines = mb.ChopAll(lines)

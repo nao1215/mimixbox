@@ -39,7 +39,7 @@ const version = "1.0.2"
 // Exit code
 const (
 	ExitSuccess int = iota // 0
-	ExitFailuer
+	ExitFailure
 )
 
 type options struct {
@@ -59,13 +59,13 @@ func Run() (int, error) {
 
 	if !mb.Exists(dirPath) {
 		err := fmt.Errorf("%s doesn't exist.", dirPath)
-		return ExitFailuer, err
+		return ExitFailure, err
 	}
 
 	var files = getFilePathsInDir(dirPath)
 	if len(files) == 0 {
 		err := fmt.Errorf("No files in %s directory.", dirPath)
-		return ExitFailuer, err
+		return ExitFailure, err
 	}
 
 	newFileNames := newNames(opts, files)
@@ -127,13 +127,13 @@ func copy(newFileNames map[string]string, dryRun bool) {
 		if mb.Exists(dest) {
 			if err := os.Remove(dest); err != nil {
 				fmt.Fprintf(os.Stderr, "Can't copy %s to %s\n", org, dest)
-				osExit(ExitFailuer)
+				osExit(ExitFailure)
 			}
 		}
 
 		if err := os.Link(org, dest); err != nil {
 			fmt.Fprintf(os.Stderr, "Can't copy %s to %s\n", org, dest)
-			osExit(ExitFailuer)
+			osExit(ExitFailure)
 		}
 	}
 }
@@ -143,7 +143,7 @@ func parseArgs(opts *options) []string {
 
 	args, err := p.Parse()
 	if err != nil {
-		osExit(ExitFailuer)
+		osExit(ExitFailure)
 	}
 
 	if opts.Version {
@@ -153,12 +153,12 @@ func parseArgs(opts *options) []string {
 
 	if len(opts.Name) != 0 && !existFilenameInPath(opts.Name) {
 		showHelp(p)
-		osExit(ExitFailuer)
+		osExit(ExitFailure)
 	}
 
 	if !isValidArgNr(args) {
 		showHelp(p)
-		osExit(ExitFailuer)
+		osExit(ExitFailure)
 	}
 
 	return args
@@ -191,7 +191,7 @@ func getFilePathsInDir(dir string) []string {
 	files, err := ioutil.ReadDir(dir)
 	if err != nil {
 		fmt.Fprintf(os.Stderr, "Can't get file list.")
-		osExit(ExitFailuer)
+		osExit(ExitFailure)
 	}
 
 	var path string
@@ -260,7 +260,7 @@ func dieIfExistSameNameFile(force bool, fileNames map[string]string) {
 			fmt.Fprintf(os.Stderr, "%s (file name which is after renaming) is already exists.\n", file)
 			fmt.Fprintf(os.Stderr, "Renaming may erase the contents of the file. ")
 			fmt.Fprintf(os.Stderr, "So, nothing to do.\n")
-			osExit(ExitFailuer)
+			osExit(ExitFailure)
 		}
 	}
 }
@@ -274,6 +274,6 @@ func makeDirIfNeeded(filePath string) {
 
 	if err := os.MkdirAll(dirPath, 0755); err != nil {
 		fmt.Fprintf(os.Stderr, "Can't make %s directory\n", dirPath)
-		osExit(ExitFailuer)
+		osExit(ExitFailure)
 	}
 }

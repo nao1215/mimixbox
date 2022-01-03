@@ -35,7 +35,7 @@ var osExit = os.Exit
 // Exit code
 const (
 	ExitSuccess int = iota // 0
-	ExitFailuer
+	ExitFailure
 )
 
 type options struct {
@@ -49,18 +49,18 @@ func Run() (int, error) {
 	status := ExitSuccess
 
 	if args, err = parseArgs(&opts); err != nil {
-		return ExitFailuer, nil
+		return ExitFailure, nil
 	}
 
 	for _, path := range args {
 		p := os.ExpandEnv(path)
 		if mb.Exists(p) {
-			status = ExitFailuer
+			status = ExitFailure
 			fmt.Fprintln(os.Stderr, cmdName+": can't make "+p+": already exist")
 			continue
 		}
 		if err := syscall.Mkfifo(p, 0644); err != nil {
-			status = ExitFailuer
+			status = ExitFailure
 			fmt.Fprintln(os.Stderr, cmdName+": "+p+": "+err.Error())
 			continue
 		}
@@ -83,7 +83,7 @@ func parseArgs(opts *options) ([]string, error) {
 
 	if !isValidArgNr(args) {
 		showHelp(p)
-		osExit(ExitFailuer)
+		osExit(ExitFailure)
 	}
 	return args, nil
 }

@@ -40,14 +40,14 @@ const cow = `   \
 // Exit code
 const (
 	ExitSuccess int = iota // 0
-	ExitFailuer
+	ExitFailure
 )
 
 func Run() (int, error) {
 	var messages string
 	args, err := parseArgs(os.Args)
 	if err != nil {
-		return ExitFailuer, nil
+		return ExitFailure, nil
 	}
 
 	if mb.HasPipeData() {

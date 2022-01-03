@@ -37,7 +37,7 @@ type options struct {
 // Exit code
 const (
 	ExitSuccess int = iota // 0
-	ExitFailuer
+	ExitFailure
 )
 
 func Run() (int, error) {
@@ -46,7 +46,7 @@ func Run() (int, error) {
 	var err error
 
 	if args, err = parseArgs(&opts); err != nil {
-		return ExitFailuer, nil
+		return ExitFailure, nil
 	}
 	return removeShell(args)
 }
@@ -54,13 +54,13 @@ func Run() (int, error) {
 func removeShell(args []string) (int, error) {
 	f, err := os.OpenFile(mb.TmpShellsFile(), os.O_CREATE|os.O_WRONLY, 0644)
 	if err != nil {
-		return ExitFailuer, err
+		return ExitFailure, err
 	}
 	defer f.Close()
 
 	lines, err := mb.ReadFileToStrList(mb.ShellsFilePath)
 	if err != nil {
-		return ExitFailuer, err
+		return ExitFailure, err
 	}
 
 	lines = mb.ChopAll(lines)
@@ -74,7 +74,7 @@ func removeShell(args []string) (int, error) {
 	err = mb.Copy(mb.TmpShellsFile(), mb.ShellsFilePath)
 	if err != nil {
 		mb.RemoveFile(mb.TmpShellsFile(), false)
-		return ExitFailuer, err
+		return ExitFailure, err
 	}
 
 	mb.RemoveFile(mb.TmpShellsFile(), false)
@@ -96,7 +96,7 @@ func parseArgs(opts *options) ([]string, error) {
 
 	if !isValidArgNr(args) {
 		fmt.Fprintln(os.Stderr, cmdName+": shellname [shellname ...]")
-		osExit(ExitFailuer)
+		osExit(ExitFailure)
 	}
 	return args, nil
 }

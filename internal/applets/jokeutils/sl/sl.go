@@ -41,7 +41,7 @@ type options struct {
 // Exit code
 const (
 	ExitSuccess int = iota // 0
-	ExitFailuer
+	ExitFailure
 )
 
 var slAA = [][][]string{
@@ -118,7 +118,7 @@ func Run() (int, error) {
 
 	_, err := parseArgs(&opts)
 	if err != nil {
-		return ExitFailuer, nil
+		return ExitFailure, nil
 	}
 	return sl()
 }
@@ -126,11 +126,11 @@ func Run() (int, error) {
 func sl() (int, error) {
 	width, _, err := term.GetSize(0)
 	if err != nil {
-		return ExitFailuer, err
+		return ExitFailure, err
 	}
 
 	if width < 80 {
-		return ExitFailuer, errors.New("terminal width is too small")
+		return ExitFailure, errors.New("terminal width is too small")
 	}
 	for _, ll := range slAA {
 		for _, l := range ll {

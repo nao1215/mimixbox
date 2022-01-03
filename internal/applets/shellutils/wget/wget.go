@@ -42,7 +42,7 @@ type options struct {
 // Exit code
 const (
 	ExitSuccess int = iota // 0
-	ExitFailuer
+	ExitFailure
 )
 
 func Run() (int, error) {
@@ -51,7 +51,7 @@ func Run() (int, error) {
 	var err error
 
 	if args, err = parseArgs(&opts); err != nil {
-		return ExitFailuer, nil
+		return ExitFailure, nil
 	}
 	return wget(args)
 }
@@ -62,7 +62,7 @@ func wget(args []string) (int, error) {
 		target, err := openTargetFile(v)
 		if err != nil {
 			fmt.Fprintln(os.Stderr, cmdName+": "+err.Error()+": v")
-			status = ExitFailuer
+			status = ExitFailure
 			continue
 		}
 		defer target.Close()
@@ -71,7 +71,7 @@ func wget(args []string) (int, error) {
 		response, err := client.Get(v)
 		if err != nil {
 			fmt.Fprintln(os.Stderr, cmdName+": "+err.Error()+": v")
-			status = ExitFailuer
+			status = ExitFailure
 			continue
 		}
 		defer response.Body.Close()
@@ -79,7 +79,7 @@ func wget(args []string) (int, error) {
 		_, err = io.Copy(target, response.Body)
 		if err != nil {
 			fmt.Fprintln(os.Stderr, cmdName+": "+err.Error()+": v")
-			status = ExitFailuer
+			status = ExitFailure
 			continue
 		}
 	}
@@ -137,7 +137,7 @@ func parseArgs(opts *options) ([]string, error) {
 
 	if !isValidArgNr(args) {
 		fmt.Fprintln(os.Stderr, "wget: missing URL")
-		osExit(ExitFailuer)
+		osExit(ExitFailure)
 	}
 
 	return args, nil

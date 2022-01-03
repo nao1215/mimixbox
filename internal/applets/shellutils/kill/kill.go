@@ -34,7 +34,7 @@ var osExit = os.Exit
 // Exit code
 const (
 	ExitSuccess int = iota // 0
-	ExitFailuer
+	ExitFailure
 )
 
 type options struct {
@@ -70,14 +70,14 @@ func kill(process []string, opts options) (int, error) {
 		pid, err := strconv.Atoi(v)
 		if err != nil {
 			fmt.Fprintln(os.Stderr, "kill: "+err.Error()+": "+v)
-			status = ExitFailuer
+			status = ExitFailure
 			continue
 		}
 
 		p, err := os.FindProcess(pid)
 		if err != nil {
 			fmt.Fprintln(os.Stderr, "kill: "+err.Error()+": "+v)
-			status = ExitFailuer
+			status = ExitFailure
 			continue
 		}
 
@@ -85,7 +85,7 @@ func kill(process []string, opts options) (int, error) {
 		err = p.Signal(syscall.Signal(signal))
 		if err != nil {
 			fmt.Fprintln(os.Stderr, "kill: "+err.Error())
-			status = ExitFailuer
+			status = ExitFailure
 			continue
 		}
 	}
@@ -116,21 +116,21 @@ func decideSignal(opts options) int32 {
 func valid(process []string, opts options) {
 	if len(process) == 0 && !opts.listFlg {
 		showHelp()
-		osExit(ExitFailuer)
+		osExit(ExitFailure)
 	}
 	if opts.nameFlg && !mb.IsSignalName(opts.signalName) {
 		fmt.Fprintln(os.Stderr, "kill: -s: invalid signal specification:"+opts.signalName)
-		osExit(ExitFailuer)
+		osExit(ExitFailure)
 	}
 	if opts.numberFlg && !mb.IsSignalName(opts.signalNumber) {
 		fmt.Fprintln(os.Stderr, "kill: -n: invalid signal specification:"+opts.signalNumber)
-		osExit(ExitFailuer)
+		osExit(ExitFailure)
 	}
 
 	trim := strings.TrimLeft(opts.direct, "-")
 	if opts.directFlg && !mb.IsSignalName(trim) && !mb.IsSignalNumber(trim) {
 		fmt.Fprintln(os.Stderr, "kill: "+opts.direct+": invalid signal specification")
-		osExit(ExitFailuer)
+		osExit(ExitFailure)
 	}
 }
 
@@ -154,7 +154,7 @@ func parseArgs(args []string) ([]string, options) {
 				opts.signalName = args[i+1]
 			} else {
 				fmt.Fprintln(os.Stderr, "kill: -s: option requires an argument")
-				osExit(ExitFailuer)
+				osExit(ExitFailure)
 			}
 			continue
 		} else if v == "-n" {
@@ -163,7 +163,7 @@ func parseArgs(args []string) ([]string, options) {
 				opts.signalNumber = args[i+1]
 			} else {
 				fmt.Fprintln(os.Stderr, "kill: -n: option requires an argument")
-				osExit(ExitFailuer)
+				osExit(ExitFailure)
 			}
 			continue
 		} else if v == "-l" {

@@ -37,7 +37,7 @@ type options struct {
 // Exit code
 const (
 	ExitSuccess int = iota // 0
-	ExitFailuer
+	ExitFailure
 )
 
 func Run() (int, error) {
@@ -53,7 +53,7 @@ func Run() (int, error) {
 func whoami() (int, error) {
 	user, err := user.Current()
 	if err != nil {
-		return ExitFailuer, err
+		return ExitFailure, err
 	}
 	fmt.Fprintln(os.Stdout, user.Username)
 	return ExitSuccess, nil

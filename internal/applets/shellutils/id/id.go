@@ -43,7 +43,7 @@ type options struct {
 // Exit code
 const (
 	ExitSuccess int = iota // 0
-	ExitFailuer
+	ExitFailure
 )
 
 func Run() (int, error) {
@@ -59,12 +59,12 @@ func Run() (int, error) {
 func id(opts options) (int, error) {
 	user, err := user.Current()
 	if err != nil {
-		return ExitFailuer, err
+		return ExitFailure, err
 	}
 
 	groups, err := mb.Groups(user.Username)
 	if err != nil {
-		return ExitFailuer, err
+		return ExitFailure, err
 	}
 
 	if opts.Group {
@@ -78,7 +78,7 @@ func id(opts options) (int, error) {
 
 	err = dumpAllId(*user, groups)
 	if err != nil {
-		return ExitFailuer, err
+		return ExitFailure, err
 	}
 	return ExitSuccess, nil
 }
@@ -87,7 +87,7 @@ func dumpGid(u user.User, showName bool) (int, error) {
 	if showName {
 		g, err := user.LookupGroup(u.Username)
 		if err != nil {
-			return ExitFailuer, err
+			return ExitFailure, err
 		}
 		fmt.Fprintln(os.Stdout, g.Name)
 	} else {

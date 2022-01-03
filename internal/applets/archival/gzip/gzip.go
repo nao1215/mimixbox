@@ -38,7 +38,7 @@ var osExit = os.Exit
 // Exit code
 const (
 	ExitSuccess int = iota // 0
-	ExitFailuer
+	ExitFailure
 )
 
 type options struct {
@@ -53,7 +53,7 @@ func Run() (int, error) {
 	var args []string
 
 	if args, err = parseArgs(&opts); err != nil {
-		return ExitFailuer, nil
+		return ExitFailure, nil
 	}
 	return __gzip(args, opts)
 }
@@ -69,13 +69,13 @@ func __gzip(args []string, opts options) (int, error) {
 
 		if !mb.Exists(path) {
 			fmt.Fprintln(os.Stderr, cmdName+": No such file or directory")
-			status = ExitFailuer
+			status = ExitFailure
 			continue
 		}
 
 		if mb.IsDir(path) {
 			fmt.Fprintln(os.Stderr, cmdName+": "+v+" is a directory -- ignored")
-			status = ExitFailuer
+			status = ExitFailure
 			continue
 		}
 
@@ -83,13 +83,13 @@ func __gzip(args []string, opts options) (int, error) {
 			err := decompress(path, opts)
 			if err != nil {
 				fmt.Fprintln(os.Stderr, cmdName+": "+err.Error())
-				status = ExitFailuer
+				status = ExitFailure
 			}
 		} else {
 			err := compress(path, opts)
 			if err != nil {
 				fmt.Fprintln(os.Stderr, cmdName+": "+err.Error())
-				status = ExitFailuer
+				status = ExitFailure
 			}
 		}
 	}
@@ -194,7 +194,7 @@ func parseArgs(opts *options) ([]string, error) {
 	}
 	if !isValidArgNr(args) {
 		fmt.Fprintln(os.Stderr, cmdName+": compressed data not written to a terminal")
-		osExit(ExitFailuer)
+		osExit(ExitFailure)
 	}
 	return args, nil
 }
