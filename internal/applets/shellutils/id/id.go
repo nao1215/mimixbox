@@ -51,7 +51,8 @@ func Run() (int, error) {
 	var err error
 
 	if _, err = parseArgs(&opts); err != nil {
-		return ExitSuccess, nil
+		fmt.Fprintln(os.Stderr, err)
+		return ExitFailuer, nil
 	}
 	return id(opts)
 }
