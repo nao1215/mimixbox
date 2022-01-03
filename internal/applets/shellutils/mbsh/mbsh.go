@@ -40,7 +40,7 @@ const version = "0.0.2"
 
 const (
 	ExitSuccess int = iota // 0
-	ExitFailuer
+	ExitFailure
 )
 
 type options struct {
@@ -95,7 +95,7 @@ func parseArgs() ([]string, options) {
 
 	args, err := p.Parse()
 	if err != nil {
-		osExit(ExitFailuer)
+		osExit(ExitFailure)
 	}
 
 	if opts.Version {

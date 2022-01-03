@@ -37,7 +37,7 @@ type options struct {
 // Exit code
 const (
 	ExitSuccess int = iota // 0
-	ExitFailuer
+	ExitFailure
 )
 
 func Run() (int, error) {
@@ -46,7 +46,7 @@ func Run() (int, error) {
 	var err error
 
 	if args, err = parseArgs(&opts); err != nil {
-		return ExitFailuer, nil
+		return ExitFailure, nil
 	}
 
 	return addShell(args)
@@ -57,11 +57,11 @@ func addShell(args []string) (int, error) {
 	// add-shell can also write the names of non-existent shells in /etc/shells.
 	err := mb.Copy(mb.ShellsFilePath, mb.TmpShellsFile())
 	if err != nil {
-		return ExitFailuer, err
+		return ExitFailure, err
 	}
 	f, err := os.OpenFile(mb.TmpShellsFile(), os.O_APPEND|os.O_WRONLY, 0644)
 	if err != nil {
-		return ExitFailuer, err
+		return ExitFailure, err
 	}
 	defer f.Close()
 
@@ -72,7 +72,7 @@ func addShell(args []string) (int, error) {
 	err = mb.Copy(mb.TmpShellsFile(), mb.ShellsFilePath)
 	if err != nil {
 		mb.RemoveFile(mb.TmpShellsFile(), false) // Original add-shell does not remove tmp file.
-		return ExitFailuer, err
+		return ExitFailure, err
 	}
 
 	mb.RemoveFile(mb.TmpShellsFile(), false)
@@ -94,7 +94,7 @@ func parseArgs(opts *options) ([]string, error) {
 
 	if !isValidArgNr(args) {
 		fmt.Fprintln(os.Stderr, cmdName+": shellname [shellname ...]")
-		osExit(ExitFailuer)
+		osExit(ExitFailure)
 	}
 	return args, nil
 }

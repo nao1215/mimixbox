@@ -35,7 +35,7 @@ var osExit = os.Exit
 // Exit code
 const (
 	ExitSuccess int = iota // 0
-	ExitFailuer
+	ExitFailure
 )
 
 type options struct {
@@ -50,13 +50,13 @@ func Run() (int, error) {
 	hash := md5.New()
 
 	if args, err = parseArgs(&opts); err != nil {
-		return ExitFailuer, nil
+		return ExitFailure, nil
 	}
 
 	if mb.HasPipeData() && mb.HasNoOperand(os.Args, cmdName) {
 		err = mb.ChecksumOutput(hash, strings.NewReader(args[0]), "-")
 		if err != nil {
-			return ExitFailuer, err
+			return ExitFailure, err
 		}
 		return ExitSuccess, nil
 	}
@@ -72,7 +72,7 @@ func Run() (int, error) {
 	if opts.Check {
 		err = mb.CompareChecksum(hash, args)
 		if err != nil {
-			return ExitFailuer, err
+			return ExitFailure, err
 		}
 		return ExitSuccess, nil
 	}

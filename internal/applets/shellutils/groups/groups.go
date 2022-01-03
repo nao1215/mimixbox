@@ -37,7 +37,7 @@ type options struct {
 // Exit code
 const (
 	ExitSuccess int = iota // 0
-	ExitFailuer
+	ExitFailure
 )
 
 func Run() (int, error) {
@@ -62,7 +62,7 @@ func groups(args []string) (int, error) {
 		groups, err := mb.Groups(uname)
 		if err != nil {
 			fmt.Fprintln(os.Stderr, "can't get "+uname+" groups information")
-			status = ExitFailuer
+			status = ExitFailure
 			continue
 		}
 		fmt.Fprint(os.Stdout, uname+" : ")
@@ -74,12 +74,12 @@ func groups(args []string) (int, error) {
 func showCurrentUserGroups() (int, error) {
 	u, err := user.Current()
 	if err != nil {
-		return ExitFailuer, err
+		return ExitFailure, err
 	}
 
 	groups, err := mb.Groups(u.Username)
 	if err != nil {
-		return ExitFailuer, err
+		return ExitFailure, err
 	}
 	mb.DumpGroups(groups, true)
 	return ExitSuccess, nil

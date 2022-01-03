@@ -38,7 +38,7 @@ const version = "1.0.2"
 // Exit code
 const (
 	ExitSuccess int = iota // 0
-	ExitFailuer
+	ExitFailure
 )
 
 type options struct {
@@ -129,7 +129,7 @@ func Run() (int, error) {
 	var repository string = args[0]
 	data, err := fetchGitHubReleaseData(repository)
 	if err != nil {
-		return ExitFailuer, err
+		return ExitFailure, err
 	}
 	if len(data) == 0 {
 		// Because the ghrdc command does not authenticate with GitHub API,
@@ -139,7 +139,7 @@ func Run() (int, error) {
 		// URL: https://github.com/google/go-github
 		err := fmt.Errorf("Release Data is nothing. If %s is organization repository,\n"+
 			"gdrdc commant can't get release data.\n", repository)
-		return ExitFailuer, err
+		return ExitFailure, err
 	}
 
 	var totalSrcCnt int = 0
@@ -233,7 +233,7 @@ func parseArgs(opts *options) []string {
 
 	args, err := p.Parse()
 	if err != nil {
-		osExit(ExitFailuer)
+		osExit(ExitFailure)
 	}
 
 	if opts.Version {
@@ -243,7 +243,7 @@ func parseArgs(opts *options) []string {
 
 	if !isValidArgNr(args) {
 		showHelp(p)
-		osExit(ExitFailuer)
+		osExit(ExitFailure)
 	}
 	return args
 }

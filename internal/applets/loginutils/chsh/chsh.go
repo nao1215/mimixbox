@@ -40,7 +40,7 @@ var osExit = os.Exit
 // Exit code
 const (
 	ExitSuccess int = iota // 0
-	ExitFailuer
+	ExitFailure
 )
 
 type options struct {
@@ -53,7 +53,7 @@ func Run() (int, error) {
 	var args []string
 
 	if args, err = parseArgs(&opts); err != nil {
-		return ExitFailuer, nil
+		return ExitFailure, nil
 	}
 	return chsh(args, opts)
 }
@@ -72,10 +72,10 @@ func interactiveChangeShell(opts options) (int, error) {
 	/*
 		user, err := user.Current()
 		if err != nil {
-			return ExitFailuer, err
+			return ExitFailure, err
 		}
 			if err = mb.AuthByPasswordWithPam(user.Username); err != nil {
-				return ExitFailuer, err
+				return ExitFailure, err
 			}
 	*/
 	return ExitSuccess, nil

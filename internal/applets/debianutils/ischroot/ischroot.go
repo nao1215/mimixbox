@@ -40,7 +40,7 @@ type options struct {
 // Exit code
 const (
 	Jail    int = iota // 0
-	NotJail            // NotJail = ExitFailuer
+	NotJail            // NotJail = ExitFailure
 	NotSuperUser
 )
 

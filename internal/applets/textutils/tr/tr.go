@@ -44,7 +44,7 @@ type convert struct {
 // Exit code
 const (
 	ExitSuccess int = iota // 0
-	ExitFailuer
+	ExitFailure
 )
 
 func Run() (int, error) {
@@ -69,7 +69,7 @@ func tr(args []string, opts options) (int, error) {
 func fileterTranslate(args []string, opts options) (int, error) {
 	cnv, err := parseConvertCharSet(args, opts)
 	if err != nil {
-		return ExitFailuer, err
+		return ExitFailure, err
 	}
 
 	data := args[len(args)-1]
@@ -85,7 +85,7 @@ func fileterTranslate(args []string, opts options) (int, error) {
 func interactiveTranslate(args []string, opts options) (int, error) {
 	cnv, err := parseConvertCharSet(args, opts)
 	if err != nil {
-		return ExitFailuer, err
+		return ExitFailure, err
 	}
 
 	for {

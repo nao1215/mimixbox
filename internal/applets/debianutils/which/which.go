@@ -38,7 +38,7 @@ type options struct {
 // Exit code
 const (
 	ExitSuccess int = iota // 0
-	ExitFailuer
+	ExitFailure
 )
 
 func Run() (int, error) {
@@ -47,7 +47,7 @@ func Run() (int, error) {
 	var err error
 
 	if args, err = parseArgs(&opts); err != nil {
-		return ExitFailuer, nil
+		return ExitFailure, nil
 	}
 
 	status := ExitSuccess
@@ -56,11 +56,11 @@ func Run() (int, error) {
 		if err != nil {
 			e, ok := err.(*exec.Error)
 			if ok && e.Err == exec.ErrNotFound {
-				status = ExitFailuer
+				status = ExitFailure
 				continue // Don't print error like coreutils.
 			}
 			fmt.Fprintln(os.Stderr, e)
-			status = ExitFailuer
+			status = ExitFailure
 		}
 		fmt.Fprintln(os.Stdout, p)
 	}
@@ -81,7 +81,7 @@ func parseArgs(opts *options) ([]string, error) {
 	}
 
 	if !isValidArgNr(args) {
-		osExit(ExitFailuer) // Do not display help messages because it behaves the same as Coreutils
+		osExit(ExitFailure) // Do not display help messages because it behaves the same as Coreutils
 	}
 	return args, nil
 }

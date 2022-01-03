@@ -38,7 +38,7 @@ type options struct {
 // Exit code
 const (
 	ExitSuccess int = iota // 0
-	ExitFailuer
+	ExitFailure
 )
 
 type command struct {
@@ -56,13 +56,13 @@ func Run() (int, error) {
 
 	err = syscall.Chroot(os.ExpandEnv(os.Args[1]))
 	if err != nil {
-		return ExitFailuer, err
+		return ExitFailure, err
 	}
 
 	//----------------From here, in the prison-------------------
 	err = os.Chdir("/")
 	if err != nil {
-		return ExitFailuer, err
+		return ExitFailure, err
 	}
 
 	decideExecCommand(&cmd)
@@ -73,7 +73,7 @@ func Run() (int, error) {
 
 	err = syscall.Exec(cmd.name, cmd.withOption, cmd.env)
 	if err != nil {
-		return ExitFailuer, err
+		return ExitFailure, err
 	}
 	return ExitSuccess, nil
 }
@@ -114,7 +114,7 @@ func parseArgs(opts *options) {
 	}
 	if !isValidArgNr(os.Args) {
 		showHelp(p)
-		osExit(ExitFailuer)
+		osExit(ExitFailure)
 	}
 }
 

@@ -36,7 +36,7 @@ var errNotGetAbsPath = errors.New("can't get absolute path")
 // Exit code
 const (
 	ExitSuccess int = iota // 0
-	ExitFailuer
+	ExitFailure
 )
 
 type options struct {
@@ -54,14 +54,14 @@ func Run() (int, error) {
 	var err error
 
 	if args, err = parseArgs(&opts); err != nil {
-		return ExitFailuer, nil
+		return ExitFailure, nil
 	}
 	path := args[0]
 
 	if opts.Abs {
 		abs, err := filepath.Abs(path)
 		if err != nil {
-			return ExitFailuer, errNotGetAbsPath
+			return ExitFailure, errNotGetAbsPath
 		}
 		fmt.Fprintf(os.Stdout, "%s\n", abs)
 	}
@@ -100,7 +100,7 @@ func parseArgs(opts *options) ([]string, error) {
 
 	if !isValidArgNr(args) {
 		showHelp(p)
-		osExit(ExitFailuer)
+		osExit(ExitFailure)
 	}
 	return args, nil
 }

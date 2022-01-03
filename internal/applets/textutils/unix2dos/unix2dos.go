@@ -38,7 +38,7 @@ type options struct {
 // Exit code
 const (
 	ExitSuccess int = iota // 0
-	ExitFailuer
+	ExitFailure
 	ExitNoSuchFile
 )
 
@@ -48,7 +48,7 @@ func Run() (int, error) {
 	var err error
 
 	if args, err = parseArgs(&opts); err != nil {
-		return ExitFailuer, nil
+		return ExitFailure, nil
 	}
 
 	if mb.HasPipeData() && mb.HasNoOperand(os.Args, cmdName) {
@@ -77,14 +77,14 @@ func unix2dos(files []string) (int, error) {
 		lines, err := mb.ReadFileToStrList(target)
 		if err != nil {
 			fmt.Fprintln(os.Stderr, cmdName+": "+target+": Can't read file and convert LF to CRLF")
-			status = ExitFailuer
+			status = ExitFailure
 			continue
 		}
 		fmt.Fprintln(os.Stdout, cmdName+": converting file "+target+" to DOS format...")
 		lines = toCRLF(lines)
 		if err := mb.ListToFile(target, lines); err != nil {
 			fmt.Fprintln(os.Stderr, err)
-			status = ExitFailuer
+			status = ExitFailure
 			continue
 		}
 	}

@@ -36,7 +36,7 @@ var osExit = os.Exit
 // Exit code
 const (
 	ExitSuccess int = iota // 0
-	ExitFailuer
+	ExitFailure
 )
 
 type options struct {
@@ -52,7 +52,7 @@ func Run() (int, error) {
 	var status int
 
 	if args, err = parseArgs(&opts); err != nil {
-		return ExitFailuer, nil
+		return ExitFailure, nil
 	}
 
 	// Coremb will continue to delete files as much as possible.
@@ -68,7 +68,7 @@ func Run() (int, error) {
 func rmdir(path string, opts options) (int, error) {
 	p := os.ExpandEnv(path)
 	if err := validBeforeRemove(p); err != nil {
-		return ExitFailuer, err
+		return ExitFailure, err
 	}
 
 	var target string
@@ -80,18 +80,18 @@ func rmdir(path string, opts options) (int, error) {
 
 	_, files, err := mb.Walk(target, false)
 	if err != nil {
-		return ExitFailuer, err
+		return ExitFailure, err
 	}
 	if len(files) != 0 {
 		if opts.Ignore {
 			return ExitSuccess, nil
 		}
-		return ExitFailuer, errors.New("Can't remove " + path + ": It's not empty directory")
+		return ExitFailure, errors.New("Can't remove " + path + ": It's not empty directory")
 	}
 
 	// The contents of the directory are empty. Delete directories at once
 	if err := os.RemoveAll(target); err != nil {
-		return ExitFailuer, err
+		return ExitFailure, err
 	}
 	return ExitSuccess, nil
 }
@@ -128,7 +128,7 @@ func parseArgs(opts *options) ([]string, error) {
 
 	if !isValidArgNr(args) {
 		showHelp(p)
-		osExit(ExitFailuer)
+		osExit(ExitFailure)
 	}
 	return args, nil
 }

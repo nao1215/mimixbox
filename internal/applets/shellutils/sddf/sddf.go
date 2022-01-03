@@ -47,7 +47,7 @@ var osExit = os.Exit
 // Exit code
 const (
 	ExitSuccess int = iota // 0
-	ExitFailuer
+	ExitFailure
 )
 
 type options struct {
@@ -61,14 +61,14 @@ func Run() (int, error) {
 	var err error
 
 	if args, err = parseArgs(&opts); err != nil {
-		return ExitFailuer, nil
+		return ExitFailure, nil
 	}
 	return sddfMainSeq(os.ExpandEnv(args[0]), opts)
 }
 
 func sddfMainSeq(path string, opts options) (int, error) {
 	if !mb.Exists(path) {
-		return ExitFailuer, errors.New(path + " does not exists")
+		return ExitFailure, errors.New(path + " does not exists")
 	}
 
 	if mb.IsFile(path) {
@@ -79,12 +79,12 @@ func sddfMainSeq(path string, opts options) (int, error) {
 
 func restoreAndDelete(path string) (int, error) {
 	if !strings.HasSuffix(path, ext) {
-		return ExitFailuer, errors.New(path + ": file format is not *.sddf")
+		return ExitFailure, errors.New(path + ": file format is not *.sddf")
 	}
 
 	df, err := restore(path)
 	if err != nil {
-		return ExitFailuer, err
+		return ExitFailure, err
 	}
 
 	return deleteFiles(df)
@@ -98,7 +98,7 @@ func deleteFiles(df map[string]Paths) (int, error) {
 	for _, v := range df {
 		list, err := decideDeleteTarget(v)
 		if err != nil {
-			return ExitFailuer, err
+			return ExitFailure, err
 		}
 		deleteFileList = append(deleteFileList, list...)
 	}
@@ -108,15 +108,15 @@ func deleteFiles(df map[string]Paths) (int, error) {
 	for _, v := range deleteFileList {
 		size, err := mb.Size(v)
 		if err != nil {
-			status = ExitFailuer
-			fmt.Fprintln(os.Stdout, "Delete(Failuer): "+v)
+			status = ExitFailure
+			fmt.Fprintln(os.Stdout, "Delete(Failure): "+v)
 			continue
 		}
 
 		err = mb.RemoveFile(v, false)
 		if err != nil {
-			status = ExitFailuer
-			fmt.Fprintln(os.Stdout, "Delete(Failuer): "+v)
+			status = ExitFailure
+			fmt.Fprintln(os.Stdout, "Delete(Failure): "+v)
 		} else {
 			fmt.Fprintln(os.Stdout, "Delete(Success): "+v+": "+strconv.FormatInt(size, 10)+"Byte")
 		}
@@ -279,7 +279,7 @@ func dumpToFile(df map[string]Paths, output string) (int, error) {
 	fmt.Fprintln(os.Stdout, "Write down duplicated file list to "+output)
 	f, err := os.Create(output)
 	if err != nil {
-		return ExitFailuer, err
+		return ExitFailure, err
 	}
 	defer f.Close()
 
@@ -299,7 +299,7 @@ func dumpToFile(df map[string]Paths, output string) (int, error) {
 	b := []byte(data)
 	_, err = f.Write(b)
 	if err != nil {
-		return ExitFailuer, err
+		return ExitFailure, err
 	}
 
 	fmt.Fprintln(os.Stdout, "See duplicated file list: "+output)
@@ -394,7 +394,7 @@ func parseArgs(opts *options) ([]string, error) {
 
 	if !isValidArg(args, *opts) {
 		showHelp(p)
-		osExit(ExitFailuer)
+		osExit(ExitFailure)
 	}
 
 	return args, nil

@@ -36,7 +36,7 @@ var osExit = os.Exit
 // Exit code
 const (
 	ExitSuccess int = iota // 0
-	ExitFailuer
+	ExitFailure
 )
 
 type options struct {
@@ -54,7 +54,7 @@ func Run() (int, error) {
 	status := ExitSuccess
 
 	if args, err = parseArgs(&opts); err != nil {
-		return ExitFailuer, nil
+		return ExitFailure, nil
 	}
 
 	for _, path := range args {
@@ -75,12 +75,12 @@ func rm(path string, opts options) (int, error) {
 
 	if mb.IsFile(p) {
 		if err := mb.RemoveFile(p, opts.Interactive); err != nil {
-			return ExitFailuer, err
+			return ExitFailure, err
 		}
 	}
 
 	if err := mb.RemoveDir(p, opts.Interactive); err != nil {
-		return ExitFailuer, err
+		return ExitFailure, err
 	}
 
 	return ExitSuccess, nil
@@ -88,18 +88,18 @@ func rm(path string, opts options) (int, error) {
 
 func validBeforeRemove(path string, opts options) (int, error) {
 	if mb.IsRootDir(path) && !opts.NoPreserve {
-		return ExitFailuer, errors.New("do not remove the root directory")
+		return ExitFailure, errors.New("do not remove the root directory")
 	}
 
 	if !mb.Exists(path) {
 		if !opts.Force {
-			return ExitFailuer, errors.New("can't remove " + path + ": No such file or directory exists")
+			return ExitFailure, errors.New("can't remove " + path + ": No such file or directory exists")
 		}
-		return ExitFailuer, nil
+		return ExitFailure, nil
 	}
 
 	if mb.IsDir(path) && !opts.Recursive {
-		return ExitFailuer, errors.New("can't remove " + path + ": It's directory")
+		return ExitFailure, errors.New("can't remove " + path + ": It's directory")
 	}
 
 	return ExitSuccess, nil
@@ -129,7 +129,7 @@ func parseArgs(opts *options) ([]string, error) {
 
 	if !isValidArgNr(args) {
 		showHelp(p)
-		osExit(ExitFailuer)
+		osExit(ExitFailure)
 	}
 	return args, nil
 }

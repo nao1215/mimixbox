@@ -34,7 +34,7 @@ var osExit = os.Exit
 // Exit code
 const (
 	ExitSuccess int = iota // 0
-	ExitFailuer
+	ExitFailure
 )
 
 type options struct {
@@ -48,7 +48,7 @@ func Run() (int, error) {
 	var err error
 
 	if args, err = parseArgs(&opts); err != nil {
-		return ExitFailuer, nil
+		return ExitFailure, nil
 	}
 
 	if len(args) == 0 || mb.Contains(args, "-") {
@@ -58,7 +58,7 @@ func Run() (int, error) {
 
 	err = head(args, opts)
 	if err != nil {
-		return ExitFailuer, err
+		return ExitFailure, err
 	}
 
 	return ExitSuccess, nil

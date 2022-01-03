@@ -38,7 +38,7 @@ type options struct {
 // Exit code
 const (
 	ExitSuccess int = iota // 0
-	ExitFailuer
+	ExitFailure
 )
 
 func Run() (int, error) {
@@ -54,7 +54,7 @@ func Run() (int, error) {
 func hostid() (int, error) {
 	ip4, err := mb.Ip4()
 	if err != nil {
-		return ExitFailuer, err
+		return ExitFailure, err
 	}
 
 	//TODO: The output doesn't match the Coreutils version of hostid command.

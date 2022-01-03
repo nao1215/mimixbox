@@ -58,7 +58,7 @@ const version = "0.33.0"
 
 const (
 	ExitSuccess int = iota // 0
-	ExitFailuer
+	ExitFailure
 )
 
 func main() {
@@ -102,7 +102,7 @@ func showSupportAppletAndExitFailure(userInputCmdName string) {
 	fmt.Fprintf(os.Stderr, "%s is not provided by mimixbox.\n\n", userInputCmdName)
 	fmt.Fprintln(os.Stderr, "[Commands supported by MimixBox]")
 	applets.ShowAppletsBySpaceSeparated()
-	osExit(ExitFailuer)
+	osExit(ExitFailure)
 }
 
 // If the mimixbox option exists, execute the processing for the option and exit.
@@ -125,12 +125,12 @@ func handleMimixBoxOptionsIfNeeded(parser *flags.Parser, opts *options) {
 	// Only mimixbox. no option and no argument.
 	if len(os.Args) == 1 {
 		showHelp(parser)
-		osExit(ExitFailuer)
+		osExit(ExitFailure)
 	}
 
 	args, err := parser.Parse()
 	if err != nil {
-		osExit(ExitFailuer)
+		osExit(ExitFailure)
 	}
 
 	if len(args) == 0 && opts.Version {
@@ -146,7 +146,7 @@ func handleMimixBoxOptionsIfNeeded(parser *flags.Parser, opts *options) {
 	if len(args) == 1 && opts.Install {
 		if err = minimumInstall(mimixBoxPath, args[0]); err != nil {
 			fmt.Fprintln(os.Stderr, err)
-			osExit(ExitFailuer)
+			osExit(ExitFailure)
 		}
 		osExit(ExitSuccess)
 	}
@@ -154,7 +154,7 @@ func handleMimixBoxOptionsIfNeeded(parser *flags.Parser, opts *options) {
 	if len(args) == 1 && opts.Remove {
 		if err = remove(args[0]); err != nil {
 			fmt.Fprintln(os.Stderr, err)
-			osExit(ExitFailuer)
+			osExit(ExitFailure)
 		}
 		osExit(ExitSuccess)
 	}
@@ -162,14 +162,14 @@ func handleMimixBoxOptionsIfNeeded(parser *flags.Parser, opts *options) {
 	if len(args) == 1 && opts.FullInstall {
 		if err = fullInstall(mimixBoxPath, args[0]); err != nil {
 			fmt.Fprintln(os.Stderr, err)
-			osExit(ExitFailuer)
+			osExit(ExitFailure)
 		}
 		osExit(ExitSuccess)
 	}
 
 	if len(args) == 0 && (opts.FullInstall || opts.Install || opts.Remove) {
 		showHelp(parser)
-		osExit(ExitFailuer)
+		osExit(ExitFailure)
 	}
 }
 
