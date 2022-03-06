@@ -27,6 +27,6 @@ const (
 )
 
 func ShowVersion(cmdName string, version string) {
-	description := cmdName + " version " + version + " (under Apache License verison 2.0)"
+	description := cmdName + " version " + version + " (under Apache License version 2.0)"
 	fmt.Fprintln(os.Stdout, description)
 }
