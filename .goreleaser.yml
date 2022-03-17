@@ -6,7 +6,7 @@ before:
     - go mod tidy
     - go generate ./...
 builds:
-  - main: .
+  - main: ./cmd/mimixbox
     ldflags:
       - -s -w
     env:
