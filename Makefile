@@ -5,7 +5,7 @@ MK_JAIL    := scripts/mkJailForDebianFamily.sh
 MK_MAN     := scripts/mkManpages.sh
 RELEASE    := scripts/release.sh
 
-build: deps ## Build mimixbox and make man-pages
+build:  ## Build mimixbox and make man-pages
 	go build "-ldflags=-s -w" -trimpath -o $(APP) cmd/mimixbox/main.go
 	$(MAKE) doc
 	$(MAKE) licenses
@@ -47,9 +47,6 @@ release: ## Make release files.
 
 licenses: ## Get licenses for dependent libraries
 	-@go-licenses save ./cmd/mimixbox --force --save_path "licenses/"
-
-deps: ## Dependency resolution for build
-	go mod vendor
 
 pre_ut:
 	@echo "Clean test directory."
