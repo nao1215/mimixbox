@@ -2,34 +2,33 @@ name: IntegrationTest
 
 on:
   push:
-    branches: [ main ]
+    branches: [main]
   pull_request:
-    branches: [ main ]
+    branches: [main]
   workflow_dispatch:
-    
-jobs:
 
+jobs:
   integration_test:
     runs-on: ubuntu-latest
     steps:
-    - uses: actions/checkout@v2
+      - uses: actions/checkout@v2
 
-    - name: Set up Go
-      uses: actions/setup-go@v2
-      with:
-        go-version: 1.17
+      - name: Set up Go
+        uses: actions/setup-go@v2
+        with:
+          go-version: "1.18"
 
-    - name: SetupShellScript
-      run: curl -fsSL https://git.io/shellspec | sh -s -- --yes
-      
-    - name: Build
-      run: make build
+      - name: SetupShellScript
+        run: curl -fsSL https://git.io/shellspec | sh -s -- --yes
 
-    - name: InstallMimixBox
-      run: sudo install -v -m 0755 -D mimixbox /usr/local/bin/.
-      
-    - name: CreateSymbolicLink
-      run: mimixbox --full-install /usr/local/bin/
-      
-    - name: IntegrationTest
-      run: make it
+      - name: Build
+        run: make build
+
+      - name: InstallMimixBox
+        run: sudo install -v -m 0755 -D mimixbox /usr/local/bin/.
+
+      - name: CreateSymbolicLink
+        run: mimixbox --full-install /usr/local/bin/
+
+      - name: IntegrationTest
+        run: make it
