@@ -28,8 +28,8 @@ $ sudo ./installer.sh
 If you have a Golang development environment, you can also install it by the following method. This method does not install the documentation.
 
 ```
-$ go install github.com/nao1215/mimixbox/cmd/mimixbox
-$ mimixbox --install /usr/local/bin
+$ go install github.com/nao1215/mimixbox/cmd/mimixbox@latest
+$ sudo mimixbox --install /usr/local/bin
 ```
 # Development 
 ## Tools & Libraries
