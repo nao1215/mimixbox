@@ -62,6 +62,7 @@ import (
 	"github.com/nao1215/mimixbox/internal/applets/shellutils/mbsh"
 	"github.com/nao1215/mimixbox/internal/applets/shellutils/path"
 	"github.com/nao1215/mimixbox/internal/applets/shellutils/printenv"
+	"github.com/nao1215/mimixbox/internal/applets/shellutils/printf"
 	"github.com/nao1215/mimixbox/internal/applets/shellutils/pwd"
 	"github.com/nao1215/mimixbox/internal/applets/shellutils/sddf"
 	"github.com/nao1215/mimixbox/internal/applets/shellutils/seq"
@@ -138,6 +139,7 @@ func init() {
 		"path":         {path.Run, "Manipulate filename path"},
 		"poweroff":     {halt.Run, "Power off the system"},
 		"printenv":     {printenv.Run, "Print environment variable"},
+		"printf":       {printf.Run, "Formats and print data"},
 		"pwd":          {pwd.Run, "Print Working Directory"},
 		"remove-shell": {removeShell.Run, "Remove shell name from /etc/shells"},
 		"reboot":       {halt.Run, "Reboot the system"},
