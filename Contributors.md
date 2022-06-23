@@ -5,4 +5,3 @@
 | Kavya Shukla    | kavyuushukla59@gmail.com                          |        72 |         0 |
 | nao1215         | nao1215@users.noreply.github.com                  |         5 |         0 |
 | dependabot[bot] | 49699333+dependabot[bot]@users.noreply.github.com |         0 |         0 |
-     0 |         0 |
