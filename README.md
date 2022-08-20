@@ -102,6 +102,11 @@ MimixBox has its own commands that don't exist in packages like Coreutils.
 |[sddf](./docs/examples/sddf/en/sddf.md) | Search & Delete Dupulicated File|
 |[serial](./docs/examples/serial/en/serial.md) | Rename the file to the name with a serial number|
 
+# Contributing
+First off, thanks for taking the time to contribute! ❤️  See [CONTRIBUTING.md](./CONTRIBUTING.md) for more information.
+Contributions are not only related to development. For example, GitHub Star motivates me to develop!
+[![Star History Chart](https://api.star-history.com/svg?repos=nao1215/mkgoprj&type=Date)](https://star-history.com/#nao1215/mkgoprj&Date)
+
 # Contact
 If you would like to send comments such as "find a bug" or "request for additional features" to the developer, please use one of the following contacts. 
 We are also looking forward to sponsorship.
