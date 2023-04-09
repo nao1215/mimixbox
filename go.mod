@@ -7,7 +7,7 @@ require (
 	github.com/fogleman/gg v1.3.0
 	github.com/jessevdk/go-flags v1.5.0
 	github.com/nsf/termbox-go v1.1.1
-	github.com/stretchr/testify v1.8.0
+	github.com/stretchr/testify v1.8.2
 	golang.org/x/term v0.7.0
 )
 
