@@ -3,7 +3,7 @@ module github.com/nao1215/mimixbox
 go 1.18
 
 require (
-	github.com/cheggaaa/pb/v3 v3.1.4
+	github.com/cheggaaa/pb/v3 v3.1.5
 	github.com/fogleman/gg v1.3.0
 	github.com/jessevdk/go-flags v1.5.0
 	github.com/nsf/termbox-go v1.1.1
@@ -19,7 +19,7 @@ require (
 	github.com/kr/pretty v0.1.0 // indirect
 	github.com/mattn/go-colorable v0.1.13 // indirect
 	github.com/mattn/go-isatty v0.0.19 // indirect
-	github.com/mattn/go-runewidth v0.0.14 // indirect
+	github.com/mattn/go-runewidth v0.0.15 // indirect
 	github.com/pmezard/go-difflib v1.0.0 // indirect
 	github.com/rivo/uniseg v0.2.0 // indirect
 	golang.org/x/image v0.0.0-20211028202545-6944b10bf410 // indirect
