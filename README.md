@@ -34,6 +34,11 @@ $ go install github.com/nao1215/mimixbox/cmd/mimixbox@latest
 $ sudo mimixbox --install /usr/local/bin
 ```
 
+## Use homebrew
+```shell
+$ brew install nao1215/tap/mimixbox
+```
+
 # Development 
 ## Tools & Libraries
 The table below shows the tools used when developing the commands in the MimixBox project.
