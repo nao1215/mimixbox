@@ -13,12 +13,16 @@ builds:
       - CGO_ENABLED=0
     goos:
       - linux
+      - windows
+      - darwin
+    goarch:
+      - amd64
+      - arm64
 archives:
   - name_template: "{{ .ProjectName }}_{{ .Version }}_{{ .Os }}_{{ .Arch }}"
-    replacements:
-      linux: Linux
-      386: i386
-      amd64: x86_64
+    format_overrides:
+      - goos: windows
+        format: zip
 checksum:
   name_template: "checksums.txt"
 snapshot:
@@ -29,3 +33,20 @@ changelog:
     exclude:
       - "^docs:"
       - "^test:"
+nfpms:
+  - maintainer: Naohiro CHIKAMATSU <n.chika156@gmail.com>
+    description: MimixBox - mimic BusyBox on Linux
+    homepage: https://github.com/nao1215/mimixbox
+    license: Apache-2.0 license
+    formats:
+      - deb
+      - rpm
+      - apk
+brews:
+  - name: mimixbox
+    description: MimixBox - mimic BusyBox on Linux
+    license: Apache-2.0 license
+    repository:
+      owner: nao1215
+      name: homebrew-tap
+      token: "{{ .Env.TAP_GITHUB_TOKEN }}"
