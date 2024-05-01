@@ -1,4 +1,7 @@
 <div align="center">
+<!-- ALL-CONTRIBUTORS-BADGE:START - Do not remove or modify this section -->
+[![All Contributors](https://img.shields.io/badge/all_contributors-1-orange.svg?style=flat-square)](#contributors-)
+<!-- ALL-CONTRIBUTORS-BADGE:END -->
 <img src="https://github.com/nao1215/mimixbox/blob/main/docs/images/logo.jpg" width="100">
 </div>
 
@@ -19,18 +22,18 @@ Also, the MimixBox project maintainer plan to have a wide range of built-in comm
 The source code and binaries are distributed on [the Release Page](https://github.com/nao1215/mimixbox/releases) in ZIP format and tar.gz format. Choose the binary that suits your OS and CPU architecture.
 For example, in the case of Linux (amd64), you can install the MimixBox and documents on your system with the following command:
 
-```
+```shell
 $ tar xf mimixbox-0.30.0-linux-amd64.tar.gz
 $ cd mimixbox-0.30.0-linux-amd64
 $ sudo ./installer.sh
 ```
 
-If you have a Golang development environment, you can also install it by the following method. This method does not install the documentation.
-
-```
+## Use "go install" 
+```shell
 $ go install github.com/nao1215/mimixbox/cmd/mimixbox@latest
 $ sudo mimixbox --install /usr/local/bin
 ```
+
 # Development 
 ## Tools & Libraries
 The table below shows the tools used when developing the commands in the MimixBox project.
@@ -118,3 +121,34 @@ We are also looking forward to sponsorship.
 # LICENSE
 The MimixBox project is licensed under the terms of the MIT license and Apache License 2.0.  
 See [LICENSE](./LICENSE) and [NOTICE](./NOTICE)
+
+## Contributors ✨
+
+Thanks goes to these wonderful people ([emoji key](https://allcontributors.org/docs/en/emoji-key)):
+
+<!-- ALL-CONTRIBUTORS-LIST:START - Do not remove or modify this section -->
+<!-- prettier-ignore-start -->
+<!-- markdownlint-disable -->
+<table>
+  <tbody>
+    <tr>
+      <td align="center" valign="top" width="14.28%"><a href="https://debimate.jp/"><img src="https://avatars.githubusercontent.com/u/22737008?v=4?s=75" width="75px;" alt="CHIKAMATSU Naohiro"/><br /><sub><b>CHIKAMATSU Naohiro</b></sub></a><br /><a href="https://github.com/nao1215/mimixbox/commits?author=nao1215" title="Code">💻</a></td>
+    </tr>
+  </tbody>
+  <tfoot>
+    <tr>
+      <td align="center" size="13px" colspan="7">
+        <img src="https://raw.githubusercontent.com/all-contributors/all-contributors-cli/1b8533af435da9854653492b1327a23a4dbd0a10/assets/logo-small.svg">
+          <a href="https://all-contributors.js.org/docs/en/bot/usage">Add your contributions</a>
+        </img>
+      </td>
+    </tr>
+  </tfoot>
+</table>
+
+<!-- markdownlint-restore -->
+<!-- prettier-ignore-end -->
+
+<!-- ALL-CONTRIBUTORS-LIST:END -->
+
+This project follows the [all-contributors](https://github.com/all-contributors/all-contributors) specification. Contributions of any kind welcome!
