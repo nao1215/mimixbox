@@ -5,7 +5,7 @@ go 1.18
 require (
 	github.com/cheggaaa/pb/v3 v3.1.5
 	github.com/fogleman/gg v1.3.0
-	github.com/jessevdk/go-flags v1.5.0
+	github.com/jessevdk/go-flags v1.6.1
 	github.com/nsf/termbox-go v1.1.1
 	github.com/stretchr/testify v1.9.0
 	golang.org/x/term v0.22.0
