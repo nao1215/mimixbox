@@ -1,0 +1,160 @@
+package env_test
+
+import (
+	"bytes"
+	"context"
+	"os/exec"
+	"strings"
+	"testing"
+
+	"github.com/nao1215/mimixbox/internal/applets/shellutils/env"
+	"github.com/nao1215/mimixbox/internal/command"
+)
+
+func run(t *testing.T, stdin string, args ...string) (string, string, error) {
+	t.Helper()
+	out := &bytes.Buffer{}
+	errBuf := &bytes.Buffer{}
+	io := command.IO{In: strings.NewReader(stdin), Out: out, Err: errBuf}
+	err := env.New().Run(context.Background(), io, args)
+	return out.String(), errBuf.String(), err
+}
+
+func TestRunPrintEnviron(t *testing.T) {
+	tests := []struct {
+		name        string
+		args        []string
+		wantContain []string
+		wantAbsent  []string
+	}{
+		{
+			name:        "assignment operand appears in output",
+			args:        []string{"FOO=bar"},
+			wantContain: []string{"FOO=bar", "MIMIX_BASE=present"},
+		},
+		{
+			name:        "ignore-environment prints only the assignment",
+			args:        []string{"-i", "ONLY=one"},
+			wantContain: []string{"ONLY=one"},
+			wantAbsent:  []string{"MIMIX_BASE="},
+		},
+		{
+			name:        "unset removes a variable",
+			args:        []string{"-u", "MIMIX_BASE"},
+			wantContain: []string{},
+			wantAbsent:  []string{"MIMIX_BASE="},
+		},
+	}
+	for _, tt := range tests {
+		tt := tt
+		t.Run(tt.name, func(t *testing.T) {
+			t.Setenv("MIMIX_BASE", "present")
+			out, _, err := run(t, "", tt.args...)
+			if err != nil {
+				t.Fatalf("Run error = %v", err)
+			}
+			for _, want := range tt.wantContain {
+				if !strings.Contains(out, want) {
+					t.Errorf("output %q does not contain %q", out, want)
+				}
+			}
+			for _, absent := range tt.wantAbsent {
+				if strings.Contains(out, absent) {
+					t.Errorf("output %q unexpectedly contains %q", out, absent)
+				}
+			}
+		})
+	}
+}
+
+func TestRunNullSeparator(t *testing.T) {
+	out, _, err := run(t, "", "-i", "-0", "A=1", "B=2")
+	if err != nil {
+		t.Fatalf("Run error = %v", err)
+	}
+	want := "A=1\x00B=2\x00"
+	if out != want {
+		t.Errorf("out = %q, want %q", out, want)
+	}
+	if strings.Contains(out, "\n") {
+		t.Errorf("out = %q, want no newline separators", out)
+	}
+}
+
+func TestRunCommand(t *testing.T) {
+	echo, err := exec.LookPath("echo")
+	if err != nil {
+		t.Skipf("echo not found: %v", err)
+	}
+	out, _, runErr := run(t, "", echo, "hello")
+	if runErr != nil {
+		t.Fatalf("Run error = %v", runErr)
+	}
+	if out != "hello\n" {
+		t.Errorf("out = %q, want %q", out, "hello\n")
+	}
+}
+
+func TestRunCommandSeesModifiedEnv(t *testing.T) {
+	sh, err := exec.LookPath("sh")
+	if err != nil {
+		t.Skipf("sh not found: %v", err)
+	}
+	out, _, runErr := run(t, "", "GREETING=hi", sh, "-c", "printf %s \"$GREETING\"")
+	if runErr != nil {
+		t.Fatalf("Run error = %v", runErr)
+	}
+	if out != "hi" {
+		t.Errorf("out = %q, want %q", out, "hi")
+	}
+}
+
+func TestRunCommandExitStatus(t *testing.T) {
+	sh, err := exec.LookPath("sh")
+	if err != nil {
+		t.Skipf("sh not found: %v", err)
+	}
+	_, _, runErr := run(t, "", sh, "-c", "exit 3")
+	exitErr, ok := runErr.(*command.ExitError)
+	if !ok {
+		t.Fatalf("error = %v (%T), want *command.ExitError", runErr, runErr)
+	}
+	if exitErr.Code != 3 {
+		t.Errorf("exit code = %d, want 3", exitErr.Code)
+	}
+}
+
+func TestRunCommandNotFound(t *testing.T) {
+	out, errOut, runErr := run(t, "", "no_such_command_xyz")
+	exitErr, ok := runErr.(*command.ExitError)
+	if !ok {
+		t.Fatalf("error = %v (%T), want *command.ExitError", runErr, runErr)
+	}
+	if exitErr.Code != 127 {
+		t.Errorf("exit code = %d, want 127", exitErr.Code)
+	}
+	if out != "" {
+		t.Errorf("out = %q, want empty", out)
+	}
+	if !strings.Contains(errOut, "env: 'no_such_command_xyz': No such file or directory") {
+		t.Errorf("stderr = %q, want not-found message", errOut)
+	}
+}
+
+func TestRunHelpAndVersion(t *testing.T) {
+	out, _, err := run(t, "", "--help")
+	if err != nil {
+		t.Fatalf("--help error = %v", err)
+	}
+	if !strings.Contains(out, "Usage: env") {
+		t.Errorf("--help out = %q", out)
+	}
+
+	out, _, err = run(t, "", "--version")
+	if err != nil {
+		t.Fatalf("--version error = %v", err)
+	}
+	if !strings.Contains(out, "env (mimixbox)") {
+		t.Errorf("--version out = %q", out)
+	}
+}
