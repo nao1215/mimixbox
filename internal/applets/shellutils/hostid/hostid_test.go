@@ -28,14 +28,8 @@ func TestRun(t *testing.T) {
 		t.Fatalf("Run error = %v, stderr = %q", err, errOut)
 	}
 
-	hex8 := regexp.MustCompile(`^[0-9a-f]{8}$`)
-	for _, line := range strings.Split(strings.TrimSpace(out), "\n") {
-		if line == "" {
-			// Host has no non-loopback IPv4 address; nothing to print.
-			continue
-		}
-		if !hex8.MatchString(line) {
-			t.Errorf("hostid output line = %q, want 8 hex digits", line)
-		}
+	// Like coreutils, hostid prints exactly one line of 8 lowercase hex digits.
+	if !regexp.MustCompile(`^[0-9a-f]{8}\n$`).MatchString(out) {
+		t.Errorf("hostid output = %q, want one line of 8 hex digits", out)
 	}
 }
