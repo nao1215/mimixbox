@@ -1,93 +1,113 @@
-//
-// mimixbox/internal/applets/debianutils/which/which.go
-//
-// Copyright 2021 Naohiro CHIKAMATSU
-//
-// Licensed under the Apache License, Version 2.0 (the "License");
-// you may not use this file except in compliance with the License.
-// You may obtain a copy of the License at
-//
-//    http://www.apache.org/licenses/LICENSE-2.0
-//
-// Unless required by applicable law or agreed to in writing, software
-// distributed under the License is distributed on an "AS IS" BASIS,
-// WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
-// See the License for the specific language governing permissions and
-// limitations under the License.
+// Package which implements the which applet: locate a command on $PATH and
+// print the absolute path that would be executed.
 package which
 
 import (
+	"context"
 	"fmt"
 	"os"
 	"os/exec"
+	"path/filepath"
+	"strings"
 
-	"github.com/jessevdk/go-flags"
-	mb "github.com/nao1215/mimixbox/internal/lib"
+	"github.com/nao1215/mimixbox/internal/command"
 )
 
-const cmdName string = "which"
+// Command is the which applet.
+type Command struct{}
 
-const version = "1.0.2"
+// New returns a which command.
+func New() *Command { return &Command{} }
 
-var osExit = os.Exit
+// Name returns the command name.
+func (c *Command) Name() string { return "which" }
 
-type options struct {
-	Version bool `short:"v" long:"version" description:"Show which command version"`
+// Synopsis returns the one-line description shown in the applet list.
+func (c *Command) Synopsis() string {
+	return "Returns the file path which would be executed in the current environment"
 }
 
-func Run() (int, error) {
-	var opts options
-	var args []string
-	var err error
+// Run executes which: for each COMMAND operand it looks the name up on $PATH and
+// prints the path that would be executed, one per line. With -a/--all every
+// match across PATH is printed. If any operand is not found (or none is given),
+// the exit status is 1, matching the Debian which behaviour: nothing is written
+// for a name that cannot be resolved.
+func (c *Command) Run(_ context.Context, stdio command.IO, args []string) error {
+	fs := command.NewFlagSet(c.Name(), "[OPTION]... COMMAND...", stdio.Err)
+	all := fs.BoolP("all", "a", false, "print all matching pathnames of each argument")
 
-	if args, err = parseArgs(&opts); err != nil {
-		return mb.ExitFailure, nil
+	proceed, err := fs.Parse(stdio, args)
+	if err != nil || !proceed {
+		return err
 	}
 
-	status := mb.ExitSuccess
-	for _, path := range args {
-		p, err := exec.LookPath(path)
-		if err != nil {
-			e, ok := err.(*exec.Error)
-			if ok && e.Err == exec.ErrNotFound {
-				status = mb.ExitFailure
-				continue // Don't print error like coreutils.
+	names := fs.Args()
+	if len(names) == 0 {
+		// No operand: nothing to print and a non-zero exit status.
+		return command.SilentFailure()
+	}
+
+	found := true
+	for _, name := range names {
+		if *all {
+			matches := lookPathAll(name)
+			if len(matches) == 0 {
+				found = false
+				continue
 			}
-			fmt.Fprintln(os.Stderr, e)
-			status = mb.ExitFailure
+			for _, p := range matches {
+				fmt.Fprintln(stdio.Out, p)
+			}
+			continue
 		}
-		fmt.Fprintln(os.Stdout, p)
+		p, lerr := exec.LookPath(name)
+		if lerr != nil {
+			// Don't print anything for a name that is not found.
+			found = false
+			continue
+		}
+		fmt.Fprintln(stdio.Out, p)
 	}
-	return status, nil
+
+	if !found {
+		return command.SilentFailure()
+	}
+	return nil
 }
 
-func parseArgs(opts *options) ([]string, error) {
-	p := initParser(opts)
+// lookPathAll returns every executable named name found across the directories
+// in $PATH, in PATH order. A name containing a path separator is resolved
+// directly without consulting $PATH.
+func lookPathAll(name string) []string {
+	if strings.ContainsRune(name, os.PathSeparator) {
+		if isExecutable(name) {
+			if abs, err := filepath.Abs(name); err == nil {
+				return []string{abs}
+			}
+			return []string{name}
+		}
+		return nil
+	}
 
-	args, err := p.Parse()
+	var matches []string
+	for _, dir := range filepath.SplitList(os.Getenv("PATH")) {
+		if dir == "" {
+			dir = "."
+		}
+		candidate := filepath.Join(dir, name)
+		if isExecutable(candidate) {
+			matches = append(matches, candidate)
+		}
+	}
+	return matches
+}
+
+// isExecutable reports whether path is a regular file with an executable bit set.
+func isExecutable(path string) bool {
+	info, err := os.Stat(path)
 	if err != nil {
-		return nil, err
+		return false
 	}
-
-	if opts.Version {
-		mb.ShowVersion(cmdName, version)
-		osExit(mb.ExitSuccess)
-	}
-
-	if !isValidArgNr(args) {
-		osExit(mb.ExitFailure) // Do not display help messages because it behaves the same as Coreutils
-	}
-	return args, nil
-}
-
-func initParser(opts *options) *flags.Parser {
-	parser := flags.NewParser(opts, flags.Default)
-	parser.Name = cmdName
-	parser.Usage = "[OPTIONS] COMMAND_NAME"
-
-	return parser
-}
-
-func isValidArgNr(args []string) bool {
-	return len(args) >= 1
+	mode := info.Mode()
+	return mode.IsRegular() && mode.Perm()&0o111 != 0
 }

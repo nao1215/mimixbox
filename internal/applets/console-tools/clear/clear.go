@@ -1,75 +1,39 @@
-//
-// mimixbox/internal/applets/console-tools/clear/clear.go
-//
-// Copyright 2021 Naohiro CHIKAMATSU
-//
-// Licensed under the Apache License, Version 2.0 (the "License");
-// you may not use this file except in compliance with the License.
-// You may obtain a copy of the License at
-//
-//    http://www.apache.org/licenses/LICENSE-2.0
-//
-// Unless required by applicable law or agreed to in writing, software
-// distributed under the License is distributed on an "AS IS" BASIS,
-// WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
-// See the License for the specific language governing permissions and
-// limitations under the License.
+// Package clear implements the clear applet: clear the terminal screen.
 package clear
 
 import (
-	"fmt"
-	"os"
+	"context"
+	"io"
 
-	mb "github.com/nao1215/mimixbox/internal/lib"
-
-	"github.com/jessevdk/go-flags"
+	"github.com/nao1215/mimixbox/internal/command"
 )
 
-const cmdName string = "clear"
+// clearSequence is the escape sequence written to clear the terminal screen.
+// It matches the original implementation's bytes: move the cursor to the home
+// position (\033[H) and erase the display (\033[J).
+const clearSequence = "\033[H\033[J"
 
-const version = "1.0.0"
+// Command is the clear applet.
+type Command struct{}
 
-var osExit = os.Exit
+// New returns a clear command.
+func New() *Command { return &Command{} }
 
-type options struct {
-	Version bool `short:"v" long:"version" description:"Show clear command version"`
-}
+// Name returns the command name.
+func (c *Command) Name() string { return "clear" }
 
-func Run() (int, error) {
-	var opts options
-	var err error
+// Synopsis returns the one-line description shown in the applet list.
+func (c *Command) Synopsis() string { return "Clear terminal" }
 
-	if _, err = parseArgs(&opts); err != nil {
-		return mb.ExitFailure, nil
-	}
-	return clear()
-}
+// Run executes clear: it writes the terminal-clear escape sequence to stdout.
+func (c *Command) Run(_ context.Context, stdio command.IO, args []string) error {
+	fs := command.NewFlagSet(c.Name(), "[OPTION]", stdio.Err)
 
-func clear() (int, error) {
-	fmt.Fprintf(os.Stdout, "\033[H\033[J")
-	return mb.ExitSuccess, nil
-}
-
-func parseArgs(opts *options) ([]string, error) {
-	p := initParser(opts)
-
-	args, err := p.Parse()
-	if err != nil {
-		return nil, err
+	proceed, err := fs.Parse(stdio, args)
+	if err != nil || !proceed {
+		return err
 	}
 
-	if opts.Version {
-		mb.ShowVersion(cmdName, version)
-		osExit(mb.ExitSuccess)
-	}
-
-	return args, nil
-}
-
-func initParser(opts *options) *flags.Parser {
-	parser := flags.NewParser(opts, flags.Default)
-	parser.Name = cmdName
-	parser.Usage = "[OPTIONS]"
-
-	return parser
+	_, err = io.WriteString(stdio.Out, clearSequence)
+	return err
 }

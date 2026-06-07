@@ -14,67 +14,85 @@
 // WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
 // See the License for the specific language governing permissions and
 // limitations under the License.
+
+// Package ischroot implements the ischroot applet: detect whether the current
+// process is running inside a chroot.
 package ischroot
 
 import (
+	"context"
 	"os"
 	"strings"
 	"syscall"
 
+	"github.com/nao1215/mimixbox/internal/command"
 	mb "github.com/nao1215/mimixbox/internal/lib"
-
-	"github.com/jessevdk/go-flags"
 )
 
-const cmdName string = "ischroot"
-const version = "1.0.0"
+// Exit codes, matching Debian's ischroot: 0 if running in a chroot, 1 if not,
+// and 2 if it cannot be detected (e.g. not enough privileges).
+const (
+	jail         = 0 // running in a chroot
+	notJail      = 1 // not running in a chroot
+	notSuperUser = 2 // chroot status could not be detected
+)
 
-var osExit = os.Exit
+// Command is the ischroot applet.
+type Command struct{}
 
-type options struct {
-	DefaultFalse bool `short:"f" long:"--default-false" description:"Return false if user(not root user) use ischroot"`
-	DefaultTrue  bool `short:"t" long:"--default-true" description:"Return true if user(not root user) use ischroot"`
-	Version      bool `short:"v" long:"version" description:"Show ischroot command version"`
+// New returns an ischroot command.
+func New() *Command { return &Command{} }
+
+// Name returns the command name.
+func (c *Command) Name() string { return "ischroot" }
+
+// Synopsis returns the one-line description shown in the applet list.
+func (c *Command) Synopsis() string { return "Detect if running in a chroot" }
+
+// Run executes ischroot. It returns nil when running in a chroot, and an
+// *command.ExitError carrying status 1 (not a chroot) or 2 (undetectable)
+// otherwise.
+func (c *Command) Run(_ context.Context, stdio command.IO, args []string) error {
+	fs := command.NewFlagSet(c.Name(), "[OPTION]", stdio.Err)
+	defaultFalse := fs.BoolP("default-false", "f", false, "return 1 if detection fails (not root)")
+	defaultTrue := fs.BoolP("default-true", "t", false, "return 0 if detection fails (not root)")
+
+	proceed, err := fs.Parse(stdio, args)
+	if err != nil || !proceed {
+		return err
+	}
+
+	code := detect(*defaultFalse, *defaultTrue)
+	switch code {
+	case jail:
+		return nil
+	default:
+		return &command.ExitError{Code: code}
+	}
 }
 
-// Exit code
-const (
-	Jail    int = iota // 0
-	NotJail            // NotJail = ExitFailure
-	NotSuperUser
-)
-
-func Run() (int, error) {
-	var opts options
-	var err error
-
-	if _, err = parseArgs(&opts); err != nil {
-		return NotJail, nil
-	}
-
-	if opts.DefaultFalse && opts.DefaultTrue {
-		return NotJail, nil
-	}
-
+// detect returns the chroot exit code, applying the -f/-t fallbacks when the
+// status cannot be determined.
+func detect(defaultFalse, defaultTrue bool) int {
 	if isFakeChroot() {
-		return Jail, nil
+		return jail
 	}
 
 	exitCode := isChroot()
-	if exitCode == NotSuperUser {
-		if opts.DefaultFalse {
-			exitCode = NotJail
-		} else if opts.DefaultTrue {
-			exitCode = Jail
+	if exitCode == notSuperUser {
+		if defaultFalse {
+			exitCode = notJail
+		} else if defaultTrue {
+			exitCode = jail
 		}
 	}
-	return exitCode, nil
+	return exitCode
 }
 
-// isFakeChroot() checks if the environment is a FAKECHROOT environment.
+// isFakeChroot reports whether the environment is a FAKECHROOT environment.
 // In the FAKECHROOT environment, the library that overwrites the libc (glibc) is preloaded.
 // Specifically, the preloaded library is libfakechroot.so. Whether it is preloaded or not
-// can be determinedby getting the path of libfakechroot.so from the environment variable LD_PRELOAD.
+// can be determined by getting the path of libfakechroot.so from the environment variable LD_PRELOAD.
 // The libc (glibc) function has been redefined in libfakechroot.so.
 // If you run the app with LD_PRELOAD, the app will run using the redefined functions.
 func isFakeChroot() bool {
@@ -92,24 +110,24 @@ func isFakeChroot() bool {
 
 func isChroot() int {
 	if !canStatRootDir() {
-		return NotSuperUser
+		return notSuperUser
 	}
 
 	if !canStatInitProcessRootDir() {
 		if !canLstatInitProcessRootDir() {
-			return NotSuperUser
+			return notSuperUser
 		}
 		if !mb.IsRootUser() {
-			return NotSuperUser
+			return notSuperUser
 		}
 		// User is root. However, root can't stat "/proc/1/root". It's jail.
-		return Jail
+		return jail
 	}
 
 	if isNotJail() {
-		return NotJail
+		return notJail
 	}
-	return Jail
+	return jail
 }
 
 func canStatRootDir() bool {
@@ -141,28 +159,4 @@ func isNotJail() bool {
 	internalProcStat := procStatInfo.Sys().(*syscall.Stat_t)
 
 	return (internalRootStat.Ino == internalProcStat.Ino) && (internalRootStat.Dev == internalProcStat.Dev)
-}
-
-func parseArgs(opts *options) ([]string, error) {
-	p := initParser(opts)
-
-	args, err := p.Parse()
-	if err != nil {
-		return nil, err
-	}
-
-	if opts.Version {
-		mb.ShowVersion(cmdName, version)
-		osExit(0)
-	}
-
-	return args, nil
-}
-
-func initParser(opts *options) *flags.Parser {
-	parser := flags.NewParser(opts, flags.Default)
-	parser.Name = cmdName
-	parser.Usage = "[OPTION]"
-
-	return parser
 }
