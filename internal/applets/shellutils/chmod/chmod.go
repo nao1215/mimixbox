@@ -94,7 +94,7 @@ func (c *Command) changeModeRecursive(stdio command.IO, path, mode string, opts 
 	var walkErr error
 	err := filepath.WalkDir(path, func(p string, _ fs.DirEntry, err error) error {
 		if err != nil {
-			c.reportAccess(stdio, p, opts)
+			c.reportAccess(stdio, p, opts, err)
 			walkErr = err
 			return nil
 		}
@@ -116,7 +116,7 @@ func (c *Command) changeModeRecursive(stdio command.IO, path, mode string, opts 
 func (c *Command) changeMode(stdio command.IO, path, mode string, opts options) error {
 	info, err := os.Stat(path)
 	if err != nil {
-		c.reportAccess(stdio, path, opts)
+		c.reportAccess(stdio, path, opts, err)
 		return err
 	}
 
@@ -136,7 +136,7 @@ func (c *Command) changeMode(stdio command.IO, path, mode string, opts options) 
 		return err
 	}
 
-	changed := cur.Perm() != newMode.Perm()
+	changed := permBits(cur) != permBits(newMode)
 	if opts.verbose || (opts.changes && changed) {
 		if changed {
 			_, _ = fmt.Fprintf(stdio.Out, "mode of '%s' changed from %s (%s) to %s (%s)\n",
@@ -149,12 +149,14 @@ func (c *Command) changeMode(stdio command.IO, path, mode string, opts options) 
 	return nil
 }
 
-// reportAccess writes the GNU "cannot access" diagnostic for a missing file.
-func (c *Command) reportAccess(stdio command.IO, path string, opts options) {
+// reportAccess writes the GNU "cannot access" diagnostic for a path that could
+// not be reached, reflecting the real underlying error (missing file,
+// permission denied, not a directory, etc.).
+func (c *Command) reportAccess(stdio command.IO, path string, opts options, err error) {
 	if opts.silent {
 		return
 	}
-	_, _ = fmt.Fprintf(stdio.Err, "%s: cannot access '%s': No such file or directory\n", c.Name(), path)
+	_, _ = fmt.Fprintf(stdio.Err, "%s: cannot access '%s': %v\n", c.Name(), path, unwrap(err))
 }
 
 func unwrap(err error) error {

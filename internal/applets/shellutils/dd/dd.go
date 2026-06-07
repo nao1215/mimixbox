@@ -4,16 +4,28 @@
 package dd
 
 import (
-	"bytes"
 	"context"
 	"fmt"
 	"io"
+	"math"
 	"os"
 	"strconv"
 	"strings"
 
 	"github.com/nao1215/mimixbox/internal/command"
 )
+
+// zeroReader is an io.Reader that yields an endless stream of zero bytes. It is
+// used to seek on a non-seekable writer (stdout) by streaming the zero padding
+// instead of allocating it all up front.
+type zeroReader struct{}
+
+func (zeroReader) Read(p []byte) (int, error) {
+	for i := range p {
+		p[i] = 0
+	}
+	return len(p), nil
+}
 
 // Command is the dd applet.
 type Command struct{}
@@ -135,7 +147,7 @@ func openOutput(stdio command.IO, opts options) (io.Writer, func(), error) {
 	if opts.outputFile == "" {
 		w := stdio.Out
 		if opts.seek > 0 {
-			if _, err := w.Write(bytes.Repeat([]byte{0}, int(opts.seek*opts.obs))); err != nil {
+			if _, err := io.CopyN(w, zeroReader{}, opts.seek*opts.obs); err != nil {
 				return nil, func() {}, err
 			}
 		}
@@ -211,9 +223,9 @@ func writeBlock(w io.Writer, block []byte, opts options, res *result) error {
 	}
 	n, err := w.Write(block)
 	res.bytesOut += int64(n)
-	if int64(len(block)) == opts.obs {
+	if n == len(block) && int64(len(block)) == opts.obs {
 		res.outFull++
-	} else {
+	} else if n > 0 {
 		res.outPart++
 	}
 	return err
@@ -404,6 +416,9 @@ func parseSize(s string) (int64, error) {
 	}
 	if n < 0 {
 		return 0, fmt.Errorf("negative size")
+	}
+	if mult > 1 && n > math.MaxInt64/mult {
+		return 0, fmt.Errorf("size too large (overflow)")
 	}
 	return n * mult, nil
 }

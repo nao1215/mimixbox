@@ -29,6 +29,7 @@ func (c *Command) Synopsis() string { return "Report file system disk space usag
 type statfsResult struct {
 	Bsize  int64  // fundamental block size
 	Blocks uint64 // total data blocks
+	Bfree  uint64 // free blocks in filesystem
 	Bavail uint64 // free blocks available to unprivileged users
 	Files  uint64 // total file nodes (inodes)
 	Ffree  uint64 // free file nodes (inodes)
@@ -44,6 +45,7 @@ var statfs = func(path string) (statfsResult, error) {
 	return statfsResult{
 		Bsize:  int64(s.Bsize),
 		Blocks: s.Blocks,
+		Bfree:  s.Bfree,
 		Bavail: s.Bavail,
 		Files:  s.Files,
 		Ffree:  s.Ffree,
@@ -76,8 +78,9 @@ type inodeUsage struct {
 func computeUsage(s statfsResult) usage {
 	bsize := uint64(s.Bsize)
 	total := s.Blocks * bsize
+	free := s.Bfree * bsize
 	avail := s.Bavail * bsize
-	used := total - avail
+	used := total - free
 	return usage{
 		total:  total,
 		used:   used,

@@ -35,9 +35,11 @@ func TestNameSynopsis(t *testing.T) {
 
 func TestComputeUsage(t *testing.T) {
 	t.Parallel()
-	// 1000 blocks of 1024 bytes = 1,024,000 total; 250 available = 256,000;
-	// used = 768,000; usable total = used+avail = 1,024,000; use% = 75.
-	s := df.StatfsResult{Bsize: 1024, Blocks: 1000, Bavail: 250}
+	// 1000 blocks of 1024 bytes = 1,024,000 total. 300 free blocks (307,200)
+	// but only 250 available to non-root (256,000); the 50-block difference is
+	// reserved. Used = total - free = 716,800 (GNU df counts reserved blocks as
+	// used). Usable total = used+avail = 972,800; use% = ceil(73.68) = 74.
+	s := df.StatfsResult{Bsize: 1024, Blocks: 1000, Bfree: 300, Bavail: 250}
 	u := df.ComputeUsage(s)
 
 	if u.Total() != 1024000 {
@@ -46,18 +48,19 @@ func TestComputeUsage(t *testing.T) {
 	if u.Avail() != 256000 {
 		t.Errorf("Avail = %d, want 256000", u.Avail())
 	}
-	if u.Used() != 768000 {
-		t.Errorf("Used = %d, want 768000", u.Used())
+	if u.Used() != 716800 {
+		t.Errorf("Used = %d, want 716800", u.Used())
 	}
-	if u.UsePct() != 75 {
-		t.Errorf("UsePct = %d, want 75", u.UsePct())
+	if u.UsePct() != 74 {
+		t.Errorf("UsePct = %d, want 74", u.UsePct())
 	}
 }
 
 func TestComputeUsagePercentRoundsUp(t *testing.T) {
 	t.Parallel()
-	// used=1, total(usable)=3 -> 1*100/3 = 33.3 -> rounds up to 34.
-	s := df.StatfsResult{Bsize: 1, Blocks: 3, Bavail: 2}
+	// used = blocks-bfree = 1, total(usable) = used+avail = 3 ->
+	// 1*100/3 = 33.3 -> rounds up to 34.
+	s := df.StatfsResult{Bsize: 1, Blocks: 3, Bfree: 2, Bavail: 2}
 	u := df.ComputeUsage(s)
 	if u.UsePct() != 34 {
 		t.Errorf("UsePct = %d, want 34", u.UsePct())
@@ -123,7 +126,7 @@ func TestFormatSize(t *testing.T) {
 // the numeric output is deterministic.
 func TestRunWithFake(t *testing.T) {
 	restore := df.SetStatfs(func(path string) (df.StatfsResult, error) {
-		return df.StatfsResult{Bsize: 1024, Blocks: 1000, Bavail: 250, Files: 100, Ffree: 60}, nil
+		return df.StatfsResult{Bsize: 1024, Blocks: 1000, Bfree: 250, Bavail: 250, Files: 100, Ffree: 60}, nil
 	})
 	defer restore()
 
