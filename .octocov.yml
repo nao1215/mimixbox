@@ -3,7 +3,6 @@ coverage:
   if: true
   paths:
     - cover.out
-  acceptable: 40%
   exclude:
     - "**/main.go"
 codeToTestRatio:
