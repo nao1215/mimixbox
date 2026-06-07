@@ -1,67 +1,74 @@
-# Contributing to MimixBox
-First of all, thank you for taking the time to contribute.  
-The following provides you with some guidance on how to contribute to this project.   
+# Contributing Guide
 
-# Pull Requests
-MimixBox will make about 100 commands by the time it reaches Version 1.0.0.  
-If you find a command that doesn't exist in MimixBox despite the general Unix command, feel free to make a Pull Request.  
-It doesn't matter if there are few options. The test is also minimal. I'll fix some bugs later.  
-First, increase the number of commands. The quality will be improved to Version 1.0.0 or later.  
+Thank you for taking the time to contribute. MimixBox welcomes new applets, options for existing applets, bug fixes, and tests.
 
-I also accept original joke commands and games.  
-However, please be careful about the license. Only licenses compatible with Apache License version 2.0 will be merged.  
-For example, GPLv2 or latter is not merged. Tetris can't be merged either (sorry).  
-  
-If you really want to add a command, declare it in your [GitHub Issue](https://github.com/nao1215/mimixbox/issues).  
-Other developers look at the Issue and try not to develop the same command.
+## Development Environment
 
-# Code tree
+- Go 1.18 or later
+- `make`
+- `git`
+- `shellspec` for the end-to-end tests (`curl -fsSL https://git.io/shellspec | sh -s -- --yes`)
+- `golangci-lint` for linting
+
+## Common Commands
+
+```bash
+make build      # build the mimixbox binary
+make test       # unit tests with coverage (writes cover.out / cover.html)
+make test-e2e   # shellspec end-to-end tests against the built binary
+make lint       # golangci-lint
 ```
-project root dir
-├── cmd
-│     └── mimixbox
-│             └── main.go   ※ If you add command, increment the minor version
-├── docs
-│      └── introduction
-│               └──en
-│                     └── CommandAppletList.md ※ If you add command, add a command description
+
+The end-to-end tests live under `test/it/` and exercise the built binary the way a user does (applet name, flags, stdin, exit codes).
+
+## Architecture
+
+Each applet is a small `Command` built on the `internal/command` framework:
+
+```go
+type Command interface {
+	Name() string
+	Synopsis() string
+	Run(ctx context.Context, io command.IO, args []string) error
+}
+```
+
+`command.IO` carries the input and output streams, so an applet never touches `os.Stdin`/`os.Stdout` directly and can be tested entirely in memory. Flags are parsed with `command.NewFlagSet`, a thin wrapper over [spf13/pflag](https://github.com/spf13/pflag) that gives every applet GNU-style parsing (`--long` options, clustered `-abc` short flags, `--` to end options, and operands mixed with options) plus the standard `--help` and `--version`. The goal is for a MimixBox applet to stand in for the system command of the same name, so options should follow GNU coreutils where one exists.
+
+Pure logic that does not need the process (for example text counting or line numbering) lives in a domain package such as `internal/textproc` and is covered by its own unit tests; the applet package stays thin and wires that logic to `command.IO`.
+
+```
+project root
+├── cmd/mimixbox/main.go          # dispatch
 └── internal
-        └── applets
-                 ├── applet.go ※ See init().
-                 ├── fileutils
-                 ├── games
-                 ├── jokeutils
-                 ├── shellutils
-                 └── textutils
+    ├── command                   # Command framework, GNU flag helper, exit codes
+    ├── textproc                  # pure text logic shared by text applets
+    ├── version                   # central version string
+    └── applets
+        ├── applet.go             # registry: reg(<pkg>.New())
+        ├── fileutils
+        ├── shellutils
+        ├── textutils
+        └── ...
 ```
 
-For example, fileutils directory structure is below.  
-One command is managed in one directory. You can increase the number of files in a certain command directory.
-```
-internal/applets/fileutils/
-├── cp
-│     └── cp.go
-├── ln
-│     └── ln.go
-├── mkdir
-│     └── mkdir.go
-├── mkfifo
-│     └── mkfifo.go
-├── mv
-│     └── mv.go
-├── rm
-│     └── rm.go
-├── rmdir
-│     └── rmdir.go
-└── touch
-       └── touch.go
-```
+### Adding or migrating an applet
 
-If you want to implement a generic method, implement it in the internal library.  
-Treat these libraries as mb libraries.  
-```
-project root directory
- └── internal
-          ├── applets
-          └── lib
-```
+1. Create (or rewrite) the applet package so its type implements `command.Command`. `cat`, `wc`, `head`, and `basename` are good references.
+2. Register it in `internal/applets/applet.go` with `reg(<pkg>.New())`.
+3. Add table-driven unit tests for the applet (and for any new `internal/...` logic).
+4. Run `make test` and, for behaviour visible from the shell, add a `test/it/` spec.
+
+Older applets still use the legacy `Run() (int, error)` entry point; they are being migrated to the framework one group at a time, and new work should use the `Command` interface.
+
+## Licensing
+
+Contributions must be compatible with the Apache License 2.0. GPLv2-or-later code, and assets such as a Tetris clone, cannot be merged. If you plan to add a command, open a [GitHub Issue](https://github.com/nao1215/mimixbox/issues) first so others do not duplicate the work.
+
+## Pull Request Expectations
+
+- follow GNU coreutils option behaviour for applets that mirror a system command
+- add or update tests for new behaviour
+- run `make test` (and `make test-e2e` for CLI changes) before opening a PR
+- run `make lint` when changing Go code
+- record user-facing changes in `CHANGELOG.md` under `[Unreleased]`

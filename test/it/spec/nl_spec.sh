@@ -4,10 +4,10 @@ Describe 'Show text file with number line'
     AfterEach 'Cleanup'
 
     result() { %text
-        #|     1  sh
-        #|     2  ash
-        #|     3  csh
-        #|     4  bash
+        #|     1	sh
+        #|     2	ash
+        #|     3	csh
+        #|     4	bash
     }
     It 'show shell family-name wiht number line'
         When call TestNlNoArg
@@ -22,7 +22,7 @@ Describe 'Show text file with number line'
     AfterEach 'Cleanup'
 
     result() { %text
-        #|     1  /tmp/mimixbox/it/nl.txt
+        #|     1	/tmp/mimixbox/it/nl.txt
     }
     It 'show shell family-name wiht number line'
         When call TestNlFromPipeData
@@ -37,10 +37,10 @@ Describe 'If pass filename and pipe-data'
     AfterEach 'Cleanup'
 
     result() { %text
-        #|     1  sh
-        #|     2  ash
-        #|     3  csh
-        #|     4  bash
+        #|     1	sh
+        #|     2	ash
+        #|     3	csh
+        #|     4	bash
     }
     It 'show only file-data'
         When call TestNlOnlyOperandWithPipeData
@@ -55,12 +55,12 @@ Describe 'Concatenate two file'
     AfterEach 'Cleanup'
 
     result() { %text
-        #|     1  sh
-        #|     2  ash
-        #|     3  csh
-        #|     4  bash
-        #|     5  fish
-        #|     6  zsh
+        #|     1	sh
+        #|     2	ash
+        #|     3	csh
+        #|     4	bash
+        #|     5	fish
+        #|     6	zsh
     }
     It 'show only file-data'
         When call TestNlConcatenateTwoFile
@@ -75,12 +75,12 @@ Describe 'Nl command using heaedoc'
     AfterEach 'Cleanup'
 
     result() { %text
-        #|     1  fish
-        #|     2  zsh
-        #|     3  sh
-        #|     4  ash
-        #|     5  csh
-        #|     6  bash
+        #|     1	fish
+        #|     2	zsh
+        #|     3	sh
+        #|     4	ash
+        #|     5	csh
+        #|     6	bash
     }
     It 'show shell family-name wiht number line'
         When call TestNlHeredoc
@@ -94,12 +94,12 @@ Describe 'Check status after  using heaedoc'
     AfterEach 'Cleanup'
 
     result() { %text
-        #|     1  fish
-        #|     2  zsh
-        #|     3  sh
-        #|     4  ash
-        #|     5  csh
-        #|     6  bash
+        #|     1	fish
+        #|     2	zsh
+        #|     3	sh
+        #|     4	ash
+        #|     5	csh
+        #|     6	bash
     }
     It 'show success'
         When call TestNlHeredoc
@@ -113,7 +113,7 @@ Describe 'nl does not exist file.'
 
     It 'show error'
         When call TestNlNoOperand
-        The error should equal "nl: open no_exist_file: no such file or directory"
+        The error should equal "nl: no_exist_file: no such file or directory"
         The status should be failure
     End
 End

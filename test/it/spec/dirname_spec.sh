@@ -33,7 +33,7 @@ Describe 'Get dirname without operand'
 
     It 'print error'
         When call TestDirnameNoOpertand
-        The error should equal "dirname: no operand"
+        The error should equal "dirname: missing operand"
         The status should be failure
     End
 End

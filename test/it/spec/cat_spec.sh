@@ -23,10 +23,10 @@ Describe 'cat file with --number option'
     AfterEach 'CleanUp'
 
     result() { %text
-        #|     1  sh
-        #|     2  ash
-        #|     3  csh
-        #|     4  bash
+        #|     1	sh
+        #|     2	ash
+        #|     3	csh
+        #|     4	bash
     }
 
     It 'show shell family name with number line.'
@@ -92,12 +92,12 @@ Describe 'cat two file with --number option'
     AfterEach 'CleanUp'
 
     result() { %text
-        #|     1  sh
-        #|     2  ash
-        #|     3  csh
-        #|     4  bash
-        #|     5  fish
-        #|     6  zsh
+        #|     1	sh
+        #|     2	ash
+        #|     3	csh
+        #|     4	bash
+        #|     5	fish
+        #|     6	zsh
     }
 
     It 'concatenate two file'
@@ -133,7 +133,7 @@ Describe 'cat does not exist file.'
 
     It 'show error'
         When call TestCatNoOperand
-        The error should equal "cat: open no_exist_file: no such file or directory"
+        The error should equal "cat: no_exist_file: no such file or directory"
         The status should be failure
     End
 End

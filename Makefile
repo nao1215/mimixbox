@@ -2,12 +2,10 @@ APP        := mimixbox
 PREPARE_UT := test/ut/prepareUnitTest.sh
 INSTALLER  := scripts/installer.sh
 MK_JAIL    := scripts/mkJailForDebianFamily.sh
-MK_MAN     := scripts/mkManpages.sh
 RELEASE    := scripts/release.sh
 
-build:  ## Build mimixbox and make man-pages
+build:  ## Build the mimixbox binary
 	go build "-ldflags=-s -w" -trimpath -o $(APP) cmd/mimixbox/main.go
-	$(MAKE) doc
 	$(MAKE) licenses
 
 clean: ## Clean project
@@ -17,27 +15,31 @@ clean: ## Clean project
 	-rm -rf /tmp/mimixbox/ut/*
 	-rm -rf release
 	-rm -rf licenses
-	-find . -name "*.1.gz" | xargs rm -f
 
-doc: ## Make man-pages
-	$(MK_MAN)
-
-docker: ## Run container for testing mimixbox 
+docker: ## Run container for testing mimixbox
 	docker image build -t mimixbox/test:latest .
 	docker container run --rm -it mimixbox/test:latest
 
-install: ## Install mimixbox (with symbolic link) and man-pages on your system
+install: ## Install mimixbox (with symbolic links) on your system
 	$(INSTALLER)
 
-full-install: ## Full Install mimixbox (with symbolic link) and man-pages on your system
+full-install: ## Install mimixbox and create symbolic links for every applet
 	-$(INSTALLER)
 	mimixbox --full-install /usr/local/bin
 
 remove: ## Remove mimixbox-symbolic link
 	mimixbox --remove /usr/local/bin
 
-it: ## Execute integration test
+test: pre_ut  ## Run unit tests with coverage (writes cover.out / cover.html)
+	-@go test -cover ./... -coverpkg=./... -coverprofile=cover.out
+	-@go tool cover -html=cover.out -o cover.html
+	-@rm -rf /tmp/mimixbox/ut/*
+
+test-e2e: ## Run the shellspec end-to-end tests against the built binary
 	cd test/it && shellspec --shell /bin/bash
+
+lint: ## Run golangci-lint
+	golangci-lint run ./...
 
 jail:  ## Make jail environment for testing chroot/ischroot
 	$(MK_JAIL)
@@ -49,22 +51,17 @@ licenses: ## Get licenses for dependent libraries
 	-@go-licenses save ./cmd/mimixbox --force --save_path "licenses/"
 
 pre_ut:
-	@echo "Clean test directory."
-	-@rm -rf /tmp/mimixbox/ut/*
 	@echo "Make files for test at test directory."
+	-@rm -rf /tmp/mimixbox/ut/*
 	@$(PREPARE_UT)
 
-ut: pre_ut  ## Execute unit test
-	-@go test -cover ./... -v -coverpkg=./... -coverprofile=cover.out
-	-@go tool cover -html=cover.out -o cover.html
-	@echo "--------------------------------------------------------------------"
-	-@rm -rf /tmp/mimixbox/ut/*
-	@echo "The tool saved the coverage information in an HTML. See cover.html"
-
+# Backwards-compatible aliases for the previous target names.
+ut: test  ## Alias for "make test"
+it: test-e2e  ## Alias for "make test-e2e"
 
 .DEFAULT_GOAL := help
-.PHONY: build clean doc docker install jail release deps it ut pre_ut
+.PHONY: build clean docker install full-install remove test test-e2e lint jail release licenses pre_ut ut it help
 
-help:  
+help:
 	@grep -E '^[0-9a-zA-Z_-]+[[:blank:]]*:.*?## .*$$' $(MAKEFILE_LIST) | sort \
 	| awk 'BEGIN {FS = ":.*?## "}; {printf "\033[1;32m%-15s\033[0m %s\n", $$1, $$2}'

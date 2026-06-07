@@ -8,8 +8,6 @@
 ![GitHub](https://img.shields.io/github/license/nao1215/mimixbox)
 ![GitHub all releases](https://img.shields.io/github/downloads/nao1215/mimixbox/total)
 
-[日本語](docs/introduction/ja/README.md)
-
 # MimixBox - mimic BusyBox on Linux
 
 MimixBox packs many Unix commands into a single binary, like BusyBox. Unlike BusyBox, it targets the desktop environment rather than embedded systems. The project aims for a wide range of built-in commands (applets), from the basics provided by Coreutils to its own experimental commands.
@@ -68,20 +66,19 @@ The table below shows the tools used when developing commands in the MimixBox pr
 | Tool | Description |
 |:-----|:------|
 | go-licenses | License management of dependent libraries |
-| pandoc | Convert markdown files to man pages |
 | make | Build, test, release, etc. |
-| gzip | Compress man pages |
 | curl | Install ShellSpec |
-| install | Install the MimixBox binary and documents on the system |
+| install | Install the MimixBox binary on the system |
 | docker | Test MimixBox inside Docker |
 | debootstrap | Test MimixBox inside a jail environment |
-| shellspec | Integration test |
+| shellspec | End-to-end test |
+| golangci-lint | Lint Go code |
 | libpam0g-dev (pam-devel) | PAM (Pluggable Authentication Modules) library |
 
 On a Debian-based distribution (e.g. Debian／Ubuntu／Kali Linux／Raspberry Pi OS), install the tools with:
 
 ```shell
-$ sudo apt install build-essential curl git pandoc gzip docker.io debootstrap libpam0g-dev
+$ sudo apt install build-essential curl git docker.io debootstrap libpam0g-dev
 $ go install github.com/google/go-licenses@latest
 $ curl -fsSL https://git.io/shellspec | sh -s -- --yes
 ```
@@ -128,7 +125,7 @@ To report a bug or request a feature, please use [GitHub Issue](https://github.c
 
 ## License
 
-The MimixBox project is licensed under the terms of the MIT license and Apache License 2.0. See [LICENSE](./LICENSE) and [NOTICE](./NOTICE).
+The MimixBox project is licensed under the terms of the MIT license and Apache License 2.0. See [LICENSE](./LICENSE).
 
 ## Contributors
 

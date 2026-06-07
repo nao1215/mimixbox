@@ -1,5 +1,37 @@
 # Changelog
-All notable changes to this project will be documented in this file. The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.0.0/), and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
+
+All notable changes to this project are documented in this file.
+
+The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.1.0/),
+and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
+
+## [Unreleased]
+
+### Added
+
+- `internal/command`: a small framework every applet can be built on. An applet
+  is now a `Command` that receives its I/O streams and arguments as values, so
+  it is testable in memory. Flag parsing moves to [spf13/pflag](https://github.com/spf13/pflag)
+  via `command.NewFlagSet`, giving GNU-style options (`--long`, clustered
+  `-abc`, `--`, interspersed operands) plus standard `--help` / `--version`.
+- `internal/textproc`: pure, unit-tested text logic (counting, line numbering,
+  reversal, head/tail) shared by the text applets.
+- `internal/version`: a single version string, replacing the per-applet
+  version constants.
+- Unit tests for the migrated applets and the new packages.
+
+### Changed
+
+- Migrated `cat`, `tac`, `nl`, `head`, `tail`, `wc`, `echo`, `basename`,
+  `dirname`, `true`, and `false` to the new framework with GNU coreutils option
+  behaviour. Remaining applets continue to work through a compatibility adapter.
+
+### Removed
+
+- Man pages and the pandoc-based generation (`scripts/mkManpages.sh`,
+  `docs/man/`); use each command's `--help` instead.
+- `NOTICE` and the Japanese introduction docs (`docs/introduction/ja/`).
+
 ## [0.33.0] - 2021-12-20
 ### Added
  - lifegame command.
