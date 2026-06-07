@@ -1,94 +1,62 @@
-//
-// mimixbox/internal/applets/shellutils/hostid/hostid.go
-//
-// Copyright 2021 Naohiro CHIKAMATSU
-//
-// Licensed under the Apache License, Version 2.0 (the "License");
-// you may not use this file except in compliance with the License.
-// You may obtain a copy of the License at
-//
-//    http://www.apache.org/licenses/LICENSE-2.0
-//
-// Unless required by applicable law or agreed to in writing, software
-// distributed under the License is distributed on an "AS IS" BASIS,
-// WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
-// See the License for the specific language governing permissions and
-// limitations under the License.
+// Package hostid implements the hostid applet: print the numeric identifier
+// (in hexadecimal) of the current host. The computation is preserved from the
+// original applet and, as its description warns, does not match the Coreutils
+// hostid command.
 package hostid
 
 import (
+	"context"
 	"fmt"
-	"os"
 	"strconv"
 	"strings"
 
-	"github.com/jessevdk/go-flags"
+	"github.com/nao1215/mimixbox/internal/command"
 	mb "github.com/nao1215/mimixbox/internal/lib"
 )
 
-const cmdName string = "hostid"
-const version = "0.9.1"
+// Command is the hostid applet.
+type Command struct{}
 
-var osExit = os.Exit
+// New returns a hostid command.
+func New() *Command { return &Command{} }
 
-type options struct {
-	Version bool `short:"v" long:"version" description:"Show hostid command version"`
+// Name returns the command name.
+func (c *Command) Name() string { return "hostid" }
+
+// Synopsis returns the one-line description shown in the applet list.
+func (c *Command) Synopsis() string {
+	return "Print hostid (Host Identity Number, hex)!!!Does not work properly!!!"
 }
 
-func Run() (int, error) {
-	var opts options
-	var err error
+// Run executes hostid.
+func (c *Command) Run(_ context.Context, stdio command.IO, args []string) error {
+	fs := command.NewFlagSet(c.Name(), "[OPTION]", stdio.Err)
 
-	if _, err = parseArgs(&opts); err != nil {
-		return mb.ExitSuccess, nil
+	proceed, err := fs.Parse(stdio, args)
+	if err != nil || !proceed {
+		return err
 	}
-	return hostid()
-}
 
-func hostid() (int, error) {
 	ip4, err := mb.Ip4()
 	if err != nil {
-		return mb.ExitFailure, err
+		fmt.Fprintf(stdio.Err, "hostid: %v\n", err)
+		return command.SilentFailure()
 	}
 
-	//TODO: The output doesn't match the Coreutils version of hostid command.
+	// NOTE: The output doesn't match the Coreutils version of hostid command.
 	// First, the IP address should be calculated from the hostname.
-	// Next, the process of converting the IP address to hexadecimal does not match.
-	// I don't know the cause, so I'll deal with it later.
+	// Next, the process of converting the IP address to hexadecimal does not
+	// match. This computation is preserved from the original implementation.
 	for _, ip := range ip4 {
 		ipList := strings.Split(ip, ".")
-		fmt.Fprintf(os.Stdout, "%02x%02x%02x%02x\n",
+		fmt.Fprintf(stdio.Out, "%02x%02x%02x%02x\n",
 			atoi(ipList[1]), atoi(ipList[0]), atoi(ipList[3]), atoi(ipList[2]))
 	}
 
-	return mb.ExitSuccess, nil
+	return nil
 }
 
 func atoi(decimal string) int {
 	i, _ := strconv.Atoi(decimal)
 	return i
-}
-
-func parseArgs(opts *options) ([]string, error) {
-	p := initParser(opts)
-
-	args, err := p.Parse()
-	if err != nil {
-		return nil, err
-	}
-
-	if opts.Version {
-		mb.ShowVersion(cmdName, version)
-		osExit(mb.ExitSuccess)
-	}
-
-	return args, nil
-}
-
-func initParser(opts *options) *flags.Parser {
-	parser := flags.NewParser(opts, flags.Default)
-	parser.Name = cmdName
-	parser.Usage = "[OPTIONS]"
-
-	return parser
 }

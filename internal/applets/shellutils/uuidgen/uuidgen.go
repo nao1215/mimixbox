@@ -14,84 +14,66 @@
 // WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
 // See the License for the specific language governing permissions and
 // limitations under the License.
+
+// Package uuidgen implements the uuidgen applet: print a random (version 4)
+// UUID in the canonical 8-4-4-4-12 lowercase hexadecimal form.
 package uuidgen
 
 import (
-	"bufio"
+	"context"
+	"crypto/rand"
 	"fmt"
-	"os"
 
-	"github.com/jessevdk/go-flags"
-	mb "github.com/nao1215/mimixbox/internal/lib"
+	"github.com/nao1215/mimixbox/internal/command"
 )
 
-const cmdName string = "uuidgen"
+// Command is the uuidgen applet.
+type Command struct{}
 
-const version = "1.0.0"
+// New returns a uuidgen command.
+func New() *Command { return &Command{} }
 
-var osExit = os.Exit
+// Name returns the command name.
+func (c *Command) Name() string { return "uuidgen" }
 
-type options struct {
-	Version bool `short:"v" long:"version" description:"Show uuidgen command version"`
-}
+// Synopsis returns the one-line description shown in the applet list.
+func (c *Command) Synopsis() string { return "Print UUID (Universal Unique IDentifier" }
 
-func Run() (int, error) {
-	var opts options
-	var err error
+// Run executes uuidgen. It generates a random (version 4) UUID and prints it
+// lowercase, followed by a newline, to stdio.Out.
+func (c *Command) Run(_ context.Context, stdio command.IO, args []string) error {
+	fs := command.NewFlagSet(c.Name(), "[OPTION]", stdio.Err)
 
-	if _, err = parseArgs(&opts); err != nil {
-		return mb.ExitFailure, nil
+	proceed, err := fs.Parse(stdio, args)
+	if err != nil || !proceed {
+		return err
 	}
-	return uuidgen()
-}
 
-func parseArgs(opts *options) ([]string, error) {
-	p := initParser(opts)
-
-	args, err := p.Parse()
+	id, err := uuidV4()
 	if err != nil {
-		return nil, err
+		fmt.Fprintf(stdio.Err, "uuidgen: %v\n", err)
+		return command.SilentFailure()
 	}
-
-	if opts.Version {
-		mb.ShowVersion(cmdName, version)
-		osExit(mb.ExitSuccess)
-	}
-	return args, nil
+	fmt.Fprintln(stdio.Out, id)
+	return nil
 }
 
-func initParser(opts *options) *flags.Parser {
-	parser := flags.NewParser(opts, flags.Default)
-	parser.Name = cmdName
-	parser.Usage = "[OPTIONS] "
-
-	return parser
-}
-
-// Generate UUID version.4
-// [e.g. ver 1.0]
-//  xxxxxxxx-xxxx-1xxx-xxxx-xxxxxxxxxxxx
-//                ^
-//                |
-//              always "1"
-// [e.g. ver 4.0]
-//  xxxxxxxx-xxxx-4xxx-xxxx-xxxxxxxxxxxx
-//                ^
-//                |
-//              always "4"
-func uuidgen() (int, error) {
-	fp, err := os.Open("/proc/sys/kernel/random/uuid")
-	if err != nil {
-		return mb.ExitFailure, err
+// uuidV4 returns a randomly generated version 4 UUID in the canonical
+// 8-4-4-4-12 lowercase hexadecimal form.
+//
+//	xxxxxxxx-xxxx-4xxx-yxxx-xxxxxxxxxxxx
+//	              ^    ^
+//	              |    |
+//	              |    variant bits: one of 8, 9, a, b
+//	              version, always "4"
+func uuidV4() (string, error) {
+	var b [16]byte
+	if _, err := rand.Read(b[:]); err != nil {
+		return "", err
 	}
-	defer fp.Close()
+	// Set the version (4) and variant (RFC 4122) bits.
+	b[6] = (b[6] & 0x0f) | 0x40
+	b[8] = (b[8] & 0x3f) | 0x80
 
-	reader := bufio.NewReaderSize(fp, 38) // UUID's format sample: 333f899e-5dbf-41ec-8c42-e3b3ddbe2e68
-	line, _, err := reader.ReadLine()
-	if err != nil {
-		return mb.ExitFailure, err
-	}
-
-	fmt.Fprintln(os.Stdout, string(line))
-	return mb.ExitSuccess, nil
+	return fmt.Sprintf("%x-%x-%x-%x-%x", b[0:4], b[4:6], b[6:8], b[8:10], b[10:16]), nil
 }

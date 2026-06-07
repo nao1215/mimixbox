@@ -1,107 +1,35 @@
-//
-// mimixbox/internal/applets/textutils/md5sum/md5sum.go
-//
-// Copyright 2021 Naohiro CHIKAMATSU
-//
-// Licensed under the Apache License, Version 2.0 (the "License");
-// you may not use this file except in compliance with the License.
-// You may obtain a copy of the License at
-//
-//    http://www.apache.org/licenses/LICENSE-2.0
-//
-// Unless required by applicable law or agreed to in writing, software
-// distributed under the License is distributed on an "AS IS" BASIS,
-// WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
-// See the License for the specific language governing permissions and
-// limitations under the License.
+// Package sha1sum implements the sha1sum applet: print or check SHA-1 message
+// digests, in the GNU coreutils output format.
 package sha1sum
 
 import (
-	"crypto/sha1"
-	"os"
-	"strings"
+	"context"
+	"crypto/sha1" //nolint:gosec // sha1sum is by definition a SHA-1 utility
 
-	mb "github.com/nao1215/mimixbox/internal/lib"
-
-	"github.com/jessevdk/go-flags"
+	"github.com/nao1215/mimixbox/internal/command"
+	"github.com/nao1215/mimixbox/internal/hashsum"
 )
 
-const cmdName string = "sha1sum"
+// synopsis is the one-line description shown in the applet list. It is kept
+// byte-for-byte identical to the legacy table (including its typo) so the
+// listing does not change.
+const synopsis = "alculate or Check sercure hash 1 algorithm"
 
-const version = "1.0.1"
+// Command is the sha1sum applet.
+type Command struct{ inner *hashsum.Command }
 
-var osExit = os.Exit
-
-type options struct {
-	Check   bool `short:"c" long:"check" description:"Check if the SHA1 value matches the file"`
-	Version bool `short:"v" long:"version" description:"Show sha1sum command version"`
+// New returns a sha1sum command.
+func New() *Command {
+	return &Command{inner: hashsum.New("sha1sum", synopsis, sha1.New)}
 }
 
-func Run() (int, error) {
-	var opts options
-	var args []string
-	var err error = nil
-	hash := sha1.New()
+// Name returns the command name.
+func (c *Command) Name() string { return c.inner.Name() }
 
-	if args, err = parseArgs(&opts); err != nil {
-		return mb.ExitFailure, nil
-	}
+// Synopsis returns the one-line description shown in the applet list.
+func (c *Command) Synopsis() string { return c.inner.Synopsis() }
 
-	if mb.HasPipeData() && mb.HasNoOperand(os.Args, cmdName) {
-		err = mb.ChecksumOutput(hash, strings.NewReader(args[0]), "-")
-		if err != nil {
-			return mb.ExitFailure, err
-		}
-		return mb.ExitSuccess, nil
-	}
-
-	if len(args) == 0 || mb.Contains(args, "-") {
-		err = mb.ChecksumOutput(hash, os.Stdin, "-")
-		if err != nil {
-			return mb.ExitSuccess, nil
-		}
-		return mb.ExitSuccess, nil
-	}
-
-	if opts.Check {
-		err = mb.CompareChecksum(hash, args)
-		if err != nil {
-			return mb.ExitFailure, err
-		}
-		return mb.ExitSuccess, nil
-	}
-
-	return mb.PrintChecksums(cmdName, hash, args)
-}
-
-func parseArgs(opts *options) ([]string, error) {
-	p := initParser(opts)
-
-	args, err := p.Parse()
-	if err != nil {
-		return nil, err
-	}
-
-	if mb.HasPipeData() && len(args) == 0 {
-		stdin, err := mb.FromPIPE()
-		if err != nil {
-			return nil, err
-		}
-		return []string{stdin}, nil
-	}
-
-	if opts.Version {
-		mb.ShowVersion(cmdName, version)
-		osExit(mb.ExitSuccess)
-	}
-
-	return args, nil
-}
-
-func initParser(opts *options) *flags.Parser {
-	parser := flags.NewParser(opts, flags.Default)
-	parser.Name = cmdName
-	parser.Usage = "[OPTIONS] FILE_PATH"
-
-	return parser
+// Run executes sha1sum.
+func (c *Command) Run(ctx context.Context, stdio command.IO, args []string) error {
+	return c.inner.Run(ctx, stdio, args)
 }

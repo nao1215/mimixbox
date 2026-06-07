@@ -1,90 +1,81 @@
-//
-// mimixbox/internal/applets/shellutils/pwd/pwd.go
-//
-// Copyright 2021 Naohiro CHIKAMATSU
-//
-// Licensed under the Apache License, Version 2.0 (the "License");
-// you may not use this file except in compliance with the License.
-// You may obtain a copy of the License at
-//
-//    http://www.apache.org/licenses/LICENSE-2.0
-//
-// Unless required by applicable law or agreed to in writing, software
-// distributed under the License is distributed on an "AS IS" BASIS,
-// WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
-// See the License for the specific language governing permissions and
-// limitations under the License.
+// Package pwd implements the pwd applet: print the name of the current working
+// directory.
 package pwd
 
 import (
+	"context"
 	"fmt"
 	"os"
 	"path/filepath"
 
-	mb "github.com/nao1215/mimixbox/internal/lib"
-
-	"github.com/jessevdk/go-flags"
+	"github.com/nao1215/mimixbox/internal/command"
 )
 
-const cmdName string = "pwd"
+// Command is the pwd applet.
+type Command struct{}
 
-const version = "1.0.0"
+// New returns a pwd command.
+func New() *Command { return &Command{} }
 
-var osExit = os.Exit
+// Name returns the command name.
+func (c *Command) Name() string { return "pwd" }
 
-type options struct {
-	Logical  bool `short:"L"  description:"print the value of $PWD if it names the current working directory (default)"`
-	Physical bool `short:"P"  description:"print the physical directory, without any symbolic links"`
-	Version  bool `short:"v" long:"version" description:"Show pwd command version"`
-}
+// Synopsis returns the one-line description shown in the applet list.
+func (c *Command) Synopsis() string { return "Print Working Directory" }
 
-func Run() (int, error) {
-	var opts options
-	var err error
+// Run executes pwd.
+func (c *Command) Run(_ context.Context, stdio command.IO, args []string) error {
+	fs := command.NewFlagSet(c.Name(), "[OPTION]", stdio.Err)
+	logical := fs.BoolP("logical", "L", false, "use PWD from environment, even if it contains symlinks")
+	physical := fs.BoolP("physical", "P", false, "avoid all symlinks")
 
-	if _, err = parseArgs(&opts); err != nil {
-		return mb.ExitFailure, nil
+	proceed, err := fs.Parse(stdio, args)
+	if err != nil || !proceed {
+		return err
 	}
-	return pwd(opts)
-}
 
-func pwd(opts options) (int, error) {
-	if !opts.Logical && !opts.Physical {
-		fmt.Fprintln(os.Stdout, os.Getenv("PWD"))
-	} else if opts.Logical && opts.Physical {
-		fmt.Fprintln(os.Stdout, os.Getenv("PWD"))
-	} else if opts.Logical {
-		fmt.Fprintln(os.Stdout, os.Getenv("PWD"))
-	} else if opts.Physical {
-		path, err := filepath.EvalSymlinks(os.Getenv("PWD"))
-		if err != nil {
-			return mb.ExitFailure, err
-		}
-		fmt.Fprintln(os.Stdout, path)
-	}
-	return mb.ExitSuccess, nil
-}
-
-func parseArgs(opts *options) ([]string, error) {
-	p := initParser(opts)
-
-	args, err := p.Parse()
+	dir, err := workingDir(*physical && !*logical)
 	if err != nil {
-		return nil, err
+		fmt.Fprintf(stdio.Err, "pwd: %v\n", err)
+		return command.SilentFailure()
 	}
-
-	if opts.Version {
-		mb.ShowVersion(cmdName, version)
-		osExit(mb.ExitSuccess)
-	}
-
-	return args, nil
+	fmt.Fprintln(stdio.Out, dir)
+	return nil
 }
 
-func initParser(opts *options) *flags.Parser {
-	parser := flags.NewParser(opts, flags.Default)
-	parser.Name = cmdName
-	parser.Usage = "[OPTIONS]"
+// workingDir returns the current working directory. By default (logical) it
+// honours $PWD when it names the current directory; with physical true it
+// resolves all symbolic links to an absolute canonical path.
+func workingDir(physical bool) (string, error) {
+	if physical {
+		dir, err := os.Getwd()
+		if err != nil {
+			return "", err
+		}
+		return filepath.EvalSymlinks(dir)
+	}
 
-	return parser
+	if pwd := os.Getenv("PWD"); filepath.IsAbs(pwd) && namesCurrentDir(pwd) {
+		return pwd, nil
+	}
+	return os.Getwd()
+}
+
+// namesCurrentDir reports whether pwd refers to the current working directory,
+// i.e. resolving its symlinks yields the same canonical directory as the
+// process's actual working directory.
+func namesCurrentDir(pwd string) bool {
+	wd, err := os.Getwd()
+	if err != nil {
+		return false
+	}
+	rp, err := filepath.EvalSymlinks(pwd)
+	if err != nil {
+		return false
+	}
+	rwd, err := filepath.EvalSymlinks(wd)
+	if err != nil {
+		return false
+	}
+	return rp == rwd
 }

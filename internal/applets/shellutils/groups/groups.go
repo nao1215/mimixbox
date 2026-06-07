@@ -1,104 +1,96 @@
-//
-// mimixbox/internal/applets/shellutils/groups/groups.go
-//
-// Copyright 2021 Naohiro CHIKAMATSU
-//
-// Licensed under the Apache License, Version 2.0 (the "License");
-// you may not use this file except in compliance with the License.
-// You may obtain a copy of the License at
-//
-//    http://www.apache.org/licenses/LICENSE-2.0
-//
-// Unless required by applicable law or agreed to in writing, software
-// distributed under the License is distributed on an "AS IS" BASIS,
-// WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
-// See the License for the specific language governing permissions and
-// limitations under the License.
+// Package groups implements the groups applet: print the groups a user
+// belongs to. With no operand it prints the current user's groups; with one or
+// more USERNAME operands it prints each user's groups.
 package groups
 
 import (
+	"context"
 	"fmt"
-	"os"
 	"os/user"
+	"strings"
 
-	"github.com/jessevdk/go-flags"
-	mb "github.com/nao1215/mimixbox/internal/lib"
+	"github.com/nao1215/mimixbox/internal/command"
 )
 
-const cmdName string = "groups"
-const version = "1.0.2"
+// Command is the groups applet.
+type Command struct{}
 
-var osExit = os.Exit
+// New returns a groups command.
+func New() *Command { return &Command{} }
 
-type options struct {
-	Version bool `short:"v" long:"version" description:"Show groups command version"`
-}
+// Name returns the command name.
+func (c *Command) Name() string { return "groups" }
 
-func Run() (int, error) {
-	var opts options
-	var err error
-	var args []string
+// Synopsis returns the one-line description shown in the applet list.
+func (c *Command) Synopsis() string { return "Print the groups to which USERNAME belongs" }
 
-	if args, err = parseArgs(&opts); err != nil {
-		return mb.ExitSuccess, nil
-	}
-	return groups(args)
-}
+// Run executes groups.
+func (c *Command) Run(_ context.Context, stdio command.IO, args []string) error {
+	fs := command.NewFlagSet(c.Name(), "[USERNAME]...", stdio.Err)
 
-func groups(args []string) (int, error) {
-
-	if len(args) == 0 {
-		return showCurrentUserGroups()
+	proceed, err := fs.Parse(stdio, args)
+	if err != nil || !proceed {
+		return err
 	}
 
-	var status int = mb.ExitSuccess
-	for _, uname := range args {
-		groups, err := mb.Groups(uname)
-		if err != nil {
-			fmt.Fprintln(os.Stderr, "can't get "+uname+" groups information")
-			status = mb.ExitFailure
+	names := fs.Args()
+	if len(names) == 0 {
+		// No operand: print the current user's groups.
+		u, uerr := user.Current()
+		if uerr != nil {
+			return command.Failuref("groups: cannot find current user: %v", uerr)
+		}
+		line, gerr := groupNames(u)
+		if gerr != nil {
+			return command.Failuref("groups: %v", gerr)
+		}
+		fmt.Fprintln(stdio.Out, line)
+		return nil
+	}
+
+	// One or more operands: print each user's groups.
+	failed := false
+	for _, name := range names {
+		u, uerr := user.Lookup(name)
+		if uerr != nil {
+			fmt.Fprintf(stdio.Err, "groups: '%s': no such user\n", name)
+			failed = true
 			continue
 		}
-		fmt.Fprint(os.Stdout, uname+" : ")
-		mb.DumpGroups(groups, true)
+		line, gerr := groupNames(u)
+		if gerr != nil {
+			fmt.Fprintf(stdio.Err, "groups: '%s': %v\n", name, gerr)
+			failed = true
+			continue
+		}
+		// GNU prefixes each line with "user :" when an operand is given.
+		if len(names) > 1 {
+			fmt.Fprintf(stdio.Out, "%s : %s\n", name, line)
+		} else {
+			fmt.Fprintln(stdio.Out, line)
+		}
 	}
-	return status, nil
+	if failed {
+		return command.SilentFailure()
+	}
+	return nil
 }
 
-func showCurrentUserGroups() (int, error) {
-	u, err := user.Current()
+// groupNames resolves the group names u belongs to, space-separated.
+func groupNames(u *user.User) (string, error) {
+	gids, err := u.GroupIds()
 	if err != nil {
-		return mb.ExitFailure, err
+		return "", err
 	}
-
-	groups, err := mb.Groups(u.Username)
-	if err != nil {
-		return mb.ExitFailure, err
+	names := make([]string, 0, len(gids))
+	for _, gid := range gids {
+		g, err := user.LookupGroupId(gid)
+		if err != nil {
+			// Fall back to the numeric id when the group has no name entry.
+			names = append(names, gid)
+			continue
+		}
+		names = append(names, g.Name)
 	}
-	mb.DumpGroups(groups, true)
-	return mb.ExitSuccess, nil
-}
-
-func parseArgs(opts *options) ([]string, error) {
-	p := initParser(opts)
-
-	args, err := p.Parse()
-	if err != nil {
-		return nil, err
-	}
-
-	if opts.Version {
-		mb.ShowVersion(cmdName, version)
-		osExit(mb.ExitSuccess)
-	}
-
-	return args, nil
-}
-
-func initParser(opts *options) *flags.Parser {
-	parser := flags.NewParser(opts, flags.Default)
-	parser.Name = cmdName
-	parser.Usage = "[OPTIONS] [USERNAME]"
-
-	return parser
+	return strings.Join(names, " "), nil
 }
