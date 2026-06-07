@@ -1,5 +1,5 @@
 // Package od implements the od applet: dump files (or standard input) in octal
-// and other formats. It mirrors the common behaviour of GNU od, including an
+// and other formats. It mirrors the common behavior of GNU od, including an
 // address (offset) column followed by formatted byte groups and a final address
 // line giving the total length.
 package od

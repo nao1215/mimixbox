@@ -208,7 +208,7 @@ func modeFromBits(base os.FileMode, bits uint32) os.FileMode {
 // applyMode computes the new FileMode for a file whose current mode is cur, given
 // a chmod MODE string. mode is either an octal number (e.g. "755", "0644") or a
 // comma-separated list of symbolic clauses "[ugoa]*[-+=][rwxXst]*". isDir selects
-// the behaviour of the "X" perm (execute only for directories or files that are
+// the behavior of the "X" perm (execute only for directories or files that are
 // already executable). The non-permission bits of cur are preserved.
 func applyMode(cur os.FileMode, mode string, isDir bool) (os.FileMode, error) {
 	if mode == "" {
