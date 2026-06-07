@@ -18,13 +18,19 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
   reversal, head/tail) shared by the text applets.
 - `internal/version`: a single version string, replacing the per-applet
   version constants.
-- Unit tests for the migrated applets and the new packages.
+- `internal/hashsum`: shared digest logic backing md5sum/sha1sum/sha256sum/sha512sum.
+- Unit tests for every migrated applet and the new packages.
 
 ### Changed
 
-- Migrated `cat`, `tac`, `nl`, `head`, `tail`, `wc`, `echo`, `basename`,
-  `dirname`, `true`, and `false` to the new framework with GNU coreutils option
-  behaviour. Remaining applets continue to work through a compatibility adapter.
+- Migrated **all** applets to the new framework with GNU coreutils option
+  behavior: every applet now implements `command.Command`, takes its I/O as
+  injected streams, parses flags with pflag, and is covered by unit tests.
+  Interactive commands (`rm -i`, `cp -i`, `mv -i`, `sddf`, `mbsh`) read from the
+  injected input; network commands (`wget`, `ghrdc`) are tested with `httptest`;
+  the terminal games (`lifegame`, `sl`) degrade gracefully without a TTY; and
+  `halt`/`poweroff`/`reboot` keep the reboot syscall behind a stubbable hook so
+  tests never touch the machine.
 
 ### Removed
 

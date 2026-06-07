@@ -1,110 +1,125 @@
-//
-//  mimixbox/internal/applets/shellutils/serial/serial.go
-//
-// Copyright 2021 Naohiro CHIKAMATSU
-//
-// Licensed under the Apache License, Version 2.0 (the "License");
-// you may not use this file except in compliance with the License.
-// You may obtain a copy of the License at
-//
-//    http://www.apache.org/licenses/LICENSE-2.0
-//
-// Unless required by applicable law or agreed to in writing, software
-// distributed under the License is distributed on an "AS IS" BASIS,
-// WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
-// See the License for the specific language governing permissions and
-// limitations under the License.
+// Package serial implements the serial applet: rename (or copy) the files in a
+// directory to names that carry a zero-padded serial number. serial is a
+// MimixBox-original command; it adds the serial number as a prefix (the
+// default) or a suffix, and can optionally replace the base file name.
 package serial
 
 import (
+	"context"
 	"fmt"
-	"io/ioutil"
 	"os"
 	"path/filepath"
 	"sort"
 	"strconv"
 	"strings"
 
-	mb "github.com/nao1215/mimixbox/internal/lib"
-
-	"github.com/jessevdk/go-flags"
+	"github.com/nao1215/mimixbox/internal/command"
 )
 
-const cmdName string = "serial"
+// Command is the serial applet.
+type Command struct{}
 
-var osExit = os.Exit
+// New returns a serial command.
+func New() *Command { return &Command{} }
 
-const version = "1.0.2"
+// Name returns the command name.
+func (c *Command) Name() string { return "serial" }
+
+// Synopsis returns the one-line description shown in the applet list.
+func (c *Command) Synopsis() string { return "Rename the file to the name with a serial number" }
 
 type options struct {
-	DryRun  bool   `short:"d" long:"dry-run" description:"Output the file renaming result to standard output (do not update the file)"`
-	Force   bool   `short:"f" long:"force" description:"Forcibly overwrite and save even if a file with the same name exists"`
-	Keep    bool   `short:"k" long:"keep" description:"Keep the file before renaming"`
-	Name    string `short:"n" long:"name" value-name:"<name>" description:"Base file name with/without directory path (assign a serial number to this file name)"`
-	Prefix  bool   `short:"p" long:"prefix" description:"Add a serial number to the beginning of the file name(default)"`
-	Suffix  bool   `short:"s" long:"suffix" description:"Add a serial number to the end of the file name"`
-	Version bool   `short:"v" long:"version" description:"Show serial command version"`
+	dryRun bool
+	force  bool
+	keep   bool
+	name   string
+	prefix bool
+	suffix bool
 }
 
-func Run() (int, error) {
-	var opts options
-	var args = parseArgs(&opts)
-	var dirPath = args[0]
+// Run executes serial.
+func (c *Command) Run(_ context.Context, stdio command.IO, args []string) error {
+	fs := command.NewFlagSet(c.Name(), "[OPTION]... DIRECTORY", stdio.Err)
+	dryRun := fs.BoolP("dry-run", "d", false, "Output the file renaming result to standard output (do not update the file)")
+	force := fs.BoolP("force", "f", false, "Forcibly overwrite and save even if a file with the same name exists")
+	keep := fs.BoolP("keep", "k", false, "Keep the file before renaming")
+	name := fs.StringP("name", "n", "", "Base file name with/without directory path (assign a serial number to this file name)")
+	prefix := fs.BoolP("prefix", "p", false, "Add a serial number to the beginning of the file name(default)")
+	suffix := fs.BoolP("suffix", "s", false, "Add a serial number to the end of the file name")
 
-	if !mb.Exists(dirPath) {
-		err := fmt.Errorf("%s doesn't exist.", dirPath)
-		return mb.ExitFailure, err
+	proceed, err := fs.Parse(stdio, args)
+	if err != nil || !proceed {
+		return err
 	}
 
-	var files = getFilePathsInDir(dirPath)
+	opts := options{
+		dryRun: *dryRun,
+		force:  *force,
+		keep:   *keep,
+		name:   *name,
+		prefix: *prefix,
+		suffix: *suffix,
+	}
+
+	operands := fs.Args()
+	if len(operands) == 0 {
+		_, _ = fmt.Fprintln(stdio.Err, "serial: missing operand")
+		return command.SilentFailure()
+	}
+	if len(operands) != 1 {
+		_, _ = fmt.Fprintf(stdio.Err, "serial: extra operand '%s'\n", operands[1])
+		return command.SilentFailure()
+	}
+	if opts.name != "" && strings.HasSuffix(opts.name, "/") {
+		_, _ = fmt.Fprintf(stdio.Err, "serial: invalid --name '%s' (must include a file name)\n", opts.name)
+		return command.SilentFailure()
+	}
+
+	dirPath := operands[0]
+	if !exists(dirPath) {
+		return command.Failuref("%s doesn't exist.", dirPath)
+	}
+
+	files, err := getFilePathsInDir(dirPath)
+	if err != nil {
+		return command.Failure(err)
+	}
 	if len(files) == 0 {
-		err := fmt.Errorf("No files in %s directory.", dirPath)
-		return mb.ExitFailure, err
+		return command.Failuref("No files in %s directory.", dirPath)
 	}
 
 	newFileNames := newNames(opts, files)
-	dieIfExistSameNameFile(opts.Force, newFileNames)
-	makeDirIfNeeded(newFileNames[files[0]])
-
-	if opts.Keep {
-		copy(newFileNames, opts.DryRun)
-	} else {
-		rename(newFileNames, opts.DryRun)
+	if err := dieIfExistSameNameFile(opts.force, newFileNames); err != nil {
+		return command.Failure(err)
 	}
-	return mb.ExitSuccess, nil
+	if err := makeDirIfNeeded(newFileNames[files[0]]); err != nil {
+		return command.Failure(err)
+	}
+
+	if opts.keep {
+		return copyFiles(stdio, newFileNames, opts.dryRun)
+	}
+	return rename(stdio, newFileNames, opts.dryRun)
 }
 
-func rename(newFileNames map[string]string, dryRun bool) {
-	keys := make([]string, 0, len(newFileNames))
-	for k := range newFileNames {
-		keys = append(keys, k)
-	}
-	sort.Strings(keys)
-
-	for _, org := range keys {
-		fmt.Fprintf(os.Stdout, "Rename %s to %s\n", org, newFileNames[org])
+func rename(stdio command.IO, newFileNames map[string]string, dryRun bool) error {
+	for _, org := range sortedKeys(newFileNames) {
+		_, _ = fmt.Fprintf(stdio.Out, "Rename %s to %s\n", org, newFileNames[org])
 		if dryRun {
 			continue
 		}
 		if err := os.Rename(org, newFileNames[org]); err != nil {
-			fmt.Fprintf(os.Stderr, "Can't rename %s to %s\n", org, newFileNames[org])
-			osExit(1)
+			_, _ = fmt.Fprintf(stdio.Err, "Can't rename %s to %s\n", org, newFileNames[org])
+			return command.SilentFailure()
 		}
 	}
+	return nil
 }
 
-func copy(newFileNames map[string]string, dryRun bool) {
-	var dest string
-	keys := make([]string, 0, len(newFileNames))
-
-	for k := range newFileNames {
-		keys = append(keys, k)
-	}
-	sort.Strings(keys)
-
-	for _, org := range keys {
-		dest = newFileNames[org]
-		fmt.Fprintf(os.Stdout, "Copy %s to %s\n", org, dest)
+func copyFiles(stdio command.IO, newFileNames map[string]string, dryRun bool) error {
+	for _, org := range sortedKeys(newFileNames) {
+		dest := newFileNames[org]
+		_, _ = fmt.Fprintf(stdio.Out, "Copy %s to %s\n", org, dest)
 		if dryRun {
 			continue
 		}
@@ -118,115 +133,72 @@ func copy(newFileNames map[string]string, dryRun bool) {
 		// If this function is running, it will force the file to be overwritten.
 		// If there is the file with the same name in the copy destination,
 		// delete it before copy the file.
-		if mb.Exists(dest) {
+		if exists(dest) {
 			if err := os.Remove(dest); err != nil {
-				fmt.Fprintf(os.Stderr, "Can't copy %s to %s\n", org, dest)
-				osExit(mb.ExitFailure)
+				_, _ = fmt.Fprintf(stdio.Err, "Can't copy %s to %s\n", org, dest)
+				return command.SilentFailure()
 			}
 		}
 
 		if err := os.Link(org, dest); err != nil {
-			fmt.Fprintf(os.Stderr, "Can't copy %s to %s\n", org, dest)
-			osExit(mb.ExitFailure)
+			_, _ = fmt.Fprintf(stdio.Err, "Can't copy %s to %s\n", org, dest)
+			return command.SilentFailure()
 		}
 	}
+	return nil
 }
 
-func parseArgs(opts *options) []string {
-	p := initParser(opts)
+func sortedKeys(m map[string]string) []string {
+	keys := make([]string, 0, len(m))
+	for k := range m {
+		keys = append(keys, k)
+	}
+	sort.Strings(keys)
+	return keys
+}
 
-	args, err := p.Parse()
+// getFilePathsInDir returns the cleaned, sorted paths of the regular,
+// non-hidden files directly under dir.
+func getFilePathsInDir(dir string) ([]string, error) {
+	entries, err := os.ReadDir(dir)
 	if err != nil {
-		osExit(mb.ExitFailure)
+		return nil, fmt.Errorf("can't get file list of %s", dir)
 	}
 
-	if opts.Version {
-		mb.ShowVersion(cmdName, version)
-		osExit(mb.ExitSuccess)
-	}
-
-	if len(opts.Name) != 0 && !existFilenameInPath(opts.Name) {
-		showHelp(p)
-		osExit(mb.ExitFailure)
-	}
-
-	if !isValidArgNr(args) {
-		showHelp(p)
-		osExit(mb.ExitFailure)
-	}
-
-	return args
-}
-
-func initParser(opts *options) *flags.Parser {
-	parser := flags.NewParser(opts, flags.Default)
-	parser.Name = cmdName
-	parser.Usage = "[OPTIONS] DIRECTORY_PATH"
-
-	return parser
-}
-
-func isValidArgNr(args []string) bool {
-	return len(args) == 1
-}
-
-func showHelp(p *flags.Parser) {
-	fmt.Fprintf(os.Stdout, "serial command rename the file name to the name with a serial number.\n\n")
-	p.WriteHelp(os.Stdout)
-}
-
-func existFilenameInPath(path string) bool {
-
-	return !strings.HasSuffix(path, "/")
-}
-
-// getFilePathsInDir returns the paths of the file in the directory.
-func getFilePathsInDir(dir string) []string {
-	files, err := ioutil.ReadDir(dir)
-	if err != nil {
-		fmt.Fprintf(os.Stderr, "Can't get file list.")
-		osExit(mb.ExitFailure)
-	}
-
-	var path string
 	var paths []string
-	for _, file := range files {
-		path = filepath.Join(dir, file.Name())
-		if mb.IsFile(path) && !mb.IsHiddenFile(path) {
+	for _, entry := range entries {
+		path := filepath.Join(dir, entry.Name())
+		if isFile(path) && !isHiddenFile(path) {
 			paths = append(paths, filepath.Clean(path))
 		}
 	}
 	sort.Strings(paths)
-	return paths
+	return paths, nil
 }
 
 func newNames(opts options, path []string) map[string]string {
 	newNames := make(map[string]string)
-	destDir := filepath.Dir(opts.Name)
+	// When --name carries a directory, files are placed there; otherwise each
+	// renamed file stays in the directory it came from.
+	nameDir := filepath.Dir(opts.name)
 
-	var fileName string
-	var format string
-	// TODO: Refactor for a simpler implementation
 	for i, file := range path {
 		ext := filepath.Ext(file)
 
-		if len(opts.Name) == 0 {
-			format = fileNameFormat(opts.Prefix, opts.Suffix, mb.BaseNameWithoutExt(file), len(path))
+		var format string
+		if opts.name == "" {
+			format = fileNameFormat(opts.prefix, opts.suffix, baseNameWithoutExt(file), len(path))
 		} else {
-			format = fileNameFormat(opts.Prefix, opts.Suffix, opts.Name, len(path))
+			format = fileNameFormat(opts.prefix, opts.suffix, opts.name, len(path))
 		}
 
-		if opts.Prefix && !opts.Suffix {
-			fileName = fmt.Sprintf(format, i, ext)
-		} else {
-			fileName = fmt.Sprintf(format, i, ext)
-		}
+		fileName := fmt.Sprintf(format, i, ext)
 
-		if destDir == "." {
-			newNames[file] = filepath.Clean(fileName)
-		} else {
-			newNames[file] = filepath.Clean(destDir + "/" + fileName)
+		destDir := nameDir
+		if opts.name == "" || nameDir == "." {
+			destDir = filepath.Dir(file)
 		}
+		newNames[file] = filepath.Clean(filepath.Join(destDir, fileName))
 	}
 	return newNames
 }
@@ -236,7 +208,8 @@ func fileNameFormat(prefix bool, suffix bool, name string, totalFileNr int) stri
 	serial := "%0" + strconv.Itoa(len(strconv.Itoa(totalFileNr))) + "d"
 	ext := "%s"
 
-	// Default format（e.x.：%03d%s%s → 001_test.txt）
+	// Default format (e.g. %01d_test%s -> 0_test.txt). The serial number is a
+	// prefix unless --suffix is requested without --prefix.
 	format := serial + "_" + baseName + ext
 	if !prefix && suffix {
 		format = baseName + "_" + serial + ext
@@ -244,30 +217,54 @@ func fileNameFormat(prefix bool, suffix bool, name string, totalFileNr int) stri
 	return format
 }
 
-func dieIfExistSameNameFile(force bool, fileNames map[string]string) {
+func dieIfExistSameNameFile(force bool, fileNames map[string]string) error {
 	if force {
-		return
+		return nil
 	}
-
 	for _, file := range fileNames {
-		if mb.Exists(file) {
-			fmt.Fprintf(os.Stderr, "%s (file name which is after renaming) is already exists.\n", file)
-			fmt.Fprintf(os.Stderr, "Renaming may erase the contents of the file. ")
-			fmt.Fprintf(os.Stderr, "So, nothing to do.\n")
-			osExit(mb.ExitFailure)
+		if exists(file) {
+			return fmt.Errorf("%s (file name which is after renaming) is already exists. "+
+				"Renaming may erase the contents of the file. So, nothing to do", file)
 		}
 	}
+	return nil
 }
 
-func makeDirIfNeeded(filePath string) {
+func makeDirIfNeeded(filePath string) error {
 	dirPath := filepath.Dir(filePath)
-
-	if mb.Exists(dirPath) {
-		return
+	if exists(dirPath) {
+		return nil
 	}
-
 	if err := os.MkdirAll(dirPath, 0755); err != nil {
-		fmt.Fprintf(os.Stderr, "Can't make %s directory\n", dirPath)
-		osExit(mb.ExitFailure)
+		return fmt.Errorf("can't make %s directory", dirPath)
 	}
+	return nil
+}
+
+// exists reports whether path exists.
+func exists(path string) bool {
+	_, err := os.Stat(path)
+	return err == nil
+}
+
+// isFile reports whether path exists and is a regular file.
+func isFile(path string) bool {
+	stat, err := os.Stat(path)
+	return err == nil && !stat.IsDir()
+}
+
+// isHiddenFile reports whether path is a file whose name starts with a dot.
+func isHiddenFile(path string) bool {
+	_, file := filepath.Split(path)
+	return isFile(path) && strings.HasPrefix(file, ".")
+}
+
+// baseNameWithoutExt returns the file name without its directory or extension.
+func baseNameWithoutExt(path string) string {
+	_, file := filepath.Split(path)
+	ext := filepath.Ext(path)
+	if ext == "" {
+		return file
+	}
+	return file[:len(file)-len(ext)]
 }

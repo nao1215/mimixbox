@@ -110,72 +110,72 @@ func reg(c command.Command) Applet {
 
 func init() {
 	Applets = map[string]Applet{
-		"add-shell": {addShell.Run, "Add shell name to /etc/shells"},
-		"base64":    {base64.Run, "Base64 encode/decode from FILR(or STDIN) to STDOUT"},
+		"add-shell": reg(addShell.New()),
+		"base64":    reg(base64.New()),
 		"basename":  reg(basename.New()),
 		"cat":       reg(cat.New()),
-		"cowsay":    {cowsay.Run, "Print message with cow's ASCII art"},
-		"chgrp":     {chgrp.Run, "Change the group of each FILE to GROUP"},
-		"chown":     {chown.Run, "Change the owner and/or group of each FILE to OWNER and/or GROUP"},
-		"chroot":    {chroot.Run, "Run command or interactive shell with special root directory"},
+		"cowsay":    reg(cowsay.New()),
+		"chgrp":     reg(chgrp.New()),
+		"chown":     reg(chown.New()),
+		"chroot":    reg(chroot.New()),
 		//"chsh":         {chsh.Run, "Cqhange login shell"},
-		"clear":        {clear.Run, "Clear terminal"},
-		"cp":           {cp.Run, "Copy file(s) otr Directory(s)"},
+		"clear":        reg(clear.New()),
+		"cp":           reg(cp.New()),
 		"dirname":      reg(dirname.New()),
-		"dos2unix":     {dos2unix.Run, "Change CRLF to LF"},
+		"dos2unix":     reg(dos2unix.New()),
 		"echo":         reg(echo.New()),
-		"expand":       {expand.Run, "Convert TAB to N space (default:N=8)"},
-		"fakemovie":    {fakemovie.Run, "Adds a video playback button to the image"},
+		"expand":       reg(expand.New()),
+		"fakemovie":    reg(fakemovie.New()),
 		"false":        reg(boolfalse.New()),
-		"ghrdc":        {ghrdc.Run, "GitHub Relase Download Counter"},
-		"groups":       {groups.Run, "Print the groups to which USERNAME belongs"},
-		"gzip":         {gzipCmd.Run, "Compress or uncompress FILEs (by default, compress FILES in-place)"},
-		"halt":         {halt.Run, "Halt the system"},
+		"ghrdc":        reg(ghrdc.New()),
+		"groups":       reg(groups.New()),
+		"gzip":         reg(gzipCmd.New()),
+		"halt":         reg(halt.NewHalt()),
 		"head":         reg(head.New()),
-		"hostid":       {hostid.Run, "Print hostid (Host Identity Number, hex)!!!Does not work properly!!!"},
-		"id":           {id.Run, "Print User ID and Group ID"},
-		"ischroot":     {ischroot.Run, "Detect if running in a chroot"},
-		"kill":         {kill.Run, "Kill process or send signal to process"},
-		"lifegame":     {lifegame.Run, "Life game (Conway's Game of Life)"},
-		"ln":           {ln.Run, "Create hard or symbolic link"},
-		"mbsh":         {mbsh.Run, "Mimix Box Shell"},
-		"md5sum":       {md5sum.Run, "Calculate or Check md5sum message digest"},
-		"mkdir":        {mkdir.Run, "Make directories"},
-		"mkfifo":       {mkfifo.Run, "Make FIFO (named pipe)"},
-		"mv":           {mv.Run, "Rename SOURCE to DESTINATION, or move SOURCE(s) to DIRECTORY"},
+		"hostid":       reg(hostid.New()),
+		"id":           reg(id.New()),
+		"ischroot":     reg(ischroot.New()),
+		"kill":         reg(kill.New()),
+		"lifegame":     reg(lifegame.New()),
+		"ln":           reg(ln.New()),
+		"mbsh":         reg(mbsh.New()),
+		"md5sum":       reg(md5sum.New()),
+		"mkdir":        reg(mkdir.New()),
+		"mkfifo":       reg(mkfifo.New()),
+		"mv":           reg(mv.New()),
 		"nl":           reg(nl.New()),
-		"path":         {path.Run, "Manipulate filename path"},
-		"poweroff":     {halt.Run, "Power off the system"},
-		"printenv":     {printenv.Run, "Print environment variable"},
-		"printf":       {printf.Run, "Formats and print data"},
-		"pwd":          {pwd.Run, "Print Working Directory"},
-		"remove-shell": {removeShell.Run, "Remove shell name from /etc/shells"},
-		"reboot":       {halt.Run, "Reboot the system"},
-		"reset":        {reset.Run, "Reset terminal"},
-		"rm":           {rm.Run, "Remove file(s) or directory(s)"},
-		"rmdir":        {rmdir.Run, "Remove directory"},
-		"sddf":         {sddf.Run, "Search & Delete Duplicated File"},
-		"serial":       {serial.Run, "Rename the file to the name with a serial number"},
-		"sha1sum":      {sha1sum.Run, "alculate or Check sercure hash 1 algorithm"},
-		"sha256sum":    {sha256sum.Run, "alculate or Check sercure hash 256 algorithm"},
-		"sha512sum":    {sha512sum.Run, "alculate or Check sercure hash 512 algorithm"},
-		"seq":          {seq.Run, "Print a column of numbers"},
-		"sl":           {sl.Run, "Cure your bad habit of mistyping"},
-		"sleep":        {sleep.Run, "Pause for NUMBER seconds(minutes, hours, days)"},
-		"sync":         {sync.Run, "Synchronize cached writes to persistent storage"},
+		"path":         reg(path.New()),
+		"poweroff":     reg(halt.NewPoweroff()),
+		"printenv":     reg(printenv.New()),
+		"printf":       reg(printf.New()),
+		"pwd":          reg(pwd.New()),
+		"remove-shell": reg(removeShell.New()),
+		"reboot":       reg(halt.NewReboot()),
+		"reset":        reg(reset.New()),
+		"rm":           reg(rm.New()),
+		"rmdir":        reg(rmdir.New()),
+		"sddf":         reg(sddf.New()),
+		"serial":       reg(serial.New()),
+		"sha1sum":      reg(sha1sum.New()),
+		"sha256sum":    reg(sha256sum.New()),
+		"sha512sum":    reg(sha512sum.New()),
+		"seq":          reg(seq.New()),
+		"sl":           reg(sl.New()),
+		"sleep":        reg(sleep.New()),
+		"sync":         reg(sync.New()),
 		"tac":          reg(tac.New()),
 		"tail":         reg(tail.New()),
-		"touch":        {touch.Run, "Update the access and modification times of each FILE to the current time"},
-		"tr":           {tr.Run, "Translate or delete characters"},
+		"touch":        reg(touch.New()),
+		"tr":           reg(tr.New()),
 		"true":         reg(booltrue.New()),
-		"unexpand":     {unexpand.Run, "Convert N space to TAB(default:N=8)"},
-		"unix2dos":     {unix2dos.Run, "Change LF to CRLF"},
-		"uuidgen":      {uuidgen.Run, "Print UUID (Universal Unique IDentifier"},
-		"valid-shell":  {validShell.Run, "Verify if /etc/shells is valid"},
+		"unexpand":     reg(unexpand.New()),
+		"unix2dos":     reg(unix2dos.New()),
+		"uuidgen":      reg(uuidgen.New()),
+		"valid-shell":  reg(validShell.New()),
 		"wc":           reg(wc.New()),
-		"wget":         {wget.Run, "The non-interactive network downloader"},
-		"which":        {which.Run, "Returns the file path which would be executed in the current environment"},
-		"whoami":       {whoami.Run, "Print login user name"},
+		"wget":         reg(wget.New()),
+		"which":        reg(which.New()),
+		"whoami":       reg(whoami.New()),
 	}
 }
 
@@ -187,7 +187,7 @@ func HasApplet(target string) bool {
 func ListApplets() {
 	format := "%" + strconv.Itoa(longestAppletLength()) + "s - %s\n"
 	for _, key := range SortApplet() {
-		fmt.Fprintf(os.Stdout, format, key, Applets[key].Desc)
+		_, _ = fmt.Fprintf(os.Stdout, format, key, Applets[key].Desc)
 	}
 }
 
@@ -209,7 +209,7 @@ func ShowAppletsBySpaceSeparated() {
 		lineLen += len(key)
 	}
 	b.WriteByte('\n')
-	fmt.Fprint(os.Stdout, b.String())
+	_, _ = fmt.Fprint(os.Stdout, b.String())
 }
 
 func SortApplet() []string {
@@ -222,7 +222,7 @@ func SortApplet() []string {
 }
 
 func longestAppletLength() int {
-	var max int = 0
+	max := 0
 	for _, key := range SortApplet() {
 		if max < len(key) {
 			max = len(key)

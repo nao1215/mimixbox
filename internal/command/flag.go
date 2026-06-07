@@ -43,8 +43,8 @@ func NewFlagSet(name, usage string, stderr io.Writer) *FlagSet {
 // message has already been written to io.Err).
 func (f *FlagSet) Parse(io IO, args []string) (proceed bool, err error) {
 	if perr := f.FlagSet.Parse(args); perr != nil {
-		fmt.Fprintf(io.Err, "%s: %v\n", f.name, perr)
-		fmt.Fprintf(io.Err, "Try '%s --help' for more information.\n", f.name)
+		_, _ = fmt.Fprintf(io.Err, "%s: %v\n", f.name, perr)
+		_, _ = fmt.Fprintf(io.Err, "Try '%s --help' for more information.\n", f.name)
 		return false, SilentFailure()
 	}
 	if *f.help {

@@ -14,125 +14,200 @@
 // WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
 // See the License for the specific language governing permissions and
 // limitations under the License.
+
+// Package mv implements the mv applet: rename SOURCE to DESTINATION, or move
+// SOURCE(s) to DIRECTORY, with the common GNU options.
 package mv
 
 import (
+	"bufio"
+	"context"
 	"errors"
 	"fmt"
 	"os"
 	"path/filepath"
+	"strings"
 
+	"github.com/nao1215/mimixbox/internal/command"
 	mb "github.com/nao1215/mimixbox/internal/lib"
-
-	"github.com/jessevdk/go-flags"
 )
 
-const cmdName string = "mv"
+// Command is the mv applet.
+type Command struct{}
 
-const version = "1.0.2"
+// New returns a mv command.
+func New() *Command { return &Command{} }
 
-var osExit = os.Exit
+// Name returns the command name.
+func (c *Command) Name() string { return "mv" }
+
+// Synopsis returns the one-line description shown in the applet list.
+func (c *Command) Synopsis() string {
+	return "Rename SOURCE to DESTINATION, or move SOURCE(s) to DIRECTORY"
+}
 
 type options struct {
-	Backup      bool `short:"b" long:"backup" description:"Backup file if same name file already exists"`
-	Force       bool `short:"f" long:"force" description:"Forcibly overwrite if same name file already exists"`
-	Interactive bool `short:"i" long:"interactive" description:"Check whether overwrite file or not if same name file already exists"`
-	NoClobber   bool `short:"n" long:"no-clobber" description:"Don't overwrite if same name file/directory already exists"`
-	Version     bool `short:"v" long:"version" description:"Show mv command version"`
+	backup      bool
+	force       bool
+	interactive bool
+	noClobber   bool
+	verbose     bool
 }
 
-func Run() (int, error) {
-	var opts options
-	var args []string
-	var err error
+// Run executes mv.
+func (c *Command) Run(_ context.Context, stdio command.IO, args []string) error {
+	fs := command.NewFlagSet(c.Name(), "[OPTION]... SOURCE... DEST", stdio.Err)
+	backup := fs.BoolP("backup", "b", false, "make a backup of each existing destination file")
+	force := fs.BoolP("force", "f", false, "do not prompt before overwriting")
+	interactive := fs.BoolP("interactive", "i", false, "prompt before overwrite")
+	noClobber := fs.BoolP("no-clobber", "n", false, "do not overwrite an existing file")
+	verbose := fs.BoolP("verbose", "v", false, "explain what is being done")
 
-	if args, err = parseArgs(&opts); err != nil {
-		return mb.ExitFailure, nil
+	proceed, err := fs.Parse(stdio, args)
+	if err != nil || !proceed {
+		return err
 	}
 
-	srcPaths, err := getSrcAbsPaths(args)
+	opts := options{
+		backup:      *backup,
+		force:       *force,
+		interactive: *interactive,
+		noClobber:   *noClobber,
+		verbose:     *verbose,
+	}
+
+	operands := fs.Args()
+	if len(operands) == 0 {
+		_, _ = fmt.Fprintln(stdio.Err, "mv: missing file operand")
+		return command.SilentFailure()
+	}
+	if len(operands) == 1 {
+		_, _ = fmt.Fprintf(stdio.Err, "mv: missing destination file operand after '%s'\n", operands[0])
+		return command.SilentFailure()
+	}
+
+	srcPaths, err := getSrcAbsPaths(operands)
 	if err != nil {
-		return mb.ExitFailure, err
+		return command.Failure(err)
 	}
-
-	destPath, err := getDestAbsPath(args)
+	destPath, err := getDestAbsPath(operands)
 	if err != nil {
-		return mb.ExitFailure, err
+		return command.Failure(err)
 	}
 
-	if err := validArgs(srcPaths, destPath, opts); err != nil {
-		return mb.ExitFailure, err
+	if err := validArgs(opts); err != nil {
+		return command.Failure(err)
 	}
 
-	return move(srcPaths, destPath, opts)
+	return c.move(stdio, srcPaths, destPath, opts)
 }
 
-func validArgs(srcPaths []string, destPath string, opts options) error {
-	if opts.NoClobber && opts.Backup {
+func validArgs(opts options) error {
+	if opts.noClobber && opts.backup {
 		return errors.New("--noclobber and --backup can't be used at the same time")
 	}
-
-	if opts.NoClobber && opts.Force {
+	if opts.noClobber && opts.force {
 		return errors.New("--noclobber and --force can't be used at the same time")
 	}
-
-	if opts.Force && opts.Interactive {
+	if opts.force && opts.interactive {
 		return errors.New("--force and --intractive can't be used at the same time")
 	}
-
-	if opts.NoClobber && opts.Interactive {
+	if opts.noClobber && opts.interactive {
 		return errors.New("--noclobber and --interactive can't be used at the same time")
 	}
 	return nil
 }
 
-func move(srcPaths []string, dest string, opts options) (int, error) {
-	status := mb.ExitSuccess
+func (c *Command) move(stdio command.IO, srcPaths []string, dest string, opts options) error {
+	var failed bool
 	for _, src := range srcPaths {
 		if !mb.Exists(src) {
-			fmt.Fprintln(os.Stderr, cmdName+": "+src+" doesn't exist")
-			status = mb.ExitFailure
+			_, _ = fmt.Fprintln(stdio.Err, "mv: "+src+" doesn't exist")
+			failed = true
 			continue
 		}
 
 		// If SRC and DEST are the same, the option(-f, -b, -i) is ignored.
 		if isSameFilePath(src, dest) {
-			fmt.Fprintln(os.Stderr, cmdName+": source '"+src+"' and destination '"+dest+"' is same")
-			status = mb.ExitFailure
+			_, _ = fmt.Fprintln(stdio.Err, "mv: source '"+src+"' and destination '"+dest+"' is same")
+			failed = true
 			continue
 		}
 
-		if opts.NoClobber {
+		if opts.noClobber {
 			if err := noclobberMove(src, dest); err != nil {
-				fmt.Fprintln(os.Stderr, cmdName+": "+err.Error())
-				status = mb.ExitFailure
+				_, _ = fmt.Fprintln(stdio.Err, "mv: "+err.Error())
+				failed = true
+				continue
 			}
+			c.report(stdio, src, dest, opts)
 			continue
 		}
 
-		if opts.Force || (opts.Backup && opts.Interactive) {
+		if opts.force || (opts.backup && opts.interactive) {
 			if err := forceMove(src, dest, opts); err != nil {
-				fmt.Fprintln(os.Stderr, cmdName+": "+err.Error())
-				status = mb.ExitFailure
+				_, _ = fmt.Fprintln(stdio.Err, "mv: "+err.Error())
+				failed = true
+				continue
 			}
+			c.report(stdio, src, dest, opts)
 			continue
 		}
 
-		if opts.Interactive {
-			if err := interactiveMove(src, dest, opts); err != nil {
-				fmt.Fprintln(os.Stderr, cmdName+": "+err.Error())
-				status = mb.ExitFailure
+		if opts.interactive {
+			if err := interactiveMove(stdio, src, dest, opts); err != nil {
+				_, _ = fmt.Fprintln(stdio.Err, "mv: "+err.Error())
+				failed = true
+				continue
 			}
+			c.report(stdio, src, dest, opts)
 			continue
 		}
 
 		destPath := decideDestAbsPath(src, dest, opts)
-		if err := os.Rename(src, destPath); err != nil {
-			fmt.Fprintln(os.Stderr, cmdName+": "+err.Error())
-			status = mb.ExitFailure
+		if err := rename(src, destPath); err != nil {
+			_, _ = fmt.Fprintln(stdio.Err, "mv: "+err.Error())
+			failed = true
+			continue
 		}
+		c.report(stdio, src, dest, opts)
 	}
-	return status, nil
+	if failed {
+		return command.SilentFailure()
+	}
+	return nil
+}
+
+func (c *Command) report(stdio command.IO, src, dest string, opts options) {
+	if opts.verbose {
+		_, _ = fmt.Fprintf(stdio.Out, "renamed '%s' -> '%s'\n", src, decideDestAbsPath(src, dest, opts))
+	}
+}
+
+// rename moves src to dest, falling back to copy+remove when the rename crosses
+// a device boundary (os.Rename fails with EXDEV in that case).
+func rename(src, dest string) error {
+	if err := os.Rename(src, dest); err != nil {
+		if !isCrossDevice(err) {
+			return err
+		}
+		if mb.IsDir(src) {
+			return err
+		}
+		if cerr := mb.Copy(src, dest); cerr != nil {
+			return cerr
+		}
+		return os.Remove(src)
+	}
+	return nil
+}
+
+func isCrossDevice(err error) bool {
+	var le *os.LinkError
+	if errors.As(err, &le) {
+		return strings.Contains(le.Err.Error(), "cross-device")
+	}
+	return strings.Contains(err.Error(), "cross-device")
 }
 
 func noclobberMove(src string, dest string) error {
@@ -144,10 +219,7 @@ func noclobberMove(src string, dest string) error {
 			return nil // Nothing to do. Say nothing.
 		}
 	}
-	if err := os.Rename(src, dest); err != nil {
-		return err
-	}
-	return nil
+	return rename(src, dest)
 }
 
 func isSameNameFileOrDir(src string, dest string) bool {
@@ -171,25 +243,36 @@ func isSameNameFileOrDir(src string, dest string) bool {
 
 func forceMove(src string, dest string, opts options) error {
 	destPath := decideDestAbsPath(src, dest, opts)
-	if err := os.Rename(src, destPath); err != nil {
-		return err
-	}
-	return nil
+	return rename(src, destPath)
 }
 
-func interactiveMove(src string, dest string, opts options) error {
+func interactiveMove(stdio command.IO, src string, dest string, opts options) error {
 	if isSameNameFileOrDir(src, dest) {
-		if !mb.Question("Overwrite " + filepath.Base(src)) {
+		if !question(stdio, "Overwrite "+filepath.Base(src)) {
 			return nil
 		}
 	}
 
-	opts.Backup = false
+	opts.backup = false
 	destPath := decideDestAbsPath(src, dest, opts)
-	if err := os.Rename(src, destPath); err != nil {
-		return err
+	return rename(src, destPath)
+}
+
+// question prompts on stdio.Out and reads the answer from stdio.In, returning
+// true only when the user types a "yes" answer.
+func question(stdio command.IO, ask string) bool {
+	_, _ = fmt.Fprintf(stdio.Out, "%s [Y/n] ", ask)
+	r := bufio.NewReader(stdio.In)
+	line, err := r.ReadString('\n')
+	if err != nil && line == "" {
+		return false
 	}
-	return nil
+	switch strings.ToLower(strings.TrimSpace(line)) {
+	case "y", "yes":
+		return true
+	default:
+		return false
+	}
 }
 
 func decideDestAbsPath(src string, dest string, opts options) string {
@@ -197,14 +280,14 @@ func decideDestAbsPath(src string, dest string, opts options) string {
 	srcPath := os.ExpandEnv(src)
 	if mb.IsDir(srcPath) && mb.IsDir(destPath) {
 		destPath = filepath.Join(dest, filepath.Base(srcPath))
-		if filepath.Base(srcPath) == filepath.Base(destPath) && opts.Backup {
+		if filepath.Base(srcPath) == filepath.Base(destPath) && opts.backup {
 			destPath = decideBackupFileName(destPath)
 		}
-	} else if mb.IsFile(srcPath) && mb.IsFile(dest) && opts.Backup {
+	} else if mb.IsFile(srcPath) && mb.IsFile(dest) && opts.backup {
 		destPath = decideBackupFileName(destPath)
 	} else if mb.IsFile(srcPath) && mb.IsDir(dest) {
 		destPath = filepath.Join(dest, filepath.Base(srcPath))
-		if mb.IsFile(destPath) && opts.Backup {
+		if mb.IsFile(destPath) && opts.backup {
 			destPath = decideBackupFileName(destPath)
 		}
 	}
@@ -226,61 +309,23 @@ func isSameFilePath(src string, dest string) bool {
 	return src == dest
 }
 
-// args don't have program name(= mv).
-func getSrcAbsPaths(args []string) ([]string, error) {
+// getSrcAbsPaths returns the absolute paths of every operand except the last
+// (which is the destination). operands does not include the program name.
+func getSrcAbsPaths(operands []string) ([]string, error) {
 	var srcPaths []string
-	for _, arg := range args {
-		arg, err := filepath.Abs(os.ExpandEnv(arg))
+	for _, arg := range operands {
+		abs, err := filepath.Abs(os.ExpandEnv(arg))
 		if err != nil {
 			return nil, err
 		}
-		srcPaths = append(srcPaths, arg)
+		srcPaths = append(srcPaths, abs)
 	}
 	// Exclude only destination path
-	return srcPaths[0 : len(args)-1], nil
+	return srcPaths[0 : len(operands)-1], nil
 }
 
-// args don't have program name(= mv).
-func getDestAbsPath(args []string) (string, error) {
-	destPath, err := filepath.Abs(os.ExpandEnv(args[len(args)-1]))
-	if err != nil {
-		return "", err
-	}
-	return destPath, nil
-}
-
-func parseArgs(opts *options) ([]string, error) {
-	p := initParser(opts)
-
-	args, err := p.Parse()
-	if err != nil {
-		return nil, err
-	}
-
-	if opts.Version {
-		mb.ShowVersion(cmdName, version)
-		osExit(mb.ExitSuccess)
-	}
-
-	if !isValidArgNr(args) {
-		showHelp(p)
-		osExit(mb.ExitFailure)
-	}
-	return args, nil
-}
-
-func initParser(opts *options) *flags.Parser {
-	parser := flags.NewParser(opts, flags.Default)
-	parser.Name = cmdName
-	parser.Usage = "[OPTIONS] SOURCE_PATH DESTINATION_PATH"
-
-	return parser
-}
-
-func isValidArgNr(args []string) bool {
-	return len(args) >= 2
-}
-
-func showHelp(p *flags.Parser) {
-	p.WriteHelp(os.Stdout)
+// getDestAbsPath returns the absolute path of the destination operand (the last
+// operand). operands does not include the program name.
+func getDestAbsPath(operands []string) (string, error) {
+	return filepath.Abs(os.ExpandEnv(operands[len(operands)-1]))
 }

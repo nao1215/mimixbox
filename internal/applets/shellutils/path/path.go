@@ -1,120 +1,70 @@
-//
-// mimixbox/internal/applets/shellutils/path/path.go
-//
-// Copyright 2021 Naohiro CHIKAMATSU
-//
-// Licensed under the Apache License, Version 2.0 (the "License");
-// you may not use this file except in compliance with the License.
-// You may obtain a copy of the License at
-//
-//    http://www.apache.org/licenses/LICENSE-2.0
-//
-// Unless required by applicable law or agreed to in writing, software
-// distributed under the License is distributed on an "AS IS" BASIS,
-// WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
-// See the License for the specific language governing permissions and
-// limitations under the License.
+// Package path implements the path applet: a MimixBox-original command that
+// manipulates a filename path, extracting its directory, basename, extension,
+// canonical form, or absolute form.
 package path
 
 import (
-	"errors"
+	"context"
 	"fmt"
-	"os"
 	"path/filepath"
 
-	"github.com/jessevdk/go-flags"
-	mb "github.com/nao1215/mimixbox/internal/lib"
+	"github.com/nao1215/mimixbox/internal/command"
 )
 
-const cmdName string = "path"
+// Command is the path applet.
+type Command struct{}
 
-const version = "1.0.2"
+// New returns a path command.
+func New() *Command { return &Command{} }
 
-var osExit = os.Exit
-var errNotGetAbsPath = errors.New("can't get absolute path")
+// Name returns the command name.
+func (c *Command) Name() string { return "path" }
 
-type options struct {
-	Abs       bool `short:"a" long:"absolute" description:"Print absolute path"`
-	Base      bool `short:"b" long:"basename" description:"Print basename (filename)"`
-	Canonical bool `short:"c" long:"canonical" description:"Print canonical path (default)"`
-	Dir       bool `short:"d" long:"dirname" description:"Print path without filename"`
-	Ext       bool `short:"e" long:"extension" description:"Print file extention"`
-	Version   bool `short:"v" long:"version" description:"Show path command version"`
-}
+// Synopsis returns the one-line description shown in the applet list.
+func (c *Command) Synopsis() string { return "Manipulate filename path" }
 
-func Run() (int, error) {
-	var opts options
-	var args []string
-	var err error
+// Run executes path.
+func (c *Command) Run(_ context.Context, stdio command.IO, args []string) error {
+	fs := command.NewFlagSet(c.Name(), "[OPTION]... PATH...", stdio.Err)
+	abs := fs.BoolP("absolute", "a", false, "Print absolute path")
+	base := fs.BoolP("basename", "b", false, "Print basename (filename)")
+	canonical := fs.BoolP("canonical", "c", false, "Print canonical path (default)")
+	dir := fs.BoolP("dirname", "d", false, "Print path without filename")
+	ext := fs.BoolP("extension", "e", false, "Print file extension")
 
-	if args, err = parseArgs(&opts); err != nil {
-		return mb.ExitFailure, nil
+	proceed, err := fs.Parse(stdio, args)
+	if err != nil || !proceed {
+		return err
 	}
-	path := args[0]
 
-	if opts.Abs {
-		abs, err := filepath.Abs(path)
+	names := fs.Args()
+	if len(names) == 0 {
+		_, _ = fmt.Fprintln(stdio.Err, "path: missing operand")
+		return command.SilentFailure()
+	}
+	p := names[0]
+
+	allOff := !*abs && !*base && !*canonical && !*dir && !*ext
+
+	if *abs {
+		absPath, err := filepath.Abs(p)
 		if err != nil {
-			return mb.ExitFailure, errNotGetAbsPath
+			return command.Failuref("path: can't get absolute path")
 		}
-		fmt.Fprintf(os.Stdout, "%s\n", abs)
+		_, _ = fmt.Fprintf(stdio.Out, "%s\n", absPath)
+	}
+	if *base {
+		_, _ = fmt.Fprintf(stdio.Out, "%s\n", filepath.Base(p))
+	}
+	if *canonical || allOff {
+		_, _ = fmt.Fprintf(stdio.Out, "%s\n", filepath.Clean(p))
+	}
+	if *dir {
+		_, _ = fmt.Fprintf(stdio.Out, "%s\n", filepath.Dir(p))
+	}
+	if *ext {
+		_, _ = fmt.Fprintf(stdio.Out, "%s\n", filepath.Ext(p))
 	}
 
-	if opts.Base {
-		fmt.Fprintf(os.Stdout, "%s\n", filepath.Base(path))
-	}
-
-	if opts.Canonical || isAllOptionsOff(opts) {
-		fmt.Fprintf(os.Stdout, "%s\n", filepath.Clean(path))
-	}
-
-	if opts.Dir {
-		fmt.Fprintf(os.Stdout, "%s\n", filepath.Dir(path))
-	}
-
-	if opts.Ext {
-		fmt.Fprintf(os.Stdout, "%s\n", filepath.Ext(path))
-	}
-
-	return mb.ExitSuccess, nil
-}
-
-func parseArgs(opts *options) ([]string, error) {
-	p := initParser(opts)
-
-	args, err := p.Parse()
-	if err != nil {
-		return nil, err
-	}
-
-	if opts.Version {
-		mb.ShowVersion(cmdName, version)
-		osExit(mb.ExitSuccess)
-	}
-
-	if !isValidArgNr(args) {
-		showHelp(p)
-		osExit(mb.ExitFailure)
-	}
-	return args, nil
-}
-
-func initParser(opts *options) *flags.Parser {
-	parser := flags.NewParser(opts, flags.Default)
-	parser.Name = cmdName
-	parser.Usage = "[OPTIONS] PATH"
-
-	return parser
-}
-
-func isValidArgNr(args []string) bool {
-	return len(args) == 1
-}
-
-func showHelp(p *flags.Parser) {
-	p.WriteHelp(os.Stdout)
-}
-
-func isAllOptionsOff(opts options) bool {
-	return !opts.Abs && !opts.Base && !opts.Canonical && !opts.Dir && !opts.Ext
+	return nil
 }

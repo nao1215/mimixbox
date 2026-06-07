@@ -74,14 +74,14 @@ func concat(stdio command.IO, files []string) (string, error) {
 	for _, name := range files {
 		r, err := command.Open(stdio, name)
 		if err != nil {
-			fmt.Fprintf(stdio.Err, "cat: %s\n", command.FileError(name, err))
+			_, _ = fmt.Fprintf(stdio.Err, "cat: %s\n", command.FileError(name, err))
 			firstErr = keep(firstErr)
 			continue
 		}
 		_, err = io.Copy(&b, r)
 		_ = r.Close()
 		if err != nil {
-			fmt.Fprintf(stdio.Err, "cat: %s\n", command.FileError(name, err))
+			_, _ = fmt.Fprintf(stdio.Err, "cat: %s\n", command.FileError(name, err))
 			firstErr = keep(firstErr)
 		}
 	}

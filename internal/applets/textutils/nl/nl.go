@@ -43,12 +43,12 @@ func (c *Command) Run(_ context.Context, stdio command.IO, args []string) error 
 
 	style, ok := bodyStyle(*body)
 	if !ok {
-		fmt.Fprintf(stdio.Err, "nl: invalid body numbering style: %q\n", *body)
+		_, _ = fmt.Fprintf(stdio.Err, "nl: invalid body numbering style: %q\n", *body)
 		return command.SilentFailure()
 	}
 	justify, ok := numberFormat(*format)
 	if !ok {
-		fmt.Fprintf(stdio.Err, "nl: invalid line numbering format: %q\n", *format)
+		_, _ = fmt.Fprintf(stdio.Err, "nl: invalid line numbering format: %q\n", *format)
 		return command.SilentFailure()
 	}
 
@@ -72,14 +72,14 @@ func (c *Command) Run(_ context.Context, stdio command.IO, args []string) error 
 	for _, name := range files {
 		r, err := command.Open(stdio, name)
 		if err != nil {
-			fmt.Fprintf(stdio.Err, "nl: %s\n", command.FileError(name, err))
+			_, _ = fmt.Fprintf(stdio.Err, "nl: %s\n", command.FileError(name, err))
 			firstErr = keep(firstErr)
 			continue
 		}
 		_, err = io.Copy(&b, r)
 		_ = r.Close()
 		if err != nil {
-			fmt.Fprintf(stdio.Err, "nl: %s\n", command.FileError(name, err))
+			_, _ = fmt.Fprintf(stdio.Err, "nl: %s\n", command.FileError(name, err))
 			firstErr = keep(firstErr)
 		}
 	}

@@ -1,145 +1,151 @@
-//
-// mimixbox/internal/applets/fileutils/rm/rm.go
-//
-// Copyright 2021 Naohiro CHIKAMATSU
-//
-// Licensed under the Apache License, Version 2.0 (the "License");
-// you may not use this file except in compliance with the License.
-// You may obtain a copy of the License at
-//
-//    http://www.apache.org/licenses/LICENSE-2.0
-//
-// Unless required by applicable law or agreed to in writing, software
-// distributed under the License is distributed on an "AS IS" BASIS,
-// WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
-// See the License for the specific language governing permissions and
-// limitations under the License.
+// Package rm implements the rm applet: remove files or directories, with the
+// common GNU options.
 package rm
 
 import (
-	"errors"
+	"bufio"
+	"context"
 	"fmt"
 	"os"
 	"strings"
 
-	mb "github.com/nao1215/mimixbox/internal/lib"
-
-	"github.com/jessevdk/go-flags"
+	"github.com/nao1215/mimixbox/internal/command"
 )
 
-const cmdName string = "rm"
+// Command is the rm applet.
+type Command struct{}
 
-const version = "1.0.3"
+// New returns an rm command.
+func New() *Command { return &Command{} }
 
-var osExit = os.Exit
+// Name returns the command name.
+func (c *Command) Name() string { return "rm" }
+
+// Synopsis returns the one-line description shown in the applet list.
+func (c *Command) Synopsis() string { return "Remove file(s) or directory(s)" }
 
 type options struct {
-	Force       bool `short:"f" long:"force" description:"Ignore non-existent files, not prompt"`
-	Interactive bool `short:"i" long:"interactive" description:"Ask every time if you want to remove"`
-	NoPreserve  bool `short:"n" long:"no-preserve-root" description:"Allow deletion of root directory"`
-	Recursive   bool `short:"r" long:"recursive" description:"Remove directories and their contents recursively"`
-	Version     bool `short:"v" long:"version" description:"Show rm command version"`
+	recursive   bool
+	force       bool
+	verbose     bool
+	dir         bool
+	interactive bool
 }
 
-func Run() (int, error) {
-	var opts options
-	var args []string
-	var err error
-	status := mb.ExitSuccess
+// Run executes rm.
+func (c *Command) Run(_ context.Context, stdio command.IO, args []string) error {
+	fs := command.NewFlagSet(c.Name(), "[OPTION]... FILE...", stdio.Err)
+	recursive := fs.BoolP("recursive", "r", false, "remove directories and their contents recursively")
+	// -R is an alias for -r in GNU rm.
+	recursiveUpper := fs.BoolP("Recursive", "R", false, "equivalent to -r")
+	force := fs.BoolP("force", "f", false, "ignore nonexistent files and arguments, never prompt")
+	verbose := fs.BoolP("verbose", "v", false, "explain what is being done")
+	dir := fs.BoolP("dir", "d", false, "remove empty directories")
+	interactive := fs.BoolP("interactive", "i", false, "prompt before every removal")
 
-	if args, err = parseArgs(&opts); err != nil {
-		return mb.ExitFailure, nil
+	proceed, err := fs.Parse(stdio, args)
+	if err != nil || !proceed {
+		return err
 	}
 
-	for _, path := range args {
-		if s, err := rm(path, opts); err != nil {
-			fmt.Fprintln(os.Stderr, cmdName+": "+err.Error())
-			status = s
+	opts := options{
+		recursive:   *recursive || *recursiveUpper,
+		force:       *force,
+		verbose:     *verbose,
+		dir:         *dir,
+		interactive: *interactive,
+	}
+
+	paths := fs.Args()
+	if len(paths) == 0 {
+		if opts.force {
+			return nil
+		}
+		_, _ = fmt.Fprintf(stdio.Err, "rm: missing operand\n")
+		return command.SilentFailure()
+	}
+
+	var failed bool
+	in := bufio.NewReader(stdio.In)
+	for _, path := range paths {
+		if err := remove(stdio, in, path, opts); err != nil {
+			_, _ = fmt.Fprintf(stdio.Err, "rm: %s\n", err.Error())
+			failed = true
 		}
 	}
 
-	return status, nil
+	if failed {
+		return command.SilentFailure()
+	}
+	return nil
 }
 
-func rm(path string, opts options) (int, error) {
-	p := os.ExpandEnv(path)
-	if status, err := validBeforeRemove(p, opts); status != mb.ExitSuccess {
-		return status, err
-	}
-
-	if mb.IsFile(p) {
-		if err := mb.RemoveFile(p, opts.Interactive); err != nil {
-			return mb.ExitFailure, err
-		}
-	}
-
-	if err := mb.RemoveDir(p, opts.Interactive); err != nil {
-		return mb.ExitFailure, err
-	}
-
-	return mb.ExitSuccess, nil
-}
-
-func validBeforeRemove(path string, opts options) (int, error) {
-	if mb.IsRootDir(path) && !opts.NoPreserve {
-		return mb.ExitFailure, errors.New("do not remove the root directory")
-	}
-
-	if !mb.Exists(path) {
-		if !opts.Force {
-			return mb.ExitFailure, errors.New("can't remove " + path + ": No such file or directory exists")
-		}
-		return mb.ExitFailure, nil
-	}
-
-	if mb.IsDir(path) && !opts.Recursive {
-		return mb.ExitFailure, errors.New("can't remove " + path + ": It's directory")
-	}
-
-	return mb.ExitSuccess, nil
-}
-
-func parseArgs(opts *options) ([]string, error) {
-	p := initParser(opts)
-
-	args, err := p.Parse()
+// remove deletes a single operand according to opts. It returns an error
+// describing the failure (without the "rm:" prefix); the caller prints it and
+// keeps going so that the remaining operands are still processed.
+func remove(stdio command.IO, in *bufio.Reader, path string, opts options) error {
+	info, err := os.Lstat(path)
 	if err != nil {
-		return nil, err
-	}
-
-	if mb.HasPipeData() && len(args) == 0 {
-		stdin, err := mb.FromPIPE()
-		if err != nil {
-			return nil, err
+		if opts.force {
+			// -f ignores nonexistent files and never reports them.
+			return nil
 		}
-		lines := strings.Split(stdin, "\n")
-		return mb.AddLineFeed(lines[:len(lines)-1]), nil
+		return fmt.Errorf("can't remove %s: No such file or directory exists", path)
 	}
 
-	if opts.Version {
-		mb.ShowVersion(cmdName, version)
-		osExit(mb.ExitSuccess)
+	if info.IsDir() {
+		if !opts.recursive {
+			// -d allows removing an empty directory without -r.
+			if !opts.dir {
+				return fmt.Errorf("can't remove %s: It's directory", path)
+			}
+		}
+		if !confirm(stdio, in, path, opts) {
+			return nil
+		}
+		if opts.recursive {
+			if err := os.RemoveAll(path); err != nil {
+				return err
+			}
+		} else {
+			if err := os.Remove(path); err != nil {
+				return err
+			}
+		}
+		report(stdio, path, opts)
+		return nil
 	}
 
-	if !isValidArgNr(args) {
-		showHelp(p)
-		osExit(mb.ExitFailure)
+	if !confirm(stdio, in, path, opts) {
+		return nil
 	}
-	return args, nil
+	if err := os.Remove(path); err != nil {
+		return err
+	}
+	report(stdio, path, opts)
+	return nil
 }
 
-func initParser(opts *options) *flags.Parser {
-	parser := flags.NewParser(opts, flags.Default)
-	parser.Name = cmdName
-	parser.Usage = "[OPTIONS] PATH"
-
-	return parser
+// confirm asks the user before removing path when -i is set. The prompt is
+// written to stdio.Err and the answer is read from stdio.In (never os.Stdin),
+// so the prompt is testable. Answers starting with "y" (case-insensitive)
+// approve the removal; anything else (including EOF) keeps the file.
+func confirm(stdio command.IO, in *bufio.Reader, path string, opts options) bool {
+	if !opts.interactive {
+		return true
+	}
+	_, _ = fmt.Fprintf(stdio.Err, "rm: remove '%s'? ", path)
+	line, err := in.ReadString('\n')
+	answer := strings.ToLower(strings.TrimSpace(line))
+	if err != nil && answer == "" {
+		return false
+	}
+	return strings.HasPrefix(answer, "y")
 }
 
-func isValidArgNr(args []string) bool {
-	return len(args) >= 1
-}
-
-func showHelp(p *flags.Parser) {
-	p.WriteHelp(os.Stdout)
+// report prints a removal notice when -v is set.
+func report(stdio command.IO, path string, opts options) {
+	if opts.verbose {
+		_, _ = fmt.Fprintf(stdio.Out, "removed '%s'\n", path)
+	}
 }

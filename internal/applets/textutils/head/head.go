@@ -46,7 +46,7 @@ func (c *Command) Run(_ context.Context, stdio command.IO, args []string) error 
 	for i, name := range files {
 		r, err := command.Open(stdio, name)
 		if err != nil {
-			fmt.Fprintf(stdio.Err, "head: %s\n", command.FileError(name, err))
+			_, _ = fmt.Fprintf(stdio.Err, "head: %s\n", command.FileError(name, err))
 			firstErr = keep(firstErr)
 			continue
 		}
@@ -60,7 +60,7 @@ func (c *Command) Run(_ context.Context, stdio command.IO, args []string) error 
 		}
 		_ = r.Close()
 		if err != nil {
-			fmt.Fprintf(stdio.Err, "head: %s\n", command.FileError(name, err))
+			_, _ = fmt.Fprintf(stdio.Err, "head: %s\n", command.FileError(name, err))
 			firstErr = keep(firstErr)
 		}
 	}
@@ -73,10 +73,10 @@ func writeHeader(w io.Writer, name string, first bool) {
 		label = "standard input"
 	}
 	if first {
-		fmt.Fprintf(w, "==> %s <==\n", label)
+		_, _ = fmt.Fprintf(w, "==> %s <==\n", label)
 		return
 	}
-	fmt.Fprintf(w, "\n==> %s <==\n", label)
+	_, _ = fmt.Fprintf(w, "\n==> %s <==\n", label)
 }
 
 func keep(existing error) error {

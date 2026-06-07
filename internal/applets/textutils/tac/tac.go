@@ -48,14 +48,14 @@ func (c *Command) Run(_ context.Context, stdio command.IO, args []string) error 
 	for _, name := range files {
 		r, err := command.Open(stdio, name)
 		if err != nil {
-			fmt.Fprintf(stdio.Err, "tac: %s\n", command.FileError(name, err))
+			_, _ = fmt.Fprintf(stdio.Err, "tac: %s\n", command.FileError(name, err))
 			firstErr = firstNonNil(firstErr)
 			continue
 		}
 		_, err = io.Copy(&b, r)
 		_ = r.Close()
 		if err != nil {
-			fmt.Fprintf(stdio.Err, "tac: %s\n", command.FileError(name, err))
+			_, _ = fmt.Fprintf(stdio.Err, "tac: %s\n", command.FileError(name, err))
 			firstErr = firstNonNil(firstErr)
 		}
 	}

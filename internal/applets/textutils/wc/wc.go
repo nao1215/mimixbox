@@ -82,7 +82,7 @@ func (c *Command) Run(_ context.Context, stdio command.IO, args []string) error 
 		}
 		r, err := command.Open(stdio, name)
 		if err != nil {
-			fmt.Fprintf(stdio.Err, "wc: %s\n", command.FileError(name, err))
+			_, _ = fmt.Fprintf(stdio.Err, "wc: %s\n", command.FileError(name, err))
 			firstErr = keep(firstErr)
 			continue
 		}
@@ -95,7 +95,7 @@ func (c *Command) Run(_ context.Context, stdio command.IO, args []string) error 
 		if err != nil {
 			// A directory opens but cannot be read; GNU still prints a zero
 			// row for it and continues.
-			fmt.Fprintf(stdio.Err, "wc: %s\n", command.FileError(name, err))
+			_, _ = fmt.Fprintf(stdio.Err, "wc: %s\n", command.FileError(name, err))
 			firstErr = keep(firstErr)
 			unknownSize = true
 			rows = append(rows, fileRow{name: label})

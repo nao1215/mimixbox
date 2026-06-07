@@ -36,7 +36,7 @@ func (c *Command) Run(_ context.Context, stdio command.IO, args []string) error 
 
 	names := fs.Args()
 	if len(names) == 0 {
-		fmt.Fprintln(stdio.Err, "basename: missing operand")
+		_, _ = fmt.Fprintln(stdio.Err, "basename: missing operand")
 		return command.SilentFailure()
 	}
 
@@ -45,7 +45,7 @@ func (c *Command) Run(_ context.Context, stdio command.IO, args []string) error 
 	if !multi {
 		// Classic form: basename NAME [SUFFIX].
 		if len(names) > 2 {
-			fmt.Fprintf(stdio.Err, "basename: extra operand '%s'\n", names[2])
+			_, _ = fmt.Fprintf(stdio.Err, "basename: extra operand '%s'\n", names[2])
 			return command.SilentFailure()
 		}
 		if len(names) == 2 {
@@ -59,7 +59,7 @@ func (c *Command) Run(_ context.Context, stdio command.IO, args []string) error 
 		end = 0
 	}
 	for _, name := range names {
-		fmt.Fprintf(stdio.Out, "%s%c", stripSuffix(base(name), suf), end)
+		_, _ = fmt.Fprintf(stdio.Out, "%s%c", stripSuffix(base(name), suf), end)
 	}
 	return nil
 }
@@ -82,7 +82,7 @@ func base(p string) string {
 }
 
 // stripSuffix removes suffix from name unless that would leave nothing or the
-// name equals the suffix, matching GNU behaviour.
+// name equals the suffix, matching GNU behavior.
 func stripSuffix(name, suffix string) string {
 	if suffix == "" || name == suffix {
 		return name

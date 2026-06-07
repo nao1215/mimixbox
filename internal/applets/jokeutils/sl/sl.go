@@ -1,180 +1,135 @@
-//
-// mimixbox/internal/applets/shellutils/sl/cowsay.go
-//
-// Copyright 2021 Naohiro CHIKAMATSU
-//
-// Licensed under the Apache License, Version 2.0 (the "License");
-// you may not use this file except in compliance with the License.
-// You may obtain a copy of the License at
-//
-//    http://www.apache.org/licenses/LICENSE-2.0
-//
-// Unless required by applicable law or agreed to in writing, software
-// distributed under the License is distributed on an "AS IS" BASIS,
-// WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
-// See the License for the specific language governing permissions and
-// limitations under the License.
+// Package sl implements the sl applet: it animates a steam locomotive across
+// the terminal to cure the bad habit of mistyping "ls". The animation needs a
+// real terminal; when one is not available (for example under tests or CI) the
+// command exits gracefully without doing anything.
 package sl
 
 import (
-	"errors"
-	"fmt"
-	"os"
+	"context"
 	"strings"
 	"time"
 
-	"github.com/jessevdk/go-flags"
-	mb "github.com/nao1215/mimixbox/internal/lib"
-	"golang.org/x/term"
+	"github.com/nao1215/mimixbox/internal/command"
+	termbox "github.com/nsf/termbox-go"
 )
 
-const cmdName string = "sl"
+// Command is the sl applet.
+type Command struct{}
 
-const version = "0.9.0"
+// New returns an sl command.
+func New() *Command { return &Command{} }
 
-var osExit = os.Exit
+// Name returns the command name.
+func (c *Command) Name() string { return "sl" }
 
-type options struct {
-	Version bool `short:"v" long:"version" description:"Show sl command version"`
+// Synopsis returns the one-line description shown in the applet list.
+func (c *Command) Synopsis() string { return "Cure your bad habit of mistyping" }
+
+// train holds the ASCII-art rows of the steam locomotive. Keeping it as package
+// data lets a test assert the art is present without initializing a terminal.
+var train = []string{
+	"      ====        ________                ___________ ",
+	"  _D _|  |_______/        \\__I_I_____===__|_________| ",
+	"   |(_)---  |   H\\________/ |   |        =|___ ___|      _________________         ",
+	"   /     |  |   H  |  |     |   |         ||_| |_||     _|                \\_____A  ",
+	"  |      |  |   H  |__--------------------| [___] |   =|                        |  ",
+	"  | ________|___H__/__|_____/[ ][ ]\\_______|       |   -|      ʕ ◔ ϖ ◔ ʔ      |  ",
+	"  |/ |   |-----------I_____I [ ][ ] [ ]  D   |=======|____|_______________________|_ ",
+	"__/ =| o |=-O=====O=====O=====O \\ ____Y___________|__|__________________________|_ ",
+	" |/-=|___|=    ||    ||    ||    |_____/~\\___/          |_D__D__D_|  |_D__D__D_|   ",
+	"  \\_/      \\__/  \\__/  \\__/  \\__/      \\_/               \\_/   \\_/    \\_/   \\_/    ",
 }
 
-var slAA = [][][]string{
-	{
-		{
-			"                 (   )",
-			"             (@@@@)",
-			"          (    )",
-			"",
-			"        (@@@)",
-		},
-		{
-			"                 (@@@)",
-			"             (    )",
-			"          (@@@@)",
-			"",
-			"        (   )",
-		},
-		{
-			"                 (   )",
-			"              @@@",
-			"          (    )",
-			"          @@",
-			"        (   )",
-		},
-	},
-	{
-		{
-			"      ====        ________                ___________ ",
-			"  _D _|  |_______/        \\__I_I_____===__|_________| ",
-			"   |(_)---  |   H\\________/ |   |        =|___ ___|      _________________         ",
-			"   /     |  |   H  |  |     |   |         ||_| |_||     _|                \\_____A  ",
-			"  |      |  |   H  |__--------------------| [___] |   =|                        |  ",
-			"  | ________|___H__/__|_____/[ ][ ]\\_______|       |   -|      ʕ ◔ ϖ ◔ ʔ      |  ",
-			"  |/ |   |-----------I_____I [ ][ ] [ ]  D   |=======|____|_______________________|_ ",
-		},
-	},
-	{
-		{
-			"__/ =| o |=-O=====O=====O=====O \\ ____Y___________|__|__________________________|_ ",
-			" |/-=|___|=    ||    ||    ||    |_____/~\\___/          |_D__D__D_|  |_D__D__D_|   ",
-			"  \\_/      \\__/  \\__/  \\__/  \\__/      \\_/               \\_/   \\_/    \\_/   \\_/    ",
-		},
-		{
-			"__/ =| o |=-~~\\  /~~\\  /~~\\  /~~\\ ____Y___________|__|__________________________|_ ",
-			" |/-=|___|=O=====O=====O=====O   |_____/~\\___/          |_D__D__D_|  |_D__D__D_|   ",
-			"  \\_/      \\__/  \\__/  \\__/  \\__/      \\_/               \\_/   \\_/    \\_/   \\_/    ",
-		},
-		{
-			"__/ =| o |=-~~\\  /~~\\  /~~\\  /~~\\ ____Y___________|__|__________________________|_ ",
-			" |/-=|___|=    ||    ||    ||    |_____/~\\___/          |_D__D__D_|  |_D__D__D_|   ",
-			"  \\_/      \\O=====O=====O=====O_/      \\_/               \\_/   \\_/    \\_/   \\_/    ",
-		},
-		{
-			"__/ =| o |=-~~\\  /~~\\  /~~\\  /~~\\ ____Y___________|__|__________________________|_ ",
-			" |/-=|___|=    ||    ||    ||    |_____/~\\___/          |_D__D__D_|  |_D__D__D_|   ",
-			"  \\_/      \\_O=====O=====O=====O/      \\_/               \\_/   \\_/    \\_/   \\_/    ",
-		},
-		{
-			"__/ =| o |=-~~\\  /~~\\  /~~\\  /~~\\ ____Y___________|__|__________________________|_ ",
-			" |/-=|___|=   O=====O=====O=====O|_____/~\\___/          |_D__D__D_|  |_D__D__D_|   ",
-			"  \\_/      \\__/  \\__/  \\__/  \\__/      \\_/               \\_/   \\_/    \\_/   \\_/    ",
-		},
-		{
-			"__/ =| o |=-~O=====O=====O=====O\\ ____Y___________|__|__________________________|_ ",
-			" |/-=|___|=    ||    ||    ||    |_____/~\\___/          |_D__D__D_|  |_D__D__D_|   ",
-			"  \\_/      \\__/  \\__/  \\__/  \\__/      \\_/               \\_/   \\_/    \\_/   \\_/    ",
-		},
-	},
-}
-
-func Run() (int, error) {
-	var opts options
-
-	_, err := parseArgs(&opts)
-	if err != nil {
-		return mb.ExitFailure, nil
+// TrainFrame returns the steam locomotive ASCII art shifted right by offset
+// columns. It is a pure helper so the animation can be exercised (and the art
+// asserted) without a terminal. A negative offset is treated as zero.
+func TrainFrame(offset int) string {
+	if offset < 0 {
+		offset = 0
 	}
-	return sl()
-}
-
-func sl() (int, error) {
-	width, _, err := term.GetSize(0)
-	if err != nil {
-		return mb.ExitFailure, err
-	}
-
-	if width < 80 {
-		return mb.ExitFailure, errors.New("terminal width is too small")
-	}
-	for _, ll := range slAA {
-		for _, l := range ll {
-			for n := range l {
-				l[n] = strings.Repeat(" ", width/5) + l[n]
-			}
+	pad := strings.Repeat(" ", offset)
+	var b strings.Builder
+	for i, row := range train {
+		if i > 0 {
+			b.WriteByte('\n')
 		}
+		b.WriteString(pad)
+		b.WriteString(row)
+	}
+	return b.String()
+}
+
+// Run executes sl.
+func (c *Command) Run(ctx context.Context, stdio command.IO, args []string) error {
+	fs := command.NewFlagSet(c.Name(), "[OPTION]", stdio.Err)
+
+	proceed, err := fs.Parse(stdio, args)
+	if err != nil || !proceed {
+		return err
 	}
 
-	x := 0
-	for {
-		fmt.Print("\x0c")
-		for _, pp := range slAA {
-			for _, l := range pp[x%len(pp)] {
-				if x < len(l) {
-					fmt.Println(string(l[x:]))
-				} else {
-					fmt.Println()
-				}
+	return c.animate(ctx)
+}
 
-			}
+// animate drives the steam locomotive across the terminal using termbox. When a
+// terminal cannot be initialized (no TTY, as under tests/CI), it returns nil so
+// the command degrades gracefully instead of crashing.
+func (c *Command) animate(ctx context.Context) error {
+	if err := termbox.Init(); err != nil {
+		// No real terminal (tests/CI): nothing to animate. Exit gracefully.
+		return nil //nolint:nilerr // a missing terminal is not a failure for sl
+	}
+	defer termbox.Close()
+
+	width, height := termbox.Size()
+	if width <= 0 || height <= 0 {
+		return nil
+	}
+
+	// The train enters from the right edge and travels off the left edge.
+	for x := width; x > -longestRow(); x-- {
+		select {
+		case <-ctx.Done():
+			return nil
+		default:
+		}
+
+		if err := termbox.Clear(termbox.ColorDefault, termbox.ColorDefault); err != nil {
+			return nil
+		}
+		top := (height - len(train)) / 2
+		if top < 0 {
+			top = 0
+		}
+		for i, row := range train {
+			drawString(x, top+i, row)
+		}
+		if err := termbox.Flush(); err != nil {
+			return nil
 		}
 		time.Sleep(time.Second / 30)
-		if x++; x > width {
-			break
+	}
+	return nil
+}
+
+// longestRow returns the width of the widest train row.
+func longestRow() int {
+	max := 0
+	for _, row := range train {
+		if n := len([]rune(row)); n > max {
+			max = n
 		}
 	}
-	return mb.ExitSuccess, nil
+	return max
 }
 
-func parseArgs(opts *options) ([]string, error) {
-	p := initParser(opts)
-
-	args, err := p.Parse()
-	if err != nil {
-		return nil, err
+// drawString draws s starting at column x, row y. Cells outside the terminal
+// are skipped so the train can scroll in and out of view.
+func drawString(x, y int, s string) {
+	for _, r := range s {
+		if x >= 0 {
+			termbox.SetCell(x, y, r, termbox.ColorDefault, termbox.ColorDefault)
+		}
+		x++
 	}
-
-	if opts.Version {
-		mb.ShowVersion(cmdName, version)
-		osExit(mb.ExitSuccess)
-	}
-
-	return args, nil
-}
-
-func initParser(opts *options) *flags.Parser {
-	parser := flags.NewParser(opts, flags.Default)
-	parser.Name = cmdName
-	parser.Usage = "[OPTIONS]"
-
-	return parser
 }

@@ -1,75 +1,53 @@
-//
-// mimixbox/internal/applets/shellutils/sync/sync.go
-//
-// Copyright 2021 Naohiro CHIKAMATSU
-//
-// Licensed under the Apache License, Version 2.0 (the "License");
-// you may not use this file except in compliance with the License.
-// You may obtain a copy of the License at
-//
-//    http://www.apache.org/licenses/LICENSE-2.0
-//
-// Unless required by applicable law or agreed to in writing, software
-// distributed under the License is distributed on an "AS IS" BASIS,
-// WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
-// See the License for the specific language governing permissions and
-// limitations under the License.
+// Package sync implements the sync applet: flush filesystem buffers so cached
+// writes reach persistent storage.
 package sync
 
 import (
-	"os"
+	"context"
+	"fmt"
 	"syscall"
 
-	mb "github.com/nao1215/mimixbox/internal/lib"
-
-	"github.com/jessevdk/go-flags"
+	"github.com/nao1215/mimixbox/internal/command"
 )
 
-const cmdName string = "sync"
+// Command is the sync applet.
+type Command struct{}
 
-const version = "1.0.0"
+// New returns a sync command.
+func New() *Command { return &Command{} }
 
-var osExit = os.Exit
+// Name returns the command name.
+func (c *Command) Name() string { return "sync" }
 
-type options struct {
-	Version bool `short:"v" long:"version" description:"Show sync command version"`
-}
+// Synopsis returns the one-line description shown in the applet list.
+func (c *Command) Synopsis() string { return "Synchronize cached writes to persistent storage" }
 
-func Run() (int, error) {
-	var opts options
-	var err error
+// Run executes sync. In its basic form sync takes no operands; it flushes the
+// filesystem buffers via syscall.Sync().
+func (c *Command) Run(_ context.Context, stdio command.IO, args []string) error {
+	fs := command.NewFlagSet(c.Name(), "[OPTION]", stdio.Err)
 
-	if _, err = parseArgs(&opts); err != nil {
-		return mb.ExitFailure, nil
+	proceed, err := fs.Parse(stdio, args)
+	if err != nil || !proceed {
+		return err
 	}
-	return sync()
+
+	if err := sync(); err != nil {
+		_, _ = fmt.Fprintf(stdio.Err, "sync: %v\n", err)
+		return command.SilentFailure()
+	}
+	return nil
 }
 
-func sync() (int, error) {
+// sync flushes filesystem buffers to persistent storage.
+func sync() (err error) {
+	// syscall.Sync returns no value; recover defends against the rare platform
+	// where the call could panic, keeping Run's error path meaningful.
+	defer func() {
+		if r := recover(); r != nil {
+			err = fmt.Errorf("%v", r)
+		}
+	}()
 	syscall.Sync()
-	return mb.ExitSuccess, nil
-}
-
-func parseArgs(opts *options) ([]string, error) {
-	p := initParser(opts)
-
-	args, err := p.Parse()
-	if err != nil {
-		return nil, err
-	}
-
-	if opts.Version {
-		mb.ShowVersion(cmdName, version)
-		osExit(mb.ExitSuccess)
-	}
-
-	return args, nil
-}
-
-func initParser(opts *options) *flags.Parser {
-	parser := flags.NewParser(opts, flags.Default)
-	parser.Name = cmdName
-	parser.Usage = "[OPTIONS]"
-
-	return parser
+	return nil
 }

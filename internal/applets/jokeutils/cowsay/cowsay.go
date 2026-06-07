@@ -1,35 +1,24 @@
-//
-// mimixbox/internal/applets/jokeutils/cowsay/cowsay.go
-//
-// Copyright 2021 Naohiro CHIKAMATSU
-//
-// Licensed under the Apache License, Version 2.0 (the "License");
-// you may not use this file except in compliance with the License.
-// You may obtain a copy of the License at
-//
-//    http://www.apache.org/licenses/LICENSE-2.0
-//
-// Unless required by applicable law or agreed to in writing, software
-// distributed under the License is distributed on an "AS IS" BASIS,
-// WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
-// See the License for the specific language governing permissions and
-// limitations under the License.
+// Package cowsay implements the cowsay applet: print a message inside a speech
+// bubble above a cow drawn in ASCII art. The message comes from the operands,
+// or from standard input when no operands are given.
 package cowsay
 
 import (
+	"bufio"
+	"context"
 	"fmt"
-	"os"
 	"strings"
 
-	mb "github.com/nao1215/mimixbox/internal/lib"
+	"github.com/nao1215/mimixbox/internal/command"
 )
 
-const cmdName string = "cowsay"
+// bubbleWidth is the column at which the message is wrapped inside the bubble.
+const bubbleWidth = 60
 
-const version = "0.9.3"
+// border is the line drawn above and below the message to form the bubble.
+const border = "------------------------------------------------------------"
 
-var osExit = os.Exit
-
+// cow is the ASCII art drawn below the speech bubble.
 const cow = `   \ 
     \   ^__^
      \  (oo)\_______
@@ -37,74 +26,85 @@ const cow = `   \
             ||----w |
             ||     ||`
 
-func Run() (int, error) {
-	var messages string
-	args, err := parseArgs(os.Args)
-	if err != nil {
-		return mb.ExitFailure, nil
+// Command is the cowsay applet.
+type Command struct{}
+
+// New returns a cowsay command.
+func New() *Command { return &Command{} }
+
+// Name returns the command name.
+func (c *Command) Name() string { return "cowsay" }
+
+// Synopsis returns the one-line description shown in the applet list.
+func (c *Command) Synopsis() string { return "Print message with cow's ASCII art" }
+
+// Run executes cowsay.
+func (c *Command) Run(_ context.Context, stdio command.IO, args []string) error {
+	fs := command.NewFlagSet(c.Name(), "[OPTION]... [MESSAGE]", stdio.Err)
+	proceed, err := fs.Parse(stdio, args)
+	if !proceed {
+		return err
 	}
 
-	if mb.HasPipeData() {
-		messages = strings.TrimSuffix(strings.Join(args, ""), "\n")
-	} else if len(args) == 0 {
-		messages = userInput()
+	var message string
+	if operands := fs.Args(); len(operands) > 0 {
+		message = strings.Join(operands, " ")
 	} else {
-		messages = strings.Join(args, "")
-	}
-	cowsay(messages)
-
-	return mb.ExitSuccess, nil
-}
-
-func cowsay(msg string) {
-	fmt.Fprintln(os.Stdout, "------------------------------------------------------------")
-	fmt.Fprintf(os.Stdout, "%s\n", mb.WrapString(msg, 60))
-	fmt.Fprintln(os.Stdout, "------------------------------------------------------------")
-	fmt.Fprintln(os.Stdout, cow)
-}
-
-func userInput() string {
-	var inputs string
-	for {
-		input, next := mb.Input()
-		if !next {
-			break
-		}
-		inputs += input
-	}
-	return inputs
-}
-
-func parseArgs(args []string) ([]string, error) {
-
-	if mb.HasVersionOpt(args) {
-		mb.ShowVersion(cmdName, version)
-		osExit(mb.ExitSuccess)
-	}
-
-	if mb.HasHelpOpt(args) {
-		showHelp()
-		osExit(mb.ExitSuccess)
-	}
-
-	if mb.HasPipeData() {
-		stdin, err := mb.FromPIPE()
+		message, err = readMessage(stdio)
 		if err != nil {
-			return nil, err
+			return command.Failure(err)
 		}
-		return []string{stdin}, nil
 	}
 
-	return args[1:], nil
+	if _, err := fmt.Fprint(stdio.Out, render(message)); err != nil {
+		return command.Failure(err)
+	}
+	return nil
 }
 
-func showHelp() {
-	fmt.Fprintln(os.Stdout, "Usage:")
-	fmt.Fprintln(os.Stdout, "  cowsay [OPTIONS] message")
-	fmt.Fprintln(os.Stdout, "")
-	fmt.Fprintln(os.Stdout, "Application Options:")
-	fmt.Fprintln(os.Stdout, "  -v, --version       Show cowsay command version")
-	fmt.Fprintln(os.Stdout, "")
-	fmt.Fprintln(os.Stdout, "Help Options:")
-	fmt.Fprintln(os.Stdout, "  -h, --help          Show this help message")
+// readMessage reads the whole of stdio.In and returns it with any trailing
+// newline removed, mirroring how a piped message is presented.
+func readMessage(stdio command.IO) (string, error) {
+	var b strings.Builder
+	sc := bufio.NewScanner(stdio.In)
+	for sc.Scan() {
+		b.WriteString(sc.Text())
+	}
+	if err := sc.Err(); err != nil {
+		return "", err
+	}
+	return b.String(), nil
+}
+
+// render builds the full cowsay output: a speech bubble containing message
+// (wrapped at bubbleWidth columns) above the cow ASCII art. The result ends
+// with a trailing newline.
+func render(message string) string {
+	var b strings.Builder
+	b.WriteString(border)
+	b.WriteByte('\n')
+	b.WriteString(wrap(message, bubbleWidth))
+	b.WriteByte('\n')
+	b.WriteString(border)
+	b.WriteByte('\n')
+	b.WriteString(cow)
+	b.WriteByte('\n')
+	return b.String()
+}
+
+// wrap breaks src into lines of at most column bytes, joined by newlines. It
+// reproduces the behavior of the original implementation's WrapString.
+func wrap(src string, column int) string {
+	if column <= 0 {
+		return src
+	}
+	var buf []string
+	for i := 0; i < len(src); i += column {
+		if i+column < len(src) {
+			buf = append(buf, src[i:i+column])
+		} else {
+			buf = append(buf, src[i:])
+		}
+	}
+	return strings.Join(buf, "\n")
 }

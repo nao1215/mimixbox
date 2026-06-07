@@ -14,31 +14,53 @@
 // WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
 // See the License for the specific language governing permissions and
 // limitations under the License.
+
+// Package ghrdc implements the ghrdc applet: GitHub Release Download Counter.
+// It queries the GitHub releases API for a repository and prints the number of
+// downloads per release asset (binary vs. source code).
 package ghrdc
 
 import (
+	"context"
 	"encoding/json"
 	"fmt"
-	"io/ioutil"
+	"io"
 	"net/http"
-	"os"
 	"strings"
 	"time"
 
-	"github.com/jessevdk/go-flags"
-	mb "github.com/nao1215/mimixbox/internal/lib"
+	"github.com/nao1215/mimixbox/internal/command"
 )
 
-const cmdName string = "ghrdc"
+// apiBaseURL is the GitHub releases API endpoint prefix. It is a package
+// variable so tests can point it at an httptest server instead of the real
+// network. The repository "USER/REPOSITORY" and "/releases" are appended.
+var apiBaseURL = "https://api.github.com/repos/"
 
-var osExit = os.Exit
+// SetAPIBaseURL overrides the GitHub API base URL and returns a function that
+// restores the previous value. It exists so tests can redirect requests to an
+// httptest server without touching the real network.
+func SetAPIBaseURL(url string) (restore func()) {
+	prev := apiBaseURL
+	apiBaseURL = url
+	return func() { apiBaseURL = prev }
+}
 
-const version = "1.0.2"
+// Command is the ghrdc applet.
+type Command struct{}
+
+// New returns a ghrdc command.
+func New() *Command { return &Command{} }
+
+// Name returns the command name.
+func (c *Command) Name() string { return "ghrdc" }
+
+// Synopsis returns the one-line description shown in the applet list.
+func (c *Command) Synopsis() string { return "GitHub Relase Download Counter" }
 
 type options struct {
-	All     bool `short:"a" long:"all" description:"Show total number of downloads per release"`
-	Total   bool `short:"t" long:"total" description:"Show total number of downloads for all releases"`
-	Version bool `short:"v" long:"version" description:"Show ghrdc command version"`
+	all   bool
+	total bool
 }
 
 // GitHubReleaseData is a structure for receiving GitHub Release information in json format.
@@ -79,11 +101,11 @@ type GitHubReleaseData struct {
 	CreatedAt       time.Time `json:"created_at"`
 	PublishedAt     time.Time `json:"published_at"`
 	Assets          []struct {
-		URL      string      `json:"url"`
-		ID       int         `json:"id"`
-		NodeID   string      `json:"node_id"`
-		Name     string      `json:"name"`
-		Label    interface{} `json:"label"`
+		URL      string `json:"url"`
+		ID       int    `json:"id"`
+		NodeID   string `json:"node_id"`
+		Name     string `json:"name"`
+		Label    any    `json:"label"`
 		Uploader struct {
 			Login             string `json:"login"`
 			ID                int    `json:"id"`
@@ -117,13 +139,34 @@ type GitHubReleaseData struct {
 	Body       string `json:"body"`
 }
 
-func Run() (int, error) {
-	var opts options
-	var args = parseArgs(&opts)
-	var repository string = args[0]
-	data, err := fetchGitHubReleaseData(repository)
+// Run executes ghrdc.
+func (c *Command) Run(ctx context.Context, stdio command.IO, args []string) error {
+	fs := command.NewFlagSet(c.Name(), "[OPTION]... USER/REPOSITORY", stdio.Err)
+	all := fs.BoolP("all", "a", false, "Show total number of downloads per release")
+	total := fs.BoolP("total", "t", false, "Show total number of downloads for all releases")
+
+	proceed, err := fs.Parse(stdio, args)
+	if err != nil || !proceed {
+		return err
+	}
+
+	operands := fs.Args()
+	switch {
+	case len(operands) == 0:
+		_, _ = fmt.Fprintf(stdio.Err, "%s: missing operand: specify USER/REPOSITORY\n", c.Name())
+		_, _ = fmt.Fprintf(stdio.Err, "Try '%s --help' for more information.\n", c.Name())
+		return command.SilentFailure()
+	case len(operands) > 1:
+		_, _ = fmt.Fprintf(stdio.Err, "%s: extra operand '%s'\n", c.Name(), operands[1])
+		_, _ = fmt.Fprintf(stdio.Err, "Try '%s --help' for more information.\n", c.Name())
+		return command.SilentFailure()
+	}
+	repository := operands[0]
+
+	data, err := fetchGitHubReleaseData(ctx, repository)
 	if err != nil {
-		return mb.ExitFailure, err
+		_, _ = fmt.Fprintf(stdio.Err, "%s: %v\n", c.Name(), err)
+		return command.SilentFailure()
 	}
 	if len(data) == 0 {
 		// Because the ghrdc command does not authenticate with GitHub API,
@@ -131,75 +174,84 @@ func Run() (int, error) {
 		// There is the method to use the following library for API authentication.
 		// (However, no plans to add functions).
 		// URL: https://github.com/google/go-github
-		err := fmt.Errorf("Release Data is nothing. If %s is organization repository,\n"+
-			"gdrdc commant can't get release data.\n", repository)
-		return mb.ExitFailure, err
+		_, _ = fmt.Fprintf(stdio.Err, "%s: Release Data is nothing. If %s is organization repository,\n"+
+			"gdrdc commant can't get release data.\n", c.Name(), repository)
+		return command.SilentFailure()
 	}
 
-	var totalSrcCnt int = 0
-	var totalBinCnt int = 0
+	opts := options{all: *all, total: *total}
+	render(stdio.Out, data, opts)
+	return nil
+}
+
+// render formats the download counts for data according to opts and writes the
+// result to w. It preserves the exact layout of the original implementation.
+func render(w io.Writer, data []GitHubReleaseData, opts options) {
+	var totalSrcCnt int
+	var totalBinCnt int
 	for i, d := range data {
 		srcCnt, binCnt := calcTotalDownloadCount(d)
 		totalSrcCnt += srcCnt
 		totalBinCnt += binCnt
 
-		if !opts.Total {
-			fmt.Fprintf(os.Stdout, "[Name(Version)]             :%s\n", d.Name)
-			fmt.Fprintf(os.Stdout, "[Release Date]              :%s\n", d.PublishedAt)
-			fmt.Fprintf(os.Stdout, "[Binary Download Count]     :%d\n", binCnt)
-			fmt.Fprintf(os.Stdout, "[Source Code Download Count]:%d\n", srcCnt)
+		if !opts.total {
+			_, _ = fmt.Fprintf(w, "[Name(Version)]             :%s\n", d.Name)
+			_, _ = fmt.Fprintf(w, "[Release Date]              :%s\n", d.PublishedAt)
+			_, _ = fmt.Fprintf(w, "[Binary Download Count]     :%d\n", binCnt)
+			_, _ = fmt.Fprintf(w, "[Source Code Download Count]:%d\n", srcCnt)
 		}
 		// In the default case, the latest result is displayed.
-		if !opts.All && !opts.Total {
+		if !opts.all && !opts.total {
 			break
 		}
 
 		// Adjust line feed between results. If last result, not add line feed.
-		if (i+1) != len(data) && !opts.Total {
-			fmt.Fprintln(os.Stdout, "")
+		if (i+1) != len(data) && !opts.total {
+			_, _ = fmt.Fprintln(w, "")
 		}
 	}
 
-	if opts.Total {
-		fmt.Fprintf(os.Stdout, "[Name(Version)]                    :All release\n")
-		fmt.Fprintf(os.Stdout, "[Release Date]                     :-\n")
-		fmt.Fprintf(os.Stdout, "[Binary Download Count(total)]     :%d\n", totalBinCnt)
-		fmt.Fprintf(os.Stdout, "[Source Code Download Count(total)]:%d\n", totalSrcCnt)
+	if opts.total {
+		_, _ = fmt.Fprintf(w, "[Name(Version)]                    :All release\n")
+		_, _ = fmt.Fprintf(w, "[Release Date]                     :-\n")
+		_, _ = fmt.Fprintf(w, "[Binary Download Count(total)]     :%d\n", totalBinCnt)
+		_, _ = fmt.Fprintf(w, "[Source Code Download Count(total)]:%d\n", totalSrcCnt)
 	}
-
-	return mb.ExitSuccess, nil
 }
 
-// fetchGitHubReleaseData () runs the GitHub Web API. Convert the acquired json to a structure.
-func fetchGitHubReleaseData(repositoryName string) ([]GitHubReleaseData, error) {
-	repository := "https://api.github.com/repos/" + repositoryName + "/releases"
+// fetchGitHubReleaseData runs the GitHub Web API for repositoryName
+// ("USER/REPOSITORY") and converts the acquired json to a slice of structures.
+func fetchGitHubReleaseData(ctx context.Context, repositoryName string) ([]GitHubReleaseData, error) {
+	endpoint := apiBaseURL + repositoryName + "/releases"
 
-	resp, err := http.Get(repository)
+	req, err := http.NewRequestWithContext(ctx, http.MethodGet, endpoint, nil)
 	if err != nil {
-		fmt.Fprintln(os.Stderr, "Can't get response from GitHub.")
-		return nil, err
+		return nil, fmt.Errorf("can't build request for GitHub: %w", err)
 	}
 
-	defer resp.Body.Close()
-	body, err := ioutil.ReadAll(resp.Body)
+	resp, err := http.DefaultClient.Do(req)
 	if err != nil {
-		fmt.Fprintln(os.Stderr, "Can't read response from GitHub.")
-		return nil, err
+		return nil, fmt.Errorf("can't get response from GitHub: %w", err)
+	}
+	defer func() { _ = resp.Body.Close() }()
+
+	body, err := io.ReadAll(resp.Body)
+	if err != nil {
+		return nil, fmt.Errorf("can't read response from GitHub: %w", err)
 	}
 
 	var data []GitHubReleaseData
 	if err := json.Unmarshal(body, &data); err != nil {
-		fmt.Fprintln(os.Stderr, "Can't convert json to structure data. Is the repository name correct?")
-		return nil, err
+		return nil, fmt.Errorf("can't convert json to structure data. Is the repository name correct?: %w", err)
 	}
 	return data, nil
 }
 
-// calcTotalDownloadCount() Calculate the number of downloads (total value) of executable
-// files and source code.
+// calcTotalDownloadCount calculates the number of downloads (total value) of
+// executable files and source code for a single release.
 func calcTotalDownloadCount(ghrd GitHubReleaseData) (int, int) {
-	var srcCnt int = 0
-	var binCnt int = 0
+	var srcCnt int
+	var binCnt int
 	for _, asset := range ghrd.Assets {
 		if isSourceCodeFileURL(asset.BrowserDownloadURL) {
 			srcCnt += asset.DownloadCount
@@ -210,7 +262,7 @@ func calcTotalDownloadCount(ghrd GitHubReleaseData) (int, int) {
 	return srcCnt, binCnt
 }
 
-// isSourceCodeFileURL() parses the URL and guesses if the target file(URL) is source code.
+// isSourceCodeFileURL parses the URL and guesses if the target file(URL) is source code.
 func isSourceCodeFileURL(str string) bool {
 	likelySrcCode := []string{"src", "Src", "SRC", "source", "Source"}
 
@@ -220,41 +272,4 @@ func isSourceCodeFileURL(str string) bool {
 		}
 	}
 	return false
-}
-
-func parseArgs(opts *options) []string {
-	p := initParser(opts)
-
-	args, err := p.Parse()
-	if err != nil {
-		osExit(mb.ExitFailure)
-	}
-
-	if opts.Version {
-		mb.ShowVersion(cmdName, version)
-		osExit(mb.ExitSuccess)
-	}
-
-	if !isValidArgNr(args) {
-		showHelp(p)
-		osExit(mb.ExitFailure)
-	}
-	return args
-}
-
-func initParser(opts *options) *flags.Parser {
-	parser := flags.NewParser(opts, flags.Default)
-	parser.Name = cmdName
-	parser.Usage = "[OPTIONS] USER_NAME/RPOSITORY_NAME"
-
-	return parser
-}
-
-func isValidArgNr(args []string) bool {
-	return len(args) == 1
-}
-
-func showHelp(p *flags.Parser) {
-	fmt.Fprintf(os.Stdout, "ghrdc command shows the number of release file downloads in the repository using GitHub API.\n\n")
-	p.WriteHelp(os.Stdout)
 }

@@ -1,144 +1,114 @@
-//
-// mimixbox/internal/applets/fileutils/rmdir/rmdir.go
-//
-// Copyright 2021 Naohiro CHIKAMATSU
-//
-// Licensed under the Apache License, Version 2.0 (the "License");
-// you may not use this file except in compliance with the License.
-// You may obtain a copy of the License at
-//
-//    http://www.apache.org/licenses/LICENSE-2.0
-//
-// Unless required by applicable law or agreed to in writing, software
-// distributed under the License is distributed on an "AS IS" BASIS,
-// WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
-// See the License for the specific language governing permissions and
-// limitations under the License.
+// Package rmdir implements the rmdir applet: remove empty directories,
+// optionally along with their now-empty ancestors, following GNU coreutils
+// behavior.
 package rmdir
 
 import (
+	"context"
 	"errors"
+	"fmt"
 	"os"
 	"path/filepath"
-	"strings"
+	"unicode"
 
-	mb "github.com/nao1215/mimixbox/internal/lib"
-
-	"github.com/jessevdk/go-flags"
+	"github.com/nao1215/mimixbox/internal/command"
 )
 
-const cmdName string = "rmdir"
+// Command is the rmdir applet.
+type Command struct{}
 
-const version = "1.0.1"
+// New returns a rmdir command.
+func New() *Command { return &Command{} }
 
-var osExit = os.Exit
+// Name returns the command name.
+func (c *Command) Name() string { return "rmdir" }
 
-type options struct {
-	Ignore  bool `short:"i" long:"ignore-fail-on-non-empty" description:"Ignore the error if the directory is not empty"`
-	Parents bool `short:"p" long:"parents" description:"Remove DIRECTORY and its parents"`
-	Version bool `short:"v" long:"version" description:"Show rmdir command version"`
-}
+// Synopsis returns the one-line description shown in the applet list.
+func (c *Command) Synopsis() string { return "Remove directory" }
 
-func Run() (int, error) {
-	var opts options
-	var args []string
-	var err error
-	var status int
+// Run executes rmdir.
+func (c *Command) Run(_ context.Context, stdio command.IO, args []string) error {
+	fs := command.NewFlagSet(c.Name(), "[OPTION]... DIRECTORY...", stdio.Err)
+	parents := fs.BoolP("parents", "p", false, "remove DIRECTORY and its ancestors")
+	verbose := fs.BoolP("verbose", "v", false, "output a diagnostic for every directory processed")
 
-	if args, err = parseArgs(&opts); err != nil {
-		return mb.ExitFailure, nil
+	proceed, err := fs.Parse(stdio, args)
+	if err != nil || !proceed {
+		return err
 	}
 
-	// Coremb will continue to delete files as much as possible.
-	// MimixBox stops processing if an error occurs even once.
-	for _, path := range args {
-		if status, err := rmdir(path, opts); err != nil {
-			return status, err
+	dirs := fs.Args()
+	if len(dirs) == 0 {
+		_, _ = fmt.Fprintf(stdio.Err, "%s: missing operand\n", c.Name())
+		return command.SilentFailure()
+	}
+
+	var firstErr error
+	for _, dir := range dirs {
+		if rerr := c.remove(stdio, dir, *parents, *verbose); rerr != nil {
+			firstErr = keep(firstErr)
 		}
 	}
-	return status, nil
+	return firstErr
 }
 
-func rmdir(path string, opts options) (int, error) {
-	p := os.ExpandEnv(path)
-	if err := validBeforeRemove(p); err != nil {
-		return mb.ExitFailure, err
+// remove deletes dir. With parents set, it also removes the now-empty ancestor
+// directories. A failure is reported GNU-style on stderr; the returned error
+// only signals that the exit code should be non-zero.
+func (c *Command) remove(stdio command.IO, dir string, parents, verbose bool) error {
+	if err := c.removeOne(stdio, dir, verbose); err != nil {
+		return err
 	}
-
-	var target string
-	if opts.Parents {
-		target = ancestorDir(p)
-	} else {
-		target = p
+	if !parents {
+		return nil
 	}
-
-	_, files, err := mb.Walk(target, false)
-	if err != nil {
-		return mb.ExitFailure, err
-	}
-	if len(files) != 0 {
-		if opts.Ignore {
-			return mb.ExitSuccess, nil
+	for cur := filepath.Dir(dir); cur != "." && cur != string(filepath.Separator) && cur != filepath.Dir(cur); cur = filepath.Dir(cur) {
+		if err := c.removeOne(stdio, cur, verbose); err != nil {
+			return err
 		}
-		return mb.ExitFailure, errors.New("Can't remove " + path + ": It's not empty directory")
 	}
-
-	// The contents of the directory are empty. Delete directories at once
-	if err := os.RemoveAll(target); err != nil {
-		return mb.ExitFailure, err
-	}
-	return mb.ExitSuccess, nil
-}
-
-func ancestorDir(path string) string {
-	dirs := strings.Split(path, string(filepath.Separator))
-	return dirs[0]
-}
-
-func validBeforeRemove(path string) error {
-	if !mb.Exists(path) {
-		return errors.New("can't remove " + path + ": No such file or directory exists")
-	}
-
-	if mb.IsFile(path) {
-		return errors.New("can't remove " + path + ": It's not directory")
-	}
-
 	return nil
 }
 
-func parseArgs(opts *options) ([]string, error) {
-	p := initParser(opts)
-
-	args, err := p.Parse()
-	if err != nil {
-		return nil, err
+// removeOne removes a single directory with os.Remove, which only succeeds on
+// empty directories. A non-empty directory yields the GNU error message.
+func (c *Command) removeOne(stdio command.IO, dir string, verbose bool) error {
+	if verbose {
+		_, _ = fmt.Fprintf(stdio.Out, "%s: removing directory, '%s'\n", c.Name(), dir)
 	}
-
-	if opts.Version {
-		mb.ShowVersion(cmdName, version)
-		osExit(mb.ExitSuccess)
+	// os.Remove also unlinks files and symlinks, so guard first: rmdir must only
+	// remove real directories. Lstat avoids following a symlink to a directory.
+	if info, lerr := os.Lstat(dir); lerr == nil && !info.IsDir() {
+		_, _ = fmt.Fprintf(stdio.Err, "%s: failed to remove '%s': Not a directory\n", c.Name(), dir)
+		return errors.New("not a directory")
 	}
-
-	if !isValidArgNr(args) {
-		showHelp(p)
-		osExit(mb.ExitFailure)
+	if err := os.Remove(dir); err != nil {
+		_, _ = fmt.Fprintf(stdio.Err, "%s: failed to remove '%s': %s\n", c.Name(), dir, reason(err))
+		return err
 	}
-	return args, nil
+	return nil
 }
 
-func initParser(opts *options) *flags.Parser {
-	parser := flags.NewParser(opts, flags.Default)
-	parser.Name = cmdName
-	parser.Usage = "[OPTIONS] PATH"
-
-	return parser
+// reason extracts the underlying cause from a possible *os.PathError so the
+// message reads like GNU's (e.g. "Directory not empty") without the operation
+// and path that os repeats, capitalizing the first letter to match GNU output.
+func reason(err error) string {
+	var pe *os.PathError
+	msg := err.Error()
+	if errors.As(err, &pe) {
+		msg = pe.Err.Error()
+	}
+	if msg == "" {
+		return msg
+	}
+	r := []rune(msg)
+	r[0] = unicode.ToUpper(r[0])
+	return string(r)
 }
 
-func isValidArgNr(args []string) bool {
-	return len(args) >= 1
-}
-
-func showHelp(p *flags.Parser) {
-	p.WriteHelp(os.Stdout)
+func keep(existing error) error {
+	if existing != nil {
+		return existing
+	}
+	return command.SilentFailure()
 }

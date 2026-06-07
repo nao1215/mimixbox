@@ -20,7 +20,7 @@ func (c *Command) Name() string { return "true" }
 func (c *Command) Synopsis() string { return "Do nothing. Return success(0)" }
 
 // Run always succeeds. Like GNU true it ignores its operands, except that a
-// leading --help or --version is honoured.
+// leading --help or --version is honored.
 func (c *Command) Run(_ context.Context, stdio command.IO, args []string) error {
 	if len(args) > 0 {
 		switch args[0] {

@@ -1,183 +1,187 @@
-//
-// mimixbox/internal/applets/shellutils/id/id.go
-//
-// Copyright 2021-2022 Naohiro CHIKAMATSU, polynomialspace
-//
-// Licensed under the Apache License, Version 2.0 (the "License");
-// you may not use this file except in compliance with the License.
-// You may obtain a copy of the License at
-//
-//    http://www.apache.org/licenses/LICENSE-2.0
-//
-// Unless required by applicable law or agreed to in writing, software
-// distributed under the License is distributed on an "AS IS" BASIS,
-// WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
-// See the License for the specific language governing permissions and
-// limitations under the License.
+// Package id implements the id applet: print real and effective user and
+// group IDs.
 package id
 
 import (
-	"errors"
+	"context"
 	"fmt"
-	"os"
 	"os/user"
 	"strings"
 
-	"github.com/jessevdk/go-flags"
-	mb "github.com/nao1215/mimixbox/internal/lib"
+	"github.com/nao1215/mimixbox/internal/command"
 )
 
-const cmdName string = "id"
-const version = "1.0.1"
+// Command is the id applet.
+type Command struct{}
 
-var osExit = os.Exit
+// New returns an id command.
+func New() *Command { return &Command{} }
 
-type options struct {
-	Group    bool `short:"g" long:"group" description:"Print only the effective group ID"`
-	AllGroup bool `short:"G" long:"groups" description:"Print all group IDs"`
-	Name     bool `short:"n" long:"name" description:"Print the name instead of a number (for -ugG)"`
-	User     bool `short:"u" long:"user" description:"Print only the effective user ID"`
-	Version  bool `short:"v" long:"version" description:"Show id command version"`
-}
+// Name returns the command name.
+func (c *Command) Name() string { return "id" }
 
-func Run() (int, error) {
-	var opts options
-	var err error
+// Synopsis returns the one-line description shown in the applet list.
+func (c *Command) Synopsis() string { return "Print User ID and Group ID" }
 
-	if _, err = parseArgs(&opts); err != nil {
-		fmt.Fprintln(os.Stderr, err)
-		return mb.ExitFailure, nil
-	}
-	return id(opts)
-}
+// Run executes id.
+func (c *Command) Run(_ context.Context, stdio command.IO, args []string) error {
+	fs := command.NewFlagSet(c.Name(), "[OPTION]... [USER]", stdio.Err)
+	userOnly := fs.BoolP("user", "u", false, "print only the effective user ID")
+	groupOnly := fs.BoolP("group", "g", false, "print only the effective group ID")
+	allGroups := fs.BoolP("groups", "G", false, "print all group IDs")
+	name := fs.BoolP("name", "n", false, "print a name instead of a number, for -ugG")
+	real := fs.BoolP("real", "r", false, "print the real ID instead of the effective ID, with -ugG")
 
-func id(opts options) (int, error) {
-	user, err := user.Current()
-	if err != nil {
-		return mb.ExitFailure, err
+	proceed, err := fs.Parse(stdio, args)
+	if err != nil || !proceed {
+		return err
 	}
 
-	groups, err := mb.Groups(user.Username)
-	if err != nil {
-		return mb.ExitFailure, err
+	// At most one of -u, -g, -G may be specified at a time.
+	if boolCount(*userOnly, *groupOnly, *allGroups) > 1 {
+		_, _ = fmt.Fprintln(stdio.Err, "id: cannot print \"only\" of more than one choice")
+		return command.SilentFailure()
+	}
+	// -n and -r are only meaningful together with -u, -g or -G.
+	if (*name || *real) && !*userOnly && !*groupOnly && !*allGroups {
+		_, _ = fmt.Fprintln(stdio.Err, "id: cannot print only names or real IDs in default format")
+		return command.SilentFailure()
 	}
 
-	switch {
-	case opts.Group:
-		return dumpGid(*user, opts.Name)
-	case opts.AllGroup:
-		mb.DumpGroups(groups, opts.Name)
-		return mb.ExitSuccess, nil
-	case opts.User:
-		return dumpUid(*user, opts.Name)
-	default:
-		if err := dumpAllId(*user, groups); err != nil {
-			return mb.ExitFailure, err
-		}
-	}
-
-	return mb.ExitSuccess, nil
-}
-
-func dumpUid(u user.User, showName bool) (int, error) {
-	var err error
-
-	if showName {
-		_, err = fmt.Fprintln(os.Stdout, u.Username)
-	} else {
-		_, err = fmt.Fprintln(os.Stdout, u.Uid)
-	}
-
-	if err != nil {
-		return mb.ExitFailure, err
-	}
-	return mb.ExitSuccess, err
-}
-
-func dumpGid(u user.User, showName bool) (int, error) {
-	if showName {
-		g, err := user.LookupGroup(u.Username)
-		if err != nil {
-			return mb.ExitFailure, err
-		}
-		fmt.Fprintln(os.Stdout, g.Name)
-	} else {
-		fmt.Fprintln(os.Stdout, u.Gid)
-	}
-	return mb.ExitSuccess, nil
-}
-
-func dumpAllId(u user.User, groups []user.Group) error {
-	var resultLine string = ""
-
-	g, err := user.LookupGroupId(u.Gid)
+	u, err := resolveUser(stdio, fs.Args())
 	if err != nil {
 		return err
 	}
-	resultLine = "uid=" + u.Uid + "(" + u.Username + ") "
-	resultLine = resultLine + "gid=" + u.Gid + "(" + g.Name + ") "
-	resultLine = resultLine + "groups="
 
-	for _, v := range groups {
-		resultLine = resultLine + v.Gid + "(" + v.Name + "),"
+	switch {
+	case *userOnly:
+		return dumpUID(stdio, u, *name, *real)
+	case *groupOnly:
+		return dumpGID(stdio, u, *name, *real)
+	case *allGroups:
+		return dumpGroups(stdio, u, *name)
+	default:
+		return dumpAll(stdio, u)
 	}
-	fmt.Fprintln(os.Stdout, strings.TrimSuffix(resultLine, ","))
+}
+
+// resolveUser returns the current user, or the user named by the single
+// operand when one is given.
+func resolveUser(stdio command.IO, operands []string) (*user.User, error) {
+	if len(operands) == 0 {
+		u, err := user.Current()
+		if err != nil {
+			_, _ = fmt.Fprintf(stdio.Err, "id: %v\n", err)
+			return nil, command.SilentFailure()
+		}
+		return u, nil
+	}
+	if len(operands) > 1 {
+		_, _ = fmt.Fprintf(stdio.Err, "id: extra operand '%s'\n", operands[1])
+		return nil, command.SilentFailure()
+	}
+	u, err := user.Lookup(operands[0])
+	if err != nil {
+		_, _ = fmt.Fprintf(stdio.Err, "id: '%s': no such user\n", operands[0])
+		return nil, command.SilentFailure()
+	}
+	return u, nil
+}
+
+// dumpUID prints the user's ID (real ignored: real and effective are the same
+// for a looked-up user) or, with showName, the user name.
+func dumpUID(stdio command.IO, u *user.User, showName, _ bool) error {
+	if showName {
+		_, _ = fmt.Fprintln(stdio.Out, u.Username)
+		return nil
+	}
+	_, _ = fmt.Fprintln(stdio.Out, u.Uid)
 	return nil
 }
 
-func parseArgs(opts *options) ([]string, error) {
-	p := initParser(opts)
+// dumpGID prints the user's primary group ID or, with showName, its name.
+func dumpGID(stdio command.IO, u *user.User, showName, _ bool) error {
+	if showName {
+		g, err := user.LookupGroupId(u.Gid)
+		if err != nil {
+			_, _ = fmt.Fprintf(stdio.Err, "id: %v\n", err)
+			return command.SilentFailure()
+		}
+		_, _ = fmt.Fprintln(stdio.Out, g.Name)
+		return nil
+	}
+	_, _ = fmt.Fprintln(stdio.Out, u.Gid)
+	return nil
+}
 
-	args, err := p.Parse()
+// dumpGroups prints all of the user's group IDs or, with showName, their names.
+func dumpGroups(stdio command.IO, u *user.User, showName bool) error {
+	groups, err := lookupGroups(u)
+	if err != nil {
+		_, _ = fmt.Fprintf(stdio.Err, "id: %v\n", err)
+		return command.SilentFailure()
+	}
+	parts := make([]string, 0, len(groups))
+	for _, g := range groups {
+		if showName {
+			parts = append(parts, g.Name)
+		} else {
+			parts = append(parts, g.Gid)
+		}
+	}
+	_, _ = fmt.Fprintln(stdio.Out, strings.Join(parts, " "))
+	return nil
+}
+
+// dumpAll prints the default GNU id line:
+// uid=N(name) gid=N(name) groups=N(name),...
+func dumpAll(stdio command.IO, u *user.User) error {
+	primary, err := user.LookupGroupId(u.Gid)
+	if err != nil {
+		_, _ = fmt.Fprintf(stdio.Err, "id: %v\n", err)
+		return command.SilentFailure()
+	}
+	groups, err := lookupGroups(u)
+	if err != nil {
+		_, _ = fmt.Fprintf(stdio.Err, "id: %v\n", err)
+		return command.SilentFailure()
+	}
+
+	var b strings.Builder
+	_, _ = fmt.Fprintf(&b, "uid=%s(%s) gid=%s(%s) groups=", u.Uid, u.Username, u.Gid, primary.Name)
+	parts := make([]string, 0, len(groups))
+	for _, g := range groups {
+		parts = append(parts, g.Gid+"("+g.Name+")")
+	}
+	b.WriteString(strings.Join(parts, ","))
+	_, _ = fmt.Fprintln(stdio.Out, b.String())
+	return nil
+}
+
+// lookupGroups returns the user's supplementary and primary groups.
+func lookupGroups(u *user.User) ([]user.Group, error) {
+	gids, err := u.GroupIds()
 	if err != nil {
 		return nil, err
 	}
-
-	if opts.Version {
-		mb.ShowVersion(cmdName, version)
-		osExit(mb.ExitSuccess)
+	groups := make([]user.Group, 0, len(gids))
+	for _, gid := range gids {
+		g, err := user.LookupGroupId(gid)
+		if err != nil {
+			return nil, err
+		}
+		groups = append(groups, *g)
 	}
-
-	if !validSpecifiedSameTime(*opts) {
-		return nil, errors.New("-g, -u, -G option cannot be specified at the same time")
-	}
-
-	if !validNameOpt(*opts) {
-		return nil, errors.New("specify the -n option at the same time as -g, -u, -G")
-	}
-
-	return args, nil
+	return groups, nil
 }
 
-func validSpecifiedSameTime(opts options) bool {
-	return countShowOnlyOneItemOpts(opts) <= 1
-}
-
-func validNameOpt(opts options) bool {
-	if opts.Name {
-		return countShowOnlyOneItemOpts(opts) == 1
+// boolCount returns how many of the given booleans are true.
+func boolCount(bs ...bool) int {
+	n := 0
+	for _, b := range bs {
+		if b {
+			n++
+		}
 	}
-	return true
-}
-
-func countShowOnlyOneItemOpts(opts options) int {
-	var count int = 0
-	if opts.AllGroup {
-		count++
-	}
-	if opts.Group {
-		count++
-	}
-	if opts.User {
-		count++
-	}
-	return count
-}
-
-func initParser(opts *options) *flags.Parser {
-	parser := flags.NewParser(opts, flags.Default)
-	parser.Name = cmdName
-	parser.Usage = "[OPTIONS]"
-
-	return parser
+	return n
 }

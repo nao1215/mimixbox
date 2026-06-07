@@ -1,6 +1,6 @@
 // Package echo implements the echo applet: write its arguments to standard
 // output. Like the GNU shell builtin, echo does not use getopt parsing: it only
-// recognises a leading run of -n, -e and -E flags and treats everything else,
+// recognizes a leading run of -n, -e and -E flags and treats everything else,
 // including --help and --version, as literal text.
 package echo
 

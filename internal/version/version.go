@@ -14,5 +14,5 @@ var Version = "0.33.3"
 // Print writes the "--version" line for a single command to w, following the
 // GNU coreutils convention, e.g. "cat (mimixbox) 0.33.3".
 func Print(w io.Writer, command string) {
-	fmt.Fprintf(w, "%s (mimixbox) %s\n", command, Version)
+	_, _ = fmt.Fprintf(w, "%s (mimixbox) %s\n", command, Version)
 }

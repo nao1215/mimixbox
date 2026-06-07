@@ -1,139 +1,109 @@
-//
-// mimixbox/internal/applets/shellutils/chroot/chroot.go
-//
-// Copyright 2021 Naohiro CHIKAMATSU
-//
-// Licensed under the Apache License, Version 2.0 (the "License");
-// you may not use this file except in compliance with the License.
-// You may obtain a copy of the License at
-//
-//    http://www.apache.org/licenses/LICENSE-2.0
-//
-// Unless required by applicable law or agreed to in writing, software
-// distributed under the License is distributed on an "AS IS" BASIS,
-// WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
-// See the License for the specific language governing permissions and
-// limitations under the License.
+// Package chroot implements the chroot applet: run a command or an interactive
+// shell with a special root directory.
 package chroot
 
 import (
+	"context"
+	"fmt"
 	"os"
+	"os/exec"
 	"syscall"
 
-	mb "github.com/nao1215/mimixbox/internal/lib"
-
-	"github.com/jessevdk/go-flags"
+	"github.com/nao1215/mimixbox/internal/command"
 )
 
-const cmdName string = "chroot"
-const version = "1.0.2"
+// Command is the chroot applet.
+type Command struct{}
 
-var osExit = os.Exit
+// New returns a chroot command.
+func New() *Command { return &Command{} }
 
-type options struct {
-	Version bool `short:"v" long:"version" description:"Show chroot command version"`
-	Help    bool `short:"h" long:"help" description:"Show this message"`
+// Name returns the command name.
+func (c *Command) Name() string { return "chroot" }
+
+// Synopsis returns the one-line description shown in the applet list.
+func (c *Command) Synopsis() string {
+	return "Run command or interactive shell with special root directory"
 }
 
-type command struct {
-	name       string
-	withOption []string
-	env        []string
-}
+// Run executes chroot. It changes the root directory to NEWROOT and runs
+// COMMAND (defaulting to the shell) inside it. This requires root privileges;
+// when it cannot change the root directory it prints a GNU-style error and
+// returns command.SilentFailure().
+func (c *Command) Run(_ context.Context, stdio command.IO, args []string) error {
+	fs := command.NewFlagSet(c.Name(), "NEWROOT [COMMAND [ARG]...]", stdio.Err)
 
-func Run() (int, error) {
-	var opts options
-	var err error
-	var cmd command
-
-	parseArgs(&opts)
-
-	err = syscall.Chroot(os.ExpandEnv(os.Args[1]))
-	if err != nil {
-		return mb.ExitFailure, err
-	}
-
-	//----------------From here, in the prison-------------------
-	err = os.Chdir("/")
-	if err != nil {
-		return mb.ExitFailure, err
-	}
-
-	decideExecCommand(&cmd)
-	// TODO: Reset UID and GID.
-	// "/etc/passwd (uid name resolution file)" and "/etc/group (gid name resolution file)" may
-	// be different between the original environment and the jail environment.
-	// So, reset uid and gid in the jail environment.
-
-	err = syscall.Exec(cmd.name, cmd.withOption, cmd.env)
-	if err != nil {
-		return mb.ExitFailure, err
-	}
-	return mb.ExitSuccess, nil
-}
-
-// Execute this method after chroot.
-// If the user has not specified a command to be executed in the jail environment,
-// the execution command is set to the environment variable $SHELL.
-// If there is no $SHELL in the jail environment, use /bin/sh.
-func decideExecCommand(cmd *command) error {
-	if len(os.Args) == 2 {
-		shell := os.Getenv("SHELL")
-		if shell != "" && mb.ExistCmd(shell) {
-			cmd.name = shell
-		} else {
-			cmd.name = "/bin/sh"
-		}
-		cmd.withOption = []string{cmd.name, "-i"}
-	} else {
-		cmd.name = os.Args[2]
-		cmd.withOption = os.Args[2:]
-	}
-
-	// Reset the environment variable SHELL for the Jail environment.
-	if err := os.Setenv("SHELL", cmd.name); err != nil {
+	proceed, err := fs.Parse(stdio, args)
+	if err != nil || !proceed {
 		return err
 	}
 
-	cmd.env = os.Environ()
+	operands := fs.Args()
+	if len(operands) == 0 {
+		_, _ = fmt.Fprintln(stdio.Err, "chroot: missing operand")
+		return command.SilentFailure()
+	}
+
+	newRoot := os.ExpandEnv(operands[0])
+	if err := syscall.Chroot(newRoot); err != nil {
+		_, _ = fmt.Fprintf(stdio.Err, "chroot: cannot change root directory to '%s': %s\n",
+			newRoot, reason(err))
+		return command.SilentFailure()
+	}
+
+	//----------------From here, in the prison-------------------
+	if err := os.Chdir("/"); err != nil {
+		_, _ = fmt.Fprintf(stdio.Err, "chroot: cannot change root directory to '%s': %s\n",
+			newRoot, reason(err))
+		return command.SilentFailure()
+	}
+
+	name, argv := decideExecCommand(operands[1:])
+	// Reset the environment variable SHELL for the jail environment.
+	if err := os.Setenv("SHELL", name); err != nil {
+		_, _ = fmt.Fprintf(stdio.Err, "chroot: %v\n", err)
+		return command.SilentFailure()
+	}
+
+	// TODO: Reset UID and GID.
+	// "/etc/passwd (uid name resolution file)" and "/etc/group (gid name
+	// resolution file)" may be different between the original environment and
+	// the jail environment. So, reset uid and gid in the jail environment.
+
+	cmd := exec.Command(name, argv...) //nolint:gosec // running a user-named command is the whole point
+	cmd.Stdin = stdio.In
+	cmd.Stdout = stdio.Out
+	cmd.Stderr = stdio.Err
+	cmd.Env = os.Environ()
+
+	if err := cmd.Run(); err != nil {
+		_, _ = fmt.Fprintf(stdio.Err, "chroot: %v\n", err)
+		return command.SilentFailure()
+	}
 	return nil
 }
 
-func parseArgs(opts *options) {
-	p := initParser(opts)
-
-	if hasVersionOption() {
-		mb.ShowVersion(cmdName, version)
-		osExit(mb.ExitSuccess)
-	}
-	if !isValidArgNr(os.Args) {
-		showHelp(p)
-		osExit(mb.ExitFailure)
-	}
-}
-
-func hasVersionOption() bool {
-	for _, s := range os.Args[1:] {
-		if s == "--version" || s == "-v" {
-			return true
+// decideExecCommand resolves the command to run inside the jail. extra are the
+// operands after NEWROOT. When none are given, the command is the shell taken
+// from $SHELL (falling back to /bin/sh) run interactively.
+func decideExecCommand(extra []string) (name string, argv []string) {
+	if len(extra) == 0 {
+		shell := os.Getenv("SHELL")
+		if shell == "" {
+			shell = "/bin/sh"
 		}
+		return shell, []string{"-i"}
 	}
-	return false
+	return extra[0], extra[1:]
 }
 
-func initParser(opts *options) *flags.Parser {
-	parser := flags.NewParser(opts, flags.Default)
-	parser.Name = cmdName
-	parser.Usage = "[OPTION] NEWROOT [COMMAND [ARG]...]"
-
-	return parser
-}
-
-func isValidArgNr(args []string) bool {
-	// 0:chroot, 1:root dir, 2:command(option)
-	return len(args) >= 2
-}
-
-func showHelp(p *flags.Parser) {
-	p.WriteHelp(os.Stdout)
+// reason maps a chroot/chdir failure to the GNU-style trailing message.
+func reason(err error) string {
+	if os.IsNotExist(err) {
+		return "No such file or directory"
+	}
+	if os.IsPermission(err) {
+		return "Operation not permitted"
+	}
+	return err.Error()
 }

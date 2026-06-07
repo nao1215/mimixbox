@@ -1,96 +1,65 @@
-//
-// mimixbox/internal/applets/shellutils/printenv/printenv.go
-//
-// Copyright 2021 Naohiro CHIKAMATSU
-//
-// Licensed under the Apache License, Version 2.0 (the "License");
-// you may not use this file except in compliance with the License.
-// You may obtain a copy of the License at
-//
-//    http://www.apache.org/licenses/LICENSE-2.0
-//
-// Unless required by applicable law or agreed to in writing, software
-// distributed under the License is distributed on an "AS IS" BASIS,
-// WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
-// See the License for the specific language governing permissions and
-// limitations under the License.
+// Package printenv implements the printenv applet: print all or named
+// environment variables.
 package printenv
 
 import (
+	"context"
 	"fmt"
 	"os"
 
-	mb "github.com/nao1215/mimixbox/internal/lib"
-
-	"github.com/jessevdk/go-flags"
+	"github.com/nao1215/mimixbox/internal/command"
 )
 
-const cmdName string = "printenv"
+// Command is the printenv applet.
+type Command struct{}
 
-const version = "1.0.0"
+// New returns a printenv command.
+func New() *Command { return &Command{} }
 
-var osExit = os.Exit
+// Name returns the command name.
+func (c *Command) Name() string { return "printenv" }
 
-type options struct {
-	Null    bool `short:"0" long:"null" description:"End each output line with NULL temination, not newline"`
-	Version bool `short:"v" long:"version" description:"Show printenv command version"`
-}
+// Synopsis returns the one-line description shown in the applet list.
+func (c *Command) Synopsis() string { return "Print environment variable" }
 
-func Run() (int, error) {
-	var opts options
-	var err error
-	var args []string
+// Run executes printenv.
+func (c *Command) Run(_ context.Context, stdio command.IO, args []string) error {
+	fs := command.NewFlagSet(c.Name(), "[OPTION]... [VARIABLE]...", stdio.Err)
+	null := fs.BoolP("null", "0", false, "end each output line with NUL, not newline")
 
-	if args, err = parseArgs(&opts); err != nil {
-		return mb.ExitFailure, nil
+	proceed, err := fs.Parse(stdio, args)
+	if err != nil || !proceed {
+		return err
 	}
-	return printenv(args, opts)
-}
 
-func printenv(args []string, opts options) (int, error) {
-	if len(args) == 0 {
-		return printAllEnvironmentVar(opts)
+	end := byte('\n')
+	if *null {
+		end = 0
 	}
-	for _, v := range args {
-		if opts.Null {
-			fmt.Fprintf(os.Stdout, "%s", os.Getenv(v))
-		} else {
-			fmt.Fprintln(os.Stdout, os.Getenv(v))
+
+	names := fs.Args()
+	if len(names) == 0 {
+		// No operands: print every environment variable as NAME=VALUE.
+		for _, e := range os.Environ() {
+			_, _ = fmt.Fprintf(stdio.Out, "%s%c", e, end)
 		}
+		return nil
 	}
-	return mb.ExitSuccess, nil
-}
 
-func printAllEnvironmentVar(opts options) (int, error) {
-	for _, e := range os.Environ() {
-		if opts.Null {
-			fmt.Fprintf(os.Stdout, "%s", e)
-		} else {
-			fmt.Fprintln(os.Stdout, e)
+	// With operands: print each named variable's value, one per line. If any
+	// requested variable is unset, the exit status is 1 (but set ones still
+	// print).
+	missing := false
+	for _, name := range names {
+		value, ok := os.LookupEnv(name)
+		if !ok {
+			missing = true
+			continue
 		}
+		_, _ = fmt.Fprintf(stdio.Out, "%s%c", value, end)
 	}
-	return mb.ExitSuccess, nil
-}
-
-func parseArgs(opts *options) ([]string, error) {
-	p := initParser(opts)
-
-	args, err := p.Parse()
-	if err != nil {
-		return nil, err
+	if missing {
+		return command.SilentFailure()
 	}
-
-	if opts.Version {
-		mb.ShowVersion(cmdName, version)
-		osExit(mb.ExitSuccess)
-	}
-	return args, nil
-}
-
-func initParser(opts *options) *flags.Parser {
-	parser := flags.NewParser(opts, flags.Default)
-	parser.Name = cmdName
-	parser.Usage = "[OPTIONS] ENV"
-
-	return parser
+	return nil
 }

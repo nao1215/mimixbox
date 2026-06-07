@@ -34,7 +34,7 @@ func (c *Command) Run(_ context.Context, stdio command.IO, args []string) error 
 
 	names := fs.Args()
 	if len(names) == 0 {
-		fmt.Fprintln(stdio.Err, "dirname: missing operand")
+		_, _ = fmt.Fprintln(stdio.Err, "dirname: missing operand")
 		return command.SilentFailure()
 	}
 
@@ -43,7 +43,7 @@ func (c *Command) Run(_ context.Context, stdio command.IO, args []string) error 
 		end = 0
 	}
 	for _, name := range names {
-		fmt.Fprintf(stdio.Out, "%s%c", dir(name), end)
+		_, _ = fmt.Fprintf(stdio.Out, "%s%c", dir(name), end)
 	}
 	return nil
 }

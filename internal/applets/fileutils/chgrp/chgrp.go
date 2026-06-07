@@ -1,141 +1,140 @@
-//
-// mimixbox/internal/applets/fileutils/chgrp/chgrp.go
-//
-// Copyright 2021 Naohiro CHIKAMATSU
-//
-// Licensed under the Apache License, Version 2.0 (the "License");
-// you may not use this file except in compliance with the License.
-// You may obtain a copy of the License at
-//
-//    http://www.apache.org/licenses/LICENSE-2.0
-//
-// Unless required by applicable law or agreed to in writing, software
-// distributed under the License is distributed on an "AS IS" BASIS,
-// WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
-// See the License for the specific language governing permissions and
-// limitations under the License.
+// Package chgrp implements the chgrp applet: change the group ownership of each
+// FILE to GROUP, with the common GNU options.
 package chgrp
 
 import (
+	"context"
+	"errors"
 	"fmt"
 	"os"
+	"os/user"
 	"path/filepath"
-	"syscall"
+	"strconv"
 
-	mb "github.com/nao1215/mimixbox/internal/lib"
-
-	"github.com/jessevdk/go-flags"
+	"github.com/nao1215/mimixbox/internal/command"
 )
 
-const cmdName string = "chgrp"
+// Command is the chgrp applet.
+type Command struct{}
 
-const version = "1.0.0"
+// New returns a chgrp command.
+func New() *Command { return &Command{} }
 
-var osExit = os.Exit
+// Name returns the command name.
+func (c *Command) Name() string { return "chgrp" }
 
-type groupInfo struct {
-	group string
-	files []string
-}
+// Synopsis returns the one-line description shown in the applet list.
+func (c *Command) Synopsis() string { return "Change the group of each FILE to GROUP" }
 
 type options struct {
-	Recursive bool `short:"R" long:"recursive" description:"Change file group IDs recursively"`
-	Version   bool `short:"v" long:"version" description:"Show chgrp command version"`
+	recursive bool
+	verbose   bool
 }
 
-func Run() (int, error) {
-	var opts options
-	var args []string
-	var err error
+// Run executes chgrp.
+func (c *Command) Run(_ context.Context, stdio command.IO, args []string) error {
+	fs := command.NewFlagSet(c.Name(), "[OPTION]... GROUP FILE...", stdio.Err)
+	recursive := fs.BoolP("recursive", "R", false, "operate on files and directories recursively")
+	verbose := fs.BoolP("verbose", "v", false, "output a diagnostic for every file processed")
 
-	if args, err = parseArgs(&opts); err != nil {
-		return mb.ExitFailure, nil
+	proceed, err := fs.Parse(stdio, args)
+	if err != nil || !proceed {
+		return err
 	}
 
-	groupInfo := groupInfo{args[0], args[1:]}
-	return chgrp(groupInfo, opts)
+	rest := fs.Args()
+	if len(rest) < 2 {
+		_, _ = fmt.Fprintf(stdio.Err, "%s: missing operand\n", c.Name())
+		return command.SilentFailure()
+	}
+
+	opts := options{recursive: *recursive, verbose: *verbose}
+
+	group := rest[0]
+	gid, ok := lookupGid(group)
+	if !ok {
+		_, _ = fmt.Fprintf(stdio.Err, "%s: invalid group: '%s'\n", c.Name(), group)
+		return command.SilentFailure()
+	}
+
+	return c.chgrp(stdio, gid, rest[1:], opts)
 }
 
-func chgrp(gInfo groupInfo, opts options) (int, error) {
-	gid, err := mb.LookupGid(gInfo.group)
-	if err != nil {
-		return mb.ExitFailure, err
+// lookupGid resolves a group name or a numeric gid to its integer gid. The
+// second return value reports whether the group could be resolved.
+func lookupGid(group string) (int, bool) {
+	if g, err := user.LookupGroup(group); err == nil {
+		if gid, err := strconv.Atoi(g.Gid); err == nil {
+			return gid, true
+		}
 	}
+	// Fall back to a numeric gid even if it has no /etc/group entry.
+	if gid, err := strconv.Atoi(group); err == nil {
+		return gid, true
+	}
+	return 0, false
+}
 
-	status := mb.ExitSuccess
-	for _, path := range gInfo.files {
+// chgrp changes the group of every file, continuing past any failures. A failed
+// file is reported GNU-style on stderr; the returned error only sets the exit
+// code, because its message was already printed.
+func (c *Command) chgrp(stdio command.IO, gid int, files []string, opts options) error {
+	var failErr error
+	for _, path := range files {
 		path = os.ExpandEnv(path)
-		if opts.Recursive {
-			if err := changeGroupRecursive(path, gid); err != nil {
-				status = mb.ExitFailure
-				fmt.Fprintln(os.Stderr, cmdName+": "+path+": "+err.Error())
-				continue
-			}
+		var err error
+		if opts.recursive {
+			err = c.changeGroupRecursive(stdio, path, gid, opts)
 		} else {
-			if err := changeGroup(path, gid); err != nil {
-				status = mb.ExitFailure
-				fmt.Fprintln(os.Stderr, cmdName+": "+path+": "+err.Error())
-				continue
-			}
+			err = c.changeGroup(stdio, path, gid, opts)
 		}
-
+		if err != nil {
+			failErr = command.SilentFailure()
+		}
 	}
-	return status, nil
+	return failErr
 }
 
-func changeGroupRecursive(path string, gid int) error {
-	err := filepath.Walk(path, func(p string, info os.FileInfo, err error) error {
+func (c *Command) changeGroupRecursive(stdio command.IO, path string, gid int, opts options) error {
+	var walkErr error
+	err := filepath.Walk(path, func(p string, _ os.FileInfo, err error) error {
 		if err != nil {
-			return err
+			c.report(stdio, p, err)
+			walkErr = err
+			return nil
 		}
-		if err := changeGroup(p, gid); err != nil {
-			return err
+		if cerr := c.changeGroup(stdio, p, gid, opts); cerr != nil {
+			walkErr = cerr
 		}
 		return nil
 	})
-	return err
-}
-
-func changeGroup(path string, gid int) error {
-	var st syscall.Stat_t
-	if err := syscall.Stat(path, &st); err != nil {
+	if err != nil {
 		return err
 	}
-	return os.Chown(path, int(st.Uid), gid)
+	return walkErr
 }
 
-func parseArgs(opts *options) ([]string, error) {
-	p := initParser(opts)
-
-	args, err := p.Parse()
-	if err != nil {
-		return nil, err
+func (c *Command) changeGroup(stdio command.IO, path string, gid int, opts options) error {
+	// uid -1 leaves the owner unchanged.
+	if err := os.Chown(path, -1, gid); err != nil {
+		c.report(stdio, path, err)
+		return err
 	}
-
-	if opts.Version {
-		mb.ShowVersion(cmdName, version)
-		osExit(mb.ExitSuccess)
+	if opts.verbose {
+		_, _ = fmt.Fprintf(stdio.Out, "changed group of '%s'\n", path)
 	}
-
-	if !isValidArgNr(args) {
-		if len(args) == 0 {
-			fmt.Fprintln(os.Stderr, cmdName+": no operand")
-		} else if len(args) == 1 {
-			fmt.Fprintln(os.Stderr, cmdName+": no operand after "+args[0])
-		}
-		osExit(mb.ExitFailure)
-	}
-	return args, nil
+	return nil
 }
 
-func initParser(opts *options) *flags.Parser {
-	parser := flags.NewParser(opts, flags.Default)
-	parser.Name = cmdName
-	parser.Usage = "[OPTIONS] GROUP FILES"
-
-	return parser
-}
-
-func isValidArgNr(args []string) bool {
-	return len(args) >= 2
+// report writes a GNU-style diagnostic for a failed chown to stderr.
+func (c *Command) report(stdio command.IO, path string, err error) {
+	var pe *os.PathError
+	if errors.As(err, &pe) {
+		err = pe.Err
+	}
+	if errors.Is(err, os.ErrPermission) {
+		_, _ = fmt.Fprintf(stdio.Err, "%s: changing group of '%s': Operation not permitted\n", c.Name(), path)
+		return
+	}
+	_, _ = fmt.Fprintf(stdio.Err, "%s: changing group of '%s': %v\n", c.Name(), path, err)
 }

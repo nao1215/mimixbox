@@ -1,142 +1,88 @@
-//
-// mimixbox/internal/applets/shellutils/sleep/sleep.go
-//
-// Copyright 2021 Naohiro CHIKAMATSU
-//
-// Licensed under the Apache License, Version 2.0 (the "License");
-// you may not use this file except in compliance with the License.
-// You may obtain a copy of the License at
-//
-//    http://www.apache.org/licenses/LICENSE-2.0
-//
-// Unless required by applicable law or agreed to in writing, software
-// distributed under the License is distributed on an "AS IS" BASIS,
-// WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
-// See the License for the specific language governing permissions and
-// limitations under the License.
+// Package sleep implements the sleep applet: pause for a given amount of time.
 package sleep
 
 import (
-	"errors"
+	"context"
 	"fmt"
-	"os"
 	"strconv"
-	"strings"
 	"time"
 
-	mb "github.com/nao1215/mimixbox/internal/lib"
+	"github.com/nao1215/mimixbox/internal/command"
 )
 
-const cmdName string = "sleep"
-const version = "1.0.1"
+// Command is the sleep applet.
+type Command struct{}
 
-var osExit = os.Exit
+// New returns a sleep command.
+func New() *Command { return &Command{} }
 
-type duration struct {
-	val  float64
-	unit time.Duration
+// Name returns the command name.
+func (c *Command) Name() string { return "sleep" }
+
+// Synopsis returns the one-line description shown in the applet list.
+func (c *Command) Synopsis() string { return "Pause for NUMBER seconds(minutes, hours, days)" }
+
+// Run executes sleep. Each operand is a number with an optional suffix:
+// s (seconds, the default), m (minutes), h (hours) or d (days). The command
+// sleeps for the sum of all operands, and the sleep is canceled if ctx is
+// done.
+func (c *Command) Run(ctx context.Context, stdio command.IO, args []string) error {
+	fs := command.NewFlagSet(c.Name(), "NUMBER[smhd]...", stdio.Err)
+
+	proceed, err := fs.Parse(stdio, args)
+	if err != nil || !proceed {
+		return err
+	}
+
+	operands := fs.Args()
+	if len(operands) == 0 {
+		_, _ = fmt.Fprintln(stdio.Err, "sleep: missing operand")
+		return command.SilentFailure()
+	}
+
+	d, err := parseDuration(operands)
+	if err != nil {
+		_, _ = fmt.Fprintf(stdio.Err, "sleep: invalid time interval '%s'\n", err.Error())
+		return command.SilentFailure()
+	}
+
+	select {
+	case <-time.After(d):
+		return nil
+	case <-ctx.Done():
+		return ctx.Err()
+	}
 }
 
-func Run() (int, error) {
-	var args []string
-	var waitTime []duration
-	var err error
-
-	args = parseArgs(os.Args)
-
-	if waitTime, err = getWaitTime(args); err != nil {
-		return mb.ExitFailure, err
-	}
-
-	for _, d := range waitTime {
-		time.Sleep(time.Duration(d.val) * d.unit)
-	}
-
-	return mb.ExitSuccess, nil
-}
-
-func parseArgs(args []string) []string {
-
-	if mb.HasVersionOpt(args) {
-		mb.ShowVersion(cmdName, version)
-		osExit(mb.ExitSuccess)
-	}
-
-	if mb.HasHelpOpt(args) {
-		showHelp()
-		osExit(mb.ExitSuccess)
-	}
-
-	if !isValidArgNr(args) {
-		showHelp()
-		osExit(mb.ExitSuccess)
-	}
-
-	return args[1:]
-}
-
-func getWaitTime(input []string) ([]duration, error) {
-	var waitTime []duration
-	var err error
-
-	for _, v := range input {
-		var d duration
-		if !hasSuffix(v) {
-			if d.val, err = strconv.ParseFloat(v, 64); err != nil {
-				return nil, errors.New("Input format error :" + v)
-			}
-			d.unit = time.Second
-		} else {
-			strList := strings.Split(v, "")
-			lastChar := strList[len(strList)-1]
-			onlyNumStr := strings.TrimSuffix(v, lastChar)
-			if d.val, err = strconv.ParseFloat(onlyNumStr, 64); err != nil {
-				return nil, errors.New("Input format error :" + v)
-			}
-			d.unit = convToTimeDuration(lastChar)
+// parseDuration sums each operand into a single time.Duration. An operand is a
+// number with an optional suffix s (seconds, default), m (minutes), h (hours)
+// or d (days). On an invalid operand it returns an error whose message is the
+// offending operand, so the caller can format the GNU-style diagnostic.
+func parseDuration(args []string) (time.Duration, error) {
+	var total time.Duration
+	for _, arg := range args {
+		if arg == "" {
+			return 0, fmt.Errorf("%s", arg)
 		}
-		waitTime = append(waitTime, d)
-	}
-	return waitTime, nil
-}
 
-func convToTimeDuration(s string) time.Duration {
-	switch s {
-	case "s":
-		return time.Second
-	case "m":
-		return time.Minute
-	case "h":
-		return time.Hour
-	case "d":
-		return (24 * time.Hour)
-	default:
-		return time.Second
-	}
-}
-
-func hasSuffix(input string) bool {
-	for _, v := range []string{"s", "m", "h", "d"} {
-		if strings.HasSuffix(input, v) {
-			return true
+		num := arg
+		unit := time.Second
+		switch arg[len(arg)-1] {
+		case 's':
+			num, unit = arg[:len(arg)-1], time.Second
+		case 'm':
+			num, unit = arg[:len(arg)-1], time.Minute
+		case 'h':
+			num, unit = arg[:len(arg)-1], time.Hour
+		case 'd':
+			num, unit = arg[:len(arg)-1], 24*time.Hour
 		}
+
+		val, err := strconv.ParseFloat(num, 64)
+		if err != nil || val < 0 {
+			return 0, fmt.Errorf("%s", arg)
+		}
+		total += time.Duration(val * float64(unit))
 	}
-	return false
-}
-
-func isValidArgNr(args []string) bool {
-	// 0:sleep, 1:numbers, 2:...
-	return len(args) >= 2
-}
-
-func showHelp() {
-	fmt.Fprintln(os.Stdout, "Usage:")
-	fmt.Fprintln(os.Stdout, "  sleep [OPTIONS] NUMBER[SUFFIX]")
-	fmt.Fprintln(os.Stdout, "  SUFFIX is s(seconds, default), m(minutes), h(hours), d(days)")
-	fmt.Fprintln(os.Stdout, "")
-	fmt.Fprintln(os.Stdout, "Application Options:")
-	fmt.Fprintln(os.Stdout, "  -v, --version       Show sleep command version")
-	fmt.Fprintln(os.Stdout, "")
-	fmt.Fprintln(os.Stdout, "Help Options:")
-	fmt.Fprintln(os.Stdout, "  -h, --help          Show this help message")
+	return total, nil
 }
