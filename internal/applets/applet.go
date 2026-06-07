@@ -29,6 +29,7 @@ import (
 	"github.com/nao1215/mimixbox/internal/applets/console-tools/reset"
 	addShell "github.com/nao1215/mimixbox/internal/applets/debianutils/add-shell"
 	"github.com/nao1215/mimixbox/internal/applets/debianutils/ischroot"
+	"github.com/nao1215/mimixbox/internal/applets/debianutils/mktemp"
 	removeShell "github.com/nao1215/mimixbox/internal/applets/debianutils/remove-shell"
 	"github.com/nao1215/mimixbox/internal/applets/debianutils/which"
 	"github.com/nao1215/mimixbox/internal/applets/fileutils/chgrp"
@@ -54,9 +55,11 @@ import (
 	"github.com/nao1215/mimixbox/internal/applets/shellutils/chroot"
 	"github.com/nao1215/mimixbox/internal/applets/shellutils/cmp"
 	"github.com/nao1215/mimixbox/internal/applets/shellutils/cut"
+	"github.com/nao1215/mimixbox/internal/applets/shellutils/date"
 	"github.com/nao1215/mimixbox/internal/applets/shellutils/dirname"
 	"github.com/nao1215/mimixbox/internal/applets/shellutils/echo"
 	"github.com/nao1215/mimixbox/internal/applets/shellutils/env"
+	"github.com/nao1215/mimixbox/internal/applets/shellutils/expr"
 	"github.com/nao1215/mimixbox/internal/applets/shellutils/false"
 	"github.com/nao1215/mimixbox/internal/applets/shellutils/ghrdc"
 	"github.com/nao1215/mimixbox/internal/applets/shellutils/groups"
@@ -73,12 +76,15 @@ import (
 	"github.com/nao1215/mimixbox/internal/applets/shellutils/seq"
 	"github.com/nao1215/mimixbox/internal/applets/shellutils/serial"
 	"github.com/nao1215/mimixbox/internal/applets/shellutils/sleep"
+	sortcmd "github.com/nao1215/mimixbox/internal/applets/shellutils/sort"
 	"github.com/nao1215/mimixbox/internal/applets/shellutils/sync"
 	"github.com/nao1215/mimixbox/internal/applets/shellutils/tee"
+	testcmd "github.com/nao1215/mimixbox/internal/applets/shellutils/test"
 	"github.com/nao1215/mimixbox/internal/applets/shellutils/true"
 	"github.com/nao1215/mimixbox/internal/applets/shellutils/uniq"
 	"github.com/nao1215/mimixbox/internal/applets/shellutils/uuidgen"
 	"github.com/nao1215/mimixbox/internal/applets/shellutils/wget"
+	"github.com/nao1215/mimixbox/internal/applets/shellutils/who"
 	"github.com/nao1215/mimixbox/internal/applets/shellutils/whoami"
 	"github.com/nao1215/mimixbox/internal/applets/textutils/cat"
 	"github.com/nao1215/mimixbox/internal/applets/textutils/dos2unix"
@@ -129,11 +135,13 @@ func init() {
 		"cmp":          reg(cmp.New()),
 		"cp":           reg(cp.New()),
 		"cut":          reg(cut.New()),
+		"date":         reg(date.New()),
 		"dirname":      reg(dirname.New()),
 		"dos2unix":     reg(dos2unix.New()),
 		"echo":         reg(echo.New()),
 		"env":          reg(env.New()),
 		"expand":       reg(expand.New()),
+		"expr":         reg(expr.New()),
 		"fakemovie":    reg(fakemovie.New()),
 		"false":        reg(boolfalse.New()),
 		"ghrdc":        reg(ghrdc.New()),
@@ -151,6 +159,7 @@ func init() {
 		"md5sum":       reg(md5sum.New()),
 		"mkdir":        reg(mkdir.New()),
 		"mkfifo":       reg(mkfifo.New()),
+		"mktemp":       reg(mktemp.New()),
 		"mv":           reg(mv.New()),
 		"nl":           reg(nl.New()),
 		"path":         reg(path.New()),
@@ -172,10 +181,12 @@ func init() {
 		"seq":          reg(seq.New()),
 		"sl":           reg(sl.New()),
 		"sleep":        reg(sleep.New()),
+		"sort":         reg(sortcmd.New()),
 		"sync":         reg(sync.New()),
 		"tac":          reg(tac.New()),
 		"tail":         reg(tail.New()),
 		"tee":          reg(tee.New()),
+		"test":         reg(testcmd.New()),
 		"touch":        reg(touch.New()),
 		"tr":           reg(tr.New()),
 		"true":         reg(booltrue.New()),
@@ -187,6 +198,7 @@ func init() {
 		"wc":           reg(wc.New()),
 		"wget":         reg(wget.New()),
 		"which":        reg(which.New()),
+		"who":          reg(who.New()),
 		"whoami":       reg(whoami.New()),
 	}
 }
