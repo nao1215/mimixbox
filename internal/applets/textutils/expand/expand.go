@@ -1,115 +1,126 @@
-//
-// mimixbox/internal/applets/textutils/expand/expand.go
-//
-// Copyright 2021 Naohiro CHIKAMATSU
-//
-// Licensed under the Apache License, Version 2.0 (the "License");
-// you may not use this file except in compliance with the License.
-// You may obtain a copy of the License at
-//
-//    http://www.apache.org/licenses/LICENSE-2.0
-//
-// Unless required by applicable law or agreed to in writing, software
-// distributed under the License is distributed on an "AS IS" BASIS,
-// WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
-// See the License for the specific language governing permissions and
-// limitations under the License.
+// Package expand implements the expand applet: convert tabs to spaces, reading
+// files (or standard input) and writing to standard output, with the common GNU
+// options.
 package expand
 
 import (
+	"bufio"
+	"context"
 	"fmt"
-	"os"
+	"io"
 	"strings"
 
-	"github.com/jessevdk/go-flags"
-	mb "github.com/nao1215/mimixbox/internal/lib"
+	"github.com/nao1215/mimixbox/internal/command"
 )
 
-const cmdName string = "expand"
-const version = "1.0.3"
+// Command is the expand applet.
+type Command struct{}
 
-var osExit = os.Exit
+// New returns an expand command.
+func New() *Command { return &Command{} }
+
+// Name returns the command name.
+func (c *Command) Name() string { return "expand" }
+
+// Synopsis returns the one-line description shown in the applet list.
+func (c *Command) Synopsis() string { return "Convert TAB to N space (default:N=8)" }
 
 type options struct {
-	Tab     int  `short:"t" long:"tab" default:"8" description:"Convert TAB to N space (default:N=8)"`
-	Version bool `short:"v" long:"version" description:"Show expand command version"`
+	tabStop int
+	initial bool
 }
 
-func Run() (int, error) {
-	var opts options
-	var err error
-	var args []string
+// Run executes expand.
+func (c *Command) Run(_ context.Context, stdio command.IO, args []string) error {
+	fs := command.NewFlagSet(c.Name(), "[OPTION]... [FILE]...", stdio.Err)
+	tabs := fs.IntP("tabs", "t", 8, "have tabs N characters apart, not 8")
+	initial := fs.BoolP("initial", "i", false, "do not convert tabs after non blanks")
 
-	if args, err = parseArgs(&opts); err != nil {
-		return mb.ExitSuccess, nil
+	proceed, err := fs.Parse(stdio, args)
+	if err != nil || !proceed {
+		return err
 	}
 
-	if mb.HasPipeData() {
-		mb.Dump(mb.AddLineFeed(strings.Split(args[0], "\n")), false)
-		return mb.ExitSuccess, nil
+	tabStop := *tabs
+	if tabStop <= 0 {
+		tabStop = 8
+	}
+	opts := options{tabStop: tabStop, initial: *initial}
+
+	files := fs.Args()
+	if len(files) == 0 {
+		files = []string{"-"}
 	}
 
-	if len(args) == 0 || mb.Contains(args, "-") {
-		mb.Parrot(false)
-		return mb.ExitSuccess, nil
-	}
-
-	return expand(args, opts)
-}
-
-func expand(args []string, opts options) (int, error) {
-	status := mb.ExitSuccess
-	for _, file := range args {
-		target := os.ExpandEnv(file)
-		if !mb.IsFile(target) {
-			fmt.Fprintln(os.Stderr, target+": No such file. Skip it")
-			status = mb.ExitFailure
+	var firstErr error
+	for _, name := range files {
+		r, openErr := command.Open(stdio, name)
+		if openErr != nil {
+			fmt.Fprintf(stdio.Err, "expand: %s\n", command.FileError(name, openErr))
+			firstErr = keep(firstErr)
 			continue
 		}
-		lines, err := mb.ReadFileToStrList(target)
-		if err != nil {
-			fmt.Fprintln(os.Stderr, err)
-			status = mb.ExitFailure
-			continue
+		copyErr := expand(stdio.Out, r, opts)
+		_ = r.Close()
+		if copyErr != nil {
+			fmt.Fprintf(stdio.Err, "expand: %s\n", command.FileError(name, copyErr))
+			firstErr = keep(firstErr)
 		}
-
-		mb.Dump(mb.ReplaceAll(lines, "\t", strings.Repeat(" ", opts.Tab)), false)
 	}
-	return status, nil
+	return firstErr
 }
 
-func parseArgs(opts *options) ([]string, error) {
-	p := initParser(opts)
-
-	args, err := p.Parse()
-	if err != nil {
-		return nil, err
-	}
-
-	if mb.HasPipeData() {
-		stdin, err := mb.FromPIPE()
+// expand converts the tabs in r to spaces according to opts and writes the
+// result to w. Columns are counted by rune so that a tab advances to the next
+// multiple of the tab stop.
+func expand(w io.Writer, r io.Reader, opts options) error {
+	br := bufio.NewReader(r)
+	bw := bufio.NewWriter(w)
+	column := 0
+	seenNonBlank := false
+	for {
+		ch, _, err := br.ReadRune()
 		if err != nil {
-			return nil, err
+			if err == io.EOF {
+				return bw.Flush()
+			}
+			return err
 		}
-		return []string{stdin}, nil
+		switch ch {
+		case '\t':
+			if opts.initial && seenNonBlank {
+				if _, werr := bw.WriteRune('\t'); werr != nil {
+					return werr
+				}
+				column++
+				continue
+			}
+			spaces := opts.tabStop - (column % opts.tabStop)
+			if _, werr := bw.WriteString(strings.Repeat(" ", spaces)); werr != nil {
+				return werr
+			}
+			column += spaces
+		case '\n':
+			if _, werr := bw.WriteRune('\n'); werr != nil {
+				return werr
+			}
+			column = 0
+			seenNonBlank = false
+		default:
+			if ch != ' ' {
+				seenNonBlank = true
+			}
+			if _, werr := bw.WriteRune(ch); werr != nil {
+				return werr
+			}
+			column++
+		}
 	}
-
-	if opts.Version {
-		mb.ShowVersion(cmdName, version)
-		osExit(mb.ExitSuccess)
-	}
-
-	if opts.Tab <= 0 {
-		opts.Tab = 8
-	}
-
-	return args, nil
 }
 
-func initParser(opts *options) *flags.Parser {
-	parser := flags.NewParser(opts, flags.Default)
-	parser.Name = cmdName
-	parser.Usage = "[OPTIONS] FILE_NAME"
-
-	return parser
+func keep(existing error) error {
+	if existing != nil {
+		return existing
+	}
+	return command.SilentFailure()
 }

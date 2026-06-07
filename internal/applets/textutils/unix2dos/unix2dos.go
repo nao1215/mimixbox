@@ -1,136 +1,133 @@
-//
-// mimixbox/internal/applets/textutils/unix2dos/unix2dos.go
-//
-// Copyright 2021 Naohiro CHIKAMATSU
-//
-// Licensed under the Apache License, Version 2.0 (the "License");
-// you may not use this file except in compliance with the License.
-// You may obtain a copy of the License at
-//
-//    http://www.apache.org/licenses/LICENSE-2.0
-//
-// Unless required by applicable law or agreed to in writing, software
-// distributed under the License is distributed on an "AS IS" BASIS,
-// WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
-// See the License for the specific language governing permissions and
-// limitations under the License.
+// Package unix2dos implements the unix2dos applet: convert the line endings of
+// files from LF to CRLF, editing each file in place.
 package unix2dos
 
 import (
+	"bufio"
+	"context"
 	"fmt"
+	"io"
 	"os"
 	"strings"
 
-	mb "github.com/nao1215/mimixbox/internal/lib"
-
-	"github.com/jessevdk/go-flags"
+	"github.com/nao1215/mimixbox/internal/command"
 )
 
-const cmdName string = "unix2dos"
-const version = "1.0.6"
+// Command is the unix2dos applet.
+type Command struct{}
 
-var osExit = os.Exit
+// New returns a unix2dos command.
+func New() *Command { return &Command{} }
 
-type options struct {
-	Version bool `short:"v" long:"version" description:"Show unix2dos command version"`
-}
+// Name returns the command name.
+func (c *Command) Name() string { return "unix2dos" }
 
-// Exit code
-const (
-	ExitSuccess int = iota // 0
-	ExitFailure
-	ExitNoSuchFile
-)
+// Synopsis returns the one-line description shown in the applet list.
+func (c *Command) Synopsis() string { return "Change LF to CRLF" }
 
-func Run() (int, error) {
-	var opts options
-	var args []string
-	var err error
+// Run executes unix2dos. Each operand must name a regular file; its LF line
+// endings are rewritten to CRLF in place. A directory or missing file is
+// reported on stderr and makes the command exit non-zero, but the remaining
+// files are still processed.
+func (c *Command) Run(_ context.Context, stdio command.IO, args []string) error {
+	fs := command.NewFlagSet(c.Name(), "[OPTION]... FILE...", stdio.Err)
 
-	if args, err = parseArgs(&opts); err != nil {
-		return ExitFailure, nil
+	proceed, err := fs.Parse(stdio, args)
+	if err != nil || !proceed {
+		return err
 	}
 
-	if mb.HasPipeData() && mb.HasNoOperand(os.Args, cmdName) {
-		fmt.Fprint(os.Stdout, toCRLF(strings.Split(args[0], "")))
-		return ExitSuccess, nil
-	}
-
-	if len(args) == 0 || mb.Contains(args, "-") {
-		mb.Parrot(false)
-		return ExitSuccess, nil
-	}
-
-	return unix2dos(args)
-}
-
-func unix2dos(files []string) (int, error) {
-	status := ExitSuccess
-	for _, file := range files {
+	var firstErr error
+	for _, file := range fs.Args() {
 		target := os.ExpandEnv(file)
-		if !mb.IsFile(target) {
-			fmt.Fprintln(os.Stderr, cmdName+": skip "+target+": not regular file")
-			status = ExitNoSuchFile
+		if !isRegularFile(target) {
+			fmt.Fprintln(stdio.Err, c.Name()+": skip "+target+": not regular file")
+			firstErr = keep(firstErr)
 			continue
 		}
 
-		lines, err := mb.ReadFileToStrList(target)
-		if err != nil {
-			fmt.Fprintln(os.Stderr, cmdName+": "+target+": Can't read file and convert LF to CRLF")
-			status = ExitFailure
+		lines, readErr := readFileToStrList(target)
+		if readErr != nil {
+			fmt.Fprintln(stdio.Err, c.Name()+": "+target+": Can't read file and convert LF to CRLF")
+			firstErr = keep(firstErr)
 			continue
 		}
-		fmt.Fprintln(os.Stdout, cmdName+": converting file "+target+" to DOS format...")
-		lines = toCRLF(lines)
-		if err := mb.ListToFile(target, lines); err != nil {
-			fmt.Fprintln(os.Stderr, err)
-			status = ExitFailure
+		fmt.Fprintln(stdio.Out, c.Name()+": converting file "+target+" to DOS format...")
+		if writeErr := listToFile(target, toCRLF(lines)); writeErr != nil {
+			fmt.Fprintln(stdio.Err, writeErr)
+			firstErr = keep(firstErr)
 			continue
 		}
 	}
-	return status, nil
+	return firstErr
 }
 
+// toCRLF replaces every LF that is not already part of a CRLF with CRLF.
 func toCRLF(unixStr []string) []string {
-	var replaceStr []string
+	replaceStr := make([]string, 0, len(unixStr))
 	for _, v := range unixStr {
 		if strings.HasSuffix(v, "\r\n") {
 			replaceStr = append(replaceStr, v)
 		} else {
-			replaceStr = append(replaceStr, strings.Replace(v, "\n", "\r\n", -1))
+			replaceStr = append(replaceStr, strings.ReplaceAll(v, "\n", "\r\n"))
 		}
 	}
 	return replaceStr
 }
 
-func parseArgs(opts *options) ([]string, error) {
-	p := initParser(opts)
+// isRegularFile reports whether path exists and is a regular file (not a
+// directory).
+func isRegularFile(path string) bool {
+	stat, err := os.Stat(path)
+	return err == nil && !stat.IsDir()
+}
 
-	args, err := p.Parse()
+// readFileToStrList reads path and returns it split into lines, each line still
+// carrying its trailing newline.
+func readFileToStrList(path string) ([]string, error) {
+	f, err := os.Open(path) //nolint:gosec // operating on a user-named file is the whole point
 	if err != nil {
 		return nil, err
 	}
+	defer f.Close()
 
-	if mb.HasPipeData() && len(args) == 0 {
-		stdin, err := mb.FromPIPE()
-		if err != nil {
+	var strList []string
+	r := bufio.NewReader(f)
+	for {
+		line, err := r.ReadString('\n')
+		if err != nil && err != io.EOF {
 			return nil, err
 		}
-		return []string{stdin}, nil
+		if err == io.EOF && len(line) == 0 {
+			break
+		}
+		strList = append(strList, line)
 	}
-
-	if opts.Version {
-		mb.ShowVersion(cmdName, version)
-		osExit(ExitSuccess)
-	}
-
-	return args, nil
+	return strList, nil
 }
 
-func initParser(opts *options) *flags.Parser {
-	parser := flags.NewParser(opts, flags.Default)
-	parser.Name = cmdName
-	parser.Usage = "[OPTIONS] FILE_PATH"
+// listToFile writes lines to path, truncating any existing content.
+func listToFile(path string, lines []string) error {
+	fp, err := os.Create(path) //nolint:gosec // operating on a user-named file is the whole point
+	if err != nil {
+		return err
+	}
+	defer fp.Close()
 
-	return parser
+	w := bufio.NewWriter(fp)
+	for _, line := range lines {
+		if _, err := w.WriteString(line); err != nil {
+			return err
+		}
+	}
+	return w.Flush()
+}
+
+// keep returns the first error seen, creating a silent failure when none exists
+// yet (the user-facing message has already been printed).
+func keep(existing error) error {
+	if existing != nil {
+		return existing
+	}
+	return command.SilentFailure()
 }
