@@ -27,7 +27,7 @@ Describe 'chmod on a missing file'
 
     It 'reports an error'
         When call TestChmodMissing
-        The error should equal "chmod: cannot access '/no_such_file': No such file or directory"
+        The error should equal "chmod: cannot access '/no_such_file': no such file or directory"
         The status should be failure
     End
 End
