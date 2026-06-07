@@ -52,11 +52,16 @@ import (
 	"github.com/nao1215/mimixbox/internal/applets/pmutils/halt"
 	"github.com/nao1215/mimixbox/internal/applets/shellutils/base64"
 	"github.com/nao1215/mimixbox/internal/applets/shellutils/basename"
+	"github.com/nao1215/mimixbox/internal/applets/shellutils/cal"
+	"github.com/nao1215/mimixbox/internal/applets/shellutils/chmod"
 	"github.com/nao1215/mimixbox/internal/applets/shellutils/chroot"
 	"github.com/nao1215/mimixbox/internal/applets/shellutils/cmp"
 	"github.com/nao1215/mimixbox/internal/applets/shellutils/cut"
 	"github.com/nao1215/mimixbox/internal/applets/shellutils/date"
+	"github.com/nao1215/mimixbox/internal/applets/shellutils/dd"
+	"github.com/nao1215/mimixbox/internal/applets/shellutils/df"
 	"github.com/nao1215/mimixbox/internal/applets/shellutils/dirname"
+	"github.com/nao1215/mimixbox/internal/applets/shellutils/du"
 	"github.com/nao1215/mimixbox/internal/applets/shellutils/echo"
 	"github.com/nao1215/mimixbox/internal/applets/shellutils/env"
 	"github.com/nao1215/mimixbox/internal/applets/shellutils/expr"
@@ -67,6 +72,7 @@ import (
 	"github.com/nao1215/mimixbox/internal/applets/shellutils/id"
 	"github.com/nao1215/mimixbox/internal/applets/shellutils/kill"
 	"github.com/nao1215/mimixbox/internal/applets/shellutils/mbsh"
+	"github.com/nao1215/mimixbox/internal/applets/shellutils/od"
 	"github.com/nao1215/mimixbox/internal/applets/shellutils/path"
 	"github.com/nao1215/mimixbox/internal/applets/shellutils/printenv"
 	"github.com/nao1215/mimixbox/internal/applets/shellutils/printf"
@@ -125,7 +131,9 @@ func init() {
 		"add-shell": reg(addShell.New()),
 		"base64":    reg(base64.New()),
 		"basename":  reg(basename.New()),
+		"cal":       reg(cal.New()),
 		"cat":       reg(cat.New()),
+		"chmod":     reg(chmod.New()),
 		"cowsay":    reg(cowsay.New()),
 		"chgrp":     reg(chgrp.New()),
 		"chown":     reg(chown.New()),
@@ -136,7 +144,10 @@ func init() {
 		"cp":           reg(cp.New()),
 		"cut":          reg(cut.New()),
 		"date":         reg(date.New()),
+		"dd":           reg(dd.New()),
+		"df":           reg(df.New()),
 		"dirname":      reg(dirname.New()),
+		"du":           reg(du.New()),
 		"dos2unix":     reg(dos2unix.New()),
 		"echo":         reg(echo.New()),
 		"env":          reg(env.New()),
@@ -162,6 +173,7 @@ func init() {
 		"mktemp":       reg(mktemp.New()),
 		"mv":           reg(mv.New()),
 		"nl":           reg(nl.New()),
+		"od":           reg(od.New()),
 		"path":         reg(path.New()),
 		"poweroff":     reg(halt.NewPoweroff()),
 		"printenv":     reg(printenv.New()),
