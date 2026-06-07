@@ -17,15 +17,17 @@ MimixBox packs many Unix commands into a single binary, like BusyBox. Unlike Bus
 The list below is generated from the registered applets by `make command-list`, so it never drifts from the binary. You can also run `mimixbox --list` to print it on the terminal.
 
 <!-- COMMAND_LIST_START -->
-There are 77 commands. Run `mimixbox --list` to see them on the terminal.
+There are 83 commands. Run `mimixbox --list` to see them on the terminal.
 
 | Command | Description |
 |:--|:--|
 | add-shell | Add shell name to /etc/shells |
 | base64 | Base64 encode/decode from FILR(or STDIN) to STDOUT |
 | basename | Print basename (PATH without "/") from file path |
+| cal | Display a calendar |
 | cat | Concatenate files and print on the standard output |
 | chgrp | Change the group of each FILE to GROUP |
+| chmod | Change file mode bits |
 | chown | Change the owner and/or group of each FILE to OWNER and/or GROUP |
 | chroot | Run command or interactive shell with special root directory |
 | clear | Clear terminal |
@@ -34,8 +36,11 @@ There are 77 commands. Run `mimixbox --list` to see them on the terminal.
 | cp | Copy file(s) otr Directory(s) |
 | cut | Remove sections from each line of files |
 | date | Print or set the system date and time |
+| dd | Convert and copy a file |
+| df | Report file system disk space usage |
 | dirname | Print only directory path |
 | dos2unix | Change CRLF to LF |
+| du | Estimate file space usage |
 | echo | Display a line of text |
 | env | Run a program in a modified environment / print the environment |
 | expand | Convert TAB to N space (default:N=8) |
@@ -60,6 +65,7 @@ There are 77 commands. Run `mimixbox --list` to see them on the terminal.
 | mktemp | Create a temporary file or directory |
 | mv | Rename SOURCE to DESTINATION, or move SOURCE(s) to DIRECTORY |
 | nl | Write each FILE to standard output with line numbers added |
+| od | Dump files in octal and other formats |
 | path | Manipulate filename path |
 | poweroff | Power off the system |
 | printenv | Print environment variable |
