@@ -3,6 +3,8 @@ package halt_test
 import (
 	"bytes"
 	"context"
+	"os"
+	"path/filepath"
 	"strings"
 	"syscall"
 	"testing"
@@ -31,6 +33,7 @@ func run(t *testing.T, cmd *halt.Command, args ...string) (rec *recorder, out, e
 	rec = &recorder{}
 	halt.SetRebootFnForTest(t, rec.reboot)
 	halt.SetIsRootForTest(t, func() bool { return true })
+	halt.SetWtmpFileForTest(t, filepath.Join(t.TempDir(), "wtmp"))
 
 	outBuf := &bytes.Buffer{}
 	errBuf := &bytes.Buffer{}
@@ -104,6 +107,78 @@ func TestRunNotRoot(t *testing.T) {
 	}
 	if !strings.Contains(errBuf.String(), "root") {
 		t.Errorf("stderr = %q, want a permission message mentioning root", errBuf.String())
+	}
+}
+
+func TestRunHaltPoweroffOption(t *testing.T) {
+	rec, _, _, err := run(t, halt.NewHalt(), "-p")
+	if err != nil {
+		t.Fatalf("Run error = %v", err)
+	}
+	if !rec.called {
+		t.Fatal("reboot function was not called")
+	}
+	if rec.action != syscall.LINUX_REBOOT_CMD_POWER_OFF {
+		t.Errorf("halt -p action = %#x, want POWER_OFF %#x", rec.action, syscall.LINUX_REBOOT_CMD_POWER_OFF)
+	}
+}
+
+func TestRunWtmpOnly(t *testing.T) {
+	rec := &recorder{}
+	halt.SetRebootFnForTest(t, rec.reboot)
+	halt.SetIsRootForTest(t, func() bool { return true })
+	wtmp := filepath.Join(t.TempDir(), "wtmp")
+	halt.SetWtmpFileForTest(t, wtmp)
+
+	io := command.IO{In: strings.NewReader(""), Out: &bytes.Buffer{}, Err: &bytes.Buffer{}}
+	if err := halt.NewReboot().Run(context.Background(), io, []string{"-w"}); err != nil {
+		t.Fatalf("Run error = %v", err)
+	}
+	if rec.called {
+		t.Fatal("-w (wtmp-only) must NOT stop the system")
+	}
+	info, statErr := os.Stat(wtmp)
+	if statErr != nil {
+		t.Fatalf("wtmp not written: %v", statErr)
+	}
+	if info.Size() != 384 {
+		t.Errorf("wtmp size = %d, want 384 (one utmp record)", info.Size())
+	}
+}
+
+func TestRunNoWtmp(t *testing.T) {
+	rec := &recorder{}
+	halt.SetRebootFnForTest(t, rec.reboot)
+	halt.SetIsRootForTest(t, func() bool { return true })
+	wtmp := filepath.Join(t.TempDir(), "wtmp")
+	halt.SetWtmpFileForTest(t, wtmp)
+
+	io := command.IO{In: strings.NewReader(""), Out: &bytes.Buffer{}, Err: &bytes.Buffer{}}
+	if err := halt.NewHalt().Run(context.Background(), io, []string{"-d"}); err != nil {
+		t.Fatalf("Run error = %v", err)
+	}
+	if _, statErr := os.Stat(wtmp); !os.IsNotExist(statErr) {
+		t.Errorf("-d must not write wtmp, stat error = %v", statErr)
+	}
+}
+
+func TestRunNoSync(t *testing.T) {
+	synced := false
+	halt.SetSyncFnForTest(t, func() { synced = true })
+
+	if _, _, _, err := run(t, halt.NewHalt(), "-n"); err != nil {
+		t.Fatalf("Run error = %v", err)
+	}
+	if synced {
+		t.Error("-n must not sync before halt")
+	}
+
+	synced = false
+	if _, _, _, err := run(t, halt.NewHalt()); err != nil {
+		t.Fatalf("Run error = %v", err)
+	}
+	if !synced {
+		t.Error("default halt must sync before halt")
 	}
 }
 
