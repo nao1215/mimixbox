@@ -43,7 +43,7 @@ Describe 'Get basename without operand'
 
     It 'show error'
         When call TestBasenameNoOpertand
-        The error should equal "basename: no operand"
+        The error should equal "basename: missing operand"
         The status should be failure
     End
 End
@@ -71,10 +71,10 @@ End
 Describe 'Get basename with three arguments'
     Include shellutils/basename_test.sh
 
-    It 'show "basename"'
+    It 'show error for extra operand'
         When call TestBasenameWithThreeArg
-        The output should equal "basename"
-        The status should be success
+        The error should equal "basename: extra operand '/home'"
+        The status should be failure
     End
 End
 

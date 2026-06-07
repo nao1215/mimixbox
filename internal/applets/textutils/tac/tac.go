@@ -1,136 +1,74 @@
-//
-// mimixbox/internal/applets/textutils/tac/tac.go
-//
-// Copyright 2021 Naohiro CHIKAMATSU
-//
-// Licensed under the Apache License, Version 2.0 (the "License");
-// you may not use this file except in compliance with the License.
-// You may obtain a copy of the License at
-//
-//    http://www.apache.org/licenses/LICENSE-2.0
-//
-// Unless required by applicable law or agreed to in writing, software
-// distributed under the License is distributed on an "AS IS" BASIS,
-// WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
-// See the License for the specific language governing permissions and
-// limitations under the License.
+// Package tac implements the tac applet: concatenate files (or standard input)
+// and write them out with the lines in reverse order.
 package tac
 
 import (
-	"bufio"
+	"context"
 	"fmt"
-	"os"
+	"io"
 	"strings"
 
-	mb "github.com/nao1215/mimixbox/internal/lib"
-
-	"github.com/jessevdk/go-flags"
+	"github.com/nao1215/mimixbox/internal/command"
+	"github.com/nao1215/mimixbox/internal/textproc"
 )
 
-const cmdName string = "tac"
+// Command is the tac applet.
+type Command struct{}
 
-const version = "1.0.5"
+// New returns a tac command.
+func New() *Command { return &Command{} }
 
-var osExit = os.Exit
+// Name returns the command name.
+func (c *Command) Name() string { return "tac" }
 
-type options struct {
-	Version bool `short:"v" long:"version" description:"Show cat command version"`
-}
+// Synopsis returns the one-line description shown in the applet list.
+func (c *Command) Synopsis() string { return "Print the file contents from the end to the beginning" }
 
-func Run() (int, error) {
-	var opts options
-	var args []string
-	var err error
+// Run executes tac.
+func (c *Command) Run(_ context.Context, stdio command.IO, args []string) error {
+	fs := command.NewFlagSet(c.Name(), "[OPTION]... [FILE]...", stdio.Err)
+	separator := fs.StringP("separator", "s", "\n", "use STRING as the record separator instead of newline")
 
-	if args, err = parseArgs(&opts); err != nil {
-		return mb.ExitFailure, nil
-	}
-
-	if mb.HasPipeData() {
-		printFromTail(strings.Split(args[0], "\n"))
-		return mb.ExitSuccess, nil
-	}
-
-	if len(args) == 0 || mb.Contains(args, "-") {
-		tacUserInput()
-		return mb.ExitSuccess, nil
-	}
-
-	for _, file := range args {
-		target := os.ExpandEnv(file)
-		err := tac(target)
-		if err != nil {
-			return mb.ExitFailure, err
-		}
-	}
-
-	return mb.ExitSuccess, nil
-}
-
-func tac(path string) error {
-	f, err := os.Open(path)
-	if err != nil {
+	proceed, err := fs.Parse(stdio, args)
+	if err != nil || !proceed {
 		return err
 	}
-	defer f.Close()
-
-	scanner := bufio.NewScanner(f)
-	lines := []string{}
-	for scanner.Scan() {
-		lines = append(lines, scanner.Text())
-	}
-	printFromTail(lines)
-	return nil
-}
-
-func printFromTail(lines []string) {
-	for i := range lines {
-		fmt.Fprintln(os.Stdout, lines[len(lines)-i-1])
-	}
-}
-
-func tacUserInput() {
-	var inputs []string
-	for {
-		input, next := mb.Input()
-		if !next {
-			break
-		}
-		inputs = append(inputs, input)
-	}
-	for i := range inputs {
-		fmt.Fprintln(os.Stdout, inputs[len(inputs)-i-1])
-	}
-}
-
-func parseArgs(opts *options) ([]string, error) {
-	p := initParser(opts)
-
-	args, err := p.Parse()
-	if err != nil {
-		return nil, err
+	sep := *separator
+	if sep == "" {
+		sep = "\n"
 	}
 
-	if mb.HasPipeData() {
-		stdin, err := mb.FromPIPE()
+	files := fs.Args()
+	if len(files) == 0 {
+		files = []string{"-"}
+	}
+
+	var b strings.Builder
+	var firstErr error
+	for _, name := range files {
+		r, err := command.Open(stdio, name)
 		if err != nil {
-			return nil, err
+			fmt.Fprintf(stdio.Err, "tac: %s\n", command.FileError(name, err))
+			firstErr = firstNonNil(firstErr)
+			continue
 		}
-		return []string{stdin}, nil
+		_, err = io.Copy(&b, r)
+		_ = r.Close()
+		if err != nil {
+			fmt.Fprintf(stdio.Err, "tac: %s\n", command.FileError(name, err))
+			firstErr = firstNonNil(firstErr)
+		}
 	}
 
-	if opts.Version {
-		mb.ShowVersion(cmdName, version)
-		osExit(mb.ExitSuccess)
+	if _, err := io.WriteString(stdio.Out, textproc.Reverse(b.String(), sep)); err != nil {
+		return command.Failure(err)
 	}
-
-	return args, nil
+	return firstErr
 }
 
-func initParser(opts *options) *flags.Parser {
-	parser := flags.NewParser(opts, flags.Default)
-	parser.Name = cmdName
-	parser.Usage = "[OPTIONS] FILE_PATH"
-
-	return parser
+func firstNonNil(existing error) error {
+	if existing != nil {
+		return existing
+	}
+	return command.SilentFailure()
 }

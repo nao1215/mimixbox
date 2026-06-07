@@ -1,94 +1,73 @@
-//
-// mimixbox/internal/applets/shellutils/dirname/dirname.go
-//
-// Copyright 2021 Naohiro CHIKAMATSU
-//
-// Licensed under the Apache License, Version 2.0 (the "License");
-// you may not use this file except in compliance with the License.
-// You may obtain a copy of the License at
-//
-//    http://www.apache.org/licenses/LICENSE-2.0
-//
-// Unless required by applicable law or agreed to in writing, software
-// distributed under the License is distributed on an "AS IS" BASIS,
-// WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
-// See the License for the specific language governing permissions and
-// limitations under the License.
+// Package dirname implements the dirname applet: strip the last component from
+// each file name.
 package dirname
 
 import (
+	"context"
 	"fmt"
-	"os"
-	"path/filepath"
+	"strings"
 
-	"github.com/jessevdk/go-flags"
-	mb "github.com/nao1215/mimixbox/internal/lib"
+	"github.com/nao1215/mimixbox/internal/command"
 )
 
-const cmdName string = "dirname"
+// Command is the dirname applet.
+type Command struct{}
 
-const version = "1.0.0"
+// New returns a dirname command.
+func New() *Command { return &Command{} }
 
-var osExit = os.Exit
+// Name returns the command name.
+func (c *Command) Name() string { return "dirname" }
 
-type options struct {
-	Version bool `short:"v" long:"version" description:"Show dirname command version"`
-	Zero    bool `short:"z" long:"zero" description:"Print each output line without line feed"`
-}
+// Synopsis returns the one-line description shown in the applet list.
+func (c *Command) Synopsis() string { return "Print only directory path" }
 
-func Run() (int, error) {
-	var opts options
-	var args []string
-	var err error
+// Run executes dirname.
+func (c *Command) Run(_ context.Context, stdio command.IO, args []string) error {
+	fs := command.NewFlagSet(c.Name(), "[OPTION]... NAME...", stdio.Err)
+	zero := fs.BoolP("zero", "z", false, "end each output line with NUL, not newline")
 
-	if args, err = parseArgs(&opts); err != nil {
-		return mb.ExitFailure, nil
+	proceed, err := fs.Parse(stdio, args)
+	if err != nil || !proceed {
+		return err
 	}
 
-	return dirname(args, opts)
+	names := fs.Args()
+	if len(names) == 0 {
+		fmt.Fprintln(stdio.Err, "dirname: missing operand")
+		return command.SilentFailure()
+	}
+
+	end := byte('\n')
+	if *zero {
+		end = 0
+	}
+	for _, name := range names {
+		fmt.Fprintf(stdio.Out, "%s%c", dir(name), end)
+	}
+	return nil
 }
 
-func dirname(args []string, opts options) (int, error) {
-	status := mb.ExitSuccess
-	for _, path := range args {
-		dirname := filepath.Dir(os.ExpandEnv(path))
-		if opts.Zero {
-			fmt.Fprintf(os.Stdout, "%s", dirname)
-		} else {
-			fmt.Fprintln(os.Stdout, dirname)
+// dir returns the directory part of p, matching GNU dirname: trailing slashes
+// are ignored, a path with no slash yields ".", and a path of only slashes
+// yields "/".
+func dir(p string) string {
+	trimmed := strings.TrimRight(p, "/")
+	if trimmed == "" {
+		if p == "" {
+			// No slash at all.
+			return "."
 		}
+		// The path was made entirely of slashes.
+		return "/"
 	}
-	return status, nil
-}
-
-func parseArgs(opts *options) ([]string, error) {
-	p := initParser(opts)
-
-	args, err := p.Parse()
-	if err != nil {
-		return nil, err
+	i := strings.LastIndexByte(trimmed, '/')
+	switch {
+	case i < 0:
+		return "."
+	case i == 0:
+		return "/"
+	default:
+		return strings.TrimRight(trimmed[:i], "/")
 	}
-
-	if opts.Version {
-		mb.ShowVersion(cmdName, version)
-		osExit(mb.ExitSuccess)
-	}
-
-	if !isValidArgNr(args) {
-		fmt.Fprintln(os.Stderr, "dirname: no operand")
-		osExit(mb.ExitFailure)
-	}
-	return args, nil
-}
-
-func initParser(opts *options) *flags.Parser {
-	parser := flags.NewParser(opts, flags.Default)
-	parser.Name = cmdName
-	parser.Usage = "[OPTIONS] PATH"
-
-	return parser
-}
-
-func isValidArgNr(args []string) bool {
-	return len(args) >= 1
 }

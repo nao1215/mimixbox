@@ -1,13 +1,12 @@
-//
 // mimixbox/internal/applets/applet.go
 //
-// Copyright 2021 Naohiro CHIKAMATSU
+// # Copyright 2021 Naohiro CHIKAMATSU
 //
 // Licensed under the Apache License, Version 2.0 (the "License");
 // you may not use this file except in compliance with the License.
 // You may obtain a copy of the License at
 //
-//    http://www.apache.org/licenses/LICENSE-2.0
+//	http://www.apache.org/licenses/LICENSE-2.0
 //
 // Unless required by applicable law or agreed to in writing, software
 // distributed under the License is distributed on an "AS IS" BASIS,
@@ -18,10 +17,12 @@ package applets
 
 import (
 	"fmt"
-	"go/doc"
 	"os"
 	"sort"
 	"strconv"
+	"strings"
+
+	"github.com/nao1215/mimixbox/internal/command"
 
 	gzipCmd "github.com/nao1215/mimixbox/internal/applets/archival/gzip"
 	"github.com/nao1215/mimixbox/internal/applets/console-tools/clear"
@@ -100,12 +101,19 @@ type Applet struct {
 
 var Applets map[string]Applet
 
+// reg builds an Applet entry for a command that has been migrated to the
+// internal/command framework. The command's own Synopsis becomes the listed
+// description, so the two never drift apart.
+func reg(c command.Command) Applet {
+	return Applet{Ep: command.Adapt(c), Desc: c.Synopsis()}
+}
+
 func init() {
 	Applets = map[string]Applet{
 		"add-shell": {addShell.Run, "Add shell name to /etc/shells"},
 		"base64":    {base64.Run, "Base64 encode/decode from FILR(or STDIN) to STDOUT"},
-		"basename":  {basename.Run, "Print basename (PATH without\"/\") from file path"},
-		"cat":       {cat.Run, "Concatenate files and print on the standard output"},
+		"basename":  reg(basename.New()),
+		"cat":       reg(cat.New()),
 		"cowsay":    {cowsay.Run, "Print message with cow's ASCII art"},
 		"chgrp":     {chgrp.Run, "Change the group of each FILE to GROUP"},
 		"chown":     {chown.Run, "Change the owner and/or group of each FILE to OWNER and/or GROUP"},
@@ -113,17 +121,17 @@ func init() {
 		//"chsh":         {chsh.Run, "Cqhange login shell"},
 		"clear":        {clear.Run, "Clear terminal"},
 		"cp":           {cp.Run, "Copy file(s) otr Directory(s)"},
-		"dirname":      {dirname.Run, "Print only directory path"},
+		"dirname":      reg(dirname.New()),
 		"dos2unix":     {dos2unix.Run, "Change CRLF to LF"},
-		"echo":         {echo.Run, "Display a line of text"},
+		"echo":         reg(echo.New()),
 		"expand":       {expand.Run, "Convert TAB to N space (default:N=8)"},
 		"fakemovie":    {fakemovie.Run, "Adds a video playback button to the image"},
-		"false":        {false.Run, "Do nothing. Return unsuccess(1)"},
+		"false":        reg(boolfalse.New()),
 		"ghrdc":        {ghrdc.Run, "GitHub Relase Download Counter"},
 		"groups":       {groups.Run, "Print the groups to which USERNAME belongs"},
 		"gzip":         {gzipCmd.Run, "Compress or uncompress FILEs (by default, compress FILES in-place)"},
 		"halt":         {halt.Run, "Halt the system"},
-		"head":         {head.Run, "Print the first NUMBER(default=10) lines"},
+		"head":         reg(head.New()),
 		"hostid":       {hostid.Run, "Print hostid (Host Identity Number, hex)!!!Does not work properly!!!"},
 		"id":           {id.Run, "Print User ID and Group ID"},
 		"ischroot":     {ischroot.Run, "Detect if running in a chroot"},
@@ -135,7 +143,7 @@ func init() {
 		"mkdir":        {mkdir.Run, "Make directories"},
 		"mkfifo":       {mkfifo.Run, "Make FIFO (named pipe)"},
 		"mv":           {mv.Run, "Rename SOURCE to DESTINATION, or move SOURCE(s) to DIRECTORY"},
-		"nl":           {nl.Run, "Write each FILE to standard output with line numbers added"},
+		"nl":           reg(nl.New()),
 		"path":         {path.Run, "Manipulate filename path"},
 		"poweroff":     {halt.Run, "Power off the system"},
 		"printenv":     {printenv.Run, "Print environment variable"},
@@ -155,16 +163,16 @@ func init() {
 		"sl":           {sl.Run, "Cure your bad habit of mistyping"},
 		"sleep":        {sleep.Run, "Pause for NUMBER seconds(minutes, hours, days)"},
 		"sync":         {sync.Run, "Synchronize cached writes to persistent storage"},
-		"tac":          {tac.Run, "Print the file contents from the end to the beginning"},
-		"tail":         {tail.Run, "Print the last NUMBER(default=10) lines"},
+		"tac":          reg(tac.New()),
+		"tail":         reg(tail.New()),
 		"touch":        {touch.Run, "Update the access and modification times of each FILE to the current time"},
 		"tr":           {tr.Run, "Translate or delete characters"},
-		"true":         {true.Run, "Do nothing. Return success(0)"},
+		"true":         reg(booltrue.New()),
 		"unexpand":     {unexpand.Run, "Convert N space to TAB(default:N=8)"},
 		"unix2dos":     {unix2dos.Run, "Change LF to CRLF"},
 		"uuidgen":      {uuidgen.Run, "Print UUID (Universal Unique IDentifier"},
 		"valid-shell":  {validShell.Run, "Verify if /etc/shells is valid"},
-		"wc":           {wc.Run, "Word Count"},
+		"wc":           reg(wc.New()),
 		"wget":         {wget.Run, "The non-interactive network downloader"},
 		"which":        {which.Run, "Returns the file path which would be executed in the current environment"},
 		"whoami":       {whoami.Run, "Print login user name"},
@@ -184,12 +192,24 @@ func ListApplets() {
 }
 
 func ShowAppletsBySpaceSeparated() {
-	var app string
-	for _, key := range SortApplet() {
-		app += key
-		app += " "
+	const wrap = 60
+	var b strings.Builder
+	lineLen := 0
+	for i, key := range SortApplet() {
+		if i > 0 {
+			if lineLen+1+len(key) > wrap {
+				b.WriteByte('\n')
+				lineLen = 0
+			} else {
+				b.WriteByte(' ')
+				lineLen++
+			}
+		}
+		b.WriteString(key)
+		lineLen += len(key)
 	}
-	doc.ToText(os.Stdout, app, "", "", 60)
+	b.WriteByte('\n')
+	fmt.Fprint(os.Stdout, b.String())
 }
 
 func SortApplet() []string {

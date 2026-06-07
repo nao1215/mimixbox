@@ -1,66 +1,36 @@
-//
-// mimixbox/internal/applets/shellutils/false/false.go
-//
-// Copyright 2021 Naohiro CHIKAMATSU
-//
-// Licensed under the Apache License, Version 2.0 (the "License");
-// you may not use this file except in compliance with the License.
-// You may obtain a copy of the License at
-//
-//    http://www.apache.org/licenses/LICENSE-2.0
-//
-// Unless required by applicable law or agreed to in writing, software
-// distributed under the License is distributed on an "AS IS" BASIS,
-// WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
-// See the License for the specific language governing permissions and
-// limitations under the License.
-package false
+// Package boolfalse implements the false applet: do nothing, unsuccessfully.
+package boolfalse
 
 import (
-	"os"
+	"context"
 
-	"github.com/jessevdk/go-flags"
-	mb "github.com/nao1215/mimixbox/internal/lib"
+	"github.com/nao1215/mimixbox/internal/command"
 )
 
-const cmdName string = "false"
-const version = "1.0.1"
+// Command is the false applet.
+type Command struct{}
 
-var osExit = os.Exit
+// New returns a false command.
+func New() *Command { return &Command{} }
 
-type options struct {
-	Version bool `short:"v" long:"version" description:"Show false command version"`
-}
+// Name returns the command name.
+func (c *Command) Name() string { return "false" }
 
-func Run() (int, error) {
-	var opts options
-	var err error
+// Synopsis returns the one-line description shown in the applet list.
+func (c *Command) Synopsis() string { return "Do nothing. Return unsuccess(1)" }
 
-	if _, err = parseArgs(&opts); err != nil {
-		return mb.ExitFailure, nil
+// Run always fails with exit status 1. Like GNU false it ignores its operands,
+// except that a leading --help or --version is honoured and exits successfully.
+func (c *Command) Run(_ context.Context, stdio command.IO, args []string) error {
+	if len(args) > 0 {
+		switch args[0] {
+		case "--help":
+			command.NewFlagSet(c.Name(), "[IGNORED]...", stdio.Err).WriteUsage(stdio.Out)
+			return nil
+		case "--version":
+			_, _ = command.NewFlagSet(c.Name(), "", stdio.Err).Parse(stdio, []string{"--version"})
+			return nil
+		}
 	}
-	return mb.ExitFailure, nil
-}
-
-func parseArgs(opts *options) ([]string, error) {
-	p := initParser(opts)
-
-	args, err := p.Parse()
-	if err != nil {
-		return nil, err
-	}
-
-	if opts.Version {
-		mb.ShowVersion(cmdName, version)
-		osExit(mb.ExitSuccess)
-	}
-	return args, nil
-}
-
-func initParser(opts *options) *flags.Parser {
-	parser := flags.NewParser(opts, flags.Default)
-	parser.Name = cmdName
-	parser.Usage = "[OPTIONS]"
-
-	return parser
+	return &command.ExitError{Code: command.ExitFailure}
 }

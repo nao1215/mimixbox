@@ -1,273 +1,187 @@
-//
-// mimixbox/internal/applets/textutils/wc/wc.go
-//
-// Copyright 2021 Naohiro CHIKAMATSU
-//
-// Licensed under the Apache License, Version 2.0 (the "License");
-// you may not use this file except in compliance with the License.
-// You may obtain a copy of the License at
-//
-//    http://www.apache.org/licenses/LICENSE-2.0
-//
-// Unless required by applicable law or agreed to in writing, software
-// distributed under the License is distributed on an "AS IS" BASIS,
-// WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
-// See the License for the specific language governing permissions and
-// limitations under the License.
+// Package wc implements the wc applet: count lines, words, characters, bytes
+// and the longest line length of files (or standard input).
 package wc
 
 import (
+	"context"
 	"fmt"
-	"os"
-	"regexp"
 	"strconv"
 	"strings"
 
-	mb "github.com/nao1215/mimixbox/internal/lib"
-
-	"github.com/jessevdk/go-flags"
+	"github.com/nao1215/mimixbox/internal/command"
+	"github.com/nao1215/mimixbox/internal/textproc"
 )
 
-const cmdName string = "wc"
-const version = "1.0.6"
+// Command is the wc applet.
+type Command struct{}
 
-var osExit = os.Exit
+// New returns a wc command.
+func New() *Command { return &Command{} }
 
-type options struct {
-	Bytes      bool `short:"c" long:"bytes" description:"Print the byte counts"`
-	Lines      bool `short:"l" long:"lines" description:"Print the newline counts"`
-	MaxLineLen bool `short:"L" long:"max-line-length" description:"Print the maximum display width"`
-	Words      bool `short:"w" long:"words" description:"Print the word counts"`
-	Version    bool `short:"v" long:"version" description:"Show wc command version"`
+// Name returns the command name.
+func (c *Command) Name() string { return "wc" }
+
+// Synopsis returns the one-line description shown in the applet list.
+func (c *Command) Synopsis() string { return "Print newline, word, and byte counts for each file" }
+
+type selection struct {
+	lines, words, chars, bytes, maxLine bool
 }
 
-type wordCount struct {
-	lines     int
-	words     int
-	bytes     int
-	maxLength int
-	filePath  string
+// fileRow is one line of wc output: the counts and the label to print after
+// them (empty for standard input, "total" for the summary line).
+type fileRow struct {
+	count textproc.Count
+	name  string
 }
 
-func Run() (int, error) {
-	var opts options
-	var args []string
-	var err error
+// any reports whether at least one column is selected.
+func (s selection) any() bool {
+	return s.lines || s.words || s.chars || s.bytes || s.maxLine
+}
 
-	if args, err = parseArgs(&opts); err != nil {
-		return mb.ExitFailure, nil
+// orDefault returns the GNU default selection (lines, words, bytes) when no
+// column flag was given.
+func (s selection) orDefault() selection {
+	if s.any() {
+		return s
+	}
+	return selection{lines: true, words: true, bytes: true}
+}
+
+// Run executes wc.
+func (c *Command) Run(_ context.Context, stdio command.IO, args []string) error {
+	fs := command.NewFlagSet(c.Name(), "[OPTION]... [FILE]...", stdio.Err)
+	lines := fs.BoolP("lines", "l", false, "print the newline counts")
+	words := fs.BoolP("words", "w", false, "print the word counts")
+	chars := fs.BoolP("chars", "m", false, "print the character counts")
+	bytes := fs.BoolP("bytes", "c", false, "print the byte counts")
+	maxLine := fs.BoolP("max-line-length", "L", false, "print the maximum display width")
+
+	proceed, err := fs.Parse(stdio, args)
+	if err != nil || !proceed {
+		return err
 	}
 
-	if mb.HasPipeData() && mb.HasNoOperand(os.Args, cmdName) {
-		return wcPipe(args, opts)
+	sel := selection{*lines, *words, *chars, *bytes, *maxLine}.orDefault()
+	files := fs.Args()
+	if len(files) == 0 {
+		files = []string{"-"}
 	}
 
-	if len(args) == 0 || mb.Contains(args, "-") {
-		var lines []string
-		for {
-			input, next := mb.Input()
-			if !next {
-				break
-			}
-			if input != "" {
-				lines = append(lines, input)
-			}
+	var rows []fileRow
+	var total textproc.Count
+	var firstErr error
+	// unknownSize records whether any input's size could not be predetermined
+	// (a pipe or a directory). GNU wc widens its columns to 7 in that case.
+	unknownSize := false
+
+	for _, name := range files {
+		if name == "-" {
+			unknownSize = true
 		}
-		printWordCountData([]wordCount{wc(lines, "-", opts)}, opts, 7)
-		return mb.ExitSuccess, nil
-	}
-
-	return wcAll(args, opts)
-}
-
-func wcPipe(lines []string, opts options) (int, error) {
-	result := wc(lines, "", opts)
-
-	digit := 7
-	if opts.Bytes || opts.Lines || opts.MaxLineLen || opts.Words {
-		digit = 1
-	}
-	printWordCountData([]wordCount{result}, opts, digit)
-	return mb.ExitSuccess, nil
-}
-
-func wcAll(args []string, opts options) (int, error) {
-	status := mb.ExitSuccess
-	var results []wordCount
-	for _, file := range args {
-		target := os.ExpandEnv(file)
-
-		if mb.IsDir(target) {
-			fmt.Fprintln(os.Stderr, "wc: "+target+": this path is directory")
-			status = mb.ExitFailure
-			results = append(results, wordCount{0, 0, 0, 0, target})
-			continue
-		}
-		if !mb.IsFile(target) {
-			fmt.Fprintln(os.Stderr, "wc: "+target+": no such File")
-			status = mb.ExitFailure
-			results = append(results, wordCount{0, 0, 0, 0, target})
-			continue
-		}
-
-		lines, err := mb.ReadFileToStrList(target)
+		r, err := command.Open(stdio, name)
 		if err != nil {
-			fmt.Fprintln(os.Stderr, "wc: "+target+": can't read file")
-			status = mb.ExitFailure
-			results = append(results, wordCount{0, 0, 0, 0, target})
+			fmt.Fprintf(stdio.Err, "wc: %s\n", command.FileError(name, err))
+			firstErr = keep(firstErr)
 			continue
 		}
-
-		results = append(results, wc(lines, target, opts))
-	}
-
-	if len(args) > 1 {
-		results = append(results, total(results))
-	}
-
-	if status == mb.ExitSuccess {
-		printWordCountData(results, opts, maxDigit(results, opts))
-	} else {
-		printWordCountData(results, opts, 7)
-	}
-
-	return status, nil
-}
-
-func wc(lines []string, path string, opts options) wordCount {
-	var result wordCount = wordCount{0, 0, 0, 0, ""}
-
-	result.filePath = path
-	for _, line := range lines {
-		result.lines++
-		result.words += countWord(line)
-		result.bytes += len([]byte(line))
-	}
-	result.maxLength = getMaxLength(lines)
-
-	return result
-}
-
-func getMaxLength(lines []string) int {
-	max := 0
-	for _, line := range lines {
-		if strings.HasSuffix(line, "\n") {
-			line = strings.TrimSuffix(line, "\n")
+		count, err := textproc.CountReader(r)
+		_ = r.Close()
+		label := name
+		if name == "-" {
+			label = ""
 		}
-		if len(line) > max {
-			max = len(line)
-		}
-	}
-	return max
-}
-
-func printWordCountData(counts []wordCount, opts options, digit int) {
-	oneContent := "%" + strconv.Itoa(digit) + "d"
-	formatForOneContent := oneContent + " %s\n"
-	formatForAll := oneContent + " " + oneContent + " " + oneContent + " %s\n"
-
-	//TODO: Not supported when multiple options are specified.
-	for _, v := range counts {
-		if opts.Bytes {
-			fmt.Fprintf(os.Stdout, formatForOneContent, v.bytes, v.filePath)
-			return
-		} else if opts.Lines {
-			fmt.Fprintf(os.Stdout, formatForOneContent, v.lines, v.filePath)
-			return
-		} else if opts.MaxLineLen {
-			fmt.Fprintf(os.Stdout, formatForOneContent, v.maxLength, v.filePath)
-			return
-		}
-		fmt.Fprintf(os.Stdout, formatForAll, v.lines, v.words, v.bytes, v.filePath)
-	}
-}
-
-func maxDigit(counts []wordCount, opts options) int {
-	var maxDigit int = 0
-	for _, v := range counts {
-		bytes := len(strconv.Itoa(v.bytes))
-		lines := len(strconv.Itoa(v.lines))
-		length := len(strconv.Itoa(v.maxLength))
-		words := len(strconv.Itoa(v.words))
-
-		if opts.Bytes && maxDigit < bytes {
-			maxDigit = bytes
-		} else if opts.Lines && maxDigit < lines {
-			maxDigit = lines
-		} else if opts.MaxLineLen && maxDigit < length {
-			maxDigit = length
-		} else if opts.Words && maxDigit < words {
-			maxDigit = words
-		} else {
-			if maxDigit < bytes {
-				maxDigit = bytes
-			}
-			if maxDigit < lines {
-				maxDigit = lines
-			}
-			if maxDigit < length {
-				maxDigit = length
-			}
-			if maxDigit < words {
-				maxDigit = words
-			}
-		}
-	}
-	return maxDigit
-}
-
-func countWord(line string) int {
-	reg := " |\t"
-	split := regexp.MustCompile(reg).Split(line, -1)
-
-	split = mb.Remove(split, "")
-	split = mb.Remove(split, " ")
-	split = mb.Remove(split, "\t")
-	split = mb.Remove(split, "\n")
-
-	return len(split)
-}
-
-func total(wordCounts []wordCount) wordCount {
-	var total = wordCount{0, 0, 0, 0, "total"}
-	for _, w := range wordCounts {
-		total.bytes += w.bytes
-		total.lines += w.lines
-		total.maxLength += w.maxLength
-		total.words += w.words
-	}
-	return total
-}
-
-func parseArgs(opts *options) ([]string, error) {
-	p := initParser(opts)
-
-	args, err := p.Parse()
-	if err != nil {
-		return nil, err
-	}
-
-	if mb.HasPipeData() && len(args) == 0 {
-		stdin, err := mb.FromPIPE()
 		if err != nil {
-			return nil, err
+			// A directory opens but cannot be read; GNU still prints a zero
+			// row for it and continues.
+			fmt.Fprintf(stdio.Err, "wc: %s\n", command.FileError(name, err))
+			firstErr = keep(firstErr)
+			unknownSize = true
+			rows = append(rows, fileRow{name: label})
+			continue
 		}
-		lines := strings.Split(stdin, "\n")
-		return mb.AddLineFeed(lines[:len(lines)-1]), nil
+		rows = append(rows, fileRow{count: count, name: label})
+		total = total.Add(count)
 	}
 
-	if opts.Version {
-		mb.ShowVersion(cmdName, version)
-		osExit(mb.ExitSuccess)
+	if len(rows) > 1 {
+		rows = append(rows, fileRow{count: total, name: "total"})
 	}
 
-	return args, nil
+	columns := len(selectedValues(textproc.Count{}, sel))
+	width := fieldWidth(rowsToCounts(rows, sel), columns, unknownSize)
+	var b strings.Builder
+	for _, rw := range rows {
+		b.WriteString(formatRow(rw.count, rw.name, sel, width))
+		b.WriteByte('\n')
+	}
+	if _, err := stdio.Out.Write([]byte(b.String())); err != nil {
+		return command.Failure(err)
+	}
+	return firstErr
 }
 
-func initParser(opts *options) *flags.Parser {
-	parser := flags.NewParser(opts, flags.Default)
-	parser.Name = cmdName
-	parser.Usage = "[OPTIONS] FILE_PATH"
+func rowsToCounts(rows []fileRow, sel selection) []int {
+	var nums []int
+	for _, rw := range rows {
+		nums = append(nums, selectedValues(rw.count, sel)...)
+	}
+	return nums
+}
 
-	return parser
+func selectedValues(c textproc.Count, sel selection) []int {
+	var vals []int
+	if sel.lines {
+		vals = append(vals, c.Lines)
+	}
+	if sel.words {
+		vals = append(vals, c.Words)
+	}
+	if sel.chars {
+		vals = append(vals, c.Runes)
+	}
+	if sel.bytes {
+		vals = append(vals, c.Bytes)
+	}
+	if sel.maxLine {
+		vals = append(vals, c.MaxLineWidth)
+	}
+	return vals
+}
+
+// fieldWidth mirrors GNU wc. The base width is the digit count of the largest
+// value (minimum 1). When more than one column is printed and any input's size
+// could not be predetermined (a pipe or a directory), the width is raised to a
+// minimum of 7 so the columns line up; a single column is never padded.
+func fieldWidth(nums []int, columns int, unknownSize bool) int {
+	width := 1
+	for _, n := range nums {
+		if w := len(strconv.Itoa(n)); w > width {
+			width = w
+		}
+	}
+	if columns > 1 && unknownSize && width < 7 {
+		width = 7
+	}
+	return width
+}
+
+func formatRow(c textproc.Count, name string, sel selection, width int) string {
+	fields := make([]string, 0, 5)
+	for _, v := range selectedValues(c, sel) {
+		fields = append(fields, fmt.Sprintf("%*d", width, v))
+	}
+	line := strings.Join(fields, " ")
+	if name != "" {
+		line += " " + name
+	}
+	return line
+}
+
+func keep(existing error) error {
+	if existing != nil {
+		return existing
+	}
+	return command.SilentFailure()
 }

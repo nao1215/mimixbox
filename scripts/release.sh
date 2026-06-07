@@ -1,7 +1,6 @@
 #!/bin/bash
 # Support OS and Arch info: https://golang.org/doc/install/source#environment
 PROJECT="mimixbox"
-ORG_COMMANDS="path serial ghrdc fakemovie sddf"
 CWD=$(pwd)
 RELEASE=${CWD}/release
 BIN_INFO_TXT=${RELEASE}/binary_info.txt
@@ -11,7 +10,6 @@ MAIN_CODE="${ROOT_DIR}/cmd/mimixbox/main.go"
 OS="linux darwin"
 ARCH="386 amd64 arm arm64"
 VERSION=$(grep "const version" ${MAIN_CODE} | sed -e "s/const version = \"\(.*\)\"/\1/g")
-MANPAGES_DIR="${CWD}/docs/man"
 
 function mkReleaseDir() {
     cd  ${CWD}
@@ -25,27 +23,11 @@ function mkReleaseDir() {
     done
 }
 
-function cpManpages() {
-    release="$1"
-
-    cd  ${CWD}
-    mkdir -p "${release}/docs"
-    cp -rf "${MANPAGES_DIR}" "${release}/docs/."
-
-    # Delete unnecessary files
-    markdown=$(find ${release} -name "*.md")
-    for md in ${markdown};
-    do
-        rm -f ${md}
-    done
-}
-
 function cpLicense() {
     release="$1"
 
     cd  ${CWD}
     cp -f LICENSE ${release}
-    cp -f NOTICE ${release}
     cp -rf licenses ${release}
 }
 
@@ -74,7 +56,6 @@ function mkRelease() {
     mv ${CWD}/${PROJECT} ${release_path}/.
     cpLicense ${release_path}/.
     cpInstaller ${release_path}/.
-    cpManpages ${release_path}/.
 
     cd ${RELEASE}/$os/
     tar cvfz "${tarball}" "${release_dir}"
@@ -151,7 +132,6 @@ function main() {
 
     touch ${BIN_INFO_TXT}
     mkReleaseDir
-    make doc
     mkMacOsAllRelease
     mkLinuxAllRelease
     rmOsDirInRelease

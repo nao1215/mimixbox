@@ -1,118 +1,124 @@
-//
-// mimixbox/internal/applets/textutils/nl/nl.go
-//
-// Copyright 2021 Naohiro CHIKAMATSU
-//
-// Licensed under the Apache License, Version 2.0 (the "License");
-// you may not use this file except in compliance with the License.
-// You may obtain a copy of the License at
-//
-//    http://www.apache.org/licenses/LICENSE-2.0
-//
-// Unless required by applicable law or agreed to in writing, software
-// distributed under the License is distributed on an "AS IS" BASIS,
-// WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
-// See the License for the specific language governing permissions and
-// limitations under the License.
+// Package nl implements the nl applet: write files (or standard input) to
+// standard output with line numbers added.
 package nl
 
 import (
+	"context"
 	"fmt"
-	"os"
+	"io"
+	"strings"
 
-	mb "github.com/nao1215/mimixbox/internal/lib"
-
-	"github.com/jessevdk/go-flags"
+	"github.com/nao1215/mimixbox/internal/command"
+	"github.com/nao1215/mimixbox/internal/textproc"
 )
 
-const cmdName string = "nl"
+// Command is the nl applet.
+type Command struct{}
 
-const version = "1.0.2"
+// New returns an nl command.
+func New() *Command { return &Command{} }
 
-var osExit = os.Exit
+// Name returns the command name.
+func (c *Command) Name() string { return "nl" }
 
-type options struct {
-	Version bool `short:"v" long:"version" description:"Show nl command version"`
+// Synopsis returns the one-line description shown in the applet list.
+func (c *Command) Synopsis() string {
+	return "Write each FILE to standard output with line numbers added"
 }
 
-func Run() (int, error) {
-	var opts options
-	var args []string
-	var err error
+// Run executes nl.
+func (c *Command) Run(_ context.Context, stdio command.IO, args []string) error {
+	fs := command.NewFlagSet(c.Name(), "[OPTION]... [FILE]...", stdio.Err)
+	body := fs.StringP("body-numbering", "b", "t", "use STYLE for numbering body lines (a, t, or n)")
+	separator := fs.StringP("number-separator", "s", "\t", "add STRING after possible line number")
+	width := fs.IntP("number-width", "w", 6, "use NUMBER columns for line numbers")
+	format := fs.StringP("number-format", "n", "rn", "insert line numbers according to FORMAT (ln, rn, rz)")
+	start := fs.IntP("starting-line-number", "v", 1, "first line number for each section")
+	increment := fs.IntP("line-increment", "i", 1, "line number increment at each line")
 
-	if args, err = parseArgs(&opts); err != nil {
-		return mb.ExitFailure, nil
+	proceed, err := fs.Parse(stdio, args)
+	if err != nil || !proceed {
+		return err
 	}
 
-	if mb.HasPipeData() && mb.HasNoOperand(os.Args, cmdName) {
-		mb.PrintStrListWithNumberLine(args, true)
-		return mb.ExitSuccess, nil
+	style, ok := bodyStyle(*body)
+	if !ok {
+		fmt.Fprintf(stdio.Err, "nl: invalid body numbering style: %q\n", *body)
+		return command.SilentFailure()
+	}
+	justify, ok := numberFormat(*format)
+	if !ok {
+		fmt.Fprintf(stdio.Err, "nl: invalid line numbering format: %q\n", *format)
+		return command.SilentFailure()
 	}
 
-	var pipeData []string
-	if len(args) == 0 || mb.Contains(args, "-") {
-		var nr int = 1
-		for {
-			input, next := mb.Input()
-			if !next {
-				break
-			}
-			pipeData = append(pipeData, input+"\n")
-			if input != "" && len(args) == 0 {
-				mb.PrintStrWithNumberLine(nr, "  %6d  %s", input+"\n")
-				nr++
-			} else if input == "" && len(args) == 0 {
-				fmt.Fprintln(os.Stdout, "")
-			}
-		}
-		if len(args) == 0 {
-			return mb.ExitSuccess, nil
-		}
-		// If this case, Heredocuments and files may be concatenated.
-		args = mb.Remove(args, "-")
+	numberer := textproc.Numberer{
+		Style:     style,
+		Start:     *start,
+		Increment: *increment,
+		Width:     *width,
+		Separator: *separator,
+		Justify:   justify,
+		PadBlank:  true,
 	}
 
-	lines, err := mb.Concatenate(args)
-	if err != nil {
-		return mb.ExitFailure, err
+	files := fs.Args()
+	if len(files) == 0 {
+		files = []string{"-"}
 	}
 
-	if len(pipeData) >= 1 {
-		lines = append(pipeData, lines...)
-	}
-	mb.PrintStrListWithNumberLine(lines, false)
-
-	return mb.ExitSuccess, nil
-}
-
-func parseArgs(opts *options) ([]string, error) {
-	p := initParser(opts)
-
-	args, err := p.Parse()
-	if err != nil {
-		return nil, err
-	}
-
-	if mb.HasPipeData() && len(args) == 0 {
-		stdin, err := mb.FromPIPE()
+	var b strings.Builder
+	var firstErr error
+	for _, name := range files {
+		r, err := command.Open(stdio, name)
 		if err != nil {
-			return nil, err
+			fmt.Fprintf(stdio.Err, "nl: %s\n", command.FileError(name, err))
+			firstErr = keep(firstErr)
+			continue
 		}
-		return []string{stdin}, nil
+		_, err = io.Copy(&b, r)
+		_ = r.Close()
+		if err != nil {
+			fmt.Fprintf(stdio.Err, "nl: %s\n", command.FileError(name, err))
+			firstErr = keep(firstErr)
+		}
 	}
 
-	if opts.Version {
-		mb.ShowVersion(cmdName, version)
-		osExit(mb.ExitSuccess)
+	if err := numberer.WriteTo(stdio.Out, strings.NewReader(b.String())); err != nil {
+		return command.Failure(err)
 	}
-
-	return args, nil
+	return firstErr
 }
 
-func initParser(opts *options) *flags.Parser {
-	parser := flags.NewParser(opts, flags.Default)
-	parser.Name = cmdName
-	parser.Usage = "[OPTIONS] FILE_PATH"
+func bodyStyle(s string) (textproc.NumberStyle, bool) {
+	switch s {
+	case "a":
+		return textproc.NumberAll, true
+	case "t":
+		return textproc.NumberNonBlank, true
+	case "n":
+		return textproc.NumberNone, true
+	default:
+		return 0, false
+	}
+}
 
-	return parser
+func numberFormat(s string) (textproc.NumberJustify, bool) {
+	switch s {
+	case "ln":
+		return textproc.JustifyLeft, true
+	case "rn":
+		return textproc.JustifyRight, true
+	case "rz":
+		return textproc.JustifyRightZero, true
+	default:
+		return 0, false
+	}
+}
+
+func keep(existing error) error {
+	if existing != nil {
+		return existing
+	}
+	return command.SilentFailure()
 }
