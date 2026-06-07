@@ -14,11 +14,13 @@
 |     cmp  | Compare two files byte by byte|
 |       cp | Copy file(s) otr Directory(s) |
 |     cut  | Remove sections from each line of files|
+|     date | Print or set the system date and time|
 |  dirname | Print only directory path |
 | dos2unix | Change CRLF to LF|
 |     echo | Display a line of text|
 |     env  | Run a program in a modified environment, or print the environment|
 |   expand | Convert TAB to N space (default:N=8)|
+|     expr | Evaluate expressions|
 |fakemovie | Adds a video playback button to the image|
 |    false | Do nothing. Return unsuccess(1)|
 |    ghrdc | GitHub Relase Download Counter|
@@ -36,6 +38,7 @@
 |    md5sum| Calculate or Check md5sum message digest|
 |    mkdir | Make directories|
 |    mkfifo | Make FIFO (Named pipe)|
+|    mktemp | Create a temporary file or directory|
 |       mv | Rename SOURCE to DESTINATION, or move SOURCE(s) to DIRECTORY|
 |       nl| Write each FILE to standard output with line numbers added|
 |     path | Manipulate filename path|
@@ -56,10 +59,12 @@
 |    sha512sum| Calculate or Check sercure hash 512 algorithm|
 |           sl| Cure your bad habit of mistyping|
 |    sleep | Pause for NUMBER seconds(minutes, hours, days)|
+|     sort | Sort lines of text files|
 |   sync   | Synchronize cached writes to persistent storage|
 |     tac  | Print the file contents from the end to the beginning|
 |     tail |  Print the last NUMBER(default=10) lines|
 |     tee  | Read from standard input and write to standard output and files|
+|     test | Evaluate a conditional expression|
 |    touch | Update the access and modification times of each FILE to the current time|
 |    tr    | Translate or delete characters|
 |     true | Do nothing. Return success(0)|
@@ -71,6 +76,7 @@
 |    wc    |    Word Counter|
 |    wget  | The non-interactive network downloader|
 |    which | Returns the file path which would be executed in the current environment|
+|      who | Show who is logged on|
 |   whoami | Print login user name|
 
 If you want to see the list of supported commands on the terminal, use the --list option.
