@@ -13,7 +13,7 @@ import (
 // synopsis is the one-line description shown in the applet list. It is kept
 // byte-for-byte identical to the legacy table (including its typo) so the
 // listing does not change.
-const synopsis = "alculate or Check sercure hash 1 algorithm"
+const synopsis = "Calculate or Check secure hash 1 algorithm"
 
 // Command is the sha1sum applet.
 type Command struct{ inner *hashsum.Command }

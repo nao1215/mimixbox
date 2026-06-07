@@ -12,7 +12,93 @@
 
 MimixBox packs many Unix commands into a single binary, like BusyBox. Unlike BusyBox, it targets the desktop environment rather than embedded systems. The project aims for a wide range of built-in commands (applets), from the basics provided by Coreutils to its own experimental commands.
 
-The [command (applet) list](./docs/introduction/en/CommandAppletList.md) shows what is currently available. You can also run `mimixbox --list` to print it on the terminal.
+## Commands
+
+The list below is generated from the registered applets by `make command-list`, so it never drifts from the binary. You can also run `mimixbox --list` to print it on the terminal.
+
+<!-- COMMAND_LIST_START -->
+There are 77 commands. Run `mimixbox --list` to see them on the terminal.
+
+| Command | Description |
+|:--|:--|
+| add-shell | Add shell name to /etc/shells |
+| base64 | Base64 encode/decode from FILR(or STDIN) to STDOUT |
+| basename | Print basename (PATH without "/") from file path |
+| cat | Concatenate files and print on the standard output |
+| chgrp | Change the group of each FILE to GROUP |
+| chown | Change the owner and/or group of each FILE to OWNER and/or GROUP |
+| chroot | Run command or interactive shell with special root directory |
+| clear | Clear terminal |
+| cmp | Compare two files byte by byte |
+| cowsay | Print message with cow's ASCII art |
+| cp | Copy file(s) otr Directory(s) |
+| cut | Remove sections from each line of files |
+| date | Print or set the system date and time |
+| dirname | Print only directory path |
+| dos2unix | Change CRLF to LF |
+| echo | Display a line of text |
+| env | Run a program in a modified environment / print the environment |
+| expand | Convert TAB to N space (default:N=8) |
+| expr | Evaluate expressions |
+| fakemovie | Adds a video playback button to the image |
+| false | Do nothing. Return unsuccess(1) |
+| ghrdc | GitHub Relase Download Counter |
+| groups | Print the groups to which USERNAME belongs |
+| gzip | Compress or uncompress FILEs (by default, compress FILES in-place) |
+| halt | Halt the system |
+| head | Print the first NUMBER(default=10) lines |
+| hostid | Print the numeric identifier (in hexadecimal) for the current host |
+| id | Print User ID and Group ID |
+| ischroot | Detect if running in a chroot |
+| kill | Kill process or send signal to process |
+| lifegame | Life game (Conway's Game of Life) |
+| ln | Create hard or symbolic link |
+| mbsh | Mimix Box Shell |
+| md5sum | Calculate or Check md5sum message digest |
+| mkdir | Make directories |
+| mkfifo | Make FIFO (named pipe) |
+| mktemp | Create a temporary file or directory |
+| mv | Rename SOURCE to DESTINATION, or move SOURCE(s) to DIRECTORY |
+| nl | Write each FILE to standard output with line numbers added |
+| path | Manipulate filename path |
+| poweroff | Power off the system |
+| printenv | Print environment variable |
+| printf | Formats and print data |
+| pwd | Print Working Directory |
+| realpath | Print the resolved absolute file name |
+| reboot | Reboot the system |
+| remove-shell | Remove shell name from /etc/shells |
+| reset | Reset terminal |
+| rm | Remove file(s) or directory(s) |
+| rmdir | Remove directory |
+| sddf | Search & Delete Duplicated File |
+| seq | Print a column of numbers |
+| serial | Rename the file to the name with a serial number |
+| sha1sum | Calculate or Check secure hash 1 algorithm |
+| sha256sum | Calculate or Check secure hash 256 algorithm |
+| sha512sum | Calculate or Check secure hash 512 algorithm |
+| sl | Cure your bad habit of mistyping |
+| sleep | Pause for NUMBER seconds(minutes, hours, days) |
+| sort | Sort lines of text files |
+| sync | Synchronize cached writes to persistent storage |
+| tac | Print the file contents from the end to the beginning |
+| tail | Print the last NUMBER(default=10) lines |
+| tee | Read from standard input and write to standard output and files |
+| test | Evaluate a conditional expression |
+| touch | Update the access and modification times of each FILE to the current time |
+| tr | Translate or delete characters |
+| true | Do nothing. Return success(0) |
+| unexpand | Convert N space to TAB(default:N=8) |
+| uniq | Report or omit repeated lines |
+| unix2dos | Change LF to CRLF |
+| uuidgen | Print UUID (Universal Unique IDentifier |
+| valid-shell | Verify if /etc/shells is valid |
+| wc | Print newline, word, and byte counts for each file |
+| wget | The non-interactive network downloader |
+| which | Returns the file path which would be executed in the current environment |
+| who | Show who is logged on |
+| whoami | Print login user name |
+<!-- COMMAND_LIST_END -->
 
 ## Install
 

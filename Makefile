@@ -41,6 +41,9 @@ test-e2e: ## Run the shellspec end-to-end tests against the built binary
 lint: ## Run golangci-lint
 	golangci-lint run ./...
 
+command-list: ## Regenerate the command list in README.md from the applet table
+	go run ./cmd/genlist
+
 jail:  ## Make jail environment for testing chroot/ischroot
 	$(MK_JAIL)
 
@@ -60,7 +63,7 @@ ut: test  ## Alias for "make test"
 it: test-e2e  ## Alias for "make test-e2e"
 
 .DEFAULT_GOAL := help
-.PHONY: build clean docker install full-install remove test test-e2e lint jail release licenses pre_ut ut it help
+.PHONY: build clean docker install full-install remove test test-e2e lint command-list jail release licenses pre_ut ut it help
 
 help:
 	@grep -E '^[0-9a-zA-Z_-]+[[:blank:]]*:.*?## .*$$' $(MAKEFILE_LIST) | sort \
