@@ -52,8 +52,11 @@ import (
 	"github.com/nao1215/mimixbox/internal/applets/shellutils/base64"
 	"github.com/nao1215/mimixbox/internal/applets/shellutils/basename"
 	"github.com/nao1215/mimixbox/internal/applets/shellutils/chroot"
+	"github.com/nao1215/mimixbox/internal/applets/shellutils/cmp"
+	"github.com/nao1215/mimixbox/internal/applets/shellutils/cut"
 	"github.com/nao1215/mimixbox/internal/applets/shellutils/dirname"
 	"github.com/nao1215/mimixbox/internal/applets/shellutils/echo"
+	"github.com/nao1215/mimixbox/internal/applets/shellutils/env"
 	"github.com/nao1215/mimixbox/internal/applets/shellutils/false"
 	"github.com/nao1215/mimixbox/internal/applets/shellutils/ghrdc"
 	"github.com/nao1215/mimixbox/internal/applets/shellutils/groups"
@@ -65,12 +68,15 @@ import (
 	"github.com/nao1215/mimixbox/internal/applets/shellutils/printenv"
 	"github.com/nao1215/mimixbox/internal/applets/shellutils/printf"
 	"github.com/nao1215/mimixbox/internal/applets/shellutils/pwd"
+	"github.com/nao1215/mimixbox/internal/applets/shellutils/realpath"
 	"github.com/nao1215/mimixbox/internal/applets/shellutils/sddf"
 	"github.com/nao1215/mimixbox/internal/applets/shellutils/seq"
 	"github.com/nao1215/mimixbox/internal/applets/shellutils/serial"
 	"github.com/nao1215/mimixbox/internal/applets/shellutils/sleep"
 	"github.com/nao1215/mimixbox/internal/applets/shellutils/sync"
+	"github.com/nao1215/mimixbox/internal/applets/shellutils/tee"
 	"github.com/nao1215/mimixbox/internal/applets/shellutils/true"
+	"github.com/nao1215/mimixbox/internal/applets/shellutils/uniq"
 	"github.com/nao1215/mimixbox/internal/applets/shellutils/uuidgen"
 	"github.com/nao1215/mimixbox/internal/applets/shellutils/wget"
 	"github.com/nao1215/mimixbox/internal/applets/shellutils/whoami"
@@ -120,10 +126,13 @@ func init() {
 		"chroot":    reg(chroot.New()),
 		//"chsh":         {chsh.Run, "Cqhange login shell"},
 		"clear":        reg(clear.New()),
+		"cmp":          reg(cmp.New()),
 		"cp":           reg(cp.New()),
+		"cut":          reg(cut.New()),
 		"dirname":      reg(dirname.New()),
 		"dos2unix":     reg(dos2unix.New()),
 		"echo":         reg(echo.New()),
+		"env":          reg(env.New()),
 		"expand":       reg(expand.New()),
 		"fakemovie":    reg(fakemovie.New()),
 		"false":        reg(boolfalse.New()),
@@ -149,6 +158,7 @@ func init() {
 		"printenv":     reg(printenv.New()),
 		"printf":       reg(printf.New()),
 		"pwd":          reg(pwd.New()),
+		"realpath":     reg(realpath.New()),
 		"remove-shell": reg(removeShell.New()),
 		"reboot":       reg(halt.NewReboot()),
 		"reset":        reg(reset.New()),
@@ -165,10 +175,12 @@ func init() {
 		"sync":         reg(sync.New()),
 		"tac":          reg(tac.New()),
 		"tail":         reg(tail.New()),
+		"tee":          reg(tee.New()),
 		"touch":        reg(touch.New()),
 		"tr":           reg(tr.New()),
 		"true":         reg(booltrue.New()),
 		"unexpand":     reg(unexpand.New()),
+		"uniq":         reg(uniq.New()),
 		"unix2dos":     reg(unix2dos.New()),
 		"uuidgen":      reg(uuidgen.New()),
 		"valid-shell":  reg(validShell.New()),

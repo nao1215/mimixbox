@@ -11,10 +11,13 @@
 |   chroot | Run command or interactive shell with special root directory|
 |chsh      | Change login shell|
 |   clear  | Clear teminal |
+|     cmp  | Compare two files byte by byte|
 |       cp | Copy file(s) otr Directory(s) |
+|     cut  | Remove sections from each line of files|
 |  dirname | Print only directory path |
 | dos2unix | Change CRLF to LF|
 |     echo | Display a line of text|
+|     env  | Run a program in a modified environment, or print the environment|
 |   expand | Convert TAB to N space (default:N=8)|
 |fakemovie | Adds a video playback button to the image|
 |    false | Do nothing. Return unsuccess(1)|
@@ -39,6 +42,7 @@
 |    poweroff| Power off the system|
 |    printenv| Print environment variable|
 |     pwd  | Print Working Directory|
+|  realpath| Print the resolved absolute file name|
 |    reboot| Reboot the system|
 |   remove-shell|Remove shell name from /etc/shells|
 |     reset| Reset terminal|
@@ -55,10 +59,12 @@
 |   sync   | Synchronize cached writes to persistent storage|
 |     tac  | Print the file contents from the end to the beginning|
 |     tail |  Print the last NUMBER(default=10) lines|
+|     tee  | Read from standard input and write to standard output and files|
 |    touch | Update the access and modification times of each FILE to the current time|
 |    tr    | Translate or delete characters|
 |     true | Do nothing. Return success(0)|
 |  unexpand| Convert N space to TAB (default:N=8)|
+|    uniq  | Report or omit repeated lines|
 |  unix2dos| Change LF to CRLF|
 |   uuidgeb| Print UUID (Universal Unique IDentifier|
 |  valid-shell| Verify if /etc/shells is valid|
