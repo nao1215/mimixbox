@@ -1,115 +1,107 @@
-//
-// mimixbox/internal/applets/fileutils/touch/touch.go
-//
-// Copyright 2021 Naohiro CHIKAMATSU
-//
-// Licensed under the Apache License, Version 2.0 (the "License");
-// you may not use this file except in compliance with the License.
-// You may obtain a copy of the License at
-//
-//    http://www.apache.org/licenses/LICENSE-2.0
-//
-// Unless required by applicable law or agreed to in writing, software
-// distributed under the License is distributed on an "AS IS" BASIS,
-// WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
-// See the License for the specific language governing permissions and
-// limitations under the License.
+// Package touch implements the touch applet: update the access and
+// modification times of each file to the current time, creating the file if it
+// does not yet exist.
 package touch
 
 import (
+	"context"
+	"errors"
 	"fmt"
 	"os"
 	"time"
 
-	mb "github.com/nao1215/mimixbox/internal/lib"
-
-	"github.com/jessevdk/go-flags"
+	"github.com/nao1215/mimixbox/internal/command"
 )
 
-const cmdName string = "touch"
+// Command is the touch applet.
+type Command struct{}
 
-const version = "1.0.2"
+// New returns a touch command.
+func New() *Command { return &Command{} }
 
-var osExit = os.Exit
+// Name returns the command name.
+func (c *Command) Name() string { return "touch" }
+
+// Synopsis returns the one-line description shown in the applet list.
+func (c *Command) Synopsis() string {
+	return "Update the access and modification times of each FILE to the current time"
+}
 
 type options struct {
-	NoCreate bool `short:"c" long:"no-create" description:"Not create file"`
-	Version  bool `short:"v" long:"version" description:"Show touch command version"`
+	noCreate   bool // -c, --no-create
+	accessOnly bool // -a
+	modifyOnly bool // -m
 }
 
-func Run() (int, error) {
-	var opts options
-	var args []string
-	var err error
+// Run executes touch.
+func (c *Command) Run(_ context.Context, stdio command.IO, args []string) error {
+	fs := command.NewFlagSet(c.Name(), "[OPTION]... FILE...", stdio.Err)
+	noCreate := fs.BoolP("no-create", "c", false, "do not create any files")
+	accessOnly := fs.BoolP("access", "a", false, "change only the access time")
+	modifyOnly := fs.BoolP("modify", "m", false, "change only the modification time")
 
-	if args, err = parseArgs(&opts); err != nil {
-		return mb.ExitFailure, nil
+	proceed, err := fs.Parse(stdio, args)
+	if err != nil || !proceed {
+		return err
 	}
 
-	status := mb.ExitSuccess
-	for _, file := range args {
-		if err = touch(file, opts); err != nil {
-			fmt.Fprintln(os.Stderr, "touch: "+err.Error())
-			status = mb.ExitFailure
-			continue
+	files := fs.Args()
+	if len(files) == 0 {
+		fmt.Fprintln(stdio.Err, "touch: missing file operand")
+		return command.SilentFailure()
+	}
+
+	opts := options{
+		noCreate:   *noCreate,
+		accessOnly: *accessOnly,
+		modifyOnly: *modifyOnly,
+	}
+
+	var firstErr error
+	for _, file := range files {
+		if err := touch(file, opts); err != nil {
+			fmt.Fprintln(stdio.Err, "touch: "+err.Error())
+			if firstErr == nil {
+				firstErr = command.SilentFailure()
+			}
 		}
 	}
-	return status, nil
+	return firstErr
 }
 
-// atime = access time
-// ctime = change time
-// mtime = modify time
+// touch updates the access and modification times of file to the current time.
+// When the file does not exist it is created, unless -c/--no-create was given.
+// The -a and -m options restrict which of the two timestamps is changed.
 func touch(file string, opts options) error {
 	path := os.ExpandEnv(file)
-	if !mb.Exists(path) && !opts.NoCreate {
-		f, err := os.Create(path)
+
+	info, statErr := os.Stat(path)
+	if errors.Is(statErr, os.ErrNotExist) {
+		if opts.noCreate {
+			return nil
+		}
+		f, err := os.Create(path) //nolint:gosec // operating on a user-named file is the whole point
 		if err != nil {
 			return err
 		}
-		defer f.Close()
-	} else {
-		currentTime := time.Now().Local()
-		err := os.Chtimes(path, currentTime, currentTime)
-		if err != nil {
-			return err
-		}
+		return f.Close()
 	}
-	return nil
-}
-
-func parseArgs(opts *options) ([]string, error) {
-	p := initParser(opts)
-
-	args, err := p.Parse()
-	if err != nil {
-		return nil, err
+	if statErr != nil {
+		return statErr
 	}
 
-	if opts.Version {
-		mb.ShowVersion(cmdName, version)
-		osExit(mb.ExitSuccess)
+	now := time.Now().Local()
+	atime, mtime := now, now
+	// -a leaves the modification time untouched; -m leaves the access time
+	// untouched. Without either flag both default to now.
+	if opts.accessOnly && !opts.modifyOnly {
+		mtime = info.ModTime()
 	}
-
-	if !isValidArgNr(args) {
-		showHelp(p)
-		osExit(mb.ExitFailure)
+	if opts.modifyOnly && !opts.accessOnly {
+		// The current access time is not available portably; fall back to the
+		// existing modification time so -m leaves the file's other timestamp
+		// at a sensible value rather than advancing it to now.
+		atime = info.ModTime()
 	}
-	return args, nil
-}
-
-func initParser(opts *options) *flags.Parser {
-	parser := flags.NewParser(opts, flags.Default)
-	parser.Name = cmdName
-	parser.Usage = "[OPTIONS] FILE_PATH"
-
-	return parser
-}
-
-func isValidArgNr(args []string) bool {
-	return len(args) >= 1
-}
-
-func showHelp(p *flags.Parser) {
-	p.WriteHelp(os.Stdout)
+	return os.Chtimes(path, atime, mtime)
 }

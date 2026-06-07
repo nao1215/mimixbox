@@ -1,99 +1,75 @@
-//
-// mimixbox/internal/applets/fileutils/mkdir/mkdir.go
-//
-// Copyright 2021 Naohiro CHIKAMATSU
-//
-// Licensed under the Apache License, Version 2.0 (the "License");
-// you may not use this file except in compliance with the License.
-// You may obtain a copy of the License at
-//
-//    http://www.apache.org/licenses/LICENSE-2.0
-//
-// Unless required by applicable law or agreed to in writing, software
-// distributed under the License is distributed on an "AS IS" BASIS,
-// WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
-// See the License for the specific language governing permissions and
-// limitations under the License.
+// Package mkdir implements the mkdir applet: create directories, optionally
+// creating parent directories as needed.
 package mkdir
 
 import (
-	"errors"
+	"context"
 	"fmt"
 	"os"
+	"strconv"
 
-	"github.com/jessevdk/go-flags"
-	mb "github.com/nao1215/mimixbox/internal/lib"
+	"github.com/nao1215/mimixbox/internal/command"
 )
 
-const cmdName string = "mkdir"
+// Command is the mkdir applet.
+type Command struct{}
 
-const version = "1.0.3"
+// New returns a mkdir command.
+func New() *Command { return &Command{} }
 
-var osExit = os.Exit
+// Name returns the command name.
+func (c *Command) Name() string { return "mkdir" }
 
-var ErrNoOperand = errors.New("no operand")
+// Synopsis returns the one-line description shown in the applet list.
+func (c *Command) Synopsis() string { return "Make directories" }
 
-type options struct {
-	Parent  bool `short:"p" long:"parents" description:"No error if existing, make parent directories as needed"`
-	Version bool `short:"v" long:"version" description:"Show mkdir command version"`
-}
+// Run executes mkdir.
+func (c *Command) Run(_ context.Context, stdio command.IO, args []string) error {
+	fs := command.NewFlagSet(c.Name(), "[OPTION]... DIRECTORY...", stdio.Err)
+	parents := fs.BoolP("parents", "p", false, "no error if existing, make parent directories as needed")
+	verbose := fs.BoolP("verbose", "v", false, "print a message for each created directory")
+	mode := fs.StringP("mode", "m", "", "set file mode (as in chmod), not a=rwx - umask")
 
-func Run() (int, error) {
-	var opts options
-	var args []string
-	var err error
-
-	if args, err = parseArgs(&opts); err != nil {
-		if err == ErrNoOperand {
-			return mb.ExitFailure, err
-		}
-		return mb.ExitFailure, nil
+	proceed, err := fs.Parse(stdio, args)
+	if err != nil || !proceed {
+		return err
 	}
 
-	status := mb.ExitSuccess
-	for _, path := range args {
+	operands := fs.Args()
+	if len(operands) == 0 {
+		fmt.Fprintln(stdio.Err, "mkdir: no operand")
+		return command.SilentFailure()
+	}
+
+	perm := os.FileMode(0o755)
+	if *mode != "" {
+		parsed, perr := strconv.ParseUint(*mode, 8, 32)
+		if perr != nil {
+			fmt.Fprintf(stdio.Err, "mkdir: invalid mode '%s'\n", *mode)
+			return command.SilentFailure()
+		}
+		perm = os.FileMode(parsed)
+	}
+
+	var firstErr error
+	for _, path := range operands {
 		target := os.ExpandEnv(path)
-		if opts.Parent {
-			err = os.MkdirAll(target, 0755)
+		var mkErr error
+		if *parents {
+			mkErr = os.MkdirAll(target, perm)
 		} else {
-			err = os.Mkdir(target, 0755)
+			mkErr = os.Mkdir(target, perm)
 		}
-
-		if err != nil {
-			status = mb.ExitFailure
-			fmt.Fprintln(os.Stderr, err.Error())
+		if mkErr != nil {
+			fmt.Fprintln(stdio.Err, mkErr.Error())
+			if firstErr == nil {
+				firstErr = command.SilentFailure()
+			}
+			continue
+		}
+		if *verbose {
+			fmt.Fprintf(stdio.Out, "mkdir: created directory '%s'\n", target)
 		}
 	}
-	return status, nil
-}
-
-func parseArgs(opts *options) ([]string, error) {
-	p := initParser(opts)
-
-	args, err := p.Parse()
-	if err != nil {
-		return nil, err
-	}
-
-	if opts.Version {
-		mb.ShowVersion(cmdName, version)
-		osExit(mb.ExitSuccess)
-	}
-
-	if !isValidArgNr(args) {
-		return nil, ErrNoOperand
-	}
-	return args, nil
-}
-
-func initParser(opts *options) *flags.Parser {
-	parser := flags.NewParser(opts, flags.Default)
-	parser.Name = cmdName
-	parser.Usage = "[OPTIONS] PATH"
-
-	return parser
-}
-
-func isValidArgNr(args []string) bool {
-	return len(args) >= 1
+	return firstErr
 }

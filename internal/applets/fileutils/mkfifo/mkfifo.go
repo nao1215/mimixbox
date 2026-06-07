@@ -1,99 +1,110 @@
-//
-// mimixbox/internal/applets/fileutils/mkfifo/mkfifo.go
-//
-// Copyright 2021 Naohiro CHIKAMATSU
-//
-// Licensed under the Apache License, Version 2.0 (the "License");
-// you may not use this file except in compliance with the License.
-// You may obtain a copy of the License at
-//
-//    http://www.apache.org/licenses/LICENSE-2.0
-//
-// Unless required by applicable law or agreed to in writing, software
-// distributed under the License is distributed on an "AS IS" BASIS,
-// WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
-// See the License for the specific language governing permissions and
-// limitations under the License.
+// Package mkfifo implements the mkfifo applet: create FIFOs (named pipes) at the
+// given paths, with the common GNU options.
 package mkfifo
 
 import (
+	"context"
+	"errors"
 	"fmt"
 	"os"
+	"strconv"
 	"syscall"
 
-	mb "github.com/nao1215/mimixbox/internal/lib"
-
-	"github.com/jessevdk/go-flags"
+	"github.com/nao1215/mimixbox/internal/command"
 )
 
-const cmdName string = "mkfifo"
+// defaultMode is the mode FIFOs are created with when -m/--mode is not given.
+// 0644 yields prw-r--r-- once the umask is applied by the system.
+const defaultMode = 0o644
 
-const version = "1.0.2"
+// Command is the mkfifo applet.
+type Command struct{}
 
-var osExit = os.Exit
+// New returns a mkfifo command.
+func New() *Command { return &Command{} }
 
-type options struct {
-	Version bool `short:"v" long:"version" description:"Show mkfifo command version"`
-}
+// Name returns the command name.
+func (c *Command) Name() string { return "mkfifo" }
 
-func Run() (int, error) {
-	var opts options
-	var args []string
-	var err error
-	status := mb.ExitSuccess
+// Synopsis returns the one-line description shown in the applet list.
+func (c *Command) Synopsis() string { return "Make FIFO (named pipe)" }
 
-	if args, err = parseArgs(&opts); err != nil {
-		return mb.ExitFailure, nil
+// Run executes mkfifo.
+func (c *Command) Run(_ context.Context, stdio command.IO, args []string) error {
+	fs := command.NewFlagSet(c.Name(), "[OPTION]... NAME...", stdio.Err)
+	modeStr := fs.StringP("mode", "m", "", "set file permission bits to MODE, not a=rw - umask")
+
+	proceed, err := fs.Parse(stdio, args)
+	if err != nil || !proceed {
+		return err
 	}
 
-	for _, path := range args {
-		p := os.ExpandEnv(path)
-		if mb.Exists(p) {
-			status = mb.ExitFailure
-			fmt.Fprintln(os.Stderr, cmdName+": can't make "+p+": already exist")
-			continue
+	names := fs.Args()
+	if len(names) == 0 {
+		fmt.Fprintf(stdio.Err, "%s: missing operand\n", c.Name())
+		return command.SilentFailure()
+	}
+
+	mode := os.FileMode(defaultMode)
+	if *modeStr != "" {
+		m, perr := parseMode(*modeStr)
+		if perr != nil {
+			fmt.Fprintf(stdio.Err, "%s: invalid mode: %q\n", c.Name(), *modeStr)
+			return command.SilentFailure()
 		}
-		if err := syscall.Mkfifo(p, 0644); err != nil {
-			status = mb.ExitFailure
-			fmt.Fprintln(os.Stderr, cmdName+": "+p+": "+err.Error())
+		mode = m
+	}
+
+	var failErr error
+	for _, name := range names {
+		path := os.ExpandEnv(name)
+		if err := makeFifo(path, mode); err != nil {
+			fmt.Fprintf(stdio.Err, "%s: %s\n", c.Name(), fifoError(path, err))
+			failErr = command.SilentFailure()
 			continue
 		}
 	}
-	return status, nil
+	return failErr
 }
 
-func parseArgs(opts *options) ([]string, error) {
-	p := initParser(opts)
+// makeFifo creates a single FIFO at path. It reports an "already exist" sentinel
+// when the path is already present so the caller can render the GNU-style
+// message the integration spec asserts.
+func makeFifo(path string, mode os.FileMode) error {
+	if _, err := os.Lstat(path); err == nil {
+		return errExist
+	}
+	return syscall.Mkfifo(path, uint32(mode))
+}
 
-	args, err := p.Parse()
+// errExist marks an attempt to create a FIFO whose path already exists.
+var errExist = errors.New("already exist")
+
+// fifoError formats a failed FIFO creation the way the integration spec expects:
+// an existing path becomes "<path>: already exist", and any other failure becomes
+// "<path>: <reason>" with the underlying syscall message lower-cased.
+func fifoError(path string, err error) string {
+	if errors.Is(err, errExist) {
+		return "can't make " + path + ": already exist"
+	}
+	return path + ": " + reason(err)
+}
+
+// reason extracts the human-readable message from a syscall error, matching the
+// lower-case GNU style ("no such file or directory").
+func reason(err error) string {
+	var errno syscall.Errno
+	if errors.As(err, &errno) {
+		return errno.Error()
+	}
+	return err.Error()
+}
+
+// parseMode parses an octal MODE string such as "644" or "0755".
+func parseMode(s string) (os.FileMode, error) {
+	v, err := strconv.ParseUint(s, 8, 32)
 	if err != nil {
-		return nil, err
+		return 0, err
 	}
-
-	if opts.Version {
-		mb.ShowVersion(cmdName, version)
-		osExit(mb.ExitSuccess)
-	}
-
-	if !isValidArgNr(args) {
-		showHelp(p)
-		osExit(mb.ExitFailure)
-	}
-	return args, nil
-}
-
-func initParser(opts *options) *flags.Parser {
-	parser := flags.NewParser(opts, flags.Default)
-	parser.Name = cmdName
-	parser.Usage = "[OPTIONS] FILE_PATH"
-
-	return parser
-}
-
-func isValidArgNr(args []string) bool {
-	return len(args) >= 1
-}
-
-func showHelp(p *flags.Parser) {
-	p.WriteHelp(os.Stdout)
+	return os.FileMode(v), nil
 }
