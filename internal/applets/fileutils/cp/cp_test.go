@@ -194,3 +194,27 @@ func TestRunCopyDirIntoItself(t *testing.T) {
 		t.Errorf("stderr = %q, want 'into itself'", errOut)
 	}
 }
+
+func TestRunCopyFileOntoItselfViaDirectory(t *testing.T) {
+	t.Parallel()
+	dir := t.TempDir()
+	src := filepath.Join(dir, "a.txt")
+	content := []byte("keep me\n")
+	if err := os.WriteFile(src, content, 0o600); err != nil {
+		t.Fatal(err)
+	}
+
+	// "cp dir/a.txt dir" resolves the target to dir/a.txt == src; it must be
+	// rejected rather than truncating the source in place.
+	_, errOut, err := run(t, src, dir)
+	if err == nil {
+		t.Fatal("expected error when the resolved target equals the source")
+	}
+	if !strings.Contains(errOut, "are the same file") {
+		t.Errorf("stderr = %q, want 'are the same file'", errOut)
+	}
+	got, readErr := os.ReadFile(src)
+	if readErr != nil || string(got) != string(content) {
+		t.Errorf("source was modified: content=%q err=%v", got, readErr)
+	}
+}

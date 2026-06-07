@@ -105,3 +105,23 @@ func TestMissingOperand(t *testing.T) {
 		t.Errorf("stderr = %q, want rmdir: missing operand", errOut)
 	}
 }
+
+func TestRunRejectsNonDirectory(t *testing.T) {
+	t.Parallel()
+	dir := t.TempDir()
+	file := filepath.Join(dir, "regular.txt")
+	if err := os.WriteFile(file, []byte("x\n"), 0o600); err != nil {
+		t.Fatal(err)
+	}
+
+	_, errOut, err := run(t, file)
+	if err == nil {
+		t.Fatal("expected error when removing a non-directory")
+	}
+	if !strings.Contains(errOut, "Not a directory") {
+		t.Errorf("stderr = %q, want 'Not a directory'", errOut)
+	}
+	if _, statErr := os.Stat(file); statErr != nil {
+		t.Errorf("file must not be removed by rmdir, stat error = %v", statErr)
+	}
+}

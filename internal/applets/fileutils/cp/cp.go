@@ -127,6 +127,13 @@ func cpFile(stdio command.IO, src, dest string, info os.FileInfo, opts options) 
 		target = filepath.Join(dest, filepath.Base(src))
 	}
 
+	// The early src-vs-dest check cannot see this: when dest is a directory the
+	// effective target becomes dest/<base(src)>, which may equal src. Opening
+	// that target for writing would truncate the source, so reject it here.
+	if isSamePath(src, target) {
+		return fmt.Errorf("'%s' and '%s' are the same file", src, target)
+	}
+
 	if opts.interactive {
 		if _, err := os.Stat(target); err == nil {
 			if !question(stdio, fmt.Sprintf("cp: overwrite '%s'? ", target)) {

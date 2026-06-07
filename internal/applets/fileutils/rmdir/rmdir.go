@@ -76,6 +76,12 @@ func (c *Command) removeOne(stdio command.IO, dir string, verbose bool) error {
 	if verbose {
 		_, _ = fmt.Fprintf(stdio.Out, "%s: removing directory, '%s'\n", c.Name(), dir)
 	}
+	// os.Remove also unlinks files and symlinks, so guard first: rmdir must only
+	// remove real directories. Lstat avoids following a symlink to a directory.
+	if info, lerr := os.Lstat(dir); lerr == nil && !info.IsDir() {
+		_, _ = fmt.Fprintf(stdio.Err, "%s: failed to remove '%s': Not a directory\n", c.Name(), dir)
+		return errors.New("not a directory")
+	}
 	if err := os.Remove(dir); err != nil {
 		_, _ = fmt.Fprintf(stdio.Err, "%s: failed to remove '%s': %s\n", c.Name(), dir, reason(err))
 		return err

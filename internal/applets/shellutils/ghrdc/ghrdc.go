@@ -151,8 +151,13 @@ func (c *Command) Run(ctx context.Context, stdio command.IO, args []string) erro
 	}
 
 	operands := fs.Args()
-	if len(operands) != 1 {
+	switch {
+	case len(operands) == 0:
 		_, _ = fmt.Fprintf(stdio.Err, "%s: missing operand: specify USER/REPOSITORY\n", c.Name())
+		_, _ = fmt.Fprintf(stdio.Err, "Try '%s --help' for more information.\n", c.Name())
+		return command.SilentFailure()
+	case len(operands) > 1:
+		_, _ = fmt.Fprintf(stdio.Err, "%s: extra operand '%s'\n", c.Name(), operands[1])
 		_, _ = fmt.Fprintf(stdio.Err, "Try '%s --help' for more information.\n", c.Name())
 		return command.SilentFailure()
 	}
