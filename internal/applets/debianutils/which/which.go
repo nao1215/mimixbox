@@ -30,7 +30,7 @@ func (c *Command) Synopsis() string {
 // Run executes which: for each COMMAND operand it looks the name up on $PATH and
 // prints the path that would be executed, one per line. With -a/--all every
 // match across PATH is printed. If any operand is not found (or none is given),
-// the exit status is 1, matching the Debian which behaviour: nothing is written
+// the exit status is 1, matching the Debian which behavior: nothing is written
 // for a name that cannot be resolved.
 func (c *Command) Run(_ context.Context, stdio command.IO, args []string) error {
 	fs := command.NewFlagSet(c.Name(), "[OPTION]... COMMAND...", stdio.Err)
@@ -56,7 +56,7 @@ func (c *Command) Run(_ context.Context, stdio command.IO, args []string) error 
 				continue
 			}
 			for _, p := range matches {
-				fmt.Fprintln(stdio.Out, p)
+				_, _ = fmt.Fprintln(stdio.Out, p)
 			}
 			continue
 		}
@@ -66,7 +66,7 @@ func (c *Command) Run(_ context.Context, stdio command.IO, args []string) error 
 			found = false
 			continue
 		}
-		fmt.Fprintln(stdio.Out, p)
+		_, _ = fmt.Fprintln(stdio.Out, p)
 	}
 
 	if !found {

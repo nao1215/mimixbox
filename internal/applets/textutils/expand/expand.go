@@ -56,14 +56,14 @@ func (c *Command) Run(_ context.Context, stdio command.IO, args []string) error 
 	for _, name := range files {
 		r, openErr := command.Open(stdio, name)
 		if openErr != nil {
-			fmt.Fprintf(stdio.Err, "expand: %s\n", command.FileError(name, openErr))
+			_, _ = fmt.Fprintf(stdio.Err, "expand: %s\n", command.FileError(name, openErr))
 			firstErr = keep(firstErr)
 			continue
 		}
 		copyErr := expand(stdio.Out, r, opts)
 		_ = r.Close()
 		if copyErr != nil {
-			fmt.Fprintf(stdio.Err, "expand: %s\n", command.FileError(name, copyErr))
+			_, _ = fmt.Fprintf(stdio.Err, "expand: %s\n", command.FileError(name, copyErr))
 			firstErr = keep(firstErr)
 		}
 	}

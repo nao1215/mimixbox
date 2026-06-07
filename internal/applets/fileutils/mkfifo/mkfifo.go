@@ -41,7 +41,7 @@ func (c *Command) Run(_ context.Context, stdio command.IO, args []string) error 
 
 	names := fs.Args()
 	if len(names) == 0 {
-		fmt.Fprintf(stdio.Err, "%s: missing operand\n", c.Name())
+		_, _ = fmt.Fprintf(stdio.Err, "%s: missing operand\n", c.Name())
 		return command.SilentFailure()
 	}
 
@@ -49,7 +49,7 @@ func (c *Command) Run(_ context.Context, stdio command.IO, args []string) error 
 	if *modeStr != "" {
 		m, perr := parseMode(*modeStr)
 		if perr != nil {
-			fmt.Fprintf(stdio.Err, "%s: invalid mode: %q\n", c.Name(), *modeStr)
+			_, _ = fmt.Fprintf(stdio.Err, "%s: invalid mode: %q\n", c.Name(), *modeStr)
 			return command.SilentFailure()
 		}
 		mode = m
@@ -59,7 +59,7 @@ func (c *Command) Run(_ context.Context, stdio command.IO, args []string) error 
 	for _, name := range names {
 		path := os.ExpandEnv(name)
 		if err := makeFifo(path, mode); err != nil {
-			fmt.Fprintf(stdio.Err, "%s: %s\n", c.Name(), fifoError(path, err))
+			_, _ = fmt.Fprintf(stdio.Err, "%s: %s\n", c.Name(), fifoError(path, err))
 			failErr = command.SilentFailure()
 			continue
 		}

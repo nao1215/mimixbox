@@ -77,33 +77,33 @@ func (c *Command) digestMode(stdio command.IO, names []string) error {
 			info, statErr := os.Stat(name)
 			if statErr != nil {
 				if os.IsNotExist(statErr) {
-					fmt.Fprintf(stdio.Err, "%s: %s: No such file or directory\n", c.name, name)
+					_, _ = fmt.Fprintf(stdio.Err, "%s: %s: No such file or directory\n", c.name, name)
 				} else {
-					fmt.Fprintf(stdio.Err, "%s: %s\n", c.name, command.FileError(name, statErr))
+					_, _ = fmt.Fprintf(stdio.Err, "%s: %s\n", c.name, command.FileError(name, statErr))
 				}
 				firstErr = keep(firstErr)
 				continue
 			}
 			if info.IsDir() {
-				fmt.Fprintf(stdio.Err, "%s: %s: It is directory\n", c.name, name)
+				_, _ = fmt.Fprintf(stdio.Err, "%s: %s: It is directory\n", c.name, name)
 				firstErr = keep(firstErr)
 				continue
 			}
 		}
 		r, openErr := command.Open(stdio, name)
 		if openErr != nil {
-			fmt.Fprintf(stdio.Err, "%s: %s\n", c.name, command.FileError(name, openErr))
+			_, _ = fmt.Fprintf(stdio.Err, "%s: %s\n", c.name, command.FileError(name, openErr))
 			firstErr = keep(firstErr)
 			continue
 		}
 		sum, sumErr := digest(h, r)
 		_ = r.Close()
 		if sumErr != nil {
-			fmt.Fprintf(stdio.Err, "%s: %s\n", c.name, command.FileError(name, sumErr))
+			_, _ = fmt.Fprintf(stdio.Err, "%s: %s\n", c.name, command.FileError(name, sumErr))
 			firstErr = keep(firstErr)
 			continue
 		}
-		fmt.Fprintf(stdio.Out, "%s  %s\n", sum, name)
+		_, _ = fmt.Fprintf(stdio.Out, "%s  %s\n", sum, name)
 	}
 	return firstErr
 }
@@ -121,7 +121,7 @@ func (c *Command) checkMode(stdio command.IO, names []string) error {
 	for _, name := range names {
 		r, openErr := command.Open(stdio, name)
 		if openErr != nil {
-			fmt.Fprintf(stdio.Err, "%s: %s\n", c.name, command.FileError(name, openErr))
+			_, _ = fmt.Fprintf(stdio.Err, "%s: %s\n", c.name, command.FileError(name, openErr))
 			firstErr = keep(firstErr)
 			continue
 		}
@@ -144,32 +144,32 @@ func (c *Command) checkList(stdio command.IO, h hash.Hash, r io.Reader) error {
 		}
 		want, file, ok := parseLine(line)
 		if !ok {
-			fmt.Fprintf(stdio.Err, "%s: improperly formatted checksum line\n", c.name)
+			_, _ = fmt.Fprintf(stdio.Err, "%s: improperly formatted checksum line\n", c.name)
 			firstErr = keep(firstErr)
 			continue
 		}
 		f, err := command.Open(stdio, file)
 		if err != nil {
-			fmt.Fprintf(stdio.Err, "%s: %s\n", c.name, command.FileError(file, err))
+			_, _ = fmt.Fprintf(stdio.Err, "%s: %s\n", c.name, command.FileError(file, err))
 			firstErr = keep(firstErr)
 			continue
 		}
 		got, sumErr := digest(h, f)
 		_ = f.Close()
 		if sumErr != nil {
-			fmt.Fprintf(stdio.Err, "%s: %s\n", c.name, command.FileError(file, sumErr))
+			_, _ = fmt.Fprintf(stdio.Err, "%s: %s\n", c.name, command.FileError(file, sumErr))
 			firstErr = keep(firstErr)
 			continue
 		}
 		if got == want {
-			fmt.Fprintf(stdio.Out, "%s: OK\n", file)
+			_, _ = fmt.Fprintf(stdio.Out, "%s: OK\n", file)
 		} else {
-			fmt.Fprintf(stdio.Out, "%s: FAILED\n", file)
+			_, _ = fmt.Fprintf(stdio.Out, "%s: FAILED\n", file)
 			firstErr = keep(firstErr)
 		}
 	}
 	if err := sc.Err(); err != nil {
-		fmt.Fprintf(stdio.Err, "%s: %v\n", c.name, err)
+		_, _ = fmt.Fprintf(stdio.Err, "%s: %v\n", c.name, err)
 		firstErr = keep(firstErr)
 	}
 	return firstErr

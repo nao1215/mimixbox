@@ -51,10 +51,10 @@ func (c *Command) Run(_ context.Context, stdio command.IO, args []string) error 
 
 	id, err := uuidV4()
 	if err != nil {
-		fmt.Fprintf(stdio.Err, "uuidgen: %v\n", err)
+		_, _ = fmt.Fprintf(stdio.Err, "uuidgen: %v\n", err)
 		return command.SilentFailure()
 	}
-	fmt.Fprintln(stdio.Out, id)
+	_, _ = fmt.Fprintln(stdio.Out, id)
 	return nil
 }
 

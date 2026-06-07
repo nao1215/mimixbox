@@ -124,7 +124,7 @@ func (c *Command) Run(_ context.Context, stdio command.IO, args []string) error 
 	if sigSpec != "" {
 		n, rerr := resolveSignal(sigSpec)
 		if rerr != nil {
-			fmt.Fprintf(stdio.Err, "kill: %s: invalid signal specification\n", sigSpec)
+			_, _ = fmt.Fprintf(stdio.Err, "kill: %s: invalid signal specification\n", sigSpec)
 			return command.SilentFailure()
 		}
 		sig = n
@@ -146,18 +146,18 @@ func sendSignals(stdio command.IO, pids []string, sig int) error {
 	for _, v := range pids {
 		pid, err := strconv.Atoi(v)
 		if err != nil {
-			fmt.Fprintf(stdio.Err, "kill: %s: arguments must be process or job IDs\n", v)
+			_, _ = fmt.Fprintf(stdio.Err, "kill: %s: arguments must be process or job IDs\n", v)
 			failed = true
 			continue
 		}
 		p, err := os.FindProcess(pid)
 		if err != nil {
-			fmt.Fprintf(stdio.Err, "kill: %s: %v\n", v, err)
+			_, _ = fmt.Fprintf(stdio.Err, "kill: %s: %v\n", v, err)
 			failed = true
 			continue
 		}
 		if err := p.Signal(syscall.Signal(sig)); err != nil {
-			fmt.Fprintf(stdio.Err, "kill: %s: %v\n", v, err)
+			_, _ = fmt.Fprintf(stdio.Err, "kill: %s: %v\n", v, err)
 			failed = true
 		}
 	}
@@ -212,6 +212,6 @@ func resolveSignal(spec string) (int, error) {
 // writeSignalList writes the table of known signals to w, one per line.
 func writeSignalList(w io.Writer) {
 	for _, s := range signals {
-		fmt.Fprintf(w, "%2s  %10s  %s\n", s.number, s.name, s.desc)
+		_, _ = fmt.Fprintf(w, "%2s  %10s  %s\n", s.number, s.name, s.desc)
 	}
 }

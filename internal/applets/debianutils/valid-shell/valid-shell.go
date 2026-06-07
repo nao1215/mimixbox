@@ -61,7 +61,7 @@ func (c *Command) Run(_ context.Context, stdio command.IO, args []string) error 
 
 	ok, err := validateShells(path, stdio.Out)
 	if err != nil {
-		fmt.Fprintf(stdio.Err, "%s: %v\n", c.Name(), err)
+		_, _ = fmt.Fprintf(stdio.Err, "%s: %v\n", c.Name(), err)
 		return command.SilentFailure()
 	}
 	if !ok {
@@ -79,7 +79,7 @@ func validateShells(path string, out io.Writer) (bool, error) {
 	if err != nil {
 		return false, err
 	}
-	defer f.Close()
+	defer func() { _ = f.Close() }()
 
 	ok := true
 	sc := bufio.NewScanner(f)
@@ -89,9 +89,9 @@ func validateShells(path string, out io.Writer) (bool, error) {
 			continue
 		}
 		if isExecutable(line) {
-			fmt.Fprintf(out, "OK: %s\n", line)
+			_, _ = fmt.Fprintf(out, "OK: %s\n", line)
 		} else {
-			fmt.Fprintf(out, "NG: %s (not exist in the system)\n", line)
+			_, _ = fmt.Fprintf(out, "NG: %s (not exist in the system)\n", line)
 			ok = false
 		}
 	}

@@ -30,7 +30,7 @@ func (c *Command) Run(_ context.Context, stdio command.IO, args []string) error 
 	base := fs.BoolP("basename", "b", false, "Print basename (filename)")
 	canonical := fs.BoolP("canonical", "c", false, "Print canonical path (default)")
 	dir := fs.BoolP("dirname", "d", false, "Print path without filename")
-	ext := fs.BoolP("extension", "e", false, "Print file extention")
+	ext := fs.BoolP("extension", "e", false, "Print file extension")
 
 	proceed, err := fs.Parse(stdio, args)
 	if err != nil || !proceed {
@@ -39,7 +39,7 @@ func (c *Command) Run(_ context.Context, stdio command.IO, args []string) error 
 
 	names := fs.Args()
 	if len(names) == 0 {
-		fmt.Fprintln(stdio.Err, "path: missing operand")
+		_, _ = fmt.Fprintln(stdio.Err, "path: missing operand")
 		return command.SilentFailure()
 	}
 	p := names[0]
@@ -51,19 +51,19 @@ func (c *Command) Run(_ context.Context, stdio command.IO, args []string) error 
 		if err != nil {
 			return command.Failuref("path: can't get absolute path")
 		}
-		fmt.Fprintf(stdio.Out, "%s\n", absPath)
+		_, _ = fmt.Fprintf(stdio.Out, "%s\n", absPath)
 	}
 	if *base {
-		fmt.Fprintf(stdio.Out, "%s\n", filepath.Base(p))
+		_, _ = fmt.Fprintf(stdio.Out, "%s\n", filepath.Base(p))
 	}
 	if *canonical || allOff {
-		fmt.Fprintf(stdio.Out, "%s\n", filepath.Clean(p))
+		_, _ = fmt.Fprintf(stdio.Out, "%s\n", filepath.Clean(p))
 	}
 	if *dir {
-		fmt.Fprintf(stdio.Out, "%s\n", filepath.Dir(p))
+		_, _ = fmt.Fprintf(stdio.Out, "%s\n", filepath.Dir(p))
 	}
 	if *ext {
-		fmt.Fprintf(stdio.Out, "%s\n", filepath.Ext(p))
+		_, _ = fmt.Fprintf(stdio.Out, "%s\n", filepath.Ext(p))
 	}
 
 	return nil

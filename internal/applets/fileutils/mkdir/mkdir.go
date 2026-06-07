@@ -37,7 +37,7 @@ func (c *Command) Run(_ context.Context, stdio command.IO, args []string) error 
 
 	operands := fs.Args()
 	if len(operands) == 0 {
-		fmt.Fprintln(stdio.Err, "mkdir: no operand")
+		_, _ = fmt.Fprintln(stdio.Err, "mkdir: no operand")
 		return command.SilentFailure()
 	}
 
@@ -45,7 +45,7 @@ func (c *Command) Run(_ context.Context, stdio command.IO, args []string) error 
 	if *mode != "" {
 		parsed, perr := strconv.ParseUint(*mode, 8, 32)
 		if perr != nil {
-			fmt.Fprintf(stdio.Err, "mkdir: invalid mode '%s'\n", *mode)
+			_, _ = fmt.Fprintf(stdio.Err, "mkdir: invalid mode '%s'\n", *mode)
 			return command.SilentFailure()
 		}
 		perm = os.FileMode(parsed)
@@ -61,14 +61,14 @@ func (c *Command) Run(_ context.Context, stdio command.IO, args []string) error 
 			mkErr = os.Mkdir(target, perm)
 		}
 		if mkErr != nil {
-			fmt.Fprintln(stdio.Err, mkErr.Error())
+			_, _ = fmt.Fprintln(stdio.Err, mkErr.Error())
 			if firstErr == nil {
 				firstErr = command.SilentFailure()
 			}
 			continue
 		}
 		if *verbose {
-			fmt.Fprintf(stdio.Out, "mkdir: created directory '%s'\n", target)
+			_, _ = fmt.Fprintf(stdio.Out, "mkdir: created directory '%s'\n", target)
 		}
 	}
 	return firstErr

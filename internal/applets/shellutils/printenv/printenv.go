@@ -41,7 +41,7 @@ func (c *Command) Run(_ context.Context, stdio command.IO, args []string) error 
 	if len(names) == 0 {
 		// No operands: print every environment variable as NAME=VALUE.
 		for _, e := range os.Environ() {
-			fmt.Fprintf(stdio.Out, "%s%c", e, end)
+			_, _ = fmt.Fprintf(stdio.Out, "%s%c", e, end)
 		}
 		return nil
 	}
@@ -56,7 +56,7 @@ func (c *Command) Run(_ context.Context, stdio command.IO, args []string) error 
 			missing = true
 			continue
 		}
-		fmt.Fprintf(stdio.Out, "%s%c", value, end)
+		_, _ = fmt.Fprintf(stdio.Out, "%s%c", value, end)
 	}
 	if missing {
 		return command.SilentFailure()

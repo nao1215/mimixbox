@@ -38,8 +38,8 @@ func (c *Command) Run(_ context.Context, stdio command.IO, args []string) error 
 
 	operands := unescapeNegativeNumbers(fs.Args())
 	if len(operands) == 0 || len(operands) > 3 {
-		fmt.Fprintf(stdio.Err, "seq: missing operand\n")
-		fmt.Fprintf(stdio.Err, "Try 'seq --help' for more information.\n")
+		_, _ = fmt.Fprintf(stdio.Err, "seq: missing operand\n")
+		_, _ = fmt.Fprintf(stdio.Err, "Try 'seq --help' for more information.\n")
 		return command.SilentFailure()
 	}
 
@@ -63,12 +63,12 @@ func (c *Command) Run(_ context.Context, stdio command.IO, args []string) error 
 		}
 	}
 	if perr != nil {
-		fmt.Fprintf(stdio.Err, "seq: invalid floating point argument: '%s'\n", perr.Error())
+		_, _ = fmt.Fprintf(stdio.Err, "seq: invalid floating point argument: '%s'\n", perr.Error())
 		return command.SilentFailure()
 	}
 
 	if increment == 0 {
-		fmt.Fprintf(stdio.Err, "seq: invalid Zero increment value: '%s'\n", incStr)
+		_, _ = fmt.Fprintf(stdio.Err, "seq: invalid Zero increment value: '%s'\n", incStr)
 		return command.SilentFailure()
 	}
 

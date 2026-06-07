@@ -85,7 +85,7 @@ func (c *Command) Run(_ context.Context, stdio command.IO, args []string) error 
 
 	dirs := fs.Args()
 	if len(dirs) == 0 {
-		fmt.Fprintf(stdio.Err, "%s: missing directory operand\n", c.Name())
+		_, _ = fmt.Fprintf(stdio.Err, "%s: missing directory operand\n", c.Name())
 		return command.SilentFailure()
 	}
 
@@ -104,7 +104,7 @@ func (c *Command) run(stdio command.IO, dirs []string, opts options) error {
 
 		info, err := os.Stat(path)
 		if err != nil {
-			fmt.Fprintf(stdio.Err, "%s: %s\n", c.Name(), command.FileError(path, err))
+			_, _ = fmt.Fprintf(stdio.Err, "%s: %s\n", c.Name(), command.FileError(path, err))
 			failed = true
 			continue
 		}
@@ -112,14 +112,14 @@ func (c *Command) run(stdio command.IO, dirs []string, opts options) error {
 		if !info.IsDir() {
 			// A *.sddf report: restore the groups and delete from them.
 			if err := c.restoreAndDelete(stdio, in, path, opts); err != nil {
-				fmt.Fprintf(stdio.Err, "%s: %s\n", c.Name(), err.Error())
+				_, _ = fmt.Fprintf(stdio.Err, "%s: %s\n", c.Name(), err.Error())
 				failed = true
 			}
 			continue
 		}
 
 		if err := c.scan(stdio, in, path, opts); err != nil {
-			fmt.Fprintf(stdio.Err, "%s: %s\n", c.Name(), err.Error())
+			_, _ = fmt.Fprintf(stdio.Err, "%s: %s\n", c.Name(), err.Error())
 			failed = true
 		}
 	}
@@ -133,14 +133,14 @@ func (c *Command) run(stdio command.IO, dirs []string, opts options) error {
 // scan walks a directory, finds duplicate groups, and either deletes them
 // (--delete) or writes them to a *.sddf report.
 func (c *Command) scan(stdio command.IO, in *bufio.Reader, dir string, opts options) error {
-	fmt.Fprintln(stdio.Out, "Get all file path at "+dir)
+	_, _ = fmt.Fprintln(stdio.Out, "Get all file path at "+dir)
 	files := collectFiles(dir)
 	if len(files) == 0 {
-		fmt.Fprintln(stdio.Out, dir+" has no file")
+		_, _ = fmt.Fprintln(stdio.Out, dir+" has no file")
 		return nil
 	}
 
-	fmt.Fprintln(stdio.Out, "Find the same file on a file content basis")
+	_, _ = fmt.Fprintln(stdio.Out, "Find the same file on a file content basis")
 	groups := findDuplicates(files)
 
 	if opts.delete || opts.dryRun {
@@ -193,7 +193,7 @@ func hashFile(path string) (string, error) {
 	if err != nil {
 		return "", err
 	}
-	defer f.Close()
+	defer func() { _ = f.Close() }()
 
 	h := md5.New() //nolint:gosec // content fingerprint only
 	if _, err := io.Copy(h, f); err != nil {
@@ -261,19 +261,19 @@ func hasImportantPrefix(path string) bool {
 // With --dry-run nothing is removed; with --interactive each removal is
 // confirmed by reading "y" from stdio.In.
 func (c *Command) deleteGroups(stdio command.IO, in *bufio.Reader, groups []fileGroup, opts options) error {
-	fmt.Fprintln(stdio.Out, "Decide delete target files")
+	_, _ = fmt.Fprintln(stdio.Out, "Decide delete target files")
 	targets := []string{}
 	for _, g := range groups {
 		targets = append(targets, deleteTargets(g.Paths)...)
 	}
 
-	fmt.Fprintln(stdio.Out, "Start deleting files")
+	_, _ = fmt.Fprintln(stdio.Out, "Start deleting files")
 	var sum int64
 	var failed bool
 	for _, path := range targets {
 		size := fileSize(path)
 		if opts.dryRun {
-			fmt.Fprintln(stdio.Out, "Delete(DryRun): "+path)
+			_, _ = fmt.Fprintln(stdio.Out, "Delete(DryRun): "+path)
 			sum += size
 			continue
 		}
@@ -281,14 +281,14 @@ func (c *Command) deleteGroups(stdio command.IO, in *bufio.Reader, groups []file
 			continue
 		}
 		if err := os.Remove(path); err != nil {
-			fmt.Fprintln(stdio.Out, "Delete(Failure): "+path)
+			_, _ = fmt.Fprintln(stdio.Out, "Delete(Failure): "+path)
 			failed = true
 			continue
 		}
-		fmt.Fprintln(stdio.Out, "Delete(Success): "+path+": "+strconv.FormatInt(size, 10)+"Byte")
+		_, _ = fmt.Fprintln(stdio.Out, "Delete(Success): "+path+": "+strconv.FormatInt(size, 10)+"Byte")
 		sum += size
 	}
-	fmt.Fprintln(stdio.Out, "End deleting files. Size="+strconv.FormatInt(sum, 10)+"Byte")
+	_, _ = fmt.Fprintln(stdio.Out, "End deleting files. Size="+strconv.FormatInt(sum, 10)+"Byte")
 
 	if failed {
 		return fmt.Errorf("failed to delete one or more files")
@@ -304,7 +304,7 @@ func confirm(stdio command.IO, in *bufio.Reader, path string, opts options) bool
 	if !opts.interactive {
 		return true
 	}
-	fmt.Fprintf(stdio.Err, "sddf: remove '%s'? ", path)
+	_, _ = fmt.Fprintf(stdio.Err, "sddf: remove '%s'? ", path)
 	line, err := in.ReadString('\n')
 	answer := strings.ToLower(strings.TrimSpace(line))
 	if err != nil && answer == "" {
@@ -352,13 +352,17 @@ func fileSize(path string) int64 {
 
 // dumpToFile writes the duplicate groups to a *.sddf report so they can later be
 // deleted with "sddf <report>".
-func dumpToFile(stdio command.IO, groups []fileGroup, output string) error {
-	fmt.Fprintln(stdio.Out, "Write down duplicated file list to "+output)
+func dumpToFile(stdio command.IO, groups []fileGroup, output string) (err error) {
+	_, _ = fmt.Fprintln(stdio.Out, "Write down duplicated file list to "+output)
 	f, err := os.Create(output) //nolint:gosec // user-named output file
 	if err != nil {
 		return err
 	}
-	defer f.Close()
+	defer func() {
+		if cerr := f.Close(); cerr != nil && err == nil {
+			err = cerr
+		}
+	}()
 
 	var b strings.Builder
 	for _, g := range groups {
@@ -371,13 +375,13 @@ func dumpToFile(stdio command.IO, groups []fileGroup, output string) error {
 		}
 		b.WriteByte('\n')
 	}
-	if _, err := f.WriteString(b.String()); err != nil {
-		return err
+	if _, werr := f.WriteString(b.String()); werr != nil {
+		return werr
 	}
 
-	fmt.Fprintln(stdio.Out, "See duplicated file list: "+output)
-	fmt.Fprintln(stdio.Out, "If you delete files, execute the following command.")
-	fmt.Fprintln(stdio.Out, "$ sddf "+output)
+	_, _ = fmt.Fprintln(stdio.Out, "See duplicated file list: "+output)
+	_, _ = fmt.Fprintln(stdio.Out, "If you delete files, execute the following command.")
+	_, _ = fmt.Fprintln(stdio.Out, "$ sddf "+output)
 	return nil
 }
 
@@ -392,7 +396,7 @@ func (c *Command) restoreAndDelete(stdio command.IO, in *bufio.Reader, path stri
 	}
 	// A restored report always deletes; honor --dry-run / --interactive.
 	opts.delete = true
-	fmt.Fprintln(stdio.Out, "Restore data from "+path)
+	_, _ = fmt.Fprintln(stdio.Out, "Restore data from "+path)
 	return c.deleteGroups(stdio, in, groups, opts)
 }
 
@@ -402,7 +406,7 @@ func restore(path string) ([]fileGroup, error) {
 	if err != nil {
 		return nil, err
 	}
-	defer f.Close()
+	defer func() { _ = f.Close() }()
 
 	groups := []fileGroup{}
 	var cur *fileGroup

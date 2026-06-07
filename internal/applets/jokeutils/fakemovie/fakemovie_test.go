@@ -28,7 +28,7 @@ func newPNG(t *testing.T, path string, w, h int) {
 	if err != nil {
 		t.Fatalf("create %s: %v", path, err)
 	}
-	defer f.Close()
+	defer func() { _ = f.Close() }()
 	if err := png.Encode(f, img); err != nil {
 		t.Fatalf("encode %s: %v", path, err)
 	}
@@ -74,7 +74,7 @@ func TestRunProducesImage(t *testing.T) {
 	if err != nil {
 		t.Fatalf("output not produced: %v", err)
 	}
-	defer f.Close()
+	defer func() { _ = f.Close() }()
 
 	cfg, format, err := image.DecodeConfig(f)
 	if err != nil {

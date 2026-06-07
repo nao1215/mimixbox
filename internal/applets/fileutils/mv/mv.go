@@ -78,11 +78,11 @@ func (c *Command) Run(_ context.Context, stdio command.IO, args []string) error 
 
 	operands := fs.Args()
 	if len(operands) == 0 {
-		fmt.Fprintln(stdio.Err, "mv: missing file operand")
+		_, _ = fmt.Fprintln(stdio.Err, "mv: missing file operand")
 		return command.SilentFailure()
 	}
 	if len(operands) == 1 {
-		fmt.Fprintf(stdio.Err, "mv: missing destination file operand after '%s'\n", operands[0])
+		_, _ = fmt.Fprintf(stdio.Err, "mv: missing destination file operand after '%s'\n", operands[0])
 		return command.SilentFailure()
 	}
 
@@ -122,21 +122,21 @@ func (c *Command) move(stdio command.IO, srcPaths []string, dest string, opts op
 	var failed bool
 	for _, src := range srcPaths {
 		if !mb.Exists(src) {
-			fmt.Fprintln(stdio.Err, "mv: "+src+" doesn't exist")
+			_, _ = fmt.Fprintln(stdio.Err, "mv: "+src+" doesn't exist")
 			failed = true
 			continue
 		}
 
 		// If SRC and DEST are the same, the option(-f, -b, -i) is ignored.
 		if isSameFilePath(src, dest) {
-			fmt.Fprintln(stdio.Err, "mv: source '"+src+"' and destination '"+dest+"' is same")
+			_, _ = fmt.Fprintln(stdio.Err, "mv: source '"+src+"' and destination '"+dest+"' is same")
 			failed = true
 			continue
 		}
 
 		if opts.noClobber {
 			if err := noclobberMove(src, dest); err != nil {
-				fmt.Fprintln(stdio.Err, "mv: "+err.Error())
+				_, _ = fmt.Fprintln(stdio.Err, "mv: "+err.Error())
 				failed = true
 				continue
 			}
@@ -146,7 +146,7 @@ func (c *Command) move(stdio command.IO, srcPaths []string, dest string, opts op
 
 		if opts.force || (opts.backup && opts.interactive) {
 			if err := forceMove(src, dest, opts); err != nil {
-				fmt.Fprintln(stdio.Err, "mv: "+err.Error())
+				_, _ = fmt.Fprintln(stdio.Err, "mv: "+err.Error())
 				failed = true
 				continue
 			}
@@ -156,7 +156,7 @@ func (c *Command) move(stdio command.IO, srcPaths []string, dest string, opts op
 
 		if opts.interactive {
 			if err := interactiveMove(stdio, src, dest, opts); err != nil {
-				fmt.Fprintln(stdio.Err, "mv: "+err.Error())
+				_, _ = fmt.Fprintln(stdio.Err, "mv: "+err.Error())
 				failed = true
 				continue
 			}
@@ -166,7 +166,7 @@ func (c *Command) move(stdio command.IO, srcPaths []string, dest string, opts op
 
 		destPath := decideDestAbsPath(src, dest, opts)
 		if err := rename(src, destPath); err != nil {
-			fmt.Fprintln(stdio.Err, "mv: "+err.Error())
+			_, _ = fmt.Fprintln(stdio.Err, "mv: "+err.Error())
 			failed = true
 			continue
 		}
@@ -180,7 +180,7 @@ func (c *Command) move(stdio command.IO, srcPaths []string, dest string, opts op
 
 func (c *Command) report(stdio command.IO, src, dest string, opts options) {
 	if opts.verbose {
-		fmt.Fprintf(stdio.Out, "renamed '%s' -> '%s'\n", src, decideDestAbsPath(src, dest, opts))
+		_, _ = fmt.Fprintf(stdio.Out, "renamed '%s' -> '%s'\n", src, decideDestAbsPath(src, dest, opts))
 	}
 }
 
@@ -261,7 +261,7 @@ func interactiveMove(stdio command.IO, src string, dest string, opts options) er
 // question prompts on stdio.Out and reads the answer from stdio.In, returning
 // true only when the user types a "yes" answer.
 func question(stdio command.IO, ask string) bool {
-	fmt.Fprintf(stdio.Out, "%s [Y/n] ", ask)
+	_, _ = fmt.Fprintf(stdio.Out, "%s [Y/n] ", ask)
 	r := bufio.NewReader(stdio.In)
 	line, err := r.ReadString('\n')
 	if err != nil && line == "" {

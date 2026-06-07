@@ -149,3 +149,48 @@ func TestRunMissingOperand(t *testing.T) {
 		t.Errorf("stderr = %q, want missing destination operand", errOut)
 	}
 }
+
+func TestRunMultipleSourcesRequireDirectory(t *testing.T) {
+	t.Parallel()
+	dir := t.TempDir()
+	a := filepath.Join(dir, "a.txt")
+	b := filepath.Join(dir, "b.txt")
+	dst := filepath.Join(dir, "dst.txt") // a regular file, not a directory
+	for _, f := range []string{a, b} {
+		if err := os.WriteFile(f, []byte("x\n"), 0o600); err != nil {
+			t.Fatal(err)
+		}
+	}
+
+	_, errOut, err := run(t, a, b, dst)
+	if err == nil {
+		t.Fatal("expected error when copying multiple sources onto a non-directory")
+	}
+	if !strings.Contains(errOut, "is not a directory") {
+		t.Errorf("stderr = %q, want 'is not a directory'", errOut)
+	}
+	// The copy must be refused before creating dst from the sources.
+	if _, statErr := os.Stat(dst); !os.IsNotExist(statErr) {
+		t.Errorf("dst should not have been created, stat error = %v", statErr)
+	}
+}
+
+func TestRunCopyDirIntoItself(t *testing.T) {
+	t.Parallel()
+	dir := t.TempDir()
+	src := filepath.Join(dir, "src")
+	if err := os.MkdirAll(src, 0o755); err != nil {
+		t.Fatal(err)
+	}
+	if err := os.WriteFile(filepath.Join(src, "f.txt"), []byte("y\n"), 0o600); err != nil {
+		t.Fatal(err)
+	}
+
+	_, errOut, err := run(t, "-r", src, filepath.Join(src, "child"))
+	if err == nil {
+		t.Fatal("expected error when copying a directory into its own subtree")
+	}
+	if !strings.Contains(errOut, "into itself") {
+		t.Errorf("stderr = %q, want 'into itself'", errOut)
+	}
+}

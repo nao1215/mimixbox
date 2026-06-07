@@ -47,7 +47,7 @@ func (c *Command) Run(_ context.Context, stdio command.IO, args []string) error 
 
 	files := fs.Args()
 	if len(files) == 0 {
-		fmt.Fprintln(stdio.Err, "touch: missing file operand")
+		_, _ = fmt.Fprintln(stdio.Err, "touch: missing file operand")
 		return command.SilentFailure()
 	}
 
@@ -60,7 +60,7 @@ func (c *Command) Run(_ context.Context, stdio command.IO, args []string) error 
 	var firstErr error
 	for _, file := range files {
 		if err := touch(file, opts); err != nil {
-			fmt.Fprintln(stdio.Err, "touch: "+err.Error())
+			_, _ = fmt.Fprintln(stdio.Err, "touch: "+err.Error())
 			if firstErr == nil {
 				firstErr = command.SilentFailure()
 			}

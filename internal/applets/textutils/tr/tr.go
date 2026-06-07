@@ -59,14 +59,14 @@ func (c *Command) Run(_ context.Context, stdio command.IO, args []string) error 
 
 	set1, err := expandSet(operands[0])
 	if err != nil {
-		fmt.Fprintf(stdio.Err, "tr: %v\n", err)
+		_, _ = fmt.Fprintf(stdio.Err, "tr: %v\n", err)
 		return command.SilentFailure()
 	}
 	var set2 []rune
 	if len(operands) > 1 {
 		set2, err = expandSet(operands[1])
 		if err != nil {
-			fmt.Fprintf(stdio.Err, "tr: %v\n", err)
+			_, _ = fmt.Fprintf(stdio.Err, "tr: %v\n", err)
 			return command.SilentFailure()
 		}
 	}
@@ -87,19 +87,19 @@ func (c *Command) Run(_ context.Context, stdio command.IO, args []string) error 
 // prints a GNU-style message to stderr and returns a silent failure.
 func validate(stdio command.IO, opts options, operands []string) error {
 	if len(operands) == 0 {
-		fmt.Fprintln(stdio.Err, "tr: missing operand")
-		fmt.Fprintln(stdio.Err, "Try 'tr --help' for more information.")
+		_, _ = fmt.Fprintln(stdio.Err, "tr: missing operand")
+		_, _ = fmt.Fprintln(stdio.Err, "Try 'tr --help' for more information.")
 		return command.SilentFailure()
 	}
 	// In translate mode (no -d, no -s) SET2 is mandatory.
 	if !opts.delete && !opts.squeeze && len(operands) < 2 {
-		fmt.Fprintf(stdio.Err, "tr: missing operand after '%s'\n", operands[0])
-		fmt.Fprintln(stdio.Err, "Try 'tr --help' for more information.")
+		_, _ = fmt.Fprintf(stdio.Err, "tr: missing operand after '%s'\n", operands[0])
+		_, _ = fmt.Fprintln(stdio.Err, "Try 'tr --help' for more information.")
 		return command.SilentFailure()
 	}
 	if len(operands) > 2 {
-		fmt.Fprintf(stdio.Err, "tr: extra operand '%s'\n", operands[2])
-		fmt.Fprintln(stdio.Err, "Try 'tr --help' for more information.")
+		_, _ = fmt.Fprintf(stdio.Err, "tr: extra operand '%s'\n", operands[2])
+		_, _ = fmt.Fprintln(stdio.Err, "Try 'tr --help' for more information.")
 		return command.SilentFailure()
 	}
 	return nil

@@ -102,14 +102,14 @@ func (c *Command) Run(_ context.Context, stdio command.IO, args []string) error 
 	}
 
 	if !isRoot() {
-		fmt.Fprintf(stdio.Err, "%s: you must be root to %s the system\n", c.Name(), c.Name())
+		_, _ = fmt.Fprintf(stdio.Err, "%s: you must be root to %s the system\n", c.Name(), c.Name())
 		return command.SilentFailure()
 	}
 
 	return stop(c.action())
 }
 
-// stop synchronises filesystems and performs the requested reboot action via
+// stop synchronizes filesystems and performs the requested reboot action via
 // the replaceable rebootFn so tests stay safe.
 func stop(action int) error {
 	syscall.Sync()

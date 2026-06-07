@@ -187,7 +187,7 @@ func HasApplet(target string) bool {
 func ListApplets() {
 	format := "%" + strconv.Itoa(longestAppletLength()) + "s - %s\n"
 	for _, key := range SortApplet() {
-		fmt.Fprintf(os.Stdout, format, key, Applets[key].Desc)
+		_, _ = fmt.Fprintf(os.Stdout, format, key, Applets[key].Desc)
 	}
 }
 
@@ -209,7 +209,7 @@ func ShowAppletsBySpaceSeparated() {
 		lineLen += len(key)
 	}
 	b.WriteByte('\n')
-	fmt.Fprint(os.Stdout, b.String())
+	_, _ = fmt.Fprint(os.Stdout, b.String())
 }
 
 func SortApplet() []string {
@@ -222,7 +222,7 @@ func SortApplet() []string {
 }
 
 func longestAppletLength() int {
-	var max int = 0
+	max := 0
 	for _, key := range SortApplet() {
 		if max < len(key) {
 			max = len(key)

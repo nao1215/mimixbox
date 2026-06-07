@@ -49,7 +49,7 @@ func (c *Command) Run(ctx context.Context, stdio command.IO, args []string) erro
 
 	reader := bufio.NewReader(stdio.In)
 	for {
-		fmt.Fprint(stdio.Out, prompt)
+		_, _ = fmt.Fprint(stdio.Out, prompt)
 
 		line, err := reader.ReadString('\n')
 		if err != nil {
@@ -63,7 +63,7 @@ func (c *Command) Run(ctx context.Context, stdio command.IO, args []string) erro
 				}
 				return nil
 			}
-			fmt.Fprintln(stdio.Err, err)
+			_, _ = fmt.Fprintln(stdio.Err, err)
 			return nil
 		}
 
@@ -92,7 +92,7 @@ func execInput(ctx context.Context, stdio command.IO, input string) (stop bool) 
 	// A built-in is preferred over an external command of the same name.
 	if builtin.IsBuiltinCmd(args[0]) {
 		if err := builtin.Run(stdio, args[0], args[1:]); err != nil {
-			fmt.Fprintln(stdio.Err, err)
+			_, _ = fmt.Fprintln(stdio.Err, err)
 		}
 		return false
 	}
@@ -104,7 +104,7 @@ func execInput(ctx context.Context, stdio command.IO, input string) (stop bool) 
 	cmd.Stdout = stdio.Out
 	cmd.Stderr = stdio.Err
 	if err := cmd.Run(); err != nil {
-		fmt.Fprintln(stdio.Err, err)
+		_, _ = fmt.Fprintln(stdio.Err, err)
 	}
 	return false
 }

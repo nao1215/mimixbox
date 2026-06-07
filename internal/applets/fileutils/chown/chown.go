@@ -42,20 +42,20 @@ func (c *Command) Run(_ context.Context, stdio command.IO, args []string) error 
 
 	operands := fs.Args()
 	if len(operands) == 0 {
-		fmt.Fprintf(stdio.Err, "%s: missing operand\n", c.Name())
+		_, _ = fmt.Fprintf(stdio.Err, "%s: missing operand\n", c.Name())
 		return command.SilentFailure()
 	}
 
 	spec := operands[0]
 	files := operands[1:]
 	if len(files) == 0 {
-		fmt.Fprintf(stdio.Err, "%s: missing operand after '%s'\n", c.Name(), spec)
+		_, _ = fmt.Fprintf(stdio.Err, "%s: missing operand after '%s'\n", c.Name(), spec)
 		return command.SilentFailure()
 	}
 
 	uid, gid, err := parseOwner(spec)
 	if err != nil {
-		fmt.Fprintf(stdio.Err, "%s: %v\n", c.Name(), err)
+		_, _ = fmt.Fprintf(stdio.Err, "%s: %v\n", c.Name(), err)
 		return command.SilentFailure()
 	}
 
@@ -75,7 +75,7 @@ func apply(stdio command.IO, path string, uid, gid int, recursive, verbose bool)
 	if recursive {
 		return filepath.Walk(path, func(p string, _ os.FileInfo, err error) error {
 			if err != nil {
-				fmt.Fprintf(stdio.Err, "chown: %s\n", command.FileError(p, err))
+				_, _ = fmt.Fprintf(stdio.Err, "chown: %s\n", command.FileError(p, err))
 				return command.SilentFailure()
 			}
 			return chownOne(stdio, p, uid, gid, verbose)
@@ -89,14 +89,14 @@ func apply(stdio command.IO, path string, uid, gid int, recursive, verbose bool)
 func chownOne(stdio command.IO, path string, uid, gid int, verbose bool) error {
 	if err := os.Chown(path, uid, gid); err != nil {
 		if errors.Is(err, os.ErrPermission) {
-			fmt.Fprintf(stdio.Err, "chown: changing ownership of '%s': Operation not permitted\n", path)
+			_, _ = fmt.Fprintf(stdio.Err, "chown: changing ownership of '%s': Operation not permitted\n", path)
 		} else {
-			fmt.Fprintf(stdio.Err, "chown: %s\n", command.FileError(path, err))
+			_, _ = fmt.Fprintf(stdio.Err, "chown: %s\n", command.FileError(path, err))
 		}
 		return command.SilentFailure()
 	}
 	if verbose {
-		fmt.Fprintf(stdio.Out, "ownership of '%s' retained\n", path)
+		_, _ = fmt.Fprintf(stdio.Out, "ownership of '%s' retained\n", path)
 	}
 	return nil
 }

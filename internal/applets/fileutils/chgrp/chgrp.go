@@ -44,7 +44,7 @@ func (c *Command) Run(_ context.Context, stdio command.IO, args []string) error 
 
 	rest := fs.Args()
 	if len(rest) < 2 {
-		fmt.Fprintf(stdio.Err, "%s: missing operand\n", c.Name())
+		_, _ = fmt.Fprintf(stdio.Err, "%s: missing operand\n", c.Name())
 		return command.SilentFailure()
 	}
 
@@ -53,7 +53,7 @@ func (c *Command) Run(_ context.Context, stdio command.IO, args []string) error 
 	group := rest[0]
 	gid, ok := lookupGid(group)
 	if !ok {
-		fmt.Fprintf(stdio.Err, "%s: invalid group: '%s'\n", c.Name(), group)
+		_, _ = fmt.Fprintf(stdio.Err, "%s: invalid group: '%s'\n", c.Name(), group)
 		return command.SilentFailure()
 	}
 
@@ -121,7 +121,7 @@ func (c *Command) changeGroup(stdio command.IO, path string, gid int, opts optio
 		return err
 	}
 	if opts.verbose {
-		fmt.Fprintf(stdio.Out, "changed group of '%s'\n", path)
+		_, _ = fmt.Fprintf(stdio.Out, "changed group of '%s'\n", path)
 	}
 	return nil
 }
@@ -133,8 +133,8 @@ func (c *Command) report(stdio command.IO, path string, err error) {
 		err = pe.Err
 	}
 	if errors.Is(err, os.ErrPermission) {
-		fmt.Fprintf(stdio.Err, "%s: changing group of '%s': Operation not permitted\n", c.Name(), path)
+		_, _ = fmt.Fprintf(stdio.Err, "%s: changing group of '%s': Operation not permitted\n", c.Name(), path)
 		return
 	}
-	fmt.Fprintf(stdio.Err, "%s: changing group of '%s': %v\n", c.Name(), path, err)
+	_, _ = fmt.Fprintf(stdio.Err, "%s: changing group of '%s': %v\n", c.Name(), path, err)
 }

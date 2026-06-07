@@ -39,7 +39,7 @@ func (c *Command) Run(_ context.Context, stdio command.IO, args []string) error 
 
 	dirs := fs.Args()
 	if len(dirs) == 0 {
-		fmt.Fprintf(stdio.Err, "%s: missing operand\n", c.Name())
+		_, _ = fmt.Fprintf(stdio.Err, "%s: missing operand\n", c.Name())
 		return command.SilentFailure()
 	}
 
@@ -74,10 +74,10 @@ func (c *Command) remove(stdio command.IO, dir string, parents, verbose bool) er
 // empty directories. A non-empty directory yields the GNU error message.
 func (c *Command) removeOne(stdio command.IO, dir string, verbose bool) error {
 	if verbose {
-		fmt.Fprintf(stdio.Out, "%s: removing directory, '%s'\n", c.Name(), dir)
+		_, _ = fmt.Fprintf(stdio.Out, "%s: removing directory, '%s'\n", c.Name(), dir)
 	}
 	if err := os.Remove(dir); err != nil {
-		fmt.Fprintf(stdio.Err, "%s: failed to remove '%s': %s\n", c.Name(), dir, reason(err))
+		_, _ = fmt.Fprintf(stdio.Err, "%s: failed to remove '%s': %s\n", c.Name(), dir, reason(err))
 		return err
 	}
 	return nil

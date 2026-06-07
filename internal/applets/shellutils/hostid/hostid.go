@@ -39,7 +39,7 @@ func (c *Command) Run(_ context.Context, stdio command.IO, args []string) error 
 
 	ip4, err := mb.Ip4()
 	if err != nil {
-		fmt.Fprintf(stdio.Err, "hostid: %v\n", err)
+		_, _ = fmt.Fprintf(stdio.Err, "hostid: %v\n", err)
 		return command.SilentFailure()
 	}
 
@@ -49,7 +49,7 @@ func (c *Command) Run(_ context.Context, stdio command.IO, args []string) error 
 	// match. This computation is preserved from the original implementation.
 	for _, ip := range ip4 {
 		ipList := strings.Split(ip, ".")
-		fmt.Fprintf(stdio.Out, "%02x%02x%02x%02x\n",
+		_, _ = fmt.Fprintf(stdio.Out, "%02x%02x%02x%02x\n",
 			atoi(ipList[1]), atoi(ipList[0]), atoi(ipList[3]), atoi(ipList[2]))
 	}
 

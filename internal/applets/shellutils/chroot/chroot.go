@@ -40,20 +40,20 @@ func (c *Command) Run(_ context.Context, stdio command.IO, args []string) error 
 
 	operands := fs.Args()
 	if len(operands) == 0 {
-		fmt.Fprintln(stdio.Err, "chroot: missing operand")
+		_, _ = fmt.Fprintln(stdio.Err, "chroot: missing operand")
 		return command.SilentFailure()
 	}
 
 	newRoot := os.ExpandEnv(operands[0])
 	if err := syscall.Chroot(newRoot); err != nil {
-		fmt.Fprintf(stdio.Err, "chroot: cannot change root directory to '%s': %s\n",
+		_, _ = fmt.Fprintf(stdio.Err, "chroot: cannot change root directory to '%s': %s\n",
 			newRoot, reason(err))
 		return command.SilentFailure()
 	}
 
 	//----------------From here, in the prison-------------------
 	if err := os.Chdir("/"); err != nil {
-		fmt.Fprintf(stdio.Err, "chroot: cannot change root directory to '%s': %s\n",
+		_, _ = fmt.Fprintf(stdio.Err, "chroot: cannot change root directory to '%s': %s\n",
 			newRoot, reason(err))
 		return command.SilentFailure()
 	}
@@ -61,7 +61,7 @@ func (c *Command) Run(_ context.Context, stdio command.IO, args []string) error 
 	name, argv := decideExecCommand(operands[1:])
 	// Reset the environment variable SHELL for the jail environment.
 	if err := os.Setenv("SHELL", name); err != nil {
-		fmt.Fprintf(stdio.Err, "chroot: %v\n", err)
+		_, _ = fmt.Fprintf(stdio.Err, "chroot: %v\n", err)
 		return command.SilentFailure()
 	}
 
@@ -77,7 +77,7 @@ func (c *Command) Run(_ context.Context, stdio command.IO, args []string) error 
 	cmd.Env = os.Environ()
 
 	if err := cmd.Run(); err != nil {
-		fmt.Fprintf(stdio.Err, "chroot: %v\n", err)
+		_, _ = fmt.Fprintf(stdio.Err, "chroot: %v\n", err)
 		return command.SilentFailure()
 	}
 	return nil

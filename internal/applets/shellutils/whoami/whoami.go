@@ -33,15 +33,15 @@ func (c *Command) Run(_ context.Context, stdio command.IO, args []string) error 
 	}
 
 	if operands := fs.Args(); len(operands) > 0 {
-		fmt.Fprintf(stdio.Err, "whoami: extra operand '%s'\n", operands[0])
+		_, _ = fmt.Fprintf(stdio.Err, "whoami: extra operand '%s'\n", operands[0])
 		return command.SilentFailure()
 	}
 
 	u, err := user.Current()
 	if err != nil {
-		fmt.Fprintf(stdio.Err, "whoami: %v\n", err)
+		_, _ = fmt.Fprintf(stdio.Err, "whoami: %v\n", err)
 		return command.SilentFailure()
 	}
-	fmt.Fprintln(stdio.Out, u.Username)
+	_, _ = fmt.Fprintln(stdio.Out, u.Username)
 	return nil
 }

@@ -61,7 +61,7 @@ func (c *Command) Run(_ context.Context, stdio command.IO, args []string) error 
 	// output regardless of the other file-oriented options.
 	if len(files) == 0 || (len(files) == 1 && files[0] == "-") {
 		if err := streamStdio(stdio, opts); err != nil {
-			fmt.Fprintf(stdio.Err, "gzip: %v\n", err)
+			_, _ = fmt.Fprintf(stdio.Err, "gzip: %v\n", err)
 			return command.SilentFailure()
 		}
 		return nil
@@ -86,13 +86,13 @@ func processFiles(stdio command.IO, files []string, opts options) error {
 	for _, name := range files {
 		if name == "-" {
 			if err := streamStdio(stdio, opts); err != nil {
-				fmt.Fprintf(stdio.Err, "gzip: %v\n", err)
+				_, _ = fmt.Fprintf(stdio.Err, "gzip: %v\n", err)
 				firstErr = keepErr(firstErr)
 			}
 			continue
 		}
 		if err := processFile(stdio, name, opts); err != nil {
-			fmt.Fprintf(stdio.Err, "gzip: %s\n", command.FileError(name, err))
+			_, _ = fmt.Fprintf(stdio.Err, "gzip: %s\n", command.FileError(name, err))
 			firstErr = keepErr(firstErr)
 		}
 	}
@@ -114,7 +114,7 @@ func compressFile(stdio command.IO, name string, opts options) error {
 	if err != nil {
 		return err
 	}
-	defer src.Close()
+	defer func() { _ = src.Close() }()
 
 	if opts.stdout {
 		return compressStream(src, stdio.Out)
@@ -146,7 +146,7 @@ func decompressFile(stdio command.IO, name string, opts options) error {
 	if err != nil {
 		return err
 	}
-	defer src.Close()
+	defer func() { _ = src.Close() }()
 
 	if opts.stdout {
 		return decompressStream(src, stdio.Out)
@@ -204,7 +204,7 @@ func decompressStream(r io.Reader, w io.Writer) error {
 	if err != nil {
 		return err
 	}
-	defer gr.Close()
+	defer func() { _ = gr.Close() }()
 	_, err = io.Copy(w, gr) //nolint:gosec // decompressing a user-supplied file is the whole point
 	return err
 }

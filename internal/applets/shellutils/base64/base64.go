@@ -41,14 +41,14 @@ func (c *Command) Run(_ context.Context, stdio command.IO, args []string) error 
 	name := operand(fs.Args())
 	r, err := command.Open(stdio, name)
 	if err != nil {
-		fmt.Fprintf(stdio.Err, "base64: %s\n", command.FileError(name, err))
+		_, _ = fmt.Fprintf(stdio.Err, "base64: %s\n", command.FileError(name, err))
 		return command.SilentFailure()
 	}
 	defer func() { _ = r.Close() }()
 
 	input, err := io.ReadAll(r)
 	if err != nil {
-		fmt.Fprintf(stdio.Err, "base64: %s\n", command.FileError(name, err))
+		_, _ = fmt.Fprintf(stdio.Err, "base64: %s\n", command.FileError(name, err))
 		return command.SilentFailure()
 	}
 
@@ -94,7 +94,7 @@ func (c *Command) decode(stdio command.IO, input []byte, ignoreGarbage bool) err
 
 	decoded, err := stdbase64.StdEncoding.DecodeString(s)
 	if err != nil {
-		fmt.Fprintln(stdio.Err, "base64: invalid input")
+		_, _ = fmt.Fprintln(stdio.Err, "base64: invalid input")
 		return command.SilentFailure()
 	}
 	if _, err := stdio.Out.Write(decoded); err != nil {

@@ -39,12 +39,12 @@ func (c *Command) Run(_ context.Context, stdio command.IO, args []string) error 
 
 	// At most one of -u, -g, -G may be specified at a time.
 	if boolCount(*userOnly, *groupOnly, *allGroups) > 1 {
-		fmt.Fprintln(stdio.Err, "id: cannot print \"only\" of more than one choice")
+		_, _ = fmt.Fprintln(stdio.Err, "id: cannot print \"only\" of more than one choice")
 		return command.SilentFailure()
 	}
 	// -n and -r are only meaningful together with -u, -g or -G.
-	if (*name || *real) && !(*userOnly || *groupOnly || *allGroups) {
-		fmt.Fprintln(stdio.Err, "id: cannot print only names or real IDs in default format")
+	if (*name || *real) && !*userOnly && !*groupOnly && !*allGroups {
+		_, _ = fmt.Fprintln(stdio.Err, "id: cannot print only names or real IDs in default format")
 		return command.SilentFailure()
 	}
 
@@ -71,18 +71,18 @@ func resolveUser(stdio command.IO, operands []string) (*user.User, error) {
 	if len(operands) == 0 {
 		u, err := user.Current()
 		if err != nil {
-			fmt.Fprintf(stdio.Err, "id: %v\n", err)
+			_, _ = fmt.Fprintf(stdio.Err, "id: %v\n", err)
 			return nil, command.SilentFailure()
 		}
 		return u, nil
 	}
 	if len(operands) > 1 {
-		fmt.Fprintf(stdio.Err, "id: extra operand '%s'\n", operands[1])
+		_, _ = fmt.Fprintf(stdio.Err, "id: extra operand '%s'\n", operands[1])
 		return nil, command.SilentFailure()
 	}
 	u, err := user.Lookup(operands[0])
 	if err != nil {
-		fmt.Fprintf(stdio.Err, "id: '%s': no such user\n", operands[0])
+		_, _ = fmt.Fprintf(stdio.Err, "id: '%s': no such user\n", operands[0])
 		return nil, command.SilentFailure()
 	}
 	return u, nil
@@ -92,10 +92,10 @@ func resolveUser(stdio command.IO, operands []string) (*user.User, error) {
 // for a looked-up user) or, with showName, the user name.
 func dumpUID(stdio command.IO, u *user.User, showName, _ bool) error {
 	if showName {
-		fmt.Fprintln(stdio.Out, u.Username)
+		_, _ = fmt.Fprintln(stdio.Out, u.Username)
 		return nil
 	}
-	fmt.Fprintln(stdio.Out, u.Uid)
+	_, _ = fmt.Fprintln(stdio.Out, u.Uid)
 	return nil
 }
 
@@ -104,13 +104,13 @@ func dumpGID(stdio command.IO, u *user.User, showName, _ bool) error {
 	if showName {
 		g, err := user.LookupGroupId(u.Gid)
 		if err != nil {
-			fmt.Fprintf(stdio.Err, "id: %v\n", err)
+			_, _ = fmt.Fprintf(stdio.Err, "id: %v\n", err)
 			return command.SilentFailure()
 		}
-		fmt.Fprintln(stdio.Out, g.Name)
+		_, _ = fmt.Fprintln(stdio.Out, g.Name)
 		return nil
 	}
-	fmt.Fprintln(stdio.Out, u.Gid)
+	_, _ = fmt.Fprintln(stdio.Out, u.Gid)
 	return nil
 }
 
@@ -118,7 +118,7 @@ func dumpGID(stdio command.IO, u *user.User, showName, _ bool) error {
 func dumpGroups(stdio command.IO, u *user.User, showName bool) error {
 	groups, err := lookupGroups(u)
 	if err != nil {
-		fmt.Fprintf(stdio.Err, "id: %v\n", err)
+		_, _ = fmt.Fprintf(stdio.Err, "id: %v\n", err)
 		return command.SilentFailure()
 	}
 	parts := make([]string, 0, len(groups))
@@ -129,7 +129,7 @@ func dumpGroups(stdio command.IO, u *user.User, showName bool) error {
 			parts = append(parts, g.Gid)
 		}
 	}
-	fmt.Fprintln(stdio.Out, strings.Join(parts, " "))
+	_, _ = fmt.Fprintln(stdio.Out, strings.Join(parts, " "))
 	return nil
 }
 
@@ -138,23 +138,23 @@ func dumpGroups(stdio command.IO, u *user.User, showName bool) error {
 func dumpAll(stdio command.IO, u *user.User) error {
 	primary, err := user.LookupGroupId(u.Gid)
 	if err != nil {
-		fmt.Fprintf(stdio.Err, "id: %v\n", err)
+		_, _ = fmt.Fprintf(stdio.Err, "id: %v\n", err)
 		return command.SilentFailure()
 	}
 	groups, err := lookupGroups(u)
 	if err != nil {
-		fmt.Fprintf(stdio.Err, "id: %v\n", err)
+		_, _ = fmt.Fprintf(stdio.Err, "id: %v\n", err)
 		return command.SilentFailure()
 	}
 
 	var b strings.Builder
-	fmt.Fprintf(&b, "uid=%s(%s) gid=%s(%s) groups=", u.Uid, u.Username, u.Gid, primary.Name)
+	_, _ = fmt.Fprintf(&b, "uid=%s(%s) gid=%s(%s) groups=", u.Uid, u.Username, u.Gid, primary.Name)
 	parts := make([]string, 0, len(groups))
 	for _, g := range groups {
 		parts = append(parts, g.Gid+"("+g.Name+")")
 	}
 	b.WriteString(strings.Join(parts, ","))
-	fmt.Fprintln(stdio.Out, b.String())
+	_, _ = fmt.Fprintln(stdio.Out, b.String())
 	return nil
 }
 

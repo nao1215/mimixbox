@@ -36,15 +36,15 @@ func (c *Command) Run(_ context.Context, stdio command.IO, args []string) error 
 
 	dir, err := workingDir(*physical && !*logical)
 	if err != nil {
-		fmt.Fprintf(stdio.Err, "pwd: %v\n", err)
+		_, _ = fmt.Fprintf(stdio.Err, "pwd: %v\n", err)
 		return command.SilentFailure()
 	}
-	fmt.Fprintln(stdio.Out, dir)
+	_, _ = fmt.Fprintln(stdio.Out, dir)
 	return nil
 }
 
 // workingDir returns the current working directory. By default (logical) it
-// honours $PWD when it names the current directory; with physical true it
+// honors $PWD when it names the current directory; with physical true it
 // resolves all symbolic links to an absolute canonical path.
 func workingDir(physical bool) (string, error) {
 	if physical {

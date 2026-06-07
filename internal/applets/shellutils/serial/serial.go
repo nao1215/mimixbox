@@ -63,15 +63,15 @@ func (c *Command) Run(_ context.Context, stdio command.IO, args []string) error 
 
 	operands := fs.Args()
 	if len(operands) == 0 {
-		fmt.Fprintln(stdio.Err, "serial: missing operand")
+		_, _ = fmt.Fprintln(stdio.Err, "serial: missing operand")
 		return command.SilentFailure()
 	}
 	if len(operands) != 1 {
-		fmt.Fprintf(stdio.Err, "serial: extra operand '%s'\n", operands[1])
+		_, _ = fmt.Fprintf(stdio.Err, "serial: extra operand '%s'\n", operands[1])
 		return command.SilentFailure()
 	}
 	if opts.name != "" && strings.HasSuffix(opts.name, "/") {
-		fmt.Fprintf(stdio.Err, "serial: invalid --name '%s' (must include a file name)\n", opts.name)
+		_, _ = fmt.Fprintf(stdio.Err, "serial: invalid --name '%s' (must include a file name)\n", opts.name)
 		return command.SilentFailure()
 	}
 
@@ -104,12 +104,12 @@ func (c *Command) Run(_ context.Context, stdio command.IO, args []string) error 
 
 func rename(stdio command.IO, newFileNames map[string]string, dryRun bool) error {
 	for _, org := range sortedKeys(newFileNames) {
-		fmt.Fprintf(stdio.Out, "Rename %s to %s\n", org, newFileNames[org])
+		_, _ = fmt.Fprintf(stdio.Out, "Rename %s to %s\n", org, newFileNames[org])
 		if dryRun {
 			continue
 		}
 		if err := os.Rename(org, newFileNames[org]); err != nil {
-			fmt.Fprintf(stdio.Err, "Can't rename %s to %s\n", org, newFileNames[org])
+			_, _ = fmt.Fprintf(stdio.Err, "Can't rename %s to %s\n", org, newFileNames[org])
 			return command.SilentFailure()
 		}
 	}
@@ -119,7 +119,7 @@ func rename(stdio command.IO, newFileNames map[string]string, dryRun bool) error
 func copyFiles(stdio command.IO, newFileNames map[string]string, dryRun bool) error {
 	for _, org := range sortedKeys(newFileNames) {
 		dest := newFileNames[org]
-		fmt.Fprintf(stdio.Out, "Copy %s to %s\n", org, dest)
+		_, _ = fmt.Fprintf(stdio.Out, "Copy %s to %s\n", org, dest)
 		if dryRun {
 			continue
 		}
@@ -135,13 +135,13 @@ func copyFiles(stdio command.IO, newFileNames map[string]string, dryRun bool) er
 		// delete it before copy the file.
 		if exists(dest) {
 			if err := os.Remove(dest); err != nil {
-				fmt.Fprintf(stdio.Err, "Can't copy %s to %s\n", org, dest)
+				_, _ = fmt.Fprintf(stdio.Err, "Can't copy %s to %s\n", org, dest)
 				return command.SilentFailure()
 			}
 		}
 
 		if err := os.Link(org, dest); err != nil {
-			fmt.Fprintf(stdio.Err, "Can't copy %s to %s\n", org, dest)
+			_, _ = fmt.Fprintf(stdio.Err, "Can't copy %s to %s\n", org, dest)
 			return command.SilentFailure()
 		}
 	}

@@ -44,7 +44,7 @@ func (c *Command) Run(_ context.Context, stdio command.IO, args []string) error 
 
 	operands := fs.Args()
 	if len(operands) == 0 {
-		fmt.Fprintf(stdio.Err, "%s: missing file operand\n", c.Name())
+		_, _ = fmt.Fprintf(stdio.Err, "%s: missing file operand\n", c.Name())
 		return command.SilentFailure()
 	}
 
@@ -86,7 +86,7 @@ func (c *Command) run(stdio command.IO, operands []string, opts options) error {
 		return c.link(stdio, operands[0], operands[1], opts)
 	}
 
-	fmt.Fprintf(stdio.Err, "%s: target '%s' is not a directory\n", c.Name(), last)
+	_, _ = fmt.Fprintf(stdio.Err, "%s: target '%s' is not a directory\n", c.Name(), last)
 	return command.SilentFailure()
 }
 
@@ -95,28 +95,28 @@ func (c *Command) run(stdio command.IO, operands []string, opts options) error {
 func (c *Command) link(stdio command.IO, target, linkName string, opts options) error {
 	if opts.force {
 		if err := removeExisting(linkName); err != nil {
-			fmt.Fprintf(stdio.Err, "%s: cannot remove '%s': %s\n", c.Name(), linkName, reason(err))
+			_, _ = fmt.Fprintf(stdio.Err, "%s: cannot remove '%s': %s\n", c.Name(), linkName, reason(err))
 			return command.SilentFailure()
 		}
 	}
 
 	if opts.symbolic {
 		if err := os.Symlink(target, linkName); err != nil {
-			fmt.Fprintf(stdio.Err, "%s: failed to create symbolic link '%s': %s\n", c.Name(), linkName, reason(err))
+			_, _ = fmt.Fprintf(stdio.Err, "%s: failed to create symbolic link '%s': %s\n", c.Name(), linkName, reason(err))
 			return command.SilentFailure()
 		}
 	} else {
 		if err := os.Link(target, linkName); err != nil {
-			fmt.Fprintf(stdio.Err, "%s: failed to create hard link '%s': %s\n", c.Name(), linkName, reason(err))
+			_, _ = fmt.Fprintf(stdio.Err, "%s: failed to create hard link '%s': %s\n", c.Name(), linkName, reason(err))
 			return command.SilentFailure()
 		}
 	}
 
 	if opts.verbose {
 		if opts.symbolic {
-			fmt.Fprintf(stdio.Out, "'%s' -> '%s'\n", linkName, target)
+			_, _ = fmt.Fprintf(stdio.Out, "'%s' -> '%s'\n", linkName, target)
 		} else {
-			fmt.Fprintf(stdio.Out, "'%s' => '%s'\n", linkName, target)
+			_, _ = fmt.Fprintf(stdio.Out, "'%s' => '%s'\n", linkName, target)
 		}
 	}
 	return nil

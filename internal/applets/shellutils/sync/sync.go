@@ -33,7 +33,7 @@ func (c *Command) Run(_ context.Context, stdio command.IO, args []string) error 
 	}
 
 	if err := sync(); err != nil {
-		fmt.Fprintf(stdio.Err, "sync: %v\n", err)
+		_, _ = fmt.Fprintf(stdio.Err, "sync: %v\n", err)
 		return command.SilentFailure()
 	}
 	return nil

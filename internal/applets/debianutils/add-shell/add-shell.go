@@ -55,12 +55,12 @@ func (c *Command) Run(_ context.Context, stdio command.IO, args []string) error 
 
 	shells := fs.Args()
 	if len(shells) == 0 {
-		fmt.Fprintf(stdio.Err, "%s: shellname [shellname ...]\n", c.Name())
+		_, _ = fmt.Fprintf(stdio.Err, "%s: shellname [shellname ...]\n", c.Name())
 		return command.SilentFailure()
 	}
 
 	if err := addShells(shellsPath, shells); err != nil {
-		fmt.Fprintf(stdio.Err, "%s: %v\n", c.Name(), err)
+		_, _ = fmt.Fprintf(stdio.Err, "%s: %v\n", c.Name(), err)
 		return command.SilentFailure()
 	}
 	return nil
@@ -95,14 +95,14 @@ func addShells(path string, shells []string) error {
 	if err != nil {
 		return err
 	}
-	defer f.Close()
 
 	for _, s := range toAdd {
 		if _, err := fmt.Fprintln(f, s); err != nil {
+			_ = f.Close()
 			return err
 		}
 	}
-	return nil
+	return f.Close()
 }
 
 // readShells returns the non-empty, whitespace-trimmed lines of the file at
@@ -116,7 +116,7 @@ func readShells(path string) ([]string, error) {
 		}
 		return nil, err
 	}
-	defer f.Close()
+	defer func() { _ = f.Close() }()
 
 	var lines []string
 	sc := bufio.NewScanner(f)

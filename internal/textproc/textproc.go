@@ -1,6 +1,6 @@
 // Package textproc holds the pure text-processing logic shared by the text
 // applets (cat, tac, nl, head, tail, wc). Everything here works on io.Reader /
-// io.Writer or plain values and never touches the process, so each behaviour is
+// io.Writer or plain values and never touches the process, so each behavior is
 // covered by an ordinary in-memory unit test and the applet packages stay thin.
 package textproc
 

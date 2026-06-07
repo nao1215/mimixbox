@@ -20,7 +20,7 @@ func (c *Command) Name() string { return "false" }
 func (c *Command) Synopsis() string { return "Do nothing. Return unsuccess(1)" }
 
 // Run always fails with exit status 1. Like GNU false it ignores its operands,
-// except that a leading --help or --version is honoured and exits successfully.
+// except that a leading --help or --version is honored and exits successfully.
 func (c *Command) Run(_ context.Context, stdio command.IO, args []string) error {
 	if len(args) > 0 {
 		switch args[0] {

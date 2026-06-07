@@ -187,7 +187,7 @@ func TestHelp(t *testing.T) {
 	}
 }
 
-// TestDifferentHash confirms the constructor is honoured: a sha256-backed
+// TestDifferentHash confirms the constructor is honored: a sha256-backed
 // command produces the sha256 digest, not md5.
 func TestDifferentHash(t *testing.T) {
 	t.Parallel()

@@ -94,7 +94,7 @@ func (c *Command) Run(_ context.Context, stdio command.IO, args []string) error 
 
 	files := fs.Args()
 	if len(files) == 0 {
-		fmt.Fprintf(stdio.Err, "fakemovie: missing operand\n")
+		_, _ = fmt.Fprintf(stdio.Err, "fakemovie: missing operand\n")
 		return command.SilentFailure()
 	}
 
@@ -107,7 +107,7 @@ func (c *Command) Run(_ context.Context, stdio command.IO, args []string) error 
 	var firstErr error
 	for _, name := range files {
 		if err := processFile(name, opts); err != nil {
-			fmt.Fprintf(stdio.Err, "fakemovie: %s\n", command.FileError(name, err))
+			_, _ = fmt.Fprintf(stdio.Err, "fakemovie: %s\n", command.FileError(name, err))
 			firstErr = keep(firstErr)
 		}
 	}

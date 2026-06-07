@@ -93,7 +93,7 @@ func render(message string) string {
 }
 
 // wrap breaks src into lines of at most column bytes, joined by newlines. It
-// reproduces the behaviour of the original implementation's WrapString.
+// reproduces the behavior of the original implementation's WrapString.
 func wrap(src string, column int) string {
 	if column <= 0 {
 		return src

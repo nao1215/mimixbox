@@ -32,7 +32,7 @@ func (c *Command) Synopsis() string { return "Formats and print data" }
 // are exhausted, matching GNU printf.
 func (c *Command) Run(_ context.Context, stdio command.IO, args []string) error {
 	if len(args) == 0 {
-		fmt.Fprintln(stdio.Err, "printf: missing operand")
+		_, _ = fmt.Fprintln(stdio.Err, "printf: missing operand")
 		return command.SilentFailure()
 	}
 
@@ -101,7 +101,7 @@ func format2(b *strings.Builder, format string, operands []string) int {
 
 // formatEscape interprets a backslash escape in the FORMAT string. s is the text
 // after the backslash. It returns the number of bytes consumed from s (0 when
-// the escape is not recognised, so the caller can emit a literal backslash).
+// the escape is not recognized, so the caller can emit a literal backslash).
 func formatEscape(b *strings.Builder, s string) int {
 	if len(s) == 0 {
 		return 0
@@ -176,7 +176,7 @@ func conversion(b *strings.Builder, s string, next func() string) int {
 		b.WriteByte('%')
 		return end
 	case 's':
-		fmt.Fprintf(b, spec+"s", next())
+		_, _ = fmt.Fprintf(b, spec+"s", next())
 		return end
 	case 'b':
 		// %b: like %s but interpret backslash escapes in the argument.
@@ -191,19 +191,19 @@ func conversion(b *strings.Builder, s string, next func() string) int {
 		b.WriteByte(arg[0])
 		return end
 	case 'd', 'i':
-		fmt.Fprintf(b, spec+"d", toInt(next()))
+		_, _ = fmt.Fprintf(b, spec+"d", toInt(next()))
 		return end
 	case 'u':
-		fmt.Fprintf(b, spec+"d", toUint(next()))
+		_, _ = fmt.Fprintf(b, spec+"d", toUint(next()))
 		return end
 	case 'o':
-		fmt.Fprintf(b, spec+"o", toUint(next()))
+		_, _ = fmt.Fprintf(b, spec+"o", toUint(next()))
 		return end
 	case 'x':
-		fmt.Fprintf(b, spec+"x", toUint(next()))
+		_, _ = fmt.Fprintf(b, spec+"x", toUint(next()))
 		return end
 	case 'X':
-		fmt.Fprintf(b, spec+"X", toUint(next()))
+		_, _ = fmt.Fprintf(b, spec+"X", toUint(next()))
 		return end
 	default:
 		// Unknown verb: emit the specification literally.

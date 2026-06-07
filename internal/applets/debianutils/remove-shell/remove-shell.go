@@ -55,12 +55,12 @@ func (c *Command) Run(_ context.Context, stdio command.IO, args []string) error 
 
 	shells := fs.Args()
 	if len(shells) == 0 {
-		fmt.Fprintf(stdio.Err, "%s: shellname [shellname ...]\n", c.Name())
+		_, _ = fmt.Fprintf(stdio.Err, "%s: shellname [shellname ...]\n", c.Name())
 		return command.SilentFailure()
 	}
 
 	if err := removeShells(shellsPath, shells); err != nil {
-		fmt.Fprintf(stdio.Err, "%s: %v\n", c.Name(), err)
+		_, _ = fmt.Fprintf(stdio.Err, "%s: %v\n", c.Name(), err)
 		return command.SilentFailure()
 	}
 	return nil
@@ -68,7 +68,7 @@ func (c *Command) Run(_ context.Context, stdio command.IO, args []string) error 
 
 // removeShells drops every named shell from the file at path and rewrites it
 // with the remaining lines (in their original order).
-func removeShells(path string, shells []string) error {
+func removeShells(path string, shells []string) (err error) {
 	lines, err := readShells(path)
 	if err != nil {
 		return err
@@ -91,11 +91,15 @@ func removeShells(path string, shells []string) error {
 	if err != nil {
 		return err
 	}
-	defer f.Close()
+	defer func() {
+		if cerr := f.Close(); cerr != nil && err == nil {
+			err = cerr
+		}
+	}()
 
 	for _, line := range kept {
-		if _, err := fmt.Fprintln(f, line); err != nil {
-			return err
+		if _, werr := fmt.Fprintln(f, line); werr != nil {
+			return werr
 		}
 	}
 	return nil
@@ -111,7 +115,7 @@ func readShells(path string) ([]string, error) {
 		}
 		return nil, err
 	}
-	defer f.Close()
+	defer func() { _ = f.Close() }()
 
 	var lines []string
 	sc := bufio.NewScanner(f)

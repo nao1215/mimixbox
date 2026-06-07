@@ -101,11 +101,11 @@ type GitHubReleaseData struct {
 	CreatedAt       time.Time `json:"created_at"`
 	PublishedAt     time.Time `json:"published_at"`
 	Assets          []struct {
-		URL      string      `json:"url"`
-		ID       int         `json:"id"`
-		NodeID   string      `json:"node_id"`
-		Name     string      `json:"name"`
-		Label    interface{} `json:"label"`
+		URL      string `json:"url"`
+		ID       int    `json:"id"`
+		NodeID   string `json:"node_id"`
+		Name     string `json:"name"`
+		Label    any    `json:"label"`
 		Uploader struct {
 			Login             string `json:"login"`
 			ID                int    `json:"id"`
@@ -152,15 +152,15 @@ func (c *Command) Run(ctx context.Context, stdio command.IO, args []string) erro
 
 	operands := fs.Args()
 	if len(operands) != 1 {
-		fmt.Fprintf(stdio.Err, "%s: missing operand: specify USER/REPOSITORY\n", c.Name())
-		fmt.Fprintf(stdio.Err, "Try '%s --help' for more information.\n", c.Name())
+		_, _ = fmt.Fprintf(stdio.Err, "%s: missing operand: specify USER/REPOSITORY\n", c.Name())
+		_, _ = fmt.Fprintf(stdio.Err, "Try '%s --help' for more information.\n", c.Name())
 		return command.SilentFailure()
 	}
 	repository := operands[0]
 
 	data, err := fetchGitHubReleaseData(ctx, repository)
 	if err != nil {
-		fmt.Fprintf(stdio.Err, "%s: %v\n", c.Name(), err)
+		_, _ = fmt.Fprintf(stdio.Err, "%s: %v\n", c.Name(), err)
 		return command.SilentFailure()
 	}
 	if len(data) == 0 {
@@ -169,7 +169,7 @@ func (c *Command) Run(ctx context.Context, stdio command.IO, args []string) erro
 		// There is the method to use the following library for API authentication.
 		// (However, no plans to add functions).
 		// URL: https://github.com/google/go-github
-		fmt.Fprintf(stdio.Err, "%s: Release Data is nothing. If %s is organization repository,\n"+
+		_, _ = fmt.Fprintf(stdio.Err, "%s: Release Data is nothing. If %s is organization repository,\n"+
 			"gdrdc commant can't get release data.\n", c.Name(), repository)
 		return command.SilentFailure()
 	}
@@ -190,10 +190,10 @@ func render(w io.Writer, data []GitHubReleaseData, opts options) {
 		totalBinCnt += binCnt
 
 		if !opts.total {
-			fmt.Fprintf(w, "[Name(Version)]             :%s\n", d.Name)
-			fmt.Fprintf(w, "[Release Date]              :%s\n", d.PublishedAt)
-			fmt.Fprintf(w, "[Binary Download Count]     :%d\n", binCnt)
-			fmt.Fprintf(w, "[Source Code Download Count]:%d\n", srcCnt)
+			_, _ = fmt.Fprintf(w, "[Name(Version)]             :%s\n", d.Name)
+			_, _ = fmt.Fprintf(w, "[Release Date]              :%s\n", d.PublishedAt)
+			_, _ = fmt.Fprintf(w, "[Binary Download Count]     :%d\n", binCnt)
+			_, _ = fmt.Fprintf(w, "[Source Code Download Count]:%d\n", srcCnt)
 		}
 		// In the default case, the latest result is displayed.
 		if !opts.all && !opts.total {
@@ -202,15 +202,15 @@ func render(w io.Writer, data []GitHubReleaseData, opts options) {
 
 		// Adjust line feed between results. If last result, not add line feed.
 		if (i+1) != len(data) && !opts.total {
-			fmt.Fprintln(w, "")
+			_, _ = fmt.Fprintln(w, "")
 		}
 	}
 
 	if opts.total {
-		fmt.Fprintf(w, "[Name(Version)]                    :All release\n")
-		fmt.Fprintf(w, "[Release Date]                     :-\n")
-		fmt.Fprintf(w, "[Binary Download Count(total)]     :%d\n", totalBinCnt)
-		fmt.Fprintf(w, "[Source Code Download Count(total)]:%d\n", totalSrcCnt)
+		_, _ = fmt.Fprintf(w, "[Name(Version)]                    :All release\n")
+		_, _ = fmt.Fprintf(w, "[Release Date]                     :-\n")
+		_, _ = fmt.Fprintf(w, "[Binary Download Count(total)]     :%d\n", totalBinCnt)
+		_, _ = fmt.Fprintf(w, "[Source Code Download Count(total)]:%d\n", totalSrcCnt)
 	}
 }
 
@@ -221,23 +221,23 @@ func fetchGitHubReleaseData(ctx context.Context, repositoryName string) ([]GitHu
 
 	req, err := http.NewRequestWithContext(ctx, http.MethodGet, endpoint, nil)
 	if err != nil {
-		return nil, fmt.Errorf("Can't build request for GitHub: %w", err)
+		return nil, fmt.Errorf("can't build request for GitHub: %w", err)
 	}
 
 	resp, err := http.DefaultClient.Do(req)
 	if err != nil {
-		return nil, fmt.Errorf("Can't get response from GitHub: %w", err)
+		return nil, fmt.Errorf("can't get response from GitHub: %w", err)
 	}
-	defer resp.Body.Close()
+	defer func() { _ = resp.Body.Close() }()
 
 	body, err := io.ReadAll(resp.Body)
 	if err != nil {
-		return nil, fmt.Errorf("Can't read response from GitHub: %w", err)
+		return nil, fmt.Errorf("can't read response from GitHub: %w", err)
 	}
 
 	var data []GitHubReleaseData
 	if err := json.Unmarshal(body, &data); err != nil {
-		return nil, fmt.Errorf("Can't convert json to structure data. Is the repository name correct?: %w", err)
+		return nil, fmt.Errorf("can't convert json to structure data. Is the repository name correct?: %w", err)
 	}
 	return data, nil
 }

@@ -48,21 +48,21 @@ func convert(stdio command.IO, files []string) error {
 	for _, file := range files {
 		target := os.ExpandEnv(file)
 		if !mb.IsFile(target) {
-			fmt.Fprintln(stdio.Err, "dos2unix: skip "+target+": not regular file")
+			_, _ = fmt.Fprintln(stdio.Err, "dos2unix: skip "+target+": not regular file")
 			failed = true
 			continue
 		}
 
 		lines, err := mb.ReadFileToStrList(target)
 		if err != nil {
-			fmt.Fprintln(stdio.Err, "dos2unix: "+target+": can't read file and convert CRLF to LF")
+			_, _ = fmt.Fprintln(stdio.Err, "dos2unix: "+target+": can't read file and convert CRLF to LF")
 			failed = true
 			continue
 		}
-		fmt.Fprintln(stdio.Out, "dos2unix: converting file "+target+" to Unix format...")
+		_, _ = fmt.Fprintln(stdio.Out, "dos2unix: converting file "+target+" to Unix format...")
 		lines = toLF(lines)
 		if err := mb.ListToFile(target, lines); err != nil {
-			fmt.Fprintln(stdio.Err, err)
+			_, _ = fmt.Fprintln(stdio.Err, err)
 			failed = true
 			continue
 		}

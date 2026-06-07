@@ -41,20 +41,20 @@ func (c *Command) Run(_ context.Context, stdio command.IO, args []string) error 
 	for _, file := range fs.Args() {
 		target := os.ExpandEnv(file)
 		if !isRegularFile(target) {
-			fmt.Fprintln(stdio.Err, c.Name()+": skip "+target+": not regular file")
+			_, _ = fmt.Fprintln(stdio.Err, c.Name()+": skip "+target+": not regular file")
 			firstErr = keep(firstErr)
 			continue
 		}
 
 		lines, readErr := readFileToStrList(target)
 		if readErr != nil {
-			fmt.Fprintln(stdio.Err, c.Name()+": "+target+": Can't read file and convert LF to CRLF")
+			_, _ = fmt.Fprintln(stdio.Err, c.Name()+": "+target+": Can't read file and convert LF to CRLF")
 			firstErr = keep(firstErr)
 			continue
 		}
-		fmt.Fprintln(stdio.Out, c.Name()+": converting file "+target+" to DOS format...")
+		_, _ = fmt.Fprintln(stdio.Out, c.Name()+": converting file "+target+" to DOS format...")
 		if writeErr := listToFile(target, toCRLF(lines)); writeErr != nil {
-			fmt.Fprintln(stdio.Err, writeErr)
+			_, _ = fmt.Fprintln(stdio.Err, writeErr)
 			firstErr = keep(firstErr)
 			continue
 		}
@@ -89,7 +89,7 @@ func readFileToStrList(path string) ([]string, error) {
 	if err != nil {
 		return nil, err
 	}
-	defer f.Close()
+	defer func() { _ = f.Close() }()
 
 	var strList []string
 	r := bufio.NewReader(f)
@@ -106,18 +106,23 @@ func readFileToStrList(path string) ([]string, error) {
 	return strList, nil
 }
 
-// listToFile writes lines to path, truncating any existing content.
-func listToFile(path string, lines []string) error {
+// listToFile writes lines to path, truncating any existing content. A failed
+// Close is reported (it can mean the written data was not flushed to disk).
+func listToFile(path string, lines []string) (err error) {
 	fp, err := os.Create(path) //nolint:gosec // operating on a user-named file is the whole point
 	if err != nil {
 		return err
 	}
-	defer fp.Close()
+	defer func() {
+		if cerr := fp.Close(); cerr != nil && err == nil {
+			err = cerr
+		}
+	}()
 
 	w := bufio.NewWriter(fp)
 	for _, line := range lines {
-		if _, err := w.WriteString(line); err != nil {
-			return err
+		if _, werr := w.WriteString(line); werr != nil {
+			return werr
 		}
 	}
 	return w.Flush()

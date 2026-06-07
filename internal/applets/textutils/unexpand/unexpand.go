@@ -64,14 +64,14 @@ func run(stdio command.IO, files []string, opts options) error {
 	for _, name := range files {
 		r, err := command.Open(stdio, name)
 		if err != nil {
-			fmt.Fprintf(stdio.Err, "unexpand: %s\n", command.FileError(name, err))
+			_, _ = fmt.Fprintf(stdio.Err, "unexpand: %s\n", command.FileError(name, err))
 			firstErr = keep(firstErr)
 			continue
 		}
 		err = unexpand(stdio.Out, r, opts)
 		_ = r.Close()
 		if err != nil {
-			fmt.Fprintf(stdio.Err, "unexpand: %s\n", command.FileError(name, err))
+			_, _ = fmt.Fprintf(stdio.Err, "unexpand: %s\n", command.FileError(name, err))
 			firstErr = keep(firstErr)
 		}
 	}

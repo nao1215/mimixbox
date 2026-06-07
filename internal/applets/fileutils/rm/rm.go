@@ -61,7 +61,7 @@ func (c *Command) Run(_ context.Context, stdio command.IO, args []string) error 
 		if opts.force {
 			return nil
 		}
-		fmt.Fprintf(stdio.Err, "rm: missing operand\n")
+		_, _ = fmt.Fprintf(stdio.Err, "rm: missing operand\n")
 		return command.SilentFailure()
 	}
 
@@ -69,7 +69,7 @@ func (c *Command) Run(_ context.Context, stdio command.IO, args []string) error 
 	in := bufio.NewReader(stdio.In)
 	for _, path := range paths {
 		if err := remove(stdio, in, path, opts); err != nil {
-			fmt.Fprintf(stdio.Err, "rm: %s\n", err.Error())
+			_, _ = fmt.Fprintf(stdio.Err, "rm: %s\n", err.Error())
 			failed = true
 		}
 	}
@@ -134,7 +134,7 @@ func confirm(stdio command.IO, in *bufio.Reader, path string, opts options) bool
 	if !opts.interactive {
 		return true
 	}
-	fmt.Fprintf(stdio.Err, "rm: remove '%s'? ", path)
+	_, _ = fmt.Fprintf(stdio.Err, "rm: remove '%s'? ", path)
 	line, err := in.ReadString('\n')
 	answer := strings.ToLower(strings.TrimSpace(line))
 	if err != nil && answer == "" {
@@ -146,6 +146,6 @@ func confirm(stdio command.IO, in *bufio.Reader, path string, opts options) bool
 // report prints a removal notice when -v is set.
 func report(stdio command.IO, path string, opts options) {
 	if opts.verbose {
-		fmt.Fprintf(stdio.Out, "removed '%s'\n", path)
+		_, _ = fmt.Fprintf(stdio.Out, "removed '%s'\n", path)
 	}
 }

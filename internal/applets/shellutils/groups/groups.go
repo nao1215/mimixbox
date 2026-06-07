@@ -44,7 +44,7 @@ func (c *Command) Run(_ context.Context, stdio command.IO, args []string) error 
 		if gerr != nil {
 			return command.Failuref("groups: %v", gerr)
 		}
-		fmt.Fprintln(stdio.Out, line)
+		_, _ = fmt.Fprintln(stdio.Out, line)
 		return nil
 	}
 
@@ -53,21 +53,21 @@ func (c *Command) Run(_ context.Context, stdio command.IO, args []string) error 
 	for _, name := range names {
 		u, uerr := user.Lookup(name)
 		if uerr != nil {
-			fmt.Fprintf(stdio.Err, "groups: '%s': no such user\n", name)
+			_, _ = fmt.Fprintf(stdio.Err, "groups: '%s': no such user\n", name)
 			failed = true
 			continue
 		}
 		line, gerr := groupNames(u)
 		if gerr != nil {
-			fmt.Fprintf(stdio.Err, "groups: '%s': %v\n", name, gerr)
+			_, _ = fmt.Fprintf(stdio.Err, "groups: '%s': %v\n", name, gerr)
 			failed = true
 			continue
 		}
 		// GNU prefixes each line with "user :" when an operand is given.
 		if len(names) > 1 {
-			fmt.Fprintf(stdio.Out, "%s : %s\n", name, line)
+			_, _ = fmt.Fprintf(stdio.Out, "%s : %s\n", name, line)
 		} else {
-			fmt.Fprintln(stdio.Out, line)
+			_, _ = fmt.Fprintln(stdio.Out, line)
 		}
 	}
 	if failed {

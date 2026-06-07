@@ -9,7 +9,7 @@ import (
 
 // Execute runs c with the given IO and arguments and returns the process exit
 // code. It is the single place that turns a command's error into an exit code
-// and a "name: message" line, so the behaviour is identical in production and
+// and a "name: message" line, so the behavior is identical in production and
 // in tests. args are the arguments after the command name (os.Args[1:]).
 func Execute(ctx context.Context, c Command, io IO, args []string) int {
 	err := c.Run(ctx, io, args)
@@ -26,12 +26,12 @@ func Execute(ctx context.Context, c Command, io IO, args []string) int {
 	var exit *ExitError
 	if errors.As(err, &exit) {
 		if exit.Err != nil {
-			fmt.Fprintf(io.Err, "%s: %s\n", c.Name(), exit.Err)
+			_, _ = fmt.Fprintf(io.Err, "%s: %s\n", c.Name(), exit.Err)
 		}
 		return exit.Code
 	}
 
-	fmt.Fprintf(io.Err, "%s: %s\n", c.Name(), err)
+	_, _ = fmt.Fprintf(io.Err, "%s: %s\n", c.Name(), err)
 	return ExitFailure
 }
 

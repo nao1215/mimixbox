@@ -94,7 +94,9 @@ func (c *Command) animate(ctx context.Context) error {
 		default:
 		}
 
-		termbox.Clear(termbox.ColorDefault, termbox.ColorDefault)
+		if err := termbox.Clear(termbox.ColorDefault, termbox.ColorDefault); err != nil {
+			return nil
+		}
 		top := (height - len(train)) / 2
 		if top < 0 {
 			top = 0

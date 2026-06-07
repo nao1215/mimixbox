@@ -44,7 +44,7 @@ func (c *Command) Run(ctx context.Context, stdio command.IO, args []string) erro
 
 	urls := fs.Args()
 	if len(urls) == 0 {
-		fmt.Fprintln(stdio.Err, "wget: missing URL")
+		_, _ = fmt.Fprintln(stdio.Err, "wget: missing URL")
 		return command.SilentFailure()
 	}
 
@@ -60,7 +60,7 @@ func download(ctx context.Context, client *http.Client, stdio command.IO, opts o
 	var firstErr error
 	for _, u := range urls {
 		if err := fetch(ctx, client, stdio, opts, u); err != nil {
-			fmt.Fprintf(stdio.Err, "wget: %s: %v\n", u, err)
+			_, _ = fmt.Fprintf(stdio.Err, "wget: %s: %v\n", u, err)
 			if firstErr == nil {
 				firstErr = command.SilentFailure()
 			}
@@ -86,14 +86,14 @@ func fetch(ctx context.Context, client *http.Client, stdio command.IO, opts opti
 	}
 
 	if !opts.quiet {
-		fmt.Fprintf(stdio.Err, "wget: connecting to %s ...\n", parsed.Host)
+		_, _ = fmt.Fprintf(stdio.Err, "wget: connecting to %s ...\n", parsed.Host)
 	}
 
 	resp, err := client.Do(req)
 	if err != nil {
 		return err
 	}
-	defer resp.Body.Close()
+	defer func() { _ = resp.Body.Close() }()
 
 	if resp.StatusCode != http.StatusOK {
 		return fmt.Errorf("server returned %s", resp.Status)
@@ -117,15 +117,15 @@ func fetch(ctx context.Context, client *http.Client, stdio command.IO, opts opti
 
 	if !opts.quiet {
 		if toStdout {
-			fmt.Fprintf(stdio.Err, "wget: %d bytes written to standard output\n", n)
+			_, _ = fmt.Fprintf(stdio.Err, "wget: %d bytes written to standard output\n", n)
 		} else {
-			fmt.Fprintf(stdio.Err, "wget: %q saved [%d]\n", dest, n)
+			_, _ = fmt.Fprintf(stdio.Err, "wget: %q saved [%d]\n", dest, n)
 		}
 	}
 	return nil
 }
 
-// destination returns the local filename for a download, honouring -O and
+// destination returns the local filename for a download, honoring -O and
 // falling back to the base name of the URL path (or "index.html").
 func destination(opts options, parsed *url.URL) string {
 	if opts.output != "" {

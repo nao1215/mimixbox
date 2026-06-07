@@ -59,11 +59,11 @@ func (c *Command) Run(_ context.Context, stdio command.IO, args []string) error 
 
 	operands := fs.Args()
 	if len(operands) == 0 {
-		fmt.Fprintf(stdio.Err, "cp: missing file operand\n")
+		_, _ = fmt.Fprintf(stdio.Err, "cp: missing file operand\n")
 		return command.SilentFailure()
 	}
 	if len(operands) == 1 {
-		fmt.Fprintf(stdio.Err, "cp: missing destination file operand after '%s'\n", operands[0])
+		_, _ = fmt.Fprintf(stdio.Err, "cp: missing destination file operand after '%s'\n", operands[0])
 		return command.SilentFailure()
 	}
 
@@ -76,33 +76,42 @@ func cp(stdio command.IO, operands []string, opts options) error {
 	dest := os.ExpandEnv(operands[len(operands)-1])
 	sources := operands[:len(operands)-1]
 
+	// With more than one source, GNU cp requires the destination to be an
+	// existing directory; otherwise each source would overwrite the last.
+	if len(sources) > 1 {
+		if di, err := os.Stat(dest); err != nil || !di.IsDir() {
+			_, _ = fmt.Fprintf(stdio.Err, "cp: target '%s' is not a directory\n", dest)
+			return command.SilentFailure()
+		}
+	}
+
 	for _, raw := range sources {
 		src := os.ExpandEnv(raw)
 
 		info, err := os.Stat(src)
 		if err != nil {
-			fmt.Fprintf(stdio.Err, "cp: %s\n", command.FileError(src, err))
+			_, _ = fmt.Fprintf(stdio.Err, "cp: %s\n", command.FileError(src, err))
 			return command.SilentFailure()
 		}
 
 		if info.IsDir() && !opts.recursive {
-			fmt.Fprintf(stdio.Err, "cp: --recursive is not specified: omitting directory: %s\n", src)
+			_, _ = fmt.Fprintf(stdio.Err, "cp: --recursive is not specified: omitting directory: %s\n", src)
 			return command.SilentFailure()
 		}
 
 		if isSamePath(src, dest) {
-			fmt.Fprintf(stdio.Err, "cp: %s and %s is same.\n", src, dest)
+			_, _ = fmt.Fprintf(stdio.Err, "cp: %s and %s is same.\n", src, dest)
 			return command.SilentFailure()
 		}
 
 		if info.IsDir() {
 			if err := cpDir(stdio, src, dest, opts); err != nil {
-				fmt.Fprintf(stdio.Err, "cp: %s\n", err)
+				_, _ = fmt.Fprintf(stdio.Err, "cp: %s\n", err)
 				return command.SilentFailure()
 			}
 		} else {
 			if err := cpFile(stdio, src, dest, info, opts); err != nil {
-				fmt.Fprintf(stdio.Err, "cp: %s\n", err)
+				_, _ = fmt.Fprintf(stdio.Err, "cp: %s\n", err)
 				return command.SilentFailure()
 			}
 		}
@@ -131,7 +140,7 @@ func cpFile(stdio command.IO, src, dest string, info os.FileInfo, opts options) 
 	}
 
 	if opts.verbose {
-		fmt.Fprintf(stdio.Out, "'%s' -> '%s'\n", src, target)
+		_, _ = fmt.Fprintf(stdio.Out, "'%s' -> '%s'\n", src, target)
 	}
 	return nil
 }
@@ -142,6 +151,12 @@ func cpDir(stdio command.IO, src, dest string, opts options) error {
 	root := dest
 	if di, err := os.Stat(dest); err == nil && di.IsDir() {
 		root = filepath.Join(dest, filepath.Base(src))
+	}
+
+	// Refuse to copy a directory into itself or one of its own descendants;
+	// filepath.Walk would otherwise recurse into the growing destination.
+	if isSubpath(root, src) {
+		return fmt.Errorf("cannot copy a directory, '%s', into itself, '%s'", src, root)
 	}
 
 	return filepath.Walk(src, func(p string, info os.FileInfo, err error) error {
@@ -168,20 +183,34 @@ func cpDir(stdio command.IO, src, dest string, opts options) error {
 			return err
 		}
 		if opts.verbose {
-			fmt.Fprintf(stdio.Out, "'%s' -> '%s'\n", p, target)
+			_, _ = fmt.Fprintf(stdio.Out, "'%s' -> '%s'\n", p, target)
 		}
 		return nil
 	})
 }
 
-// copyFileContents writes src's contents to dst, honouring -p (mode and
+// isSubpath reports whether path is base itself or a descendant of base, after
+// resolving both to absolute, cleaned paths.
+func isSubpath(path, base string) bool {
+	pAbs, err1 := filepath.Abs(path)
+	bAbs, err2 := filepath.Abs(base)
+	if err1 != nil || err2 != nil {
+		return false
+	}
+	if pAbs == bAbs {
+		return true
+	}
+	return strings.HasPrefix(pAbs, bAbs+string(os.PathSeparator))
+}
+
+// copyFileContents writes src's contents to dst, honoring -p (mode and
 // timestamps).
 func copyFileContents(src, dst string, info os.FileInfo, opts options) error {
 	in, err := os.Open(src) //nolint:gosec // operating on a user-named file is the whole point
 	if err != nil {
 		return err
 	}
-	defer in.Close()
+	defer func() { _ = in.Close() }()
 
 	mode := os.FileMode(0644)
 	if opts.preserve {
@@ -224,7 +253,7 @@ func isSamePath(src, dest string) bool {
 // question asks the user a yes/no prompt on stdio.Out and reads the answer from
 // stdio.In, returning true for an affirmative reply.
 func question(stdio command.IO, prompt string) bool {
-	fmt.Fprint(stdio.Out, prompt)
+	_, _ = fmt.Fprint(stdio.Out, prompt)
 	scanner := bufio.NewScanner(stdio.In)
 	if !scanner.Scan() {
 		return false

@@ -24,7 +24,7 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 ### Changed
 
 - Migrated **all** applets to the new framework with GNU coreutils option
-  behaviour: every applet now implements `command.Command`, takes its I/O as
+  behavior: every applet now implements `command.Command`, takes its I/O as
   injected streams, parses flags with pflag, and is covered by unit tests.
   Interactive commands (`rm -i`, `cp -i`, `mv -i`, `sddf`, `mbsh`) read from the
   injected input; network commands (`wget`, `ghrdc`) are tested with `httptest`;

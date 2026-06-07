@@ -24,7 +24,7 @@ func (c *Command) Synopsis() string { return "Pause for NUMBER seconds(minutes, 
 
 // Run executes sleep. Each operand is a number with an optional suffix:
 // s (seconds, the default), m (minutes), h (hours) or d (days). The command
-// sleeps for the sum of all operands, and the sleep is cancelled if ctx is
+// sleeps for the sum of all operands, and the sleep is canceled if ctx is
 // done.
 func (c *Command) Run(ctx context.Context, stdio command.IO, args []string) error {
 	fs := command.NewFlagSet(c.Name(), "NUMBER[smhd]...", stdio.Err)
@@ -36,13 +36,13 @@ func (c *Command) Run(ctx context.Context, stdio command.IO, args []string) erro
 
 	operands := fs.Args()
 	if len(operands) == 0 {
-		fmt.Fprintln(stdio.Err, "sleep: missing operand")
+		_, _ = fmt.Fprintln(stdio.Err, "sleep: missing operand")
 		return command.SilentFailure()
 	}
 
 	d, err := parseDuration(operands)
 	if err != nil {
-		fmt.Fprintf(stdio.Err, "sleep: invalid time interval '%s'\n", err.Error())
+		_, _ = fmt.Fprintf(stdio.Err, "sleep: invalid time interval '%s'\n", err.Error())
 		return command.SilentFailure()
 	}
 
