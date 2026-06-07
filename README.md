@@ -1,26 +1,24 @@
-<div align="center">
 <!-- ALL-CONTRIBUTORS-BADGE:START - Do not remove or modify this section -->
 [![All Contributors](https://img.shields.io/badge/all_contributors-3-orange.svg?style=flat-square)](#contributors-)
 <!-- ALL-CONTRIBUTORS-BADGE:END -->
-<img src="https://github.com/nao1215/mimixbox/blob/main/docs/images/logo.jpg" width="100">
-</div>
-
+![Coverage](https://raw.githubusercontent.com/nao1215/octocovs-central-repo/main/badges/nao1215/mimixbox/coverage.svg)
 [![Build](https://github.com/nao1215/mimixbox/actions/workflows/build.yml/badge.svg?branch=main)](https://github.com/nao1215/mimixbox/actions/workflows/build.yml)
 [![UnitTest](https://github.com/nao1215/mimixbox/actions/workflows/unit_test.yml/badge.svg?branch=main&event=push)](https://github.com/nao1215/mimixbox/actions/workflows/unit_test.yml)
 [![IntegrationTest](https://github.com/nao1215/mimixbox/actions/workflows/integration_test.yml/badge.svg?event=push)](https://github.com/nao1215/mimixbox/actions/workflows/integration_test.yml)
 ![GitHub](https://img.shields.io/github/license/nao1215/mimixbox)
 ![GitHub all releases](https://img.shields.io/github/downloads/nao1215/mimixbox/total)
-![Lines of code](https://img.shields.io/tokei/lines/github/nao1215/mimixbox?style=plastic)
-[![Support me on Patreon](https://img.shields.io/endpoint.svg?url=https%3A%2F%2Fshieldsio-patreon.vercel.app%2Fapi%3Fusername%3Dmimixbox%26type%3Dpatrons&style=flat-square)](https://patreon.com/mimixbox)
 
-[[日本語](docs/introduction/ja/README.md)]
+[日本語](docs/introduction/ja/README.md)
+
 # MimixBox - mimic BusyBox on Linux
-MimixBox has many Unix commands in the single binary like BusyBox. However, MimixBox aim for the different uses from BusyBox. Specifically, it is supposed to be used in the desktop environment, not the embedded environment.  
-Also, the MimixBox project maintainer plan to have a wide range of built-in commands (applets) from basic command provided by Coreutils and others to experimental commands.
 
-# Installation.
-The source code and binaries are distributed on [the Release Page](https://github.com/nao1215/mimixbox/releases) in ZIP format and tar.gz format. Choose the binary that suits your OS and CPU architecture.
-For example, in the case of Linux (amd64), you can install the MimixBox and documents on your system with the following command:
+MimixBox packs many Unix commands into a single binary, like BusyBox. Unlike BusyBox, it targets the desktop environment rather than embedded systems. The project aims for a wide range of built-in commands (applets), from the basics provided by Coreutils to its own experimental commands.
+
+The [command (applet) list](./docs/introduction/en/CommandAppletList.md) shows what is currently available. You can also run `mimixbox --list` to print it on the terminal.
+
+## Install
+
+The release page distributes source code and binaries in ZIP and tar.gz format. Pick the binary that matches your OS and CPU architecture from [the Release Page](https://github.com/nao1215/mimixbox/releases). For example, on Linux (amd64):
 
 ```shell
 $ tar xf mimixbox-0.30.0-linux-amd64.tar.gz
@@ -28,106 +26,111 @@ $ cd mimixbox-0.30.0-linux-amd64
 $ sudo ./installer.sh
 ```
 
-## Use "go install" 
+### Use "go install"
+
 ```shell
 $ go install github.com/nao1215/mimixbox/cmd/mimixbox@latest
 $ sudo mimixbox --install /usr/local/bin
 ```
 
-## Use homebrew
+### Use homebrew
+
 ```shell
 $ brew install nao1215/tap/mimixbox
 ```
 
-# Development 
-## Tools & Libraries
-The table below shows the tools used when developing the commands in the MimixBox project.
-| Tool | description |
+## Original commands
+
+MimixBox has its own commands that do not exist in packages like Coreutils.
+
+| Command (Applet) Name | Description |
+|:--|:--|
+| [fakemovie](./docs/examples/fakemovie/en/fakemovie.md) | Adds a video playback button to the image |
+| [ghrdc](./docs/examples/ghrdc/en/ghrdc.md) | GitHub Release Download Counter |
+| [path](./docs/examples/path/en/path.md) | Manipulate filename path |
+| [sddf](./docs/examples/sddf/en/sddf.md) | Search & Delete Duplicated File |
+| [serial](./docs/examples/serial/en/serial.md) | Rename the file to a name with a serial number |
+
+## Roadmap
+
+- Step 1. Implement many common Unix commands (〜Version 0.x.x).
+- Step 2. Increase the options for each command (〜Version 1.x.x).
+- Step 3. Move commands toward modern specifications (〜Version 2.x.x).
+
+MimixBox does not yet have enough commands, so the first priority is increasing their number until the project can be dogfooded. Next, command options are brought closer to Coreutils and other packages. MimixBox does not aim to copy Coreutils, but it does aim to provide the options Linux users expect. The final phase makes MimixBox unique by extending commands toward higher functionality, like [bat](https://github.com/sharkdp/bat) and [lsd](https://github.com/Peltoche/lsd), which are reimplementations of cat and ls.
+
+## Development
+
+### Tools & Libraries
+
+The table below shows the tools used when developing commands in the MimixBox project.
+
+| Tool | Description |
 |:-----|:------|
-| go-licenses | Used for license management of dependent libraries|
-| pandoc   | Convert markdown files to manpages |
-| make   | Used for build, test, release, etc |
-| gzip   | Used for compress man pages |
-| curl | Used for install ShellSpec |
-| install   | Used for install MimixBox binary and document in the system |
-| docker| Used for testing Mimixbox inside Docker|
-| debootstrap| Used for testing Mimixbox inside jail envrioment|
-|  shellspec   | Used for integration test|  
-| libpam0g-dev(pam-devel)| PAM (Pluggable Authentication Modules) library|
+| go-licenses | License management of dependent libraries |
+| pandoc | Convert markdown files to man pages |
+| make | Build, test, release, etc. |
+| gzip | Compress man pages |
+| curl | Install ShellSpec |
+| install | Install the MimixBox binary and documents on the system |
+| docker | Test MimixBox inside Docker |
+| debootstrap | Test MimixBox inside a jail environment |
+| shellspec | Integration test |
+| libpam0g-dev (pam-devel) | PAM (Pluggable Authentication Modules) library |
 
-If you use Debian-based distribution (e.g. Debian／Ubuntu／Kali Linux／Raspberry Pi OS), You can install tools with the following command.
+On a Debian-based distribution (e.g. Debian／Ubuntu／Kali Linux／Raspberry Pi OS), install the tools with:
 
-```
+```shell
 $ sudo apt install build-essential curl git pandoc gzip docker.io debootstrap libpam0g-dev
 $ go install github.com/google/go-licenses@latest
 $ curl -fsSL https://git.io/shellspec | sh -s -- --yes
 ```
-  
-## How to build
 
-```
+### How to build
+
+```shell
 $ git clone https://github.com/nao1215/mimixbox.git
 $ cd mimixbox
 $ make build
 ```
 
-# [Debugging](docs/introduction/en/DebugAndTest.md)
-## How to create docker environment
-```
+### Debugging
+
+See [DebugAndTest.md](docs/introduction/en/DebugAndTest.md) for details.
+
+Create a Docker environment:
+
+```shell
 $ make docker
-
-※ Once the Docker image build is complete, you'll be inside the container.
-$ 
-```
-## How to create jail environment
-``` 
-$ sudo apt install debootstrap    ※ If you have not installed debootstrap in Ubuntu.
-$ make build                      ※ Build mimixbox binary
-$ sudo make jail                  ※ Create jail environment at /tmp/mimixbox/jail
-
-$ sudo chroot /tmp/mimixbox/jail /bin/bash   ※ Dive to jail
-# mimixbox --full-install /usr/local/bin     ※ Install MimixBox's command in jail
+# Once the image build finishes, you are inside the container.
 ```
 
-# Roadmap
-- Step1. Implements many common Unix commands (〜Version 0.x.x).
-- Step2. Increase the options for each commands (〜Version 1.x.x).
-- Step3. Change the command to modern specifications(〜Version 2.x.x)
-  
-Now, MimixBox has not implemented enough commands ([currently supported command list is here](./docs/introduction/en/CommandAppletList.md)). Therefore, as a project, we will increase the number of commands and aim for a state where dog fooding can be done with the highest priority.
-    
-Then increase the command options to the same level as Coreutils and other packages. Note that MimixBox does not aim to create commands equivalent to Coreutils. However, we think it's better to have the options that Linux users expect.
-  
-Finally, it's the phase that makes the Mimix Box unique. Extend commands to high functionality, like [bat](https://github.com/sharkdp/bat) and [lsd](https://github.com/Peltoche/lsd), which are reimplementations of cat and ls.
+Create a jail environment:
 
-# Original commands in MimixBox
-MimixBox has its own commands that don't exist in packages like Coreutils.
-|Command (Applet) Name | Description|
-|:--|:--|
-|[fakemovie](./docs/examples/fakemovie/en/fakemovie.md) | Adds a video playback button to the image|
-|[ghrdc](./docs/examples/ghrdc/en/ghrdc.md) | GitHub Relase Download Counter|
-|[path](./docs/examples/path/en/path.md) | Manipulate filename path|
-|[sddf](./docs/examples/sddf/en/sddf.md) | Search & Delete Dupulicated File|
-|[serial](./docs/examples/serial/en/serial.md) | Rename the file to the name with a serial number|
+```shell
+$ sudo apt install debootstrap            # If debootstrap is not installed on Ubuntu.
+$ make build                              # Build the mimixbox binary.
+$ sudo make jail                          # Create the jail at /tmp/mimixbox/jail.
 
-# Contributing
-First off, thanks for taking the time to contribute! ❤️  See [CONTRIBUTING.md](./CONTRIBUTING.md) for more information.
-Contributions are not only related to development. For example, GitHub Star motivates me to develop!
+$ sudo chroot /tmp/mimixbox/jail /bin/bash    # Dive into the jail.
+# mimixbox --full-install /usr/local/bin      # Install MimixBox commands in the jail.
+```
+
+## Contributing
+
+Thanks for taking the time to contribute. See [CONTRIBUTING.md](./CONTRIBUTING.md) for details. Contributions are not limited to development; a GitHub Star is also a motivation to keep developing.
+
 [![Star History Chart](https://api.star-history.com/svg?repos=nao1215/mimixbox&type=Date)](https://star-history.com/#nao1215/mimixbox&Date)
 
-# Contact
-If you would like to send comments such as "find a bug" or "request for additional features" to the developer, please use one of the following contacts. 
-We are also looking forward to sponsorship.
+## Contact
 
-- [GitHub Issue](https://github.com/nao1215/mimixbox/issues)
-- [Twitter@mimixbox156](https://twitter.com/mimixbox156) ※ MimixBox project information
-- [Patreon](https://www.patreon.com/mimixbox?fan_landing=true)
+To report a bug or request a feature, please use [GitHub Issue](https://github.com/nao1215/mimixbox/issues). Sponsorship is also welcome.
 
-# LICENSE
-The MimixBox project is licensed under the terms of the MIT license and Apache License 2.0.  
-See [LICENSE](./LICENSE) and [NOTICE](./NOTICE)
+## License
 
-## Contributors ✨
+The MimixBox project is licensed under the terms of the MIT license and Apache License 2.0. See [LICENSE](./LICENSE) and [NOTICE](./NOTICE).
+
+## Contributors
 
 Thanks goes to these wonderful people ([emoji key](https://allcontributors.org/docs/en/emoji-key)):
 
