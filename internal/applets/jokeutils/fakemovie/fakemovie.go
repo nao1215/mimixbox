@@ -29,24 +29,6 @@
 // SOFTWARE.
 //-----------------------[Original license end]------------------------------------
 //
-// The code that did not exist in the original fakemovie is shown below.
-//   - Semantic Versioning
-//   - run()         : Move the main process from main() to run()
-//   - parseArgs()   : Argument parsing function
-//   - initParser()  : Parser initialization function
-//   - isValidArgNr(): Function to check if the number of arguments is correct
-//   - isValidExt()  : Function to check if image file extension is correct
-//   - showVersion() : Function to show fakemovie version
-//   - showHelp()    : Function to show help message
-//   - openImage()   : Function to open image file
-//   - writeImage()  : Function to write image file
-//	 - addBlueBtn()  : Rename Fake() to addBlueBtn()
-//   - addOrangeBtn(): Function to add orange button to the image
-//   - decideOutputFileName()     : Function that make string with "original file name" + "_fake" + "extension"
-//   - extractFileNameWithoutExt(): Function that return filename without extension.
-//
-// The above code is the copyright below.
-//
 // Copyright 2021 Naohiro CHIKAMATSU.
 //
 // Licensed under the Apache License, Version 2.0 (the "License");
@@ -60,9 +42,13 @@
 // WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
 // See the License for the specific language governing permissions and
 // limitations under the License.
+
+// Package fakemovie implements the fakemovie applet: it draws a fake video
+// playback button onto an image so the result looks like a movie thumbnail.
 package fakemovie
 
 import (
+	"context"
 	"errors"
 	"fmt"
 	"image"
@@ -73,79 +59,117 @@ import (
 	"strings"
 
 	"github.com/fogleman/gg"
-	"github.com/jessevdk/go-flags"
-	mb "github.com/nao1215/mimixbox/internal/lib"
+	"github.com/nao1215/mimixbox/internal/command"
 )
 
-const cmdName string = "fakemovie"
+// Command is the fakemovie applet.
+type Command struct{}
 
-var osExit = os.Exit
+// New returns a fakemovie command.
+func New() *Command { return &Command{} }
 
-const version = "1.0.4"
+// Name returns the command name.
+func (c *Command) Name() string { return "fakemovie" }
+
+// Synopsis returns the one-line description shown in the applet list.
+func (c *Command) Synopsis() string { return "Adds a video playback button to the image" }
 
 type options struct {
-	Output  string `short:"o" long:"output" value-name:"<output-file-name>" description:"Output file name(default: Added suffix \"_fake\" to original name)"`
-	Phub    bool   `short:"p" long:"phub" description:"Put p-hub button(default: Color similar to twitter button)"`
-	Radius  int    `short:"r" long:"radius" value-name:"<number(integer)>" description:"Radius of button(default: Auto caluculate)"`
-	Version bool   `short:"v" long:"version" description:"Show fakemovie command version"`
+	output string
+	phub   bool
+	radius int
 }
 
-func Run() (int, error) {
-	var opts options
-	var args = parseArgs(&opts)
-	var inputFileName string = os.ExpandEnv(args[0])
-	var outputFileName string = os.ExpandEnv(opts.Output)
-	var radius int = opts.Radius
+// Run executes fakemovie.
+func (c *Command) Run(_ context.Context, stdio command.IO, args []string) error {
+	fs := command.NewFlagSet(c.Name(), "[OPTION]... IMAGE_FILE...", stdio.Err)
+	output := fs.StringP("output", "o", "", "output file name (default: add the suffix \"_fake\" to the original name)")
+	phub := fs.BoolP("phub", "p", false, "put a p-hub style button (default: a twitter-like button)")
+	radius := fs.IntP("radius", "r", 0, "radius of the button (default: auto calculate)")
 
-	if !isValidExt(inputFileName) {
-		err := errors.New("fakemovie command only support jpg or png")
-		return mb.ExitFailure, err
+	proceed, err := fs.Parse(stdio, args)
+	if err != nil || !proceed {
+		return err
 	}
 
-	img, err := openImage(inputFileName)
+	files := fs.Args()
+	if len(files) == 0 {
+		fmt.Fprintf(stdio.Err, "fakemovie: missing operand\n")
+		return command.SilentFailure()
+	}
+
+	opts := options{
+		output: *output,
+		phub:   *phub,
+		radius: *radius,
+	}
+
+	var firstErr error
+	for _, name := range files {
+		if err := processFile(name, opts); err != nil {
+			fmt.Fprintf(stdio.Err, "fakemovie: %s\n", command.FileError(name, err))
+			firstErr = keep(firstErr)
+		}
+	}
+	return firstErr
+}
+
+// processFile reads one input image, draws the play-button overlay onto it and
+// writes the result back out. The output path and button style come from opts.
+func processFile(name string, opts options) error {
+	input := os.ExpandEnv(name)
+	if !isValidExt(input) {
+		return errors.New("fakemovie command only supports jpg or png")
+	}
+
+	img, err := openImage(input)
 	if err != nil {
-		return mb.ExitFailure, err
+		return err
 	}
 
+	radius := opts.radius
 	if radius <= 0 {
 		radius = calcButtonRadius(img)
 	}
 
-	if outputFileName == "" {
-		outputFileName = decideOutputFileName(inputFileName)
+	output := os.ExpandEnv(opts.output)
+	if output == "" {
+		output = decideOutputFileName(input)
 	}
 
-	if opts.Phub {
-		img = addOrangeBtn(img, radius)
-	} else {
-		img = addBlueBtn(img, radius)
-	}
-	err = writeImage(img, outputFileName)
-	if err != nil {
-		return mb.ExitFailure, err
-	}
+	img = AddButton(img, radius, opts.phub)
 
-	return mb.ExitSuccess, nil
+	return writeImage(img, output)
+}
+
+// AddButton returns a copy of img with a fake video playback button drawn at its
+// center. radius controls the button size; when phub is true an orange p-hub
+// style button is drawn, otherwise a blue twitter-like button. AddButton is a
+// pure function (no file IO) so it can be exercised directly by tests.
+func AddButton(img image.Image, radius int, phub bool) image.Image {
+	if phub {
+		return addOrangeBtn(img, radius)
+	}
+	return addBlueBtn(img, radius)
 }
 
 func openImage(imageFileName string) (image.Image, error) {
-	f, err := os.Open(imageFileName)
+	f, err := os.Open(imageFileName) //nolint:gosec // operating on a user-named file is the whole point
 	if err != nil {
 		return nil, err
 	}
+	defer f.Close() //nolint:errcheck // read-only handle; a close error here is harmless
 
 	img, _, err := image.Decode(f)
 	if err != nil {
 		return nil, err
 	}
-	f.Close()
-
 	return img, nil
 }
 
 func isValidExt(imageFileName string) bool {
 	targets := []string{"jpg", "jpeg", "png"}
-	var ext string = filepath.Ext(imageFileName)
+	ext := strings.ToLower(filepath.Ext(imageFileName))
 
 	for _, target := range targets {
 		if strings.Contains(ext, target) {
@@ -156,13 +180,13 @@ func isValidExt(imageFileName string) bool {
 }
 
 func calcButtonRadius(img image.Image) int {
-	const ImgDivisionNum = 14 // Manually adjusted value.
+	const imgDivisionNum = 14 // Manually adjusted value.
 	rect := img.Bounds()
 
 	// This calculation algorithm is not meaningful.
 	// Extremely different aspect ratios of images give strange radius values.
-	xRadiusSize := rect.Max.X / ImgDivisionNum
-	yRadiusSize := rect.Max.Y / ImgDivisionNum
+	xRadiusSize := rect.Max.X / imgDivisionNum
+	yRadiusSize := rect.Max.Y / imgDivisionNum
 	return (xRadiusSize + yRadiusSize) / 2
 }
 
@@ -174,23 +198,25 @@ func extractFileNameWithoutExt(path string) string {
 	return filepath.Base(path[:len(path)-len(filepath.Ext(path))])
 }
 
-func writeImage(img image.Image, outputFileName string) error {
-	f, err := os.Create(outputFileName)
+// writeImage encodes img to outputFileName. A close error on the write path is
+// returned, because a failed close can mean the file was left corrupt.
+func writeImage(img image.Image, outputFileName string) (err error) {
+	f, err := os.Create(outputFileName) //nolint:gosec // operating on a user-named file is the whole point
 	if err != nil {
 		return err
 	}
+	defer func() {
+		if cerr := f.Close(); cerr != nil && err == nil {
+			err = cerr
+		}
+	}()
 
-	if filepath.Ext(outputFileName) == "png" {
+	if strings.EqualFold(filepath.Ext(outputFileName), ".png") {
 		err = png.Encode(f, img)
 	} else {
 		err = jpeg.Encode(f, img, nil) // nil means default quality (=75, max=100)
 	}
-	if err != nil {
-		return err
-	}
-	f.Close()
-
-	return nil
+	return err
 }
 
 func addBlueBtn(img image.Image, r int) image.Image {
@@ -244,39 +270,9 @@ func addOrangeBtn(img image.Image, r int) image.Image {
 	return dc.Image()
 }
 
-func parseArgs(opts *options) []string {
-	p := initParser(opts)
-
-	args, err := p.Parse()
-	if err != nil {
-		osExit(mb.ExitFailure)
+func keep(existing error) error {
+	if existing != nil {
+		return existing
 	}
-
-	if opts.Version {
-		mb.ShowVersion(cmdName, version)
-		osExit(mb.ExitSuccess)
-	}
-
-	if !isValidArgNr(args) {
-		showHelp(p)
-		osExit(mb.ExitFailure)
-	}
-	return args
-}
-
-func initParser(opts *options) *flags.Parser {
-	parser := flags.NewParser(opts, flags.Default)
-	parser.Name = cmdName
-	parser.Usage = "[OPTIONS] IMAGE_FILE_NAME"
-
-	return parser
-}
-
-func isValidArgNr(args []string) bool {
-	return len(args) == 1
-}
-
-func showHelp(p *flags.Parser) {
-	fmt.Fprintf(os.Stdout, "fakemovie adds fake-movie button to the image.\n\n")
-	p.WriteHelp(os.Stdout)
+	return command.SilentFailure()
 }

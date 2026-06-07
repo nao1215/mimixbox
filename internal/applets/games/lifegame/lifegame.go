@@ -1,137 +1,188 @@
+// Package lifegame implements the lifegame applet: Conway's Game of Life.
 //
-// mimixbox/internal/applets/games/lifegame/lifegame.go
-//
-// Copyright 2021 Naohiro CHIKAMATSU
-//
-// Licensed under the Apache License, Version 2.0 (the "License");
-// you may not use this file except in compliance with the License.
-// You may obtain a copy of the License at
-//
-//    http://www.apache.org/licenses/LICENSE-2.0
-//
-// Unless required by applicable law or agreed to in writing, software
-// distributed under the License is distributed on an "AS IS" BASIS,
-// WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
-// See the License for the specific language governing permissions and
-// limitations under the License.
+// The simulation itself lives in the pure Board type so it can be unit-tested
+// without a terminal. Run animates the board with termbox; when a terminal
+// cannot be initialized (no TTY, as under tests or CI) it exits gracefully
+// instead of crashing.
 package lifegame
 
 import (
+	"context"
 	"math/rand"
-	"os"
 	"time"
 
-	mb "github.com/nao1215/mimixbox/internal/lib"
-	"github.com/nsf/termbox-go"
-
-	"github.com/jessevdk/go-flags"
+	"github.com/nao1215/mimixbox/internal/command"
+	termbox "github.com/nsf/termbox-go"
 )
 
-var cmdName string = "lifegame"
+// Command is the lifegame applet.
+type Command struct{}
 
-const version = "1.0.0"
+// New returns a lifegame command.
+func New() *Command { return &Command{} }
 
-var osExit = os.Exit
+// Name returns the command name.
+func (c *Command) Name() string { return "lifegame" }
 
-type options struct {
-	Version bool `short:"v" long:"version" description:"Show lifegame command version"`
-}
+// Synopsis returns the one-line description shown in the applet list.
+func (c *Command) Synopsis() string { return "Life game (Conway's Game of Life)" }
 
 const (
-	BackGround = termbox.ColorBlack
-	Alive      = termbox.ColorWhite
-	Interval   = 100 * time.Millisecond
+	backGround = termbox.ColorBlack
+	alive      = termbox.ColorWhite
+	interval   = 100 * time.Millisecond
 )
 
-type Window struct {
+// Board is a Conway's Game of Life grid. It is independent of termbox so the
+// simulation rules can be exercised by unit tests. cells is indexed
+// [row][column]; a true value means the cell is alive.
+type Board struct {
 	width  int
 	height int
+	cells  [][]bool
 }
 
-type Field struct {
-	matrix [][]bool //[row][column]
-}
-
-type Game struct {
-	win   Window
-	field Field
-	queue chan termbox.Event
-}
-
-func Run() (int, error) {
-	var opts options
-	var args []string
-	var err error
-
-	if args, err = parseArgs(&opts); err != nil {
-		return mb.ExitFailure, nil
+// NewBoard returns an empty (all-dead) Board of the given size. Non-positive
+// dimensions are clamped to zero.
+func NewBoard(width, height int) *Board {
+	if width < 0 {
+		width = 0
 	}
-	return lifegame(args, opts)
+	if height < 0 {
+		height = 0
+	}
+	cells := make([][]bool, height)
+	for i := range cells {
+		cells[i] = make([]bool, width)
+	}
+	return &Board{width: width, height: height, cells: cells}
 }
 
-func lifegame(args []string, opts options) (int, error) {
+// Width returns the board width in columns.
+func (b *Board) Width() int { return b.width }
+
+// Height returns the board height in rows.
+func (b *Board) Height() int { return b.height }
+
+// Set marks the cell at (row, column) alive or dead. Out-of-range coordinates
+// are ignored.
+func (b *Board) Set(row, column int, value bool) {
+	if !b.inBounds(row, column) {
+		return
+	}
+	b.cells[row][column] = value
+}
+
+// Alive reports whether the cell at (row, column) is alive. Cells outside the
+// board are considered dead, which gives the board fixed (non-wrapping) edges.
+func (b *Board) Alive(row, column int) bool {
+	if !b.inBounds(row, column) {
+		return false
+	}
+	return b.cells[row][column]
+}
+
+// inBounds reports whether (row, column) is inside the board.
+func (b *Board) inBounds(row, column int) bool {
+	return row >= 0 && column >= 0 && row < b.height && column < b.width
+}
+
+// neighbors counts the live cells in the eight cells surrounding (row, column).
+func (b *Board) neighbors(row, column int) int {
+	sum := 0
+	for i := -1; i <= 1; i++ {
+		for j := -1; j <= 1; j++ {
+			if i == 0 && j == 0 {
+				continue
+			}
+			if b.Alive(row+i, column+j) {
+				sum++
+			}
+		}
+	}
+	return sum
+}
+
+// Next returns a new Board advanced one generation under Conway's rules:
+//   - a dead cell with exactly 3 live neighbors becomes alive (birth);
+//   - a live cell with 2 or 3 live neighbors stays alive (survival);
+//   - any other live cell dies (under- or over-population).
+func (b *Board) Next() *Board {
+	next := NewBoard(b.width, b.height)
+	for i := 0; i < b.height; i++ {
+		for j := 0; j < b.width; j++ {
+			n := b.neighbors(i, j)
+			if b.cells[i][j] {
+				next.cells[i][j] = n == 2 || n == 3
+			} else {
+				next.cells[i][j] = n == 3
+			}
+		}
+	}
+	return next
+}
+
+// Randomize fills the board with a random pattern; roughly one cell in twenty
+// starts alive.
+func (b *Board) Randomize(r *rand.Rand) {
+	for i := 0; i < b.height; i++ {
+		for j := 0; j < b.width; j++ {
+			b.cells[i][j] = r.Intn(20) == 0
+		}
+	}
+}
+
+// Run executes lifegame.
+func (c *Command) Run(ctx context.Context, stdio command.IO, args []string) error {
+	fs := command.NewFlagSet(c.Name(), "[OPTION]", stdio.Err)
+
+	proceed, err := fs.Parse(stdio, args)
+	if err != nil || !proceed {
+		return err
+	}
+
+	return c.animate(ctx)
+}
+
+// animate drives the simulation on the terminal using termbox. When a terminal
+// cannot be initialized (no TTY, as under tests/CI), it returns nil so the
+// command degrades gracefully instead of crashing.
+func (c *Command) animate(ctx context.Context) error {
 	if err := termbox.Init(); err != nil {
-		return mb.ExitFailure, err
+		// No real terminal (tests/CI): nothing to animate. Exit gracefully.
+		return nil //nolint:nilerr // a missing terminal is not a failure for lifegame
 	}
 	defer termbox.Close()
 
-	var game Game
-	g := game.New(termbox.Size())
-	return g.start()
-}
-
-func (g *Game) New(w, h int) *Game {
-	var field Field
-
-	return &Game{
-		win:   Window{w, h},
-		field: field.New(w, h),
-		queue: pollEvent(),
+	width, height := termbox.Size()
+	if width <= 0 || height <= 0 {
+		return nil
 	}
-}
 
-func (f *Field) New(w, h int) Field {
-	row := make([][]bool, h)
-	for i := 0; i < h; i++ {
-		row[i] = make([]bool, w)
-	}
-	return Field{row}
-}
+	board := NewBoard(width, height)
+	board.Randomize(rand.New(rand.NewSource(time.Now().UnixNano())))
 
-func (g *Game) start() (int, error) {
-	g.field.random(g.win.width, g.win.height)
-
+	queue := pollEvent()
 	for {
 		select {
-		case ev := <-g.queue:
+		case <-ctx.Done():
+			return nil
+		case ev := <-queue:
 			if isGameEnd(ev.Key) {
-				return mb.ExitSuccess, nil
+				return nil
 			}
 		default:
-			time.Sleep(Interval)
-			g.field.render(g.win.width, g.win.height)
-			g.field.update(g.win.width, g.win.height)
-		}
-	}
-}
-
-func isGameEnd(key termbox.Key) bool {
-	return key == termbox.KeyEsc || key == termbox.KeyCtrlD || key == termbox.KeyCtrlC
-}
-
-func (f *Field) random(w, h int) {
-	rand.Seed(time.Now().UnixNano())
-	for i := 0; i < h; i++ {
-		for j := 0; j < w; j++ {
-			if rand.Intn(20) == 0 {
-				f.matrix[i][j] = true
-			} else {
-				f.matrix[i][j] = false
+			if err := render(board); err != nil {
+				return nil
 			}
+			board = board.Next()
+			time.Sleep(interval)
 		}
 	}
 }
 
+// pollEvent forwards termbox events on a channel so the main loop can poll for
+// quit keys without blocking the animation.
 func pollEvent() chan termbox.Event {
 	q := make(chan termbox.Event)
 	go func() {
@@ -142,107 +193,23 @@ func pollEvent() chan termbox.Event {
 	return q
 }
 
-func (f *Field) exist(row, column, width, height int) bool {
-	if row < 0 || column < 0 || row >= height || column >= width {
-		return false
-	}
-	if f.matrix[row][column] {
-		return true
-	}
-	return false
+// isGameEnd reports whether key is one of the quit keys (Esc, Ctrl-C, Ctrl-D).
+func isGameEnd(key termbox.Key) bool {
+	return key == termbox.KeyEsc || key == termbox.KeyCtrlD || key == termbox.KeyCtrlC
 }
 
-func (f *Field) countNeighborhood(row, column, width, height int) int {
-	var sum = 0
-	for i := -1; i < 2; i++ {
-		for j := -1; j < 2; j++ {
-			if i == 0 && j == 0 {
-				continue
-			}
-			if f.exist(row+i, column+j, width, height) {
-				sum += 1
+// render draws the board to the terminal. It returns an error if termbox fails
+// to clear or flush, so the caller can stop the loop.
+func render(b *Board) error {
+	if err := termbox.Clear(backGround, backGround); err != nil {
+		return err
+	}
+	for i := 0; i < b.height; i++ {
+		for j := 0; j < b.width; j++ {
+			if b.cells[i][j] {
+				termbox.SetCell(j, i, '█', alive, backGround)
 			}
 		}
 	}
-	return sum
-}
-
-//
-// [Birth] 3 alive cell near 1 dead cell
-// ■■□
-// ■□□
-// □□□
-//
-// [Alive(maintenance)] 2 or 3 alive cell near 1 alive cell
-// □□□□
-// □■■□
-// □■■□
-// □□□□
-//
-// [Death (depopulation)] 0 or 1 alive cell near 1 alive cell
-// □□□
-// □■■
-// □□□
-//
-// [Death (overcrowding)] over 4 alive cell near 1 alive cell
-// ■■■
-// ■■□
-// □□□
-//
-func (f *Field) update(w, h int) {
-	var field Field
-	newFields := field.New(w, h)
-
-	var count = 0
-	for i := 0; i < h; i++ {
-		for j := 0; j < w; j++ {
-			count = f.countNeighborhood(i, j, w, h)
-			if !f.isAlive(i, j) {
-				f.matrix[i][j] = (count == 3) // Birth
-			} else {
-				f.matrix[i][j] = (count == 2 || count == 3) // Dead or Alive
-			}
-		}
-	}
-	f = &newFields
-}
-
-func (f *Field) isAlive(row, column int) bool {
-	return f.matrix[row][column]
-}
-
-func (f *Field) render(w, h int) {
-	termbox.Clear(BackGround, BackGround)
-	for i := 0; i < h; i++ {
-		for j := 0; j < w; j++ {
-			if f.matrix[i][j] {
-				termbox.SetCell(j, i, '█', Alive, BackGround)
-			}
-		}
-	}
-	termbox.Flush()
-}
-
-func parseArgs(opts *options) ([]string, error) {
-	p := initParser(opts)
-
-	args, err := p.Parse()
-	if err != nil {
-		return nil, err
-	}
-
-	if opts.Version {
-		mb.ShowVersion(cmdName, version)
-		osExit(mb.ExitSuccess)
-	}
-
-	return args, nil
-}
-
-func initParser(opts *options) *flags.Parser {
-	parser := flags.NewParser(opts, flags.Default)
-	parser.Name = cmdName
-	parser.Usage = "[OPTIONS] "
-
-	return parser
+	return termbox.Flush()
 }

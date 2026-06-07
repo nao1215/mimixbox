@@ -1,163 +1,167 @@
-// mimixbox/internal/applets/fileutils/chown/chown.go
-//
-// # Copyright 2021 Naohiro CHIKAMATSU
-//
-// Licensed under the Apache License, Version 2.0 (the "License");
-// you may not use this file except in compliance with the License.
-// You may obtain a copy of the License at
-//
-//	http://www.apache.org/licenses/LICENSE-2.0
-//
-// Unless required by applicable law or agreed to in writing, software
-// distributed under the License is distributed on an "AS IS" BASIS,
-// WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
-// See the License for the specific language governing permissions and
-// limitations under the License.
+// Package chown implements the chown applet: change the owner and/or group of
+// each FILE to OWNER and/or GROUP, with the common GNU options.
 package chown
 
 import (
+	"context"
+	"errors"
 	"fmt"
 	"os"
+	"os/user"
 	"path/filepath"
+	"strconv"
 	"strings"
-	"syscall"
 
-	mb "github.com/nao1215/mimixbox/internal/lib"
-
-	"github.com/jessevdk/go-flags"
+	"github.com/nao1215/mimixbox/internal/command"
 )
 
-const cmdName string = "chown"
+// Command is the chown applet.
+type Command struct{}
 
-const version = "1.0.0"
+// New returns a chown command.
+func New() *Command { return &Command{} }
 
-var osExit = os.Exit
+// Name returns the command name.
+func (c *Command) Name() string { return "chown" }
 
-type idInfo struct {
-	owner string
-	group string
+// Synopsis returns the one-line description shown in the applet list.
+func (c *Command) Synopsis() string {
+	return "Change the owner and/or group of each FILE to OWNER and/or GROUP"
 }
 
-type options struct {
-	Recursive bool `short:"R" long:"recursive" description:"Change file owner and/or group IDs recursively"`
-	Version   bool `short:"v" long:"version" description:"Show chown command version"`
-}
+// Run executes chown.
+func (c *Command) Run(_ context.Context, stdio command.IO, args []string) error {
+	fs := command.NewFlagSet(c.Name(), "[OPTION]... OWNER[:GROUP] FILE...", stdio.Err)
+	recursive := fs.BoolP("recursive", "R", false, "operate on files and directories recursively")
+	verbose := fs.BoolP("verbose", "v", false, "output a diagnostic for every file processed")
 
-func Run() (int, error) {
-	var opts options
-	var args []string
-	var err error
-
-	if args, err = parseArgs(&opts); err != nil {
-		return mb.ExitFailure, nil
+	proceed, err := fs.Parse(stdio, args)
+	if err != nil || !proceed {
+		return err
 	}
 
-	return chown(ids(args[0]), args[1:], opts)
-}
-
-// ids is "owner:group" or "owner" or something.
-func ids(ids string) idInfo {
-	idInfo := idInfo{"", ""}
-	if strings.Contains(ids, ":") {
-		strList := strings.Split(ids, ":")
-		idInfo.owner = strList[0]
-		idInfo.group = strList[1]
-	} else {
-		idInfo.owner = ids
+	operands := fs.Args()
+	if len(operands) == 0 {
+		fmt.Fprintf(stdio.Err, "%s: missing operand\n", c.Name())
+		return command.SilentFailure()
 	}
-	return idInfo
-}
 
-func chown(ids idInfo, files []string, opts options) (int, error) {
-	owner, err := mb.LookupUid(ids.owner)
+	spec := operands[0]
+	files := operands[1:]
+	if len(files) == 0 {
+		fmt.Fprintf(stdio.Err, "%s: missing operand after '%s'\n", c.Name(), spec)
+		return command.SilentFailure()
+	}
+
+	uid, gid, err := parseOwner(spec)
 	if err != nil {
-		return mb.ExitFailure, err
+		fmt.Fprintf(stdio.Err, "%s: %v\n", c.Name(), err)
+		return command.SilentFailure()
 	}
 
-	var gid int = -1
-	if ids.group != "" {
-		gid, err = mb.LookupGid(ids.group)
-		if err != nil {
-			return mb.ExitFailure, err
-		}
-	}
-
-	status := mb.ExitSuccess
+	var firstErr error
 	for _, path := range files {
-		path = os.ExpandEnv(path)
-
-		if ids.group == "" {
-			var st syscall.Stat_t
-			if err := syscall.Stat(path, &st); err != nil {
-				status = mb.ExitFailure
-				fmt.Fprintln(os.Stderr, cmdName+": "+path+": "+err.Error())
-				continue
-			}
-			gid = int(st.Gid)
+		if err := apply(stdio, path, uid, gid, *recursive, *verbose); err != nil {
+			firstErr = keep(firstErr)
 		}
+	}
+	return firstErr
+}
 
-		if opts.Recursive {
-			if err := changeOwnerRecursive(path, owner, gid); err != nil {
-				status = mb.ExitFailure
-				fmt.Fprintln(os.Stderr, cmdName+": "+path+": "+err.Error())
-				continue
+// apply changes the ownership of a single operand, optionally recursing into
+// directories. A failure is reported on stderr GNU-style and returns an error
+// that only sets the exit code, so the caller keeps processing later files.
+func apply(stdio command.IO, path string, uid, gid int, recursive, verbose bool) error {
+	if recursive {
+		return filepath.Walk(path, func(p string, _ os.FileInfo, err error) error {
+			if err != nil {
+				fmt.Fprintf(stdio.Err, "chown: %s\n", command.FileError(p, err))
+				return command.SilentFailure()
 			}
+			return chownOne(stdio, p, uid, gid, verbose)
+		})
+	}
+	return chownOne(stdio, path, uid, gid, verbose)
+}
+
+// chownOne performs the os.Chown for a single path and renders the GNU-style
+// diagnostics for permission failures and verbose mode.
+func chownOne(stdio command.IO, path string, uid, gid int, verbose bool) error {
+	if err := os.Chown(path, uid, gid); err != nil {
+		if errors.Is(err, os.ErrPermission) {
+			fmt.Fprintf(stdio.Err, "chown: changing ownership of '%s': Operation not permitted\n", path)
 		} else {
-			if err := os.Chown(path, owner, gid); err != nil {
-				status = mb.ExitFailure
-				fmt.Fprintln(os.Stderr, cmdName+": "+path+": "+err.Error())
-				continue
-			}
+			fmt.Fprintf(stdio.Err, "chown: %s\n", command.FileError(path, err))
 		}
+		return command.SilentFailure()
 	}
-	return status, nil
+	if verbose {
+		fmt.Fprintf(stdio.Out, "ownership of '%s' retained\n", path)
+	}
+	return nil
 }
 
-func changeOwnerRecursive(path string, uid int, gid int) error {
-	err := filepath.Walk(path, func(p string, info os.FileInfo, err error) error {
+// parseOwner parses a GNU chown spec of the form OWNER, OWNER:GROUP, OWNER:, or
+// :GROUP, where each part is a name or a numeric id. It returns the resolved
+// uid and gid, using -1 for any part left unspecified (so os.Chown leaves it
+// unchanged). Resolution goes through os/user so it works without root.
+func parseOwner(spec string) (uid, gid int, err error) {
+	uid, gid = -1, -1
+	if spec == "" {
+		return -1, -1, errors.New("missing operand")
+	}
+
+	ownerPart := spec
+	var groupPart string
+	hasGroup := false
+	if i := strings.IndexByte(spec, ':'); i >= 0 {
+		ownerPart = spec[:i]
+		groupPart = spec[i+1:]
+		hasGroup = true
+	}
+
+	if ownerPart != "" {
+		uid, err = lookupUID(ownerPart)
 		if err != nil {
-			return err
+			return -1, -1, fmt.Errorf("invalid user: '%s'", spec)
 		}
-		if err := os.Chown(p, uid, gid); err != nil {
-			return err
-		}
-		return nil
-	})
-	return err
-}
-
-func parseArgs(opts *options) ([]string, error) {
-	p := initParser(opts)
-
-	args, err := p.Parse()
-	if err != nil {
-		return nil, err
 	}
 
-	if opts.Version {
-		mb.ShowVersion(cmdName, version)
-		osExit(mb.ExitSuccess)
-	}
-
-	if !isValidArgNr(args) {
-		if len(args) == 0 {
-			fmt.Fprintln(os.Stderr, cmdName+": no operand")
-		} else if len(args) == 1 {
-			fmt.Fprintln(os.Stderr, cmdName+": no operand after "+args[0])
+	if hasGroup && groupPart != "" {
+		gid, err = lookupGID(groupPart)
+		if err != nil {
+			return -1, -1, fmt.Errorf("invalid group: '%s'", spec)
 		}
-		osExit(mb.ExitFailure)
 	}
-	return args, nil
+
+	return uid, gid, nil
 }
 
-func initParser(opts *options) *flags.Parser {
-	parser := flags.NewParser(opts, flags.Default)
-	parser.Name = cmdName
-	parser.Usage = "[OPTIONS] [OWNER][:GROUP] FILES"
-
-	return parser
+// lookupUID resolves a user name to a uid, accepting a numeric id directly.
+func lookupUID(name string) (int, error) {
+	if u, err := user.Lookup(name); err == nil {
+		return strconv.Atoi(u.Uid)
+	}
+	if id, err := strconv.Atoi(name); err == nil {
+		return id, nil
+	}
+	return -1, fmt.Errorf("unknown user: %s", name)
 }
 
-func isValidArgNr(args []string) bool {
-	return len(args) >= 2
+// lookupGID resolves a group name to a gid, accepting a numeric id directly.
+func lookupGID(name string) (int, error) {
+	if g, err := user.LookupGroup(name); err == nil {
+		return strconv.Atoi(g.Gid)
+	}
+	if id, err := strconv.Atoi(name); err == nil {
+		return id, nil
+	}
+	return -1, fmt.Errorf("unknown group: %s", name)
+}
+
+func keep(existing error) error {
+	if existing != nil {
+		return existing
+	}
+	return command.SilentFailure()
 }
