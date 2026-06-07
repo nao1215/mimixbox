@@ -1,197 +1,217 @@
-//
-// mimixbox/internal/applets/shellutils/kill/kill.go
-//
-// Copyright 2021 Naohiro CHIKAMATSU
-//
-// Licensed under the Apache License, Version 2.0 (the "License");
-// you may not use this file except in compliance with the License.
-// You may obtain a copy of the License at
-//
-//    http://www.apache.org/licenses/LICENSE-2.0
-//
-// Unless required by applicable law or agreed to in writing, software
-// distributed under the License is distributed on an "AS IS" BASIS,
-// WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
-// See the License for the specific language governing permissions and
-// limitations under the License.
+// Package kill implements the kill applet: terminate processes or send them a
+// signal, following GNU/POSIX kill semantics.
 package kill
 
 import (
+	"context"
 	"fmt"
+	"io"
 	"os"
 	"strconv"
 	"strings"
 	"syscall"
 
-	mb "github.com/nao1215/mimixbox/internal/lib"
+	"github.com/nao1215/mimixbox/internal/command"
 )
 
-const cmdName string = "kill"
-const version = "1.0.0"
+// Command is the kill applet.
+type Command struct{}
 
-var osExit = os.Exit
+// New returns a kill command.
+func New() *Command { return &Command{} }
 
-type options struct {
-	nameFlg      bool
-	signalName   string
-	numberFlg    bool
-	signalNumber string
-	listFlg      bool
-	list         string
-	directFlg    bool
-	direct       string
+// Name returns the command name.
+func (c *Command) Name() string { return "kill" }
+
+// Synopsis returns the one-line description shown in the applet list.
+func (c *Command) Synopsis() string { return "Kill process or send signal to process" }
+
+// defaultSignal is sent when no signal is specified, matching GNU/POSIX kill.
+const defaultSignal = 15 // SIGTERM
+
+// signal describes a single entry of the signal table.
+type signal struct {
+	number string
+	name   string
+	desc   string
 }
 
-func Run() (int, error) {
-	process, opts := parseArgs(os.Args)
+// signals is the signal table the applet knows about. The list and the
+// descriptions are preserved from the original implementation.
+//
+// [Reference]
+// https://www-uxsup.csx.cam.ac.uk/courses/moved.Building/signals.pdf
+var signals = []signal{
+	{"1", "SIGHUP", "Hangup detected on controlling terminal or death of controlling process"},
+	{"2", "SIGINT", "The process was interrupted (When user hits Cnrl+C)"},
+	{"3", "SIGQUIT", "Quit program"},
+	{"4", "SIGILL", "Illegal instruction"},
+	{"5", "SIGTRAP", "Trace trap for debugging"},
+	{"6", "SIGABRT", "Emegency stop.  Abort program (formerly SIGIOT)"},
+	{"7", "SIGBUS", "Bus error. e.g. alignment errors in memory access"},
+	{"8", "SIGFPE", "A floating point exception happened in the program."},
+	{"9", "SIGKILL", "Kill program"},
+	{"10", "SIGUSR1", "Left for the programmers to do whatever they want"},
+	{"11", "SIGSEGV", "Segmentation violation"},
+	{"12", "SIGUSR2", "Left for the programmers to do whatever they want"},
+	{"13", "SIGPIPE", "Write on a pipe with no reader"},
+	{"14", "SIGALRM", "Real-time timer (request a wake up call) expired"},
+	{"15", "SIGTERM", "Software termination"},
+	{"16", "SIGSTKFLT", "Unused (Stack fault in the FPU)"},
+	{"17", "SIGCHLD", "Stop or exit child process"},
+	{"18", "SIGCONT", "Restart from stop"},
+	{"19", "SIGSTOP", "Stop process"},
+	{"20", "SIGTSTP", "Stop process from terminal (When user hits Cnrl+Z)"},
+	{"21", "SIGTTIN", "Signal to a backgrounded process when it tries to read input from its terminal"},
+	{"22", "SIGTTOU", "Signal to a backgrounded process when it tries to write output to its terminal"},
+	{"23", "SIGURG", "Network connection when urgent out of band data is sent to it"},
+	{"24", "SIGXCPU", "Exceeded CPU limit"},
+	{"25", "SIGXFSZ", "Exceeded file size limit"},
+	{"26", "SIGVTALRM", "Virtual alram cloc"},
+	{"27", "SIGPROF", "Profiling timer's timeout"},
+	{"28", "SIGWINCH", "Window resize signal"},
+	{"29", "SIGIO", "Input / output is possible"},
+	{"30", "SIGPWR", "Power failure"},
+	{"31", "SIGSYS", "Unused (Illegal argument to routine)"},
+	// signal number 33-64 is real-time signal.
+	// It has no predefined meaning and can be used for application-defined purposes.
+}
 
-	valid(process, opts)
-	if opts.listFlg {
-		if opts.list == "" {
-			mb.PrintSignalList()
-		} else {
-			mb.PrintSignal(opts.list)
+// Run executes kill.
+//
+// Forms:
+//
+//	kill PID...            send SIGTERM to each PID
+//	kill -s SIGNAL PID...  send SIGNAL to each PID
+//	kill -SIGNAL PID...    send SIGNAL to each PID (e.g. -9, -KILL, -SIGKILL)
+//	kill -l                list signal names
+func (c *Command) Run(_ context.Context, stdio command.IO, args []string) error {
+	fs := command.NewFlagSet(c.Name(), "[-s SIGNAL | -SIGNAL] PID... | -l", stdio.Err)
+	sigName := fs.StringP("signal", "s", "", "send the given SIGNAL instead of SIGTERM")
+	list := fs.BoolP("list", "l", false, "list signal names")
+
+	// Separate POSIX "-SIGNAL" style operands (e.g. -9, -KILL, -SIGKILL) that
+	// pflag cannot parse as flags. Anything that is a known signal spec after
+	// the leading dash is pulled out before parsing; the rest is left to pflag.
+	directSig := ""
+	rest := make([]string, 0, len(args))
+	for _, a := range args {
+		if len(a) > 1 && a[0] == '-' && a != "--" && a[1] != '-' {
+			if spec := strings.TrimLeft(a, "-"); isSignalSpec(spec) {
+				directSig = spec
+				continue
+			}
 		}
-		osExit(mb.ExitSuccess)
+		rest = append(rest, a)
 	}
 
-	return kill(process, opts)
+	proceed, err := fs.Parse(stdio, rest)
+	if err != nil || !proceed {
+		return err
+	}
+
+	if *list {
+		writeSignalList(stdio.Out)
+		return nil
+	}
+
+	// Resolve the signal to send.
+	sigSpec := *sigName
+	if directSig != "" {
+		sigSpec = directSig
+	}
+	sig := defaultSignal
+	if sigSpec != "" {
+		n, rerr := resolveSignal(sigSpec)
+		if rerr != nil {
+			fmt.Fprintf(stdio.Err, "kill: %s: invalid signal specification\n", sigSpec)
+			return command.SilentFailure()
+		}
+		sig = n
+	}
+
+	pids := fs.Args()
+	if len(pids) == 0 {
+		fs.WriteUsage(stdio.Err)
+		return command.SilentFailure()
+	}
+
+	return sendSignals(stdio, pids, sig)
 }
 
-func kill(process []string, opts options) (int, error) {
-	status := mb.ExitSuccess
-	for _, v := range process {
+// sendSignals delivers sig to every operand, reporting per-process failures on
+// stderr and continuing. The returned error only sets the exit code.
+func sendSignals(stdio command.IO, pids []string, sig int) error {
+	var failed bool
+	for _, v := range pids {
 		pid, err := strconv.Atoi(v)
 		if err != nil {
-			fmt.Fprintln(os.Stderr, "kill: "+err.Error()+": "+v)
-			status = mb.ExitFailure
+			fmt.Fprintf(stdio.Err, "kill: %s: arguments must be process or job IDs\n", v)
+			failed = true
 			continue
 		}
-
 		p, err := os.FindProcess(pid)
 		if err != nil {
-			fmt.Fprintln(os.Stderr, "kill: "+err.Error()+": "+v)
-			status = mb.ExitFailure
+			fmt.Fprintf(stdio.Err, "kill: %s: %v\n", v, err)
+			failed = true
 			continue
 		}
-
-		signal := decideSignal(opts)
-		err = p.Signal(syscall.Signal(signal))
-		if err != nil {
-			fmt.Fprintln(os.Stderr, "kill: "+err.Error())
-			status = mb.ExitFailure
-			continue
+		if err := p.Signal(syscall.Signal(sig)); err != nil {
+			fmt.Fprintf(stdio.Err, "kill: %s: %v\n", v, err)
+			failed = true
 		}
 	}
-	return status, nil
+	if failed {
+		return command.SilentFailure()
+	}
+	return nil
 }
 
-func decideSignal(opts options) int32 {
-	var signal int32 = 0
-	// TODO: Workaround. I have not investigated the response
-	// when multiple signals are specified.
-	if opts.directFlg {
-		str := strings.TrimLeft(opts.direct, "-")
-		if len(str) <= 2 {
-			signal = mb.SignalAtoi(str)
-		} else {
-			signal = mb.ConvSignalNameToNum(str)
+// isSignalSpec reports whether spec is a recognized signal number or name
+// (with or without the SIG prefix).
+func isSignalSpec(spec string) bool {
+	_, err := resolveSignal(spec)
+	return err == nil
+}
+
+// resolveSignal converts a signal specification to its number. It accepts a
+// decimal number ("9"), a full name ("SIGKILL"), or a short name ("KILL"),
+// case-insensitively for names. Unknown specs return an error.
+func resolveSignal(spec string) (int, error) {
+	if spec == "" {
+		return 0, fmt.Errorf("empty signal specification")
+	}
+	// Numeric form: 0 is the POSIX null signal (existence check); any other
+	// number must match a known signal in the table.
+	if n, err := strconv.Atoi(spec); err == nil {
+		if n == 0 {
+			return 0, nil
 		}
-	} else if opts.nameFlg {
-		signal = mb.ConvSignalNameToNum(opts.signalName)
-	} else if opts.numberFlg {
-		signal = mb.SignalAtoi(opts.signalNumber)
-	} else {
-		signal = 9
-	}
-	return signal
-}
-
-func valid(process []string, opts options) {
-	if len(process) == 0 && !opts.listFlg {
-		showHelp()
-		osExit(mb.ExitFailure)
-	}
-	if opts.nameFlg && !mb.IsSignalName(opts.signalName) {
-		fmt.Fprintln(os.Stderr, "kill: -s: invalid signal specification:"+opts.signalName)
-		osExit(mb.ExitFailure)
-	}
-	if opts.numberFlg && !mb.IsSignalName(opts.signalNumber) {
-		fmt.Fprintln(os.Stderr, "kill: -n: invalid signal specification:"+opts.signalNumber)
-		osExit(mb.ExitFailure)
-	}
-
-	trim := strings.TrimLeft(opts.direct, "-")
-	if opts.directFlg && !mb.IsSignalName(trim) && !mb.IsSignalNumber(trim) {
-		fmt.Fprintln(os.Stderr, "kill: "+opts.direct+": invalid signal specification")
-		osExit(mb.ExitFailure)
-	}
-}
-
-func parseArgs(args []string) ([]string, options) {
-	if mb.HasVersionOpt(args) {
-		mb.ShowVersion(cmdName, version)
-		osExit(mb.ExitSuccess)
-	}
-
-	if mb.HasHelpOpt(args) {
-		showHelp()
-		osExit(mb.ExitSuccess)
-	}
-
-	var opts options = options{false, "", false, "", false, "", false, ""}
-	args = args[1:]
-	for i, v := range args {
-		if v == "-s" {
-			opts.nameFlg = true
-			if len(args) > i+1 {
-				opts.signalName = args[i+1]
-			} else {
-				fmt.Fprintln(os.Stderr, "kill: -s: option requires an argument")
-				osExit(mb.ExitFailure)
+		num := strconv.Itoa(n)
+		for _, s := range signals {
+			if s.number == num {
+				return n, nil
 			}
-			continue
-		} else if v == "-n" {
-			opts.numberFlg = true
-			if len(args) > i+1 {
-				opts.signalNumber = args[i+1]
-			} else {
-				fmt.Fprintln(os.Stderr, "kill: -n: option requires an argument")
-				osExit(mb.ExitFailure)
-			}
-			continue
-		} else if v == "-l" {
-			opts.listFlg = true
-			if len(args) > i+1 {
-				opts.list = args[i+1]
-			}
-		} else if strings.Contains(v, "-") {
-			opts.directFlg = true
-			opts.direct = v
+		}
+		return 0, fmt.Errorf("unknown signal number %q", spec)
+	}
+	// Name form: normalize to the SIG-prefixed, upper-case name.
+	name := strings.ToUpper(spec)
+	if !strings.HasPrefix(name, "SIG") {
+		name = "SIG" + name
+	}
+	for _, s := range signals {
+		if s.name == name {
+			n, _ := strconv.Atoi(s.number)
+			return n, nil
 		}
 	}
-	return decideProcess(args[1:], opts), opts
+	return 0, fmt.Errorf("unknown signal name %q", spec)
 }
 
-func decideProcess(args []string, opts options) []string {
-	new := mb.Remove(args, "-s")
-	new = mb.Remove(new, "-n")
-	new = mb.Remove(new, "-l")
-	new = mb.Remove(new, opts.list)
-	new = mb.Remove(new, opts.signalName)
-	new = mb.Remove(new, opts.signalNumber)
-	new = mb.Remove(new, opts.direct)
-	return new
-}
-
-func showHelp() {
-	fmt.Fprintln(os.Stdout, "Usage:")
-	fmt.Fprintln(os.Stdout, "  kill [-s sigspec | -n signum | -sigspec] PID  or")
-	fmt.Fprintln(os.Stdout, "  kill -l [PID]")
-	fmt.Fprintln(os.Stdout, "")
-	fmt.Fprintln(os.Stdout, "Application Options:")
-	fmt.Fprintln(os.Stdout, "  -v, --version       Show kill command version")
-	fmt.Fprintln(os.Stdout, "")
-	fmt.Fprintln(os.Stdout, "Help Options:")
-	fmt.Fprintln(os.Stdout, "  -h, --help          Show this help message")
+// writeSignalList writes the table of known signals to w, one per line.
+func writeSignalList(w io.Writer) {
+	for _, s := range signals {
+		fmt.Fprintf(w, "%2s  %10s  %s\n", s.number, s.name, s.desc)
+	}
 }

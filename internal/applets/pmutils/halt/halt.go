@@ -14,147 +14,107 @@
 // WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
 // See the License for the specific language governing permissions and
 // limitations under the License.
+
+// Package halt implements the halt, poweroff and reboot applets: stop the
+// system. The same package backs all three command names; the action performed
+// depends on the name the command was constructed with.
 package halt
 
 import (
-	"errors"
+	"context"
 	"fmt"
 	"os"
 	"syscall"
 
-	mb "github.com/nao1215/mimixbox/internal/lib"
-
-	"github.com/jessevdk/go-flags"
+	"github.com/nao1215/mimixbox/internal/command"
 )
 
-var cmdName string = "halt"
+// Command names served by this package.
+const (
+	nameHalt     = "halt"
+	namePoweroff = "poweroff"
+	nameReboot   = "reboot"
+)
 
-const version = "1.0.1"
+// rebootFn is the dangerous syscall, behind a package variable so tests can
+// stub it and never actually stop the machine.
+var rebootFn = syscall.Reboot
 
-var osExit = os.Exit
-
-type haltOpts struct {
-	Version bool `short:"v" long:"version" description:"Show halt command version"`
+// isRoot reports whether the current process has the privilege required to stop
+// the system. It is a package variable so tests can simulate root.
+var isRoot = func() bool {
+	return os.Geteuid() == 0 && os.Getuid() == 0
 }
 
-type poweroffOpts struct {
-	Version bool `short:"v" long:"version" description:"Show poweroff command version"`
+// Command is the halt/poweroff/reboot applet. It carries the name it was
+// invoked as so the same type can serve all three commands.
+type Command struct {
+	name string
 }
 
-type rebootOpts struct {
-	Version bool `short:"v" long:"version" description:"Show reboot command version"`
-}
+// New returns a command for the given name (one of "halt", "poweroff" or
+// "reboot").
+func New(name string) *Command { return &Command{name: name} }
 
-type allOptions struct {
-	halt   haltOpts
-	po     poweroffOpts
-	reboot rebootOpts
-}
+// NewHalt returns a halt command.
+func NewHalt() *Command { return New(nameHalt) }
 
-func Run() (int, error) {
-	var allOpts allOptions = allOptions{}
-	var args []string
-	var err error
+// NewPoweroff returns a poweroff command.
+func NewPoweroff() *Command { return New(namePoweroff) }
 
-	setCmdName(os.Args[0])
-	if args, err = parseArgs(&allOpts); err != nil {
-		return mb.ExitFailure, nil
+// NewReboot returns a reboot command.
+func NewReboot() *Command { return New(nameReboot) }
+
+// Name returns the command name.
+func (c *Command) Name() string { return c.name }
+
+// Synopsis returns the one-line description shown in the applet list.
+func (c *Command) Synopsis() string {
+	switch c.name {
+	case namePoweroff:
+		return "Power off the system"
+	case nameReboot:
+		return "Reboot the system"
+	default:
+		return "Halt the system"
 	}
-
-	switch cmdName {
-	case "halt":
-		return halt(args, allOpts.halt)
-	case "poweroff":
-		return poweroff(args, allOpts.po)
-	case "reboot":
-		return reboot(args, allOpts.reboot)
-	}
-	return mb.ExitFailure, errors.New("mimixbox failed to parse the argument (not halt, poweroff, reboot error)")
 }
 
-func halt(args []string, opts haltOpts) (int, error) {
-	fmt.Fprintln(os.Stdout, "The system is going down NOW !!")
-
-	recordWtmp()
-	if err := powerOffSystem(); err != nil {
-		return mb.ExitFailure, err
+// action returns the syscall.Reboot command constant for this command name.
+func (c *Command) action() int {
+	switch c.name {
+	case nameReboot:
+		return syscall.LINUX_REBOOT_CMD_RESTART
+	case namePoweroff:
+		return syscall.LINUX_REBOOT_CMD_POWER_OFF
+	default:
+		return syscall.LINUX_REBOOT_CMD_HALT
 	}
-	return mb.ExitSuccess, nil
 }
 
-func poweroff(args []string, opts poweroffOpts) (int, error) {
-	if err := powerOffSystem(); err != nil {
-		return mb.ExitFailure, err
-	}
-	return mb.ExitSuccess, nil
-}
-
-func reboot(args []string, opts rebootOpts) (int, error) {
-	if err := rebootSystem(); err != nil {
-		return mb.ExitFailure, err
-	}
-	return mb.ExitSuccess, nil
-}
-
-func powerOffSystem() error {
-	process, err := os.FindProcess(1)
-	if err != nil {
+// Run executes halt/poweroff/reboot. It requires root; otherwise it prints a
+// permission message and returns a silent failure without touching rebootFn.
+func (c *Command) Run(_ context.Context, stdio command.IO, args []string) error {
+	fs := command.NewFlagSet(c.Name(), "[OPTION]", stdio.Err)
+	proceed, err := fs.Parse(stdio, args)
+	if err != nil || !proceed {
 		return err
 	}
-	err = process.Signal(syscall.Signal(mb.ConvSignalNameToNum("SIGUSR1")))
-	if err != nil {
-		return err
+
+	if !isRoot() {
+		fmt.Fprintf(stdio.Err, "%s: you must be root to %s the system\n", c.Name(), c.Name())
+		return command.SilentFailure()
 	}
+
+	return stop(c.action())
+}
+
+// stop synchronises filesystems and performs the requested reboot action via
+// the replaceable rebootFn so tests stay safe.
+func stop(action int) error {
 	syscall.Sync()
-	// 0x4321fedc == LINUX_REBOOT_CMD_POWER_OFF; see reboot(2)
-	// LINUX_REBOOT_CMD_HALT is semantically correct, but
-	// implementations vary (halt(8)), and most users will
-	// want power off.
-	return syscall.Reboot(syscall.LINUX_REBOOT_CMD_POWER_OFF)
-}
-
-func rebootSystem() error {
-	process, err := os.FindProcess(1)
-	if err != nil {
-		return err
+	if err := rebootFn(action); err != nil {
+		return command.Failure(err)
 	}
-	err = process.Signal(syscall.Signal(mb.ConvSignalNameToNum("SIGUSR2")))
-	if err != nil {
-		return err
-	}
-	syscall.Sync()
-	return syscall.Reboot(syscall.LINUX_REBOOT_CMD_RESTART)
-}
-
-func recordWtmp() {
-	return // TODO:
-}
-
-func setCmdName(name string) {
-	cmdName = name
-}
-
-func parseArgs(opts *allOptions) ([]string, error) {
-	p := initParser(opts)
-
-	args, err := p.Parse()
-	if err != nil {
-		return nil, err
-	}
-	showVersionAndExitIfNeeded(opts)
-	return args, nil
-}
-
-func initParser(opts *allOptions) *flags.Parser {
-	parser := flags.NewParser(opts, flags.Default)
-	parser.Name = cmdName
-	parser.Usage = "[OPTIONS]"
-	return parser
-}
-
-func showVersionAndExitIfNeeded(opts *allOptions) {
-	if opts.halt.Version || opts.po.Version || opts.reboot.Version {
-		mb.ShowVersion(cmdName, version)
-		osExit(mb.ExitSuccess)
-	}
+	return nil
 }

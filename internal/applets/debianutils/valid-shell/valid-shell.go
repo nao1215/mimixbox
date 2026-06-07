@@ -14,149 +14,102 @@
 // WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
 // See the License for the specific language governing permissions and
 // limitations under the License.
+
+// Package validShell implements the valid-shell applet: verify that every
+// shell listed in /etc/shells exists and is executable.
 package validShell
 
 import (
+	"bufio"
+	"context"
 	"fmt"
+	"io"
 	"os"
-	"os/exec"
 	"strings"
 
-	"github.com/jessevdk/go-flags"
-	mb "github.com/nao1215/mimixbox/internal/lib"
+	"github.com/nao1215/mimixbox/internal/command"
 )
 
-const cmdName string = "valid-shell"
+// shellsPath is the file valid-shell checks by default.
+const shellsPath = "/etc/shells"
 
-const version = "1.0.0"
+// Command is the valid-shell applet.
+type Command struct{}
 
-var osExit = os.Exit
+// New returns a valid-shell command.
+func New() *Command { return &Command{} }
 
-type options struct {
-	Show    bool `short:"s" long:"show" description:"Print contents of /etc/shells"`
-	Fix     bool `short:"f" long:"fix" description:"Fix problems in /etc/shells"`
-	Version bool `short:"v" long:"version" description:"Show valid-shell command version"`
-}
+// Name returns the command name.
+func (c *Command) Name() string { return "valid-shell" }
 
-func Run() (int, error) {
-	var opts options
-	var err error
+// Synopsis returns the one-line description shown in the applet list.
+func (c *Command) Synopsis() string { return "Verify if /etc/shells is valid" }
 
-	if _, err = parseArgs(&opts); err != nil {
-		return mb.ExitFailure, nil
+// Run executes valid-shell.
+func (c *Command) Run(_ context.Context, stdio command.IO, args []string) error {
+	fs := command.NewFlagSet(c.Name(), "[FILE]", stdio.Err)
+
+	proceed, err := fs.Parse(stdio, args)
+	if err != nil || !proceed {
+		return err
 	}
 
-	return validShell(opts)
-}
-
-func validShell(opts options) (int, error) {
-	if opts.Show {
-		return printShellsFile()
-	} else if opts.Fix {
-		return fix()
+	path := shellsPath
+	if rest := fs.Args(); len(rest) > 0 {
+		path = rest[0]
 	}
-	return valid()
-}
 
-func printShellsFile() (int, error) {
-	lines, err := mb.ReadFileToStrList(mb.ShellsFilePath)
+	ok, err := validateShells(path, stdio.Out)
 	if err != nil {
-		return mb.ExitFailure, err
+		fmt.Fprintf(stdio.Err, "%s: %v\n", c.Name(), err)
+		return command.SilentFailure()
 	}
-	for _, v := range lines {
-		fmt.Fprintf(os.Stdout, "%s", v)
+	if !ok {
+		return command.SilentFailure()
 	}
-	return mb.ExitSuccess, nil
+	return nil
 }
 
-func fix() (int, error) {
-	f, err := os.OpenFile(mb.TmpShellsFile(), os.O_CREATE|os.O_WRONLY, 0644)
+// validateShells reads the shells file at path and writes an "OK:"/"NG:" line
+// to out for each listed shell. Comment lines (starting with '#') and blank
+// lines are ignored. It returns ok=true only when every listed shell exists and
+// is executable.
+func validateShells(path string, out io.Writer) (bool, error) {
+	f, err := os.Open(path) //nolint:gosec // operating on the named shells file is the point
 	if err != nil {
-		return mb.ExitFailure, err
+		return false, err
 	}
 	defer f.Close()
 
-	lines, err := mb.ReadFileToStrList(mb.ShellsFilePath)
-	if err != nil {
-		return mb.ExitFailure, err
-	}
-
-	lines = mb.ChopAll(lines)
-	for _, v := range lines {
-		if strings.HasPrefix(v, "#") {
-			fmt.Fprintln(f, v)
+	ok := true
+	sc := bufio.NewScanner(f)
+	for sc.Scan() {
+		line := strings.TrimSpace(sc.Text())
+		if line == "" || strings.HasPrefix(line, "#") {
 			continue
 		}
-		if isFalseCmd(v) {
-			continue // NG: Bupass
-		}
-		if mb.Exists(v) {
-			fmt.Fprintln(f, v)
-		} // else is NG: Bypass
-	}
-
-	err = mb.Copy(mb.TmpShellsFile(), mb.ShellsFilePath)
-	if err != nil {
-		mb.RemoveFile(mb.TmpShellsFile(), false)
-		return mb.ExitFailure, err
-	}
-	mb.RemoveFile(mb.TmpShellsFile(), false)
-
-	return mb.ExitSuccess, nil
-}
-
-func valid() (int, error) {
-	lines, err := mb.ReadFileToStrList(mb.ShellsFilePath)
-	if err != nil {
-		return mb.ExitFailure, err
-	}
-
-	lines = mb.ChopAll(lines)
-	for _, v := range lines {
-		if strings.HasPrefix(v, "#") {
-			continue
-		}
-		if isFalseCmd(v) {
-			fmt.Fprintf(os.Stdout, "NG: %s (not preferable for security)\n", v)
-			continue
-		}
-		if mb.Exists(v) {
-			fmt.Fprintf(os.Stdout, "OK: %s\n", v)
+		if isExecutable(line) {
+			fmt.Fprintf(out, "OK: %s\n", line)
 		} else {
-			fmt.Fprintf(os.Stdout, "NG: %s (not exist in the system)\n", v)
+			fmt.Fprintf(out, "NG: %s (not exist in the system)\n", line)
+			ok = false
 		}
 	}
-	return mb.ExitSuccess, nil
+	if err := sc.Err(); err != nil {
+		return false, err
+	}
+	return ok, nil
 }
 
-func isFalseCmd(str string) bool {
-	path, err := exec.LookPath("false")
+// isExecutable reports whether path is an existing regular file with an execute
+// bit set.
+func isExecutable(path string) bool {
+	info, err := os.Stat(path)
 	if err != nil {
 		return false
 	}
-	return path == str
-}
-
-func parseArgs(opts *options) ([]string, error) {
-	p := initParser(opts)
-
-	args, err := p.Parse()
-	if err != nil {
-		return nil, err
+	if info.IsDir() {
+		return false
 	}
-
-	if opts.Version {
-		mb.ShowVersion(cmdName, version)
-		osExit(mb.ExitSuccess)
-	}
-
-	return args, nil
-}
-
-func initParser(opts *options) *flags.Parser {
-	parser := flags.NewParser(opts, flags.Default)
-	parser.Name = cmdName
-	parser.Usage = "[OPTIONS]"
-
-	return parser
+	return info.Mode().Perm()&0111 != 0
 }
