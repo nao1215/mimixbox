@@ -32,7 +32,7 @@ func TestNewAndMeta(t *testing.T) {
 	if c.Name() != "sha512sum" {
 		t.Errorf("Name() = %q", c.Name())
 	}
-	if c.Synopsis() != "alculate or Check sercure hash 512 algorithm" {
+	if c.Synopsis() != "Calculate or Check secure hash 512 algorithm" {
 		t.Errorf("Synopsis() = %q", c.Synopsis())
 	}
 }
