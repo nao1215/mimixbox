@@ -12,6 +12,10 @@
 
 MimixBox packs many Unix commands into a single binary, like BusyBox. Unlike BusyBox, it targets the desktop environment rather than embedded systems. The project aims for a wide range of built-in commands (applets), from the basics provided by Coreutils to its own experimental commands.
 
+![demo](./assets/demo.gif)
+
+The GIF above is generated from [assets/demo.tape](./assets/demo.tape) with [vhs](https://github.com/charmbracelet/vhs); run `vhs assets/demo.tape` after `make build` to regenerate it.
+
 ## Commands
 
 The list below is generated from the registered applets by `make command-list`, so it never drifts from the binary. You can also run `mimixbox --list` to print it on the terminal.
@@ -150,13 +154,51 @@ $ brew install nao1215/tap/mimixbox
 
 MimixBox has its own commands that do not exist in packages like Coreutils.
 
-| Command (Applet) Name | Description |
-|:--|:--|
-| [fakemovie](./docs/examples/fakemovie/en/fakemovie.md) | Adds a video playback button to the image |
-| [ghrdc](./docs/examples/ghrdc/en/ghrdc.md) | GitHub Release Download Counter |
-| [path](./docs/examples/path/en/path.md) | Manipulate filename path |
-| [sddf](./docs/examples/sddf/en/sddf.md) | Search & Delete Duplicated File |
-| [serial](./docs/examples/serial/en/serial.md) | Rename the file to a name with a serial number |
+### fakemovie
+
+Add a movie-style play button to an image (based on [mattn's fakemovie](https://github.com/mattn/fakemovie)). Use `-o` to set the output name, `-p` for a different button style and `-r` to set the radius.
+
+```shell
+$ fakemovie lena.png            # writes lena_fake.png
+$ fakemovie -p lena.png -o out.png
+```
+
+### ghrdc
+
+GitHub Release Downloads Counter: print how many times a repository's release assets were downloaded, via the GitHub API. `-a` shows the count per release and `-t` the total across all releases. It uses the unauthenticated API, so it is limited to 60 calls per hour and public repositories only.
+
+```shell
+$ ghrdc nao1215/mimixbox        # latest release
+$ ghrdc -t nao1215/mimixbox     # all releases (total)
+```
+
+### path
+
+Manipulate a filename path: print its absolute form, canonical form, directory, basename or extension.
+
+```shell
+$ path -a path                  # absolute path
+$ path -b /etc/systemd/pstore.conf   # basename -> pstore.conf
+$ path -d /etc/ssh/ssh_config        # dirname  -> /etc/ssh
+$ path -e archive.tar.gz             # extension -> .gz
+```
+
+### sddf
+
+Search & Delete Duplicated File: find files with identical content (compared by md5 checksum) and remove the duplicates, keeping the most recent copy. The list of removed files is written to `duplicated-file.sddf` (change the name with `-o`).
+
+```shell
+$ sddf .
+```
+
+### serial
+
+Rename the files in a directory to a common base name with a serial number, useful for normalizing a directory of images or downloads. Choose the base name with `-n`, put the number as a prefix (`-p`, default) or suffix (`-s`), and preview with `-d`.
+
+```shell
+$ serial -n photo .             # photo0, photo1, ... in the current directory
+$ serial -d -n photo .          # dry run: print the renames without applying them
+```
 
 ## Roadmap
 
@@ -201,8 +243,6 @@ $ make build
 ```
 
 ### Debugging
-
-See [DebugAndTest.md](docs/introduction/en/DebugAndTest.md) for details.
 
 Create a Docker environment:
 
