@@ -14,6 +14,9 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
   `comm` (#159), `paste` (#160), `fold` (#161), `fmt` (#162), `split` (#163),
   `shuf` (#164), `rev` (#165), `cksum` (#166), `strings` (#167), `xxd` (#168),
   `base32` (#169).
+- New fileutils applets, each with unit tests and shellspec integration tests:
+  `stat` (#170), `truncate` (#171), `readlink` (#172), `link` (#173),
+  `unlink` (#174), `shred` (#175), `mountpoint` (#176).
 
 ## [0.34.0] - 2026-06-08
 

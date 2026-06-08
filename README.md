@@ -19,7 +19,7 @@ MimixBox packs many Unix commands into a single binary, like BusyBox. Unlike Bus
 The list below is generated from the registered applets by `make command-list`, so it never drifts from the binary. You can also run `mimixbox --list` to print it on the terminal.
 
 <!-- COMMAND_LIST_START -->
-There are 116 commands. Run `mimixbox --list` to see them on the terminal.
+There are 123 commands. Run `mimixbox --list` to see them on the terminal.
 
 | Command | Description |
 |:--|:--|
@@ -74,6 +74,7 @@ There are 116 commands. Run `mimixbox --list` to see them on the terminal.
 | ischroot | Detect if running in a chroot |
 | kill | Kill process or send signal to process |
 | lifegame | Life game (Conway's Game of Life) |
+| link | Create a hard link to a file |
 | ln | Create hard or symbolic link |
 | mbsh | Mimix Box Shell |
 | md5sum | Calculate or Check md5sum message digest |
@@ -81,6 +82,7 @@ There are 116 commands. Run `mimixbox --list` to see them on the terminal.
 | mkfifo | Make FIFO (named pipe) |
 | mknod | Make block or character special files |
 | mktemp | Create a temporary file or directory |
+| mountpoint | See if a directory is a mountpoint |
 | mv | Rename SOURCE to DESTINATION, or move SOURCE(s) to DIRECTORY |
 | nl | Write each FILE to standard output with line numbers added |
 | od | Dump files in octal and other formats |
@@ -91,6 +93,7 @@ There are 116 commands. Run `mimixbox --list` to see them on the terminal.
 | printenv | Print environment variable |
 | printf | Formats and print data |
 | pwd | Print Working Directory |
+| readlink | Print resolved symbolic links or canonical file names |
 | realpath | Print the resolved absolute file name |
 | reboot | Reboot the system |
 | remove-shell | Remove shell name from /etc/shells |
@@ -108,11 +111,13 @@ There are 116 commands. Run `mimixbox --list` to see them on the terminal.
 | sha1sum | Calculate or Check secure hash 1 algorithm |
 | sha256sum | Calculate or Check secure hash 256 algorithm |
 | sha512sum | Calculate or Check secure hash 512 algorithm |
+| shred | Overwrite a file to hide its contents |
 | shuf | Generate a random permutation of input lines |
 | sl | Cure your bad habit of mistyping |
 | sleep | Pause for NUMBER seconds(minutes, hours, days) |
 | sort | Sort lines of text files |
 | split | Split a file into pieces |
+| stat | Display file or file system status |
 | strings | Print printable character sequences in files |
 | sync | Synchronize cached writes to persistent storage |
 | tac | Print the file contents from the end to the beginning |
@@ -123,10 +128,12 @@ There are 116 commands. Run `mimixbox --list` to see them on the terminal.
 | touch | Update the access and modification times of each FILE to the current time |
 | tr | Translate or delete characters |
 | true | Do nothing. Return success(0) |
+| truncate | Shrink or extend the size of a file to a given size |
 | uncompress | Decompress LZW (.Z) files |
 | unexpand | Convert N space to TAB(default:N=8) |
 | uniq | Report or omit repeated lines |
 | unix2dos | Change LF to CRLF |
+| unlink | Remove a single file by calling the unlink function |
 | unzip | Extract files from a ZIP archive |
 | uuidgen | Print UUID (Universal Unique IDentifier |
 | valid-shell | Verify if /etc/shells is valid |

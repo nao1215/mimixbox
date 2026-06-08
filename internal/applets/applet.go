@@ -52,13 +52,20 @@ import (
 	"github.com/nao1215/mimixbox/internal/applets/fileutils/chgrp"
 	"github.com/nao1215/mimixbox/internal/applets/fileutils/chown"
 	"github.com/nao1215/mimixbox/internal/applets/fileutils/cp"
+	"github.com/nao1215/mimixbox/internal/applets/fileutils/link"
 	"github.com/nao1215/mimixbox/internal/applets/fileutils/ln"
 	"github.com/nao1215/mimixbox/internal/applets/fileutils/mkdir"
 	"github.com/nao1215/mimixbox/internal/applets/fileutils/mkfifo"
+	"github.com/nao1215/mimixbox/internal/applets/fileutils/mountpoint"
 	"github.com/nao1215/mimixbox/internal/applets/fileutils/mv"
+	"github.com/nao1215/mimixbox/internal/applets/fileutils/readlink"
 	"github.com/nao1215/mimixbox/internal/applets/fileutils/rm"
 	"github.com/nao1215/mimixbox/internal/applets/fileutils/rmdir"
+	"github.com/nao1215/mimixbox/internal/applets/fileutils/shred"
+	statCmd "github.com/nao1215/mimixbox/internal/applets/fileutils/stat"
 	"github.com/nao1215/mimixbox/internal/applets/fileutils/touch"
+	"github.com/nao1215/mimixbox/internal/applets/fileutils/truncate"
+	"github.com/nao1215/mimixbox/internal/applets/fileutils/unlink"
 	"github.com/nao1215/mimixbox/internal/applets/findutils/find"
 	"github.com/nao1215/mimixbox/internal/applets/findutils/grep"
 	"github.com/nao1215/mimixbox/internal/applets/findutils/xargs"
@@ -213,6 +220,7 @@ func init() {
 		"ischroot":     reg(ischroot.New()),
 		"kill":         reg(kill.New()),
 		"lifegame":     reg(lifegame.New()),
+		"link":         reg(link.New()),
 		"ln":           reg(ln.New()),
 		"mbsh":         reg(mbsh.New()),
 		"md5sum":       reg(md5sum.New()),
@@ -220,6 +228,7 @@ func init() {
 		"mkfifo":       reg(mkfifo.New()),
 		"mknod":        reg(mknod.New()),
 		"mktemp":       reg(mktemp.New()),
+		"mountpoint":   reg(mountpoint.New()),
 		"mv":           reg(mv.New()),
 		"nl":           reg(nl.New()),
 		"od":           reg(od.New()),
@@ -230,6 +239,7 @@ func init() {
 		"printenv":     reg(printenv.New()),
 		"printf":       reg(printf.New()),
 		"pwd":          reg(pwd.New()),
+		"readlink":     reg(readlink.New()),
 		"realpath":     reg(realpath.New()),
 		"remove-shell": reg(removeShell.New()),
 		"rev":          reg(rev.New()),
@@ -245,6 +255,7 @@ func init() {
 		"sha1sum":      reg(sha1sum.New()),
 		"sha256sum":    reg(sha256sum.New()),
 		"sha512sum":    reg(sha512sum.New()),
+		"shred":        reg(shred.New()),
 		"sed":          reg(sed.New()),
 		"seq":          reg(seq.New()),
 		"shuf":         reg(shuf.New()),
@@ -252,6 +263,7 @@ func init() {
 		"sleep":        reg(sleep.New()),
 		"sort":         reg(sortcmd.New()),
 		"split":        reg(split.New()),
+		"stat":         reg(statCmd.New()),
 		"strings":      reg(stringsCmd.New()),
 		"sync":         reg(sync.New()),
 		"tac":          reg(tac.New()),
@@ -262,10 +274,12 @@ func init() {
 		"touch":        reg(touch.New()),
 		"tr":           reg(tr.New()),
 		"true":         reg(booltrue.New()),
+		"truncate":     reg(truncate.New()),
 		"uncompress":   reg(uncompress.New()),
 		"unexpand":     reg(unexpand.New()),
 		"uniq":         reg(uniq.New()),
 		"unix2dos":     reg(unix2dos.New()),
+		"unlink":       reg(unlink.New()),
 		"unzip":        reg(unzip.New()),
 		"vi":           reg(vi.New()),
 		"uuidgen":      reg(uuidgen.New()),

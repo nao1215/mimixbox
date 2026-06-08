@@ -1,0 +1,3 @@
+TestMountpointRoot() {
+    mountpoint /
+}
