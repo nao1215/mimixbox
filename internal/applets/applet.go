@@ -79,6 +79,9 @@ import (
 	"github.com/nao1215/mimixbox/internal/applets/jokeutils/nyancat"
 	"github.com/nao1215/mimixbox/internal/applets/jokeutils/sl"
 	"github.com/nao1215/mimixbox/internal/applets/netutils/httpstatus"
+	"github.com/nao1215/mimixbox/internal/applets/netutils/nc"
+	"github.com/nao1215/mimixbox/internal/applets/netutils/ping"
+	"github.com/nao1215/mimixbox/internal/applets/netutils/whris"
 	"github.com/nao1215/mimixbox/internal/applets/securityutils/pwcrack"
 	"github.com/nao1215/mimixbox/internal/applets/securityutils/pwgen"
 	"github.com/nao1215/mimixbox/internal/applets/securityutils/pwscore"
@@ -114,6 +117,7 @@ import (
 	"github.com/nao1215/mimixbox/internal/applets/shellutils/install"
 	"github.com/nao1215/mimixbox/internal/applets/shellutils/kill"
 	"github.com/nao1215/mimixbox/internal/applets/shellutils/killall"
+	"github.com/nao1215/mimixbox/internal/applets/shellutils/logcollect"
 	"github.com/nao1215/mimixbox/internal/applets/shellutils/logname"
 	"github.com/nao1215/mimixbox/internal/applets/shellutils/mbsh"
 	"github.com/nao1215/mimixbox/internal/applets/shellutils/mknod"
@@ -131,6 +135,7 @@ import (
 	"github.com/nao1215/mimixbox/internal/applets/shellutils/serial"
 	"github.com/nao1215/mimixbox/internal/applets/shellutils/sleep"
 	sortcmd "github.com/nao1215/mimixbox/internal/applets/shellutils/sort"
+	"github.com/nao1215/mimixbox/internal/applets/shellutils/speaker"
 	"github.com/nao1215/mimixbox/internal/applets/shellutils/sync"
 	"github.com/nao1215/mimixbox/internal/applets/shellutils/tee"
 	testcmd "github.com/nao1215/mimixbox/internal/applets/shellutils/test"
@@ -255,6 +260,7 @@ func init() {
 		"lifegame":         reg(lifegame.New()),
 		"link":             reg(link.New()),
 		"ln":               reg(ln.New()),
+		"log-collect":      reg(logcollect.New()),
 		"logname":          reg(logname.New()),
 		"mbsh":             reg(mbsh.New()),
 		"md5sum":           reg(md5sum.New()),
@@ -264,11 +270,13 @@ func init() {
 		"mktemp":           reg(mktemp.New()),
 		"mountpoint":       reg(mountpoint.New()),
 		"mv":               reg(mv.New()),
+		"nc":               reg(nc.New()),
 		"nl":               reg(nl.New()),
 		"nohup":            reg(nohup.New()),
 		"nproc":            reg(nproc.New()),
 		"nyancat":          reg(nyancat.New()),
 		"od":               reg(od.New()),
+		"ping":             reg(ping.New()),
 		"paste":            reg(paste.New()),
 		"patch":            reg(patch.New()),
 		"path":             reg(path.New()),
@@ -303,6 +311,7 @@ func init() {
 		"sl":               reg(sl.New()),
 		"sleep":            reg(sleep.New()),
 		"sort":             reg(sortcmd.New()),
+		"speaker":          reg(speaker.New()),
 		"split":            reg(split.New()),
 		"stat":             reg(statCmd.New()),
 		"strings":          reg(stringsCmd.New()),
@@ -339,6 +348,7 @@ func init() {
 		"zip-pwcrack":      reg(zippwcrack.New()),
 		"who":              reg(who.New()),
 		"whoami":           reg(whoami.New()),
+		"whris":            reg(whris.New()),
 		"yes":              reg(yes.New()),
 	}
 }

@@ -35,6 +35,11 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
   auditing; `pwscore` (#203) rates password strength; `http-status-code`
   (#206) explains HTTP status codes. New `netutils` and `securityutils`
   applet categories were introduced.
+- New network/system ported applets, with original MIT/BSD-3 attribution
+  preserved where applicable and no source copied verbatim: `nc` (#197,
+  netcat), `ping` (#198, raw-socket ICMP), `whris` (#199, domain IP/AS
+  lookup), `log-collect` (#200, gather log files), `speaker` (#196,
+  TTS via an installed engine).
 - New securityutils cracking applets (clean-room, no GPL source copied):
   `pwcrack` (#205) audits crypt(3) hashes against a wordlist, and
   `zip-pwcrack` (#204) recovers a ZipCrypto-encrypted archive's password.
@@ -44,6 +49,16 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
   static build verifies passwords against `/etc/shadow` via crypt(3); a PAM
   backend can be selected with `-tags pam` so the no-PAM build never needs
   cgo or libpam.
+- A `Docker` CI workflow that builds the image from the local source tree
+  and verifies the in-image `mimixbox` binary runs, so building MimixBox in
+  Docker stays working (#4).
+
+### Changed
+
+- Raised overall test coverage above 80% (octocov target) by adding
+  unit tests for the previously-untested `internal/lib` helpers (string,
+  type, signal, option, path, shell, crypto, id, net, shadow, version)
+  and `internal/version`.
 
 ## [0.34.0] - 2026-06-08
 
