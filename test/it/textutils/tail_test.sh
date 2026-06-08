@@ -31,3 +31,15 @@ TestTailPipe() {
 TestTailNoExistFile() {
     tail /no_exist_file
 }
+
+TestTailFollow() {
+    export TEST_DIR=/tmp/mimixbox/it
+    export FOLLOW_FILE=/tmp/mimixbox/it/follow.txt
+    mkdir -p "${TEST_DIR}"
+    printf 'start\n' > "${FOLLOW_FILE}"
+    # Append more data shortly after tail starts following.
+    ( sleep 0.2; printf 'appended\n' >> "${FOLLOW_FILE}" ) &
+    # tail -f follows forever; bound it with timeout (exits non-zero when killed),
+    # so the assertion is on the captured output.
+    timeout 0.5 tail -f -s 0.05 "${FOLLOW_FILE}"
+}

@@ -24,17 +24,33 @@ func (c *Command) Name() string { return "tail" }
 func (c *Command) Synopsis() string { return "Print the last NUMBER(default=10) lines" }
 
 // Run executes tail.
-func (c *Command) Run(_ context.Context, stdio command.IO, args []string) error {
+func (c *Command) Run(ctx context.Context, stdio command.IO, args []string) error {
 	fs := command.NewFlagSet(c.Name(), "[OPTION]... [FILE]...", stdio.Err)
 	lines := fs.IntP("lines", "n", 10, "output the last NUM lines instead of the last 10")
 	bytesN := fs.IntP("bytes", "c", 0, "output the last NUM bytes of each file")
 	quiet := fs.BoolP("quiet", "q", false, "never print headers giving file names")
 	verbose := fs.BoolP("verbose", "v", false, "always print headers giving file names")
+	followMode := fs.StringP("follow", "f", "", "output appended data as the file grows; MODE is 'name' or 'descriptor'")
+	fs.Lookup("follow").NoOptDefVal = "descriptor"
+	followName := fs.BoolP("follow-name", "F", false, "same as --follow=name --retry")
+	retry := fs.Bool("retry", false, "keep trying to open a file even if it is inaccessible")
+	sleepInterval := fs.Float64P("sleep-interval", "s", 1.0, "seconds to wait between iterations when following")
 
 	proceed, err := fs.Parse(stdio, args)
 	if err != nil || !proceed {
 		return err
 	}
+
+	if *sleepInterval <= 0 {
+		return command.Failuref("invalid number of seconds: %g", *sleepInterval)
+	}
+	if fs.Changed("follow") && *followMode != "name" && *followMode != "descriptor" {
+		return command.Failuref("invalid argument %q for '--follow'; valid arguments are 'name', 'descriptor'", *followMode)
+	}
+
+	following := fs.Changed("follow") || *followName
+	reopen := *followName || *followMode == "name"
+	retryOpen := *retry || *followName
 
 	files := fs.Args()
 	if len(files) == 0 {
@@ -64,7 +80,29 @@ func (c *Command) Run(_ context.Context, stdio command.IO, args []string) error 
 			firstErr = keep(firstErr)
 		}
 	}
+
+	if following {
+		// Standard input cannot be polled for growth, so only real files are
+		// followed. With -F/--retry a not-yet-existing file is still tracked.
+		paths := followablePaths(files)
+		targets := newFollowTargets(paths, retryOpen)
+		defer closeAll(targets)
+		follow(ctx, stdio, targets, *sleepInterval, reopen, showHeader)
+	}
 	return firstErr
+}
+
+// followablePaths returns the file operands that can be polled for growth,
+// dropping the "-" (standard input) pseudo-file.
+func followablePaths(files []string) []string {
+	paths := make([]string, 0, len(files))
+	for _, name := range files {
+		if name == "-" {
+			continue
+		}
+		paths = append(paths, name)
+	}
+	return paths
 }
 
 func writeHeader(w io.Writer, name string, first bool) {
