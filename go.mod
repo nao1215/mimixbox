@@ -3,6 +3,7 @@ module github.com/nao1215/mimixbox
 go 1.18
 
 require (
+	github.com/GehirnInc/crypt v0.0.0-20230320061759-8cc1b52080c5
 	github.com/fogleman/gg v1.3.0
 	github.com/jessevdk/go-flags v1.6.1
 	github.com/nsf/termbox-go v1.1.1

@@ -19,7 +19,7 @@ MimixBox packs many Unix commands into a single binary, like BusyBox. Unlike Bus
 The list below is generated from the registered applets by `make command-list`, so it never drifts from the binary. You can also run `mimixbox --list` to print it on the terminal.
 
 <!-- COMMAND_LIST_START -->
-There are 150 commands. Run `mimixbox --list` to see them on the terminal.
+There are 152 commands. Run `mimixbox --list` to see them on the terminal.
 
 | Command | Description |
 |:--|:--|
@@ -109,6 +109,7 @@ There are 150 commands. Run `mimixbox --list` to see them on the terminal.
 | poweroff | Power off the system |
 | printenv | Print environment variable |
 | printf | Formats and print data |
+| pwcrack | Audit crypt(3) password hashes against a wordlist |
 | pwd | Print Working Directory |
 | pwgen | Generate random passwords for authorized testing |
 | pwscore | Estimate the strength of a password |
@@ -173,6 +174,7 @@ There are 150 commands. Run `mimixbox --list` to see them on the terminal.
 | xxd | Make a hex dump or do the reverse |
 | yes | Output a string repeatedly until killed |
 | zip | Package and compress files into a ZIP archive |
+| zip-pwcrack | Recover the password of a ZipCrypto-encrypted archive |
 <!-- COMMAND_LIST_END -->
 
 ## Install
