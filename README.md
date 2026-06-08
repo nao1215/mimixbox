@@ -19,13 +19,14 @@ MimixBox packs many Unix commands into a single binary, like BusyBox. Unlike Bus
 The list below is generated from the registered applets by `make command-list`, so it never drifts from the binary. You can also run `mimixbox --list` to print it on the terminal.
 
 <!-- COMMAND_LIST_START -->
-There are 105 commands. Run `mimixbox --list` to see them on the terminal.
+There are 116 commands. Run `mimixbox --list` to see them on the terminal.
 
 | Command | Description |
 |:--|:--|
 | add-shell | Add shell name to /etc/shells |
 | ar | Create, modify and extract from archives |
 | awk | Pattern scanning and processing language |
+| base32 | Base32 encode/decode from FILE(or STDIN) to STDOUT |
 | base64 | Base64 encode/decode from FILR(or STDIN) to STDOUT |
 | basename | Print basename (PATH without "/") from file path |
 | bunzip2 | Decompress bzip2 (.bz2) files |
@@ -35,8 +36,10 @@ There are 105 commands. Run `mimixbox --list` to see them on the terminal.
 | chmod | Change file mode bits |
 | chown | Change the owner and/or group of each FILE to OWNER and/or GROUP |
 | chroot | Run command or interactive shell with special root directory |
+| cksum | Print CRC checksum and byte count of each file |
 | clear | Clear terminal |
 | cmp | Compare two files byte by byte |
+| comm | Compare two sorted files line by line |
 | compress | Compress files with LZW (.Z) |
 | cowsay | Print message with cow's ASCII art |
 | cp | Copy file(s) otr Directory(s) |
@@ -56,6 +59,8 @@ There are 105 commands. Run `mimixbox --list` to see them on the terminal.
 | fakemovie | Adds a video playback button to the image |
 | false | Do nothing. Return unsuccess(1) |
 | find | Search for files in a directory hierarchy |
+| fmt | Simple optimal text formatter |
+| fold | Wrap each input line to fit in specified width |
 | ghrdc | GitHub Relase Download Counter |
 | grep | Print lines that match patterns |
 | groups | Print the groups to which USERNAME belongs |
@@ -79,6 +84,7 @@ There are 105 commands. Run `mimixbox --list` to see them on the terminal.
 | mv | Rename SOURCE to DESTINATION, or move SOURCE(s) to DIRECTORY |
 | nl | Write each FILE to standard output with line numbers added |
 | od | Dump files in octal and other formats |
+| paste | Merge lines of files |
 | patch | Apply a diff file to an original |
 | path | Manipulate filename path |
 | poweroff | Power off the system |
@@ -90,6 +96,7 @@ There are 105 commands. Run `mimixbox --list` to see them on the terminal.
 | remove-shell | Remove shell name from /etc/shells |
 | reset | Reset terminal |
 | resize | Print commands to set the terminal size |
+| rev | Reverse the order of characters in every line |
 | rm | Remove file(s) or directory(s) |
 | rmdir | Remove directory |
 | rpm | Query an RPM package file |
@@ -101,9 +108,12 @@ There are 105 commands. Run `mimixbox --list` to see them on the terminal.
 | sha1sum | Calculate or Check secure hash 1 algorithm |
 | sha256sum | Calculate or Check secure hash 256 algorithm |
 | sha512sum | Calculate or Check secure hash 512 algorithm |
+| shuf | Generate a random permutation of input lines |
 | sl | Cure your bad habit of mistyping |
 | sleep | Pause for NUMBER seconds(minutes, hours, days) |
 | sort | Sort lines of text files |
+| split | Split a file into pieces |
+| strings | Print printable character sequences in files |
 | sync | Synchronize cached writes to persistent storage |
 | tac | Print the file contents from the end to the beginning |
 | tail | Print the last NUMBER(default=10) lines |
@@ -127,6 +137,7 @@ There are 105 commands. Run `mimixbox --list` to see them on the terminal.
 | who | Show who is logged on |
 | whoami | Print login user name |
 | xargs | Build and execute command lines from standard input |
+| xxd | Make a hex dump or do the reverse |
 | zip | Package and compress files into a ZIP archive |
 <!-- COMMAND_LIST_END -->
 

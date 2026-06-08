@@ -114,15 +114,25 @@ import (
 	"github.com/nao1215/mimixbox/internal/applets/shellutils/wget"
 	"github.com/nao1215/mimixbox/internal/applets/shellutils/who"
 	"github.com/nao1215/mimixbox/internal/applets/shellutils/whoami"
+	"github.com/nao1215/mimixbox/internal/applets/textutils/base32"
 	"github.com/nao1215/mimixbox/internal/applets/textutils/cat"
+	"github.com/nao1215/mimixbox/internal/applets/textutils/cksum"
+	"github.com/nao1215/mimixbox/internal/applets/textutils/comm"
 	"github.com/nao1215/mimixbox/internal/applets/textutils/dos2unix"
 	"github.com/nao1215/mimixbox/internal/applets/textutils/expand"
+	fmtCmd "github.com/nao1215/mimixbox/internal/applets/textutils/fmt"
+	"github.com/nao1215/mimixbox/internal/applets/textutils/fold"
 	"github.com/nao1215/mimixbox/internal/applets/textutils/head"
 	"github.com/nao1215/mimixbox/internal/applets/textutils/md5sum"
 	"github.com/nao1215/mimixbox/internal/applets/textutils/nl"
+	"github.com/nao1215/mimixbox/internal/applets/textutils/paste"
+	"github.com/nao1215/mimixbox/internal/applets/textutils/rev"
 	"github.com/nao1215/mimixbox/internal/applets/textutils/sha1sum"
 	"github.com/nao1215/mimixbox/internal/applets/textutils/sha256sum"
 	"github.com/nao1215/mimixbox/internal/applets/textutils/sha512sum"
+	"github.com/nao1215/mimixbox/internal/applets/textutils/shuf"
+	"github.com/nao1215/mimixbox/internal/applets/textutils/split"
+	stringsCmd "github.com/nao1215/mimixbox/internal/applets/textutils/strings"
 	"github.com/nao1215/mimixbox/internal/applets/textutils/tac"
 	"github.com/nao1215/mimixbox/internal/applets/textutils/tail"
 
@@ -130,6 +140,7 @@ import (
 	"github.com/nao1215/mimixbox/internal/applets/textutils/unexpand"
 	"github.com/nao1215/mimixbox/internal/applets/textutils/unix2dos"
 	"github.com/nao1215/mimixbox/internal/applets/textutils/wc"
+	"github.com/nao1215/mimixbox/internal/applets/textutils/xxd"
 )
 
 type EntryPoint func() (int, error)
@@ -153,12 +164,15 @@ func init() {
 		"add-shell": reg(addShell.New()),
 		"ar":        reg(ar.New()),
 		"awk":       reg(awk.New()),
+		"base32":    reg(base32.New()),
 		"base64":    reg(base64.New()),
 		"basename":  reg(basename.New()),
 		"bunzip2":   reg(bunzip2.New()),
 		"cal":       reg(cal.New()),
 		"cat":       reg(cat.New()),
+		"cksum":     reg(cksum.New()),
 		"chmod":     reg(chmod.New()),
+		"comm":      reg(comm.New()),
 		"cowsay":    reg(cowsay.New()),
 		"chgrp":     reg(chgrp.New()),
 		"chown":     reg(chown.New()),
@@ -184,6 +198,8 @@ func init() {
 		"fakemovie":    reg(fakemovie.New()),
 		"false":        reg(boolfalse.New()),
 		"find":         reg(find.New()),
+		"fmt":          reg(fmtCmd.New()),
+		"fold":         reg(fold.New()),
 		"ghrdc":        reg(ghrdc.New()),
 		"grep":         reg(grep.New()),
 		"groups":       reg(groups.New()),
@@ -207,6 +223,7 @@ func init() {
 		"mv":           reg(mv.New()),
 		"nl":           reg(nl.New()),
 		"od":           reg(od.New()),
+		"paste":        reg(paste.New()),
 		"patch":        reg(patch.New()),
 		"path":         reg(path.New()),
 		"poweroff":     reg(halt.NewPoweroff()),
@@ -215,6 +232,7 @@ func init() {
 		"pwd":          reg(pwd.New()),
 		"realpath":     reg(realpath.New()),
 		"remove-shell": reg(removeShell.New()),
+		"rev":          reg(rev.New()),
 		"reboot":       reg(halt.NewReboot()),
 		"rpm":          reg(rpm.New()),
 		"rpm2cpio":     reg(rpm2cpio.New()),
@@ -229,9 +247,12 @@ func init() {
 		"sha512sum":    reg(sha512sum.New()),
 		"sed":          reg(sed.New()),
 		"seq":          reg(seq.New()),
+		"shuf":         reg(shuf.New()),
 		"sl":           reg(sl.New()),
 		"sleep":        reg(sleep.New()),
 		"sort":         reg(sortcmd.New()),
+		"split":        reg(split.New()),
+		"strings":      reg(stringsCmd.New()),
 		"sync":         reg(sync.New()),
 		"tac":          reg(tac.New()),
 		"tail":         reg(tail.New()),
@@ -253,6 +274,7 @@ func init() {
 		"wget":         reg(wget.New()),
 		"which":        reg(which.New()),
 		"xargs":        reg(xargs.New()),
+		"xxd":          reg(xxd.New()),
 		"zip":          reg(zipCmd.New()),
 		"who":          reg(who.New()),
 		"whoami":       reg(whoami.New()),
