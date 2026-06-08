@@ -17,11 +17,12 @@ MimixBox packs many Unix commands into a single binary, like BusyBox. Unlike Bus
 The list below is generated from the registered applets by `make command-list`, so it never drifts from the binary. You can also run `mimixbox --list` to print it on the terminal.
 
 <!-- COMMAND_LIST_START -->
-There are 94 commands. Run `mimixbox --list` to see them on the terminal.
+There are 96 commands. Run `mimixbox --list` to see them on the terminal.
 
 | Command | Description |
 |:--|:--|
 | add-shell | Add shell name to /etc/shells |
+| ar | Create, modify and extract from archives |
 | base64 | Base64 encode/decode from FILR(or STDIN) to STDOUT |
 | basename | Print basename (PATH without "/") from file path |
 | bunzip2 | Decompress bzip2 (.bz2) files |
@@ -35,6 +36,7 @@ There are 94 commands. Run `mimixbox --list` to see them on the terminal.
 | cmp | Compare two files byte by byte |
 | cowsay | Print message with cow's ASCII art |
 | cp | Copy file(s) otr Directory(s) |
+| cpio | Copy files to and from archives |
 | cut | Remove sections from each line of files |
 | date | Print or set the system date and time |
 | dd | Convert and copy a file |
