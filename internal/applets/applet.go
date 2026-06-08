@@ -94,6 +94,7 @@ import (
 	"github.com/nao1215/mimixbox/internal/applets/shellutils/env"
 	"github.com/nao1215/mimixbox/internal/applets/shellutils/expr"
 	"github.com/nao1215/mimixbox/internal/applets/shellutils/false"
+	"github.com/nao1215/mimixbox/internal/applets/shellutils/free"
 	"github.com/nao1215/mimixbox/internal/applets/shellutils/ghrdc"
 	"github.com/nao1215/mimixbox/internal/applets/shellutils/groups"
 	"github.com/nao1215/mimixbox/internal/applets/shellutils/hostid"
@@ -102,8 +103,10 @@ import (
 	"github.com/nao1215/mimixbox/internal/applets/shellutils/logname"
 	"github.com/nao1215/mimixbox/internal/applets/shellutils/install"
 	"github.com/nao1215/mimixbox/internal/applets/shellutils/kill"
+	"github.com/nao1215/mimixbox/internal/applets/shellutils/killall"
 	"github.com/nao1215/mimixbox/internal/applets/shellutils/mbsh"
 	"github.com/nao1215/mimixbox/internal/applets/shellutils/mknod"
+	"github.com/nao1215/mimixbox/internal/applets/shellutils/nohup"
 	"github.com/nao1215/mimixbox/internal/applets/shellutils/nproc"
 	"github.com/nao1215/mimixbox/internal/applets/shellutils/od"
 	"github.com/nao1215/mimixbox/internal/applets/shellutils/path"
@@ -119,9 +122,11 @@ import (
 	"github.com/nao1215/mimixbox/internal/applets/shellutils/sync"
 	"github.com/nao1215/mimixbox/internal/applets/shellutils/tee"
 	testcmd "github.com/nao1215/mimixbox/internal/applets/shellutils/test"
+	timeoutCmd "github.com/nao1215/mimixbox/internal/applets/shellutils/timeout"
 	"github.com/nao1215/mimixbox/internal/applets/shellutils/true"
 	"github.com/nao1215/mimixbox/internal/applets/shellutils/tty"
 	"github.com/nao1215/mimixbox/internal/applets/shellutils/uname"
+	"github.com/nao1215/mimixbox/internal/applets/shellutils/watch"
 	"github.com/nao1215/mimixbox/internal/applets/shellutils/uniq"
 	"github.com/nao1215/mimixbox/internal/applets/shellutils/uuidgen"
 	"github.com/nao1215/mimixbox/internal/applets/shellutils/wget"
@@ -215,6 +220,7 @@ func init() {
 		"find":         reg(find.New()),
 		"fmt":          reg(fmtCmd.New()),
 		"fold":         reg(fold.New()),
+		"free":         reg(free.New()),
 		"ghrdc":        reg(ghrdc.New()),
 		"grep":         reg(grep.New()),
 		"groups":       reg(groups.New()),
@@ -228,6 +234,7 @@ func init() {
 		"install":      reg(install.New()),
 		"ischroot":     reg(ischroot.New()),
 		"kill":         reg(kill.New()),
+		"killall":      reg(killall.New()),
 		"lifegame":     reg(lifegame.New()),
 		"link":         reg(link.New()),
 		"ln":           reg(ln.New()),
@@ -241,6 +248,7 @@ func init() {
 		"mountpoint":   reg(mountpoint.New()),
 		"mv":           reg(mv.New()),
 		"nl":           reg(nl.New()),
+		"nohup":        reg(nohup.New()),
 		"nproc":        reg(nproc.New()),
 		"od":           reg(od.New()),
 		"paste":        reg(paste.New()),
@@ -282,6 +290,7 @@ func init() {
 		"tar":          reg(tarCmd.New()),
 		"tee":          reg(tee.New()),
 		"test":         reg(testcmd.New()),
+		"timeout":      reg(timeoutCmd.New()),
 		"touch":        reg(touch.New()),
 		"tr":           reg(tr.New()),
 		"true":         reg(booltrue.New()),
@@ -297,6 +306,7 @@ func init() {
 		"vi":           reg(vi.New()),
 		"uuidgen":      reg(uuidgen.New()),
 		"valid-shell":  reg(validShell.New()),
+		"watch":        reg(watch.New()),
 		"wc":           reg(wc.New()),
 		"wget":         reg(wget.New()),
 		"which":        reg(which.New()),

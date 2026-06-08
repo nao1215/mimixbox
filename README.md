@@ -19,7 +19,7 @@ MimixBox packs many Unix commands into a single binary, like BusyBox. Unlike Bus
 The list below is generated from the registered applets by `make command-list`, so it never drifts from the binary. You can also run `mimixbox --list` to print it on the terminal.
 
 <!-- COMMAND_LIST_START -->
-There are 130 commands. Run `mimixbox --list` to see them on the terminal.
+There are 135 commands. Run `mimixbox --list` to see them on the terminal.
 
 | Command | Description |
 |:--|:--|
@@ -62,6 +62,7 @@ There are 130 commands. Run `mimixbox --list` to see them on the terminal.
 | find | Search for files in a directory hierarchy |
 | fmt | Simple optimal text formatter |
 | fold | Wrap each input line to fit in specified width |
+| free | Display amount of free and used memory in the system |
 | ghrdc | GitHub Relase Download Counter |
 | grep | Print lines that match patterns |
 | groups | Print the groups to which USERNAME belongs |
@@ -75,6 +76,7 @@ There are 130 commands. Run `mimixbox --list` to see them on the terminal.
 | install | Copy files and set attributes |
 | ischroot | Detect if running in a chroot |
 | kill | Kill process or send signal to process |
+| killall | Kill processes by name |
 | lifegame | Life game (Conway's Game of Life) |
 | link | Create a hard link to a file |
 | ln | Create hard or symbolic link |
@@ -88,6 +90,7 @@ There are 130 commands. Run `mimixbox --list` to see them on the terminal.
 | mountpoint | See if a directory is a mountpoint |
 | mv | Rename SOURCE to DESTINATION, or move SOURCE(s) to DIRECTORY |
 | nl | Write each FILE to standard output with line numbers added |
+| nohup | Run a command immune to hangups, with output to a non-tty |
 | nproc | Print the number of processing units available |
 | od | Dump files in octal and other formats |
 | paste | Merge lines of files |
@@ -129,6 +132,7 @@ There are 130 commands. Run `mimixbox --list` to see them on the terminal.
 | tar | Archive files (create, list, extract) |
 | tee | Read from standard input and write to standard output and files |
 | test | Evaluate a conditional expression |
+| timeout | Run a command with a time limit |
 | touch | Update the access and modification times of each FILE to the current time |
 | tr | Translate or delete characters |
 | true | Do nothing. Return success(0) |
@@ -144,6 +148,7 @@ There are 130 commands. Run `mimixbox --list` to see them on the terminal.
 | uuidgen | Print UUID (Universal Unique IDentifier |
 | valid-shell | Verify if /etc/shells is valid |
 | vi | A minimal vi-style screen text editor |
+| watch | Execute a program periodically, showing output fullscreen |
 | wc | Print newline, word, and byte counts for each file |
 | wget | The non-interactive network downloader |
 | which | Returns the file path which would be executed in the current environment |
