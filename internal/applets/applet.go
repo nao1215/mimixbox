@@ -30,6 +30,8 @@ import (
 	"github.com/nao1215/mimixbox/internal/applets/archival/cpio"
 	"github.com/nao1215/mimixbox/internal/applets/archival/gunzip"
 	gzipCmd "github.com/nao1215/mimixbox/internal/applets/archival/gzip"
+	"github.com/nao1215/mimixbox/internal/applets/archival/rpm"
+	"github.com/nao1215/mimixbox/internal/applets/archival/rpm2cpio"
 	tarCmd "github.com/nao1215/mimixbox/internal/applets/archival/tar"
 	"github.com/nao1215/mimixbox/internal/applets/archival/uncompress"
 	"github.com/nao1215/mimixbox/internal/applets/archival/unzip"
@@ -214,6 +216,8 @@ func init() {
 		"realpath":     reg(realpath.New()),
 		"remove-shell": reg(removeShell.New()),
 		"reboot":       reg(halt.NewReboot()),
+		"rpm":          reg(rpm.New()),
+		"rpm2cpio":     reg(rpm2cpio.New()),
 		"reset":        reg(reset.New()),
 		"resize":       reg(resize.New()),
 		"rm":           reg(rm.New()),

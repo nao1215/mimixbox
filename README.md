@@ -21,7 +21,7 @@ The GIF above is generated from [assets/demo.tape](./assets/demo.tape) with [vhs
 The list below is generated from the registered applets by `make command-list`, so it never drifts from the binary. You can also run `mimixbox --list` to print it on the terminal.
 
 <!-- COMMAND_LIST_START -->
-There are 103 commands. Run `mimixbox --list` to see them on the terminal.
+There are 105 commands. Run `mimixbox --list` to see them on the terminal.
 
 | Command | Description |
 |:--|:--|
@@ -94,6 +94,8 @@ There are 103 commands. Run `mimixbox --list` to see them on the terminal.
 | resize | Print commands to set the terminal size |
 | rm | Remove file(s) or directory(s) |
 | rmdir | Remove directory |
+| rpm | Query an RPM package file |
+| rpm2cpio | Extract the cpio payload from an RPM package |
 | sddf | Search & Delete Duplicated File |
 | sed | Stream editor for filtering and transforming text |
 | seq | Print a column of numbers |
