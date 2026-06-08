@@ -122,14 +122,21 @@ func (p *parser) skipSeparators() {
 // command parses one addressed command.
 func (p *parser) command() (cmd, error) {
 	var c cmd
-	a1 := p.address()
+	a1, err := p.address()
+	if err != nil {
+		return c, err
+	}
 	c.a1 = a1
 	if a1 != nil && !p.eof() && p.s[p.i] == ',' {
 		p.i++
-		c.a2 = p.address()
-		if c.a2 == nil {
+		a2, err := p.address()
+		if err != nil {
+			return c, err
+		}
+		if a2 == nil {
 			return c, fmt.Errorf("expected address after ','")
 		}
+		c.a2 = a2
 	}
 	p.skipSpaces()
 	if p.eof() {
@@ -148,33 +155,37 @@ func (p *parser) command() (cmd, error) {
 	}
 }
 
-// address parses an optional address at the cursor, or returns nil.
-func (p *parser) address() *address {
+// address parses an optional address at the cursor. It returns (nil, nil) when
+// there is no address, and an error when a /regexp/ address fails to compile.
+func (p *parser) address() (*address, error) {
 	p.skipSpaces()
 	if p.eof() {
-		return nil
+		return nil, nil
 	}
 	switch ch := p.s[p.i]; {
 	case ch == '$':
 		p.i++
-		return &address{kind: addrLast}
+		return &address{kind: addrLast}, nil
 	case ch >= '0' && ch <= '9':
 		start := p.i
 		for !p.eof() && p.s[p.i] >= '0' && p.s[p.i] <= '9' {
 			p.i++
 		}
 		n, _ := strconvAtoi(p.s[start:p.i])
-		return &address{kind: addrLine, line: n}
+		return &address{kind: addrLine, line: n}, nil
 	case ch == '/':
 		p.i++
-		expr := p.until('/')
+		expr, found := p.until('/')
+		if !found {
+			return nil, fmt.Errorf("unterminated address regex")
+		}
 		re, err := p.compileRE(expr)
 		if err != nil {
-			return &address{kind: addrRegex, re: regexp.MustCompile(regexp.QuoteMeta(expr))}
+			return nil, fmt.Errorf("invalid address regex: %w", err)
 		}
-		return &address{kind: addrRegex, re: re}
+		return &address{kind: addrRegex, re: re}, nil
 	default:
-		return nil
+		return nil, nil
 	}
 }
 
@@ -184,10 +195,19 @@ func (p *parser) substitute(c cmd) (cmd, error) {
 		return c, fmt.Errorf("unterminated 's' command")
 	}
 	delim := p.s[p.i]
+	if isValidDelim(delim) {
+		return c, fmt.Errorf("invalid delimiter for 's' command")
+	}
 	p.i++
-	pattern := p.until(delim)
-	repl := p.until(delim)
-	flags := p.flags()
+	pattern, ok1 := p.until(delim)
+	repl, ok2 := p.until(delim)
+	if !ok1 || !ok2 {
+		return c, fmt.Errorf("unterminated 's' command")
+	}
+	flags, err := p.flags()
+	if err != nil {
+		return c, err
+	}
 
 	caseInsensitive := strings.ContainsRune(flags, 'i') || strings.ContainsRune(flags, 'I')
 	expr := pattern
@@ -205,17 +225,51 @@ func (p *parser) substitute(c cmd) (cmd, error) {
 	c.repl = translateRepl(repl)
 	c.global = strings.ContainsRune(flags, 'g')
 	c.printSub = strings.ContainsRune(flags, 'p')
-	for _, r := range flags {
-		if r >= '0' && r <= '9' {
-			c.occurrence = int(r - '0')
-		}
+	if n, ok := flagNumber(flags); ok {
+		c.occurrence = n
 	}
 	return c, nil
 }
 
+// isValidDelim reports whether ch may not be used as the s-command delimiter.
+// GNU sed forbids a newline or backslash as the delimiter; alphanumerics are
+// reserved for flags and would make the command unparseable.
+func isValidDelim(ch byte) bool {
+	return ch == '\n' || ch == '\\' ||
+		(ch >= 'a' && ch <= 'z') || (ch >= 'A' && ch <= 'Z') || (ch >= '0' && ch <= '9')
+}
+
+// flagNumber extracts the (possibly multi-digit) occurrence number from the s
+// flags, e.g. "10" in "s/x/y/10".
+func flagNumber(flags string) (int, bool) {
+	start := -1
+	for i, r := range flags {
+		if r >= '0' && r <= '9' {
+			if start < 0 {
+				start = i
+			}
+		} else if start >= 0 {
+			break
+		}
+	}
+	if start < 0 {
+		return 0, false
+	}
+	end := start
+	for end < len(flags) && flags[end] >= '0' && flags[end] <= '9' {
+		end++
+	}
+	n, err := strconvAtoi(flags[start:end])
+	if err != nil {
+		return 0, false
+	}
+	return n, true
+}
+
 // until consumes runes up to (and consuming) the next unescaped delim, returning
-// the text in between with the escape of delim resolved.
-func (p *parser) until(delim byte) string {
+// the text in between with the escape of delim resolved. found reports whether
+// the closing delimiter was actually seen.
+func (p *parser) until(delim byte) (text string, found bool) {
 	var b strings.Builder
 	for !p.eof() {
 		ch := p.s[p.i]
@@ -233,26 +287,30 @@ func (p *parser) until(delim byte) string {
 		}
 		if ch == delim {
 			p.i++
-			return b.String()
+			return b.String(), true
 		}
 		b.WriteByte(ch)
 		p.i++
 	}
-	return b.String()
+	return b.String(), false
 }
 
-// flags reads the trailing flag characters of an s command.
-func (p *parser) flags() string {
+// flags reads the trailing flag characters of an s command, rejecting any flag
+// that is not one of g, p, i, I or a digit.
+func (p *parser) flags() (string, error) {
 	start := p.i
 	for !p.eof() {
 		ch := p.s[p.i]
-		if (ch >= 'a' && ch <= 'z') || (ch >= 'A' && ch <= 'Z') || (ch >= '0' && ch <= '9') {
+		switch {
+		case ch == 'g' || ch == 'p' || ch == 'i' || ch == 'I' || (ch >= '0' && ch <= '9'):
 			p.i++
-			continue
+		case ch == ';' || ch == '\n' || ch == ' ' || ch == '\t':
+			return p.s[start:p.i], nil
+		default:
+			return "", fmt.Errorf("unknown option to 's' command: %q", string(ch))
 		}
-		break
 	}
-	return p.s[start:p.i]
+	return p.s[start:p.i], nil
 }
 
 func (p *parser) skipSpaces() {
@@ -345,18 +403,24 @@ func (e *editor) run(lines []string) {
 }
 
 // applySub runs the substitute command on a line, honoring g, the Nth-occurrence
-// selector and the p flag.
+// selector and the p flag. The p flag prints whenever a substitution was made,
+// even if the replacement text is identical to what it replaced.
 func (e *editor) applySub(c *cmd, line string) string {
+	matches := c.re.FindAllStringIndex(line, -1)
 	var result string
+	var substituted bool
 	switch {
 	case c.occurrence > 0:
 		result = replaceNth(c.re, line, c.repl, c.occurrence, c.global)
+		substituted = len(matches) >= c.occurrence
 	case c.global:
 		result = c.re.ReplaceAllString(line, c.repl)
+		substituted = len(matches) > 0
 	default:
 		result = replaceNth(c.re, line, c.repl, 1, false)
+		substituted = len(matches) > 0
 	}
-	if c.printSub && result != line {
+	if c.printSub && substituted {
 		_, _ = fmt.Fprintln(e.out, result)
 	}
 	return result

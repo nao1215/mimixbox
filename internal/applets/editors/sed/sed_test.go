@@ -226,6 +226,10 @@ func TestErrors(t *testing.T) {
 		{"no script", nil, "no script"},
 		{"unknown command", []string{"Z"}, "unknown command"},
 		{"missing file", []string{"s/a/b/", "/no/such/file/x"}, "sed:"},
+		{"invalid s flag", []string{"s/a/b/z"}, "unknown option"},
+		{"invalid delimiter", []string{"saXa"}, "invalid delimiter"},
+		{"unterminated s", []string{"s/a/b"}, "unterminated"},
+		{"invalid address regex", []string{"/[/d"}, "invalid address regex"},
 	}
 	for _, tt := range tests {
 		tt := tt

@@ -182,6 +182,17 @@ func TestMissingOperand(t *testing.T) {
 	}
 }
 
+func TestExtraOperand(t *testing.T) {
+	t.Parallel()
+	_, errOut, err := run(t, "a", "b", "c")
+	if exitCode(t, err) != 2 {
+		t.Errorf("exit = %d, want 2", exitCode(t, err))
+	}
+	if !strings.Contains(errOut, "extra operand") {
+		t.Errorf("stderr = %q, want 'extra operand'", errOut)
+	}
+}
+
 func TestMissingFile(t *testing.T) {
 	t.Parallel()
 	dir := t.TempDir()

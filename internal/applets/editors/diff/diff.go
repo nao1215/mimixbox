@@ -13,6 +13,10 @@ import (
 	"github.com/nao1215/mimixbox/internal/command"
 )
 
+// maxDPCells caps the size of the LCS dynamic-programming table so that
+// comparing very large files cannot exhaust memory (~50M cells of int).
+const maxDPCells = 50_000_000
+
 // Command is the diff applet.
 type Command struct{}
 
@@ -38,8 +42,13 @@ func (c *Command) Run(_ context.Context, stdio command.IO, args []string) error 
 	}
 
 	names := fs.Args()
-	if len(names) != 2 {
+	if len(names) < 2 {
 		_, _ = fmt.Fprintln(stdio.Err, "diff: missing operand")
+		_, _ = fmt.Fprintln(stdio.Err, "diff: Try 'diff --help' for more information.")
+		return &command.ExitError{Code: 2}
+	}
+	if len(names) > 2 {
+		_, _ = fmt.Fprintf(stdio.Err, "diff: extra operand '%s'\n", names[2])
 		_, _ = fmt.Fprintln(stdio.Err, "diff: Try 'diff --help' for more information.")
 		return &command.ExitError{Code: 2}
 	}
@@ -52,6 +61,12 @@ func (c *Command) Run(_ context.Context, stdio command.IO, args []string) error 
 	b, err := readLines(names[1])
 	if err != nil {
 		_, _ = fmt.Fprintf(stdio.Err, "diff: %s\n", command.FileError(names[1], err))
+		return &command.ExitError{Code: 2}
+	}
+
+	// Guard the O(n*m) LCS table against pathological memory use on huge files.
+	if len(a) > 0 && int64(len(a))*int64(len(b)) > maxDPCells {
+		_, _ = fmt.Fprintln(stdio.Err, "diff: files too large to compare")
 		return &command.ExitError{Code: 2}
 	}
 

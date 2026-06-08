@@ -9,6 +9,7 @@ import (
 	"context"
 	"fmt"
 	"os"
+	"path/filepath"
 	"strconv"
 	"strings"
 
@@ -115,7 +116,9 @@ func runStreaming(stdio command.IO, program []cmd, files []string, quiet bool) e
 	return nil
 }
 
-// runInPlace rewrites each file with the result of applying the program.
+// runInPlace rewrites each file with the result of applying the program. Each
+// file gets a fresh copy of the program so that range (two-address) state from
+// one file does not leak into the next.
 func runInPlace(stdio command.IO, program []cmd, files []string, quiet bool) error {
 	var failed bool
 	for _, f := range files {
@@ -126,15 +129,62 @@ func runInPlace(stdio command.IO, program []cmd, files []string, quiet bool) err
 			continue
 		}
 		var b strings.Builder
-		ed := &editor{program: program, quiet: quiet, out: &b}
+		ed := &editor{program: cloneProgram(program), quiet: quiet, out: &b}
 		ed.run(lines)
-		if err := os.WriteFile(f, []byte(b.String()), 0o644); err != nil { //nolint:gosec // preserve simple default mode
+		if err := writeFilePreservingMode(f, b.String()); err != nil {
 			_, _ = fmt.Fprintf(stdio.Err, "sed: %v\n", err)
 			failed = true
 		}
 	}
 	if failed {
 		return command.SilentFailure()
+	}
+	return nil
+}
+
+// cloneProgram returns a copy of the program with all range state reset, so a
+// fresh run starts with no command mid-range.
+func cloneProgram(program []cmd) []cmd {
+	out := make([]cmd, len(program))
+	copy(out, program)
+	for i := range out {
+		out[i].active = false
+	}
+	return out
+}
+
+// writeFilePreservingMode writes content to name atomically (via a temp file in
+// the same directory and a rename) while preserving the file's original
+// permission bits.
+func writeFilePreservingMode(name, content string) error {
+	info, err := os.Stat(name)
+	mode := os.FileMode(0o644)
+	if err == nil {
+		mode = info.Mode().Perm()
+	}
+
+	dir := filepath.Dir(name)
+	tmp, err := os.CreateTemp(dir, ".sed-*")
+	if err != nil {
+		return err
+	}
+	tmpName := tmp.Name()
+	if _, err := tmp.WriteString(content); err != nil {
+		_ = tmp.Close()
+		_ = os.Remove(tmpName)
+		return err
+	}
+	if err := tmp.Close(); err != nil {
+		_ = os.Remove(tmpName)
+		return err
+	}
+	if err := os.Chmod(tmpName, mode); err != nil {
+		_ = os.Remove(tmpName)
+		return err
+	}
+	if err := os.Rename(tmpName, name); err != nil {
+		_ = os.Remove(tmpName)
+		return err
 	}
 	return nil
 }
