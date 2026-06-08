@@ -56,3 +56,30 @@ Describe 'Echo redirect to file.'
         The status should be success
     End
 End
+
+Describe 'Echo --help as the first argument'
+    Include shellutils/echo_test.sh
+    It 'prints usage instead of the literal text'
+        When call TestEchoHelp
+        The output should include 'Usage: echo'
+        The status should be success
+    End
+End
+
+Describe 'Echo --version as the first argument'
+    Include shellutils/echo_test.sh
+    It 'prints the version line'
+        When call TestEchoVersion
+        The output should include 'echo (mimixbox)'
+        The status should be success
+    End
+End
+
+Describe 'Echo --help that is not the first argument'
+    Include shellutils/echo_test.sh
+    It 'stays literal'
+        When call TestEchoHelpNotFirst
+        The output should equal 'foo --help'
+        The status should be success
+    End
+End
