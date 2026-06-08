@@ -8,11 +8,11 @@ import (
 	"fmt"
 	"os/exec"
 	"strconv"
-	"strings"
 	"syscall"
 	"time"
 
 	"github.com/nao1215/mimixbox/internal/command"
+	"github.com/nao1215/mimixbox/internal/signal"
 )
 
 // Command is the timeout applet.
@@ -146,27 +146,12 @@ func parseDuration(s string) (time.Duration, error) {
 }
 
 // parseSignal resolves a signal given by name (with or without the SIG prefix)
-// or by number to the corresponding syscall.Signal.
+// or by number to the corresponding syscall.Signal, using the canonical signal
+// table.
 func parseSignal(name string) (syscall.Signal, error) {
-	if n, err := strconv.Atoi(name); err == nil {
-		return syscall.Signal(n), nil
+	n, err := signal.NumberLax(name)
+	if err != nil {
+		return 0, err
 	}
-	name = strings.ToUpper(strings.TrimPrefix(strings.ToUpper(name), "SIG"))
-	if sig, ok := signalNames[name]; ok {
-		return sig, nil
-	}
-	return 0, fmt.Errorf("unknown signal %q", name)
-}
-
-// signalNames maps the commonly used signal names to their numbers.
-var signalNames = map[string]syscall.Signal{
-	"TERM": syscall.SIGTERM,
-	"KILL": syscall.SIGKILL,
-	"INT":  syscall.SIGINT,
-	"HUP":  syscall.SIGHUP,
-	"QUIT": syscall.SIGQUIT,
-	"USR1": syscall.SIGUSR1,
-	"USR2": syscall.SIGUSR2,
-	"STOP": syscall.SIGSTOP,
-	"CONT": syscall.SIGCONT,
+	return syscall.Signal(n), nil
 }
