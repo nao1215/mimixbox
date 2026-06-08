@@ -7,6 +7,14 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## [Unreleased]
 
+### Added
+
+- New textutils applets on the `internal/command` framework, each with
+  GNU-style options, table-driven unit tests and shellspec integration tests:
+  `comm` (#159), `paste` (#160), `fold` (#161), `fmt` (#162), `split` (#163),
+  `shuf` (#164), `rev` (#165), `cksum` (#166), `strings` (#167), `xxd` (#168),
+  `base32` (#169).
+
 ## [0.34.0] - 2026-06-08
 
 ### Added
