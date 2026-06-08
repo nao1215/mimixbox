@@ -115,11 +115,18 @@ func TestRunCharDeviceWithoutPrivilege(t *testing.T) {
 	dev := filepath.Join(dir, "null")
 	_, errOut, err := run(t, dev, "c", "1", "3")
 	if os.Geteuid() == 0 {
-		if err != nil {
-			t.Fatalf("running as root, expected success, got %v (%s)", err, errOut)
+		if err == nil {
+			_ = os.Remove(dev)
+			return
 		}
-		_ = os.Remove(dev)
-		return
+		// uid 0 is not enough: containers often drop CAP_MKNOD, so a real
+		// device node still cannot be created. Treat that as a skip, not a
+		// failure, to keep the test environment-independent.
+		lowerErr := strings.ToLower(errOut)
+		if strings.Contains(lowerErr, "operation not permitted") || strings.Contains(lowerErr, "permission denied") {
+			t.Skip("uid=0 but CAP_MKNOD is unavailable in this environment")
+		}
+		t.Fatalf("running as root, expected success, got %v (%s)", err, errOut)
 	}
 	if err == nil {
 		t.Error("expected permission error creating device as non-root")

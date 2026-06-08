@@ -128,6 +128,10 @@ func (c *Command) copyFiles(stdio command.IO, operands []string, opts options) e
 	}
 
 	destIsDir := opts.target != "" || (!opts.noTarget && isDir(dest))
+	if len(sources) > 1 && !destIsDir {
+		_, _ = fmt.Fprintf(stdio.Err, "install: target '%s' is not a directory\n", dest)
+		return command.SilentFailure()
+	}
 
 	var failed bool
 	for _, src := range sources {

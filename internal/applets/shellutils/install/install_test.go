@@ -257,6 +257,24 @@ func TestRunOmitDirectory(t *testing.T) {
 	}
 }
 
+func TestRunMultiSourceNonDirDest(t *testing.T) {
+	t.Parallel()
+	dir := t.TempDir()
+	a := filepath.Join(dir, "a")
+	b := filepath.Join(dir, "b")
+	writeFile(t, a, "A")
+	writeFile(t, b, "B")
+	dst := filepath.Join(dir, "dst") // a regular (non-directory) destination
+
+	_, errOut, err := run(t, a, b, dst)
+	if err == nil {
+		t.Error("expected error: multiple sources with non-directory destination")
+	}
+	if !strings.Contains(errOut, "is not a directory") {
+		t.Errorf("stderr = %q, want 'is not a directory'", errOut)
+	}
+}
+
 func TestRunHelp(t *testing.T) {
 	t.Parallel()
 	out, _, err := run(t, "--help")
