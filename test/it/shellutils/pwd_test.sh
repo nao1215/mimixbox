@@ -1,0 +1,1 @@
+TestPwd() { cd /tmp && pwd; }

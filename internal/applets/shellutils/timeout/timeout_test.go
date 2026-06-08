@@ -133,3 +133,29 @@ func TestNameSynopsis(t *testing.T) {
 		t.Error("Synopsis() is empty")
 	}
 }
+
+func TestKillAfter(t *testing.T) {
+	t.Parallel()
+	// A process that ignores SIGTERM is still killed after -k grace, so timeout
+	// returns 124 rather than hanging. The shell busy-waits (no child process)
+	// so SIGKILL on the shell itself ends it promptly.
+	start := time.Now()
+	_, _, err := run(t, "-s", "TERM", "-k", "0.3", "0.1", "sh", "-c", "trap '' TERM; while :; do :; done")
+	if code := exitCode(err); code != exitTimedOut {
+		t.Errorf("exit code = %d, want %d", code, exitTimedOut)
+	}
+	if elapsed := time.Since(start); elapsed > 5*time.Second {
+		t.Errorf("took %v; -k did not force a kill", elapsed)
+	}
+}
+
+func TestInvalidKillAfter(t *testing.T) {
+	t.Parallel()
+	_, _, err := run(t, "-k", "abc", "1", "true")
+	if err == nil {
+		t.Fatal("expected error for invalid -k interval")
+	}
+	if !strings.Contains(err.Error(), "invalid time interval") {
+		t.Errorf("err = %v", err)
+	}
+}

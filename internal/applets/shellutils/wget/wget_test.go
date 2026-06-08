@@ -3,6 +3,7 @@ package wget_test
 import (
 	"bytes"
 	"context"
+	"net"
 	"net/http"
 	"net/http/httptest"
 	"os"
@@ -25,8 +26,18 @@ func run(t *testing.T, args ...string) (string, string, error) {
 	return out.String(), errBuf.String(), err
 }
 
+func requireLoopback(t *testing.T) {
+	t.Helper()
+	ln, err := net.Listen("tcp", "127.0.0.1:0")
+	if err != nil {
+		t.Skipf("loopback listen unavailable: %v", err)
+	}
+	_ = ln.Close()
+}
+
 func newServer(t *testing.T) *httptest.Server {
 	t.Helper()
+	requireLoopback(t)
 	srv := httptest.NewServer(http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
 		if r.URL.Path == "/missing" {
 			http.NotFound(w, r)

@@ -61,6 +61,11 @@ func TestChgrpToOwnGroup(t *testing.T) {
 
 	_, errOut, err := run(t, group, file)
 	if err != nil {
+		// Some sandboxes forbid chown entirely (even to one's own group); treat
+		// that as unavailable rather than a failure.
+		if strings.Contains(errOut, "not permitted") {
+			t.Skipf("chown is not permitted in this environment: %s", errOut)
+		}
 		t.Fatalf("Run error = %v, stderr = %q", err, errOut)
 	}
 	if errOut != "" {

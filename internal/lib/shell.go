@@ -17,7 +17,7 @@ package mb
 
 import (
 	"fmt"
-	"io/ioutil"
+	"io"
 	"os"
 	"os/exec"
 	"os/user"
@@ -42,26 +42,27 @@ func IsRootDir(path string) bool {
 }
 
 func Question(ask string) bool {
-	var response string
-
-	fmt.Fprintf(os.Stdout, ask+" [Y/n] ")
-	_, err := fmt.Scanln(&response)
-	if err != nil {
-		// If user input only enter.
-		if strings.Contains(err.Error(), "expected newline") {
-			return Question(ask)
+	for {
+		var response string
+		fmt.Fprintf(os.Stdout, ask+" [Y/n] ")
+		_, err := fmt.Scanln(&response)
+		if err != nil {
+			// An empty line (just Enter) reports "expected newline"; re-ask.
+			if strings.Contains(err.Error(), "expected newline") {
+				continue
+			}
+			fmt.Fprint(os.Stderr, err.Error())
+			return false
 		}
-		fmt.Fprint(os.Stderr, err.Error())
-		return false
-	}
 
-	switch strings.ToLower(response) {
-	case "y", "yes":
-		return true
-	case "n", "no":
-		return false
-	default:
-		return Question(ask)
+		switch strings.ToLower(response) {
+		case "y", "yes":
+			return true
+		case "n", "no":
+			return false
+		default:
+			continue
+		}
 	}
 }
 
@@ -152,7 +153,7 @@ func PrintStrWithNumberLine(nl int, format string, message string) {
 
 func FromPIPE() (string, error) {
 	if HasPipeData() {
-		b, err := ioutil.ReadAll(os.Stdin)
+		b, err := io.ReadAll(os.Stdin)
 		if err != nil {
 			return "", err
 		}

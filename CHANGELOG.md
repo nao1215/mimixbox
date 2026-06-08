@@ -7,6 +7,36 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## [Unreleased]
 
+### Changed
+
+- The top-level `mimixbox` dispatcher was rewritten without the go-flags
+  hacks into a single testable function. `mimixbox --help`/`--version`/
+  `--list` now exit 0 and print to stdout; an unknown command/option prints
+  the error and the supported-applet list to stderr and exits non-zero.
+  Dispatch is decided by the first argument, so an applet's own flags always
+  reach it (`mimixbox cp -f a b` runs `cp -f`, no longer mistaken for
+  `--full-install`), and an install/remove target may share a basename with
+  an applet.
+- `cp` is closer to GNU cp: `-R` is a proper alias of `-r`, `-a` means `-rp`,
+  and `-n`/`--no-clobber` skips existing destinations.
+- `timeout` gained `-k`/`--kill-after`, which sends SIGKILL when the command
+  ignores the initial signal.
+- `internal/lib`: `Question` loops instead of recursing, and `FromPIPE` uses
+  `io.ReadAll` instead of the deprecated `ioutil.ReadAll`.
+
+### Fixed
+
+- The unit-test suite is hermetic: `internal/lib` file tests build their
+  fixtures with `t.TempDir()` (no `/tmp/mimixbox/ut` dependency, parallel
+  safe), and tests that need `chown`, loopback listen sockets or netlink now
+  `t.Skip` when those are unavailable instead of failing.
+
+### Added
+
+- Top-level dispatch tests (`cmd/mimixbox`) and shellspec end-to-end specs
+  for previously-untested applets: `printenv`, `printf`, `pwd`, `sleep`,
+  `sync`, `uuidgen`, `tr`, `kill`, and a `gzip`/`gunzip` roundtrip.
+
 ## [0.35.1] - 2026-06-08
 
 ### Fixed
