@@ -1,0 +1,3 @@
+TestTtyNotATty() {
+    echo "" | tty
+}

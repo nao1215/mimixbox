@@ -19,12 +19,13 @@ MimixBox packs many Unix commands into a single binary, like BusyBox. Unlike Bus
 The list below is generated from the registered applets by `make command-list`, so it never drifts from the binary. You can also run `mimixbox --list` to print it on the terminal.
 
 <!-- COMMAND_LIST_START -->
-There are 123 commands. Run `mimixbox --list` to see them on the terminal.
+There are 130 commands. Run `mimixbox --list` to see them on the terminal.
 
 | Command | Description |
 |:--|:--|
 | add-shell | Add shell name to /etc/shells |
 | ar | Create, modify and extract from archives |
+| arch | Print machine hardware name (same as uname -m) |
 | awk | Pattern scanning and processing language |
 | base32 | Base32 encode/decode from FILE(or STDIN) to STDOUT |
 | base64 | Base64 encode/decode from FILR(or STDIN) to STDOUT |
@@ -69,6 +70,7 @@ There are 123 commands. Run `mimixbox --list` to see them on the terminal.
 | halt | Halt the system |
 | head | Print the first NUMBER(default=10) lines |
 | hostid | Print the numeric identifier (in hexadecimal) for the current host |
+| hostname | Show the system's host name |
 | id | Print User ID and Group ID |
 | install | Copy files and set attributes |
 | ischroot | Detect if running in a chroot |
@@ -76,6 +78,7 @@ There are 123 commands. Run `mimixbox --list` to see them on the terminal.
 | lifegame | Life game (Conway's Game of Life) |
 | link | Create a hard link to a file |
 | ln | Create hard or symbolic link |
+| logname | Print the name of the current user |
 | mbsh | Mimix Box Shell |
 | md5sum | Calculate or Check md5sum message digest |
 | mkdir | Make directories |
@@ -85,6 +88,7 @@ There are 123 commands. Run `mimixbox --list` to see them on the terminal.
 | mountpoint | See if a directory is a mountpoint |
 | mv | Rename SOURCE to DESTINATION, or move SOURCE(s) to DIRECTORY |
 | nl | Write each FILE to standard output with line numbers added |
+| nproc | Print the number of processing units available |
 | od | Dump files in octal and other formats |
 | paste | Merge lines of files |
 | patch | Apply a diff file to an original |
@@ -129,6 +133,8 @@ There are 123 commands. Run `mimixbox --list` to see them on the terminal.
 | tr | Translate or delete characters |
 | true | Do nothing. Return success(0) |
 | truncate | Shrink or extend the size of a file to a given size |
+| tty | Print the file name of the terminal connected to stdin |
+| uname | Print system information |
 | uncompress | Decompress LZW (.Z) files |
 | unexpand | Convert N space to TAB(default:N=8) |
 | uniq | Report or omit repeated lines |
@@ -145,6 +151,7 @@ There are 123 commands. Run `mimixbox --list` to see them on the terminal.
 | whoami | Print login user name |
 | xargs | Build and execute command lines from standard input |
 | xxd | Make a hex dump or do the reverse |
+| yes | Output a string repeatedly until killed |
 | zip | Package and compress files into a ZIP archive |
 <!-- COMMAND_LIST_END -->
 

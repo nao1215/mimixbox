@@ -77,6 +77,7 @@ import (
 	//"github.com/nao1215/mimixbox/internal/applets/loginutils/chsh"
 	validShell "github.com/nao1215/mimixbox/internal/applets/debianutils/valid-shell"
 	"github.com/nao1215/mimixbox/internal/applets/pmutils/halt"
+	"github.com/nao1215/mimixbox/internal/applets/shellutils/arch"
 	"github.com/nao1215/mimixbox/internal/applets/shellutils/base64"
 	"github.com/nao1215/mimixbox/internal/applets/shellutils/basename"
 	"github.com/nao1215/mimixbox/internal/applets/shellutils/cal"
@@ -96,11 +97,14 @@ import (
 	"github.com/nao1215/mimixbox/internal/applets/shellutils/ghrdc"
 	"github.com/nao1215/mimixbox/internal/applets/shellutils/groups"
 	"github.com/nao1215/mimixbox/internal/applets/shellutils/hostid"
+	"github.com/nao1215/mimixbox/internal/applets/shellutils/hostname"
 	"github.com/nao1215/mimixbox/internal/applets/shellutils/id"
+	"github.com/nao1215/mimixbox/internal/applets/shellutils/logname"
 	"github.com/nao1215/mimixbox/internal/applets/shellutils/install"
 	"github.com/nao1215/mimixbox/internal/applets/shellutils/kill"
 	"github.com/nao1215/mimixbox/internal/applets/shellutils/mbsh"
 	"github.com/nao1215/mimixbox/internal/applets/shellutils/mknod"
+	"github.com/nao1215/mimixbox/internal/applets/shellutils/nproc"
 	"github.com/nao1215/mimixbox/internal/applets/shellutils/od"
 	"github.com/nao1215/mimixbox/internal/applets/shellutils/path"
 	"github.com/nao1215/mimixbox/internal/applets/shellutils/printenv"
@@ -116,11 +120,14 @@ import (
 	"github.com/nao1215/mimixbox/internal/applets/shellutils/tee"
 	testcmd "github.com/nao1215/mimixbox/internal/applets/shellutils/test"
 	"github.com/nao1215/mimixbox/internal/applets/shellutils/true"
+	"github.com/nao1215/mimixbox/internal/applets/shellutils/tty"
+	"github.com/nao1215/mimixbox/internal/applets/shellutils/uname"
 	"github.com/nao1215/mimixbox/internal/applets/shellutils/uniq"
 	"github.com/nao1215/mimixbox/internal/applets/shellutils/uuidgen"
 	"github.com/nao1215/mimixbox/internal/applets/shellutils/wget"
 	"github.com/nao1215/mimixbox/internal/applets/shellutils/who"
 	"github.com/nao1215/mimixbox/internal/applets/shellutils/whoami"
+	"github.com/nao1215/mimixbox/internal/applets/shellutils/yes"
 	"github.com/nao1215/mimixbox/internal/applets/textutils/base32"
 	"github.com/nao1215/mimixbox/internal/applets/textutils/cat"
 	"github.com/nao1215/mimixbox/internal/applets/textutils/cksum"
@@ -170,6 +177,7 @@ func init() {
 	Applets = map[string]Applet{
 		"add-shell": reg(addShell.New()),
 		"ar":        reg(ar.New()),
+		"arch":      reg(arch.New()),
 		"awk":       reg(awk.New()),
 		"base32":    reg(base32.New()),
 		"base64":    reg(base64.New()),
@@ -215,6 +223,7 @@ func init() {
 		"halt":         reg(halt.NewHalt()),
 		"head":         reg(head.New()),
 		"hostid":       reg(hostid.New()),
+		"hostname":     reg(hostname.New()),
 		"id":           reg(id.New()),
 		"install":      reg(install.New()),
 		"ischroot":     reg(ischroot.New()),
@@ -222,6 +231,7 @@ func init() {
 		"lifegame":     reg(lifegame.New()),
 		"link":         reg(link.New()),
 		"ln":           reg(ln.New()),
+		"logname":      reg(logname.New()),
 		"mbsh":         reg(mbsh.New()),
 		"md5sum":       reg(md5sum.New()),
 		"mkdir":        reg(mkdir.New()),
@@ -231,6 +241,7 @@ func init() {
 		"mountpoint":   reg(mountpoint.New()),
 		"mv":           reg(mv.New()),
 		"nl":           reg(nl.New()),
+		"nproc":        reg(nproc.New()),
 		"od":           reg(od.New()),
 		"paste":        reg(paste.New()),
 		"patch":        reg(patch.New()),
@@ -275,6 +286,8 @@ func init() {
 		"tr":           reg(tr.New()),
 		"true":         reg(booltrue.New()),
 		"truncate":     reg(truncate.New()),
+		"tty":          reg(tty.New()),
+		"uname":        reg(uname.New()),
 		"uncompress":   reg(uncompress.New()),
 		"unexpand":     reg(unexpand.New()),
 		"uniq":         reg(uniq.New()),
@@ -292,6 +305,7 @@ func init() {
 		"zip":          reg(zipCmd.New()),
 		"who":          reg(who.New()),
 		"whoami":       reg(whoami.New()),
+		"yes":          reg(yes.New()),
 	}
 }
 

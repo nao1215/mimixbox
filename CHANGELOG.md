@@ -17,6 +17,9 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 - New fileutils applets, each with unit tests and shellspec integration tests:
   `stat` (#170), `truncate` (#171), `readlink` (#172), `link` (#173),
   `unlink` (#174), `shred` (#175), `mountpoint` (#176).
+- New shellutils system-information applets, each with unit tests and shellspec
+  integration tests: `yes` (#177), `uname` (#178), `arch` (#179), `nproc`
+  (#180), `hostname` (#181), `logname` (#182), `tty` (#183).
 
 ## [0.34.0] - 2026-06-08
 
