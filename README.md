@@ -19,7 +19,7 @@ MimixBox packs many Unix commands into a single binary, like BusyBox. Unlike Bus
 The list below is generated from the registered applets by `make command-list`, so it never drifts from the binary. You can also run `mimixbox --list` to print it on the terminal.
 
 <!-- COMMAND_LIST_START -->
-There are 140 commands. Run `mimixbox --list` to see them on the terminal.
+There are 145 commands. Run `mimixbox --list` to see them on the terminal.
 
 | Command | Description |
 |:--|:--|
@@ -76,6 +76,7 @@ There are 140 commands. Run `mimixbox --list` to see them on the terminal.
 | head | Print the first NUMBER(default=10) lines |
 | hostid | Print the numeric identifier (in hexadecimal) for the current host |
 | hostname | Show the system's host name |
+| http-status-code | Explain HTTP status codes and their RFC references |
 | id | Print User ID and Group ID |
 | install | Copy files and set attributes |
 | ischroot | Detect if running in a chroot |
@@ -101,10 +102,13 @@ There are 140 commands. Run `mimixbox --list` to see them on the terminal.
 | paste | Merge lines of files |
 | patch | Apply a diff file to an original |
 | path | Manipulate filename path |
+| posixer | Report which POSIX utilities are installed |
 | poweroff | Power off the system |
 | printenv | Print environment variable |
 | printf | Formats and print data |
 | pwd | Print Working Directory |
+| pwgen | Generate random passwords for authorized testing |
+| pwscore | Estimate the strength of a password |
 | readlink | Print resolved symbolic links or canonical file names |
 | realpath | Print the resolved absolute file name |
 | reboot | Reboot the system |
@@ -149,6 +153,7 @@ There are 140 commands. Run `mimixbox --list` to see them on the terminal.
 | uniq | Report or omit repeated lines |
 | unix2dos | Change LF to CRLF |
 | unlink | Remove a single file by calling the unlink function |
+| unshadow | Combine passwd and shadow files for password auditing |
 | unzip | Extract files from a ZIP archive |
 | uuidgen | Print UUID (Universal Unique IDentifier |
 | valid-shell | Verify if /etc/shells is valid |
