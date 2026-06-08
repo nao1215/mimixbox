@@ -25,6 +25,10 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
   `free` (#187), `pidof` (#188), `killall` (#189). The command-running
   applets (`nohup`, `timeout`, `watch`) stop parsing their own options at the
   wrapped command so its flags pass through unchanged.
+- New jokeutils applets, each with unit tests and shellspec integration tests:
+  `fortune` (#190), `banner` (#191), `cowthink` (#192), `nyancat` (#193),
+  `cmatrix` (#194). The animated `nyancat`/`cmatrix` expose pure frame helpers
+  for testing and degrade gracefully when no terminal is available.
 
 ## [0.34.0] - 2026-06-08
 
