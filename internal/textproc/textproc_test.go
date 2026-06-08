@@ -3,6 +3,7 @@ package textproc_test
 import (
 	"bytes"
 	"strings"
+	"testing/iotest"
 	"testing"
 
 	"github.com/nao1215/mimixbox/internal/textproc"
@@ -232,5 +233,21 @@ func TestTailBytes(t *testing.T) {
 	}
 	if buf.String() != "world" {
 		t.Errorf("TailBytes = %q, want %q", buf.String(), "world")
+	}
+}
+
+func TestNumbererStreamsAcrossReads(t *testing.T) {
+	t.Parallel()
+	n := textproc.Numberer{Style: textproc.NumberAll, Start: 1, Increment: 1, Width: 6, Separator: "\t"}
+	var buf bytes.Buffer
+	// OneByteReader delivers one byte per Read; WriteTo must still assemble
+	// whole lines (it streams with bufio rather than reading everything at once).
+	src := iotest.OneByteReader(strings.NewReader("a\nbb\nccc"))
+	if err := n.WriteTo(&buf, src); err != nil {
+		t.Fatalf("WriteTo error = %v", err)
+	}
+	want := "     1\ta\n     2\tbb\n     3\tccc"
+	if buf.String() != want {
+		t.Errorf("streamed = %q, want %q", buf.String(), want)
 	}
 }

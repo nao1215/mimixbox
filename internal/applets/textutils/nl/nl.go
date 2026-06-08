@@ -6,7 +6,6 @@ import (
 	"context"
 	"fmt"
 	"io"
-	"strings"
 
 	"github.com/nao1215/mimixbox/internal/command"
 	"github.com/nao1215/mimixbox/internal/textproc"
@@ -67,7 +66,11 @@ func (c *Command) Run(_ context.Context, stdio command.IO, args []string) error 
 		files = []string{"-"}
 	}
 
-	var b strings.Builder
+	// Open every operand and number the concatenation as a single stream, so
+	// the line counter spans file boundaries (as nl does) without ever holding
+	// the whole input in memory.
+	var readers []io.Reader
+	var closers []io.Closer
 	var firstErr error
 	for _, name := range files {
 		r, err := command.Open(stdio, name)
@@ -76,15 +79,16 @@ func (c *Command) Run(_ context.Context, stdio command.IO, args []string) error 
 			firstErr = keep(firstErr)
 			continue
 		}
-		_, err = io.Copy(&b, r)
-		_ = r.Close()
-		if err != nil {
-			_, _ = fmt.Fprintf(stdio.Err, "nl: %s\n", command.FileError(name, err))
-			firstErr = keep(firstErr)
-		}
+		readers = append(readers, r)
+		closers = append(closers, r)
 	}
+	defer func() {
+		for _, c := range closers {
+			_ = c.Close()
+		}
+	}()
 
-	if err := numberer.WriteTo(stdio.Out, strings.NewReader(b.String())); err != nil {
+	if err := numberer.WriteTo(stdio.Out, io.MultiReader(readers...)); err != nil {
 		return command.Failure(err)
 	}
 	return firstErr

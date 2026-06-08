@@ -3,6 +3,7 @@
 package cat
 
 import (
+	"bufio"
 	"context"
 	"fmt"
 	"io"
@@ -54,22 +55,16 @@ func (c *Command) Run(_ context.Context, stdio command.IO, args []string) error 
 		showTabs:       *showTabs,
 	}
 
-	text, readErr := concat(stdio, fs.Args())
-	if err := write(stdio.Out, render(text, opts), opts); err != nil {
-		return command.Failure(err)
-	}
-	return readErr
-}
-
-// concat reads every operand (defaulting to standard input when there are none)
-// and returns the joined text. A failed open or read is reported on stderr but
-// does not stop the remaining files; the returned error only sets the exit
-// code, because its message was already printed.
-func concat(stdio command.IO, files []string) (string, error) {
+	files := fs.Args()
 	if len(files) == 0 {
 		files = []string{"-"}
 	}
-	var b strings.Builder
+
+	// Open every operand up front and stream the concatenation, so cat works in
+	// constant memory on large files and pipes instead of reading everything in.
+	// A failed open is reported and skipped; the others are still printed.
+	var readers []io.Reader
+	var closers []io.Closer
 	var firstErr error
 	for _, name := range files {
 		r, err := command.Open(stdio, name)
@@ -78,42 +73,76 @@ func concat(stdio command.IO, files []string) (string, error) {
 			firstErr = keep(firstErr)
 			continue
 		}
-		_, err = io.Copy(&b, r)
-		_ = r.Close()
+		readers = append(readers, r)
+		closers = append(closers, r)
+	}
+	defer func() {
+		for _, c := range closers {
+			_ = c.Close()
+		}
+	}()
+
+	src := io.Reader(io.MultiReader(readers...))
+
+	// Apply -s/-T/-E as a streaming filter before numbering, so the line counter
+	// still sees the squeezed lines (matching the previous behavior).
+	if opts.squeeze || opts.showTabs || opts.showEnds {
+		raw := src // capture before reassigning src, or the goroutine would read the pipe itself
+		pr, pw := io.Pipe()
+		go func() { _ = pw.CloseWithError(renderStream(pw, raw, opts)) }()
+		src = pr
+	}
+
+	if err := writeStream(stdio.Out, src, opts); err != nil {
+		return command.Failure(err)
+	}
+	return firstErr
+}
+
+// renderStream copies r to w line by line, applying the display
+// transformations (-s squeeze blank lines, -T show tabs, -E show line ends).
+func renderStream(w io.Writer, r io.Reader, opts options) error {
+	br := bufio.NewReader(r)
+	prevBlank := false
+	for {
+		chunk, err := br.ReadString('\n')
+		if chunk != "" {
+			body, nl := chunk, ""
+			if strings.HasSuffix(chunk, "\n") {
+				body, nl = chunk[:len(chunk)-1], "\n"
+			}
+			emit := true
+			if opts.squeeze {
+				blank := body == ""
+				if blank && prevBlank {
+					emit = false
+				}
+				prevBlank = blank
+			}
+			if emit {
+				if opts.showTabs {
+					body = strings.ReplaceAll(body, "\t", "^I")
+				}
+				if opts.showEnds {
+					body += "$"
+				}
+				if _, werr := io.WriteString(w, body+nl); werr != nil {
+					return werr
+				}
+			}
+		}
+		if err == io.EOF {
+			return nil
+		}
 		if err != nil {
-			_, _ = fmt.Fprintf(stdio.Err, "cat: %s\n", command.FileError(name, err))
-			firstErr = keep(firstErr)
+			return err
 		}
 	}
-	return b.String(), firstErr
 }
 
-// render applies the display transformations (-s, -T, -E) and returns new text.
-// Numbering is applied later by write so its counter sees the squeezed lines.
-func render(text string, opts options) string {
-	if !opts.squeeze && !opts.showTabs && !opts.showEnds {
-		return text
-	}
-	lines := splitKeepNewline(text)
-	if opts.squeeze {
-		lines = squeezeBlank(lines)
-	}
-	var b strings.Builder
-	for _, l := range lines {
-		body := l.body
-		if opts.showTabs {
-			body = strings.ReplaceAll(body, "\t", "^I")
-		}
-		if opts.showEnds {
-			body += "$"
-		}
-		b.WriteString(body)
-		b.WriteString(l.newline)
-	}
-	return b.String()
-}
-
-func write(w io.Writer, text string, opts options) error {
+// writeStream writes src to w, numbering lines when -n/-b is set (streaming via
+// the Numberer) or copying through otherwise.
+func writeStream(w io.Writer, src io.Reader, opts options) error {
 	if opts.number || opts.numberNonBlank {
 		n := textproc.Numberer{
 			Style:     numberStyle(opts.numberNonBlank),
@@ -122,9 +151,9 @@ func write(w io.Writer, text string, opts options) error {
 			Width:     6,
 			Separator: "\t",
 		}
-		return n.WriteTo(w, strings.NewReader(text))
+		return n.WriteTo(w, src)
 	}
-	_, err := io.WriteString(w, text)
+	_, err := io.Copy(w, src)
 	return err
 }
 
@@ -133,39 +162,6 @@ func numberStyle(nonBlank bool) textproc.NumberStyle {
 		return textproc.NumberNonBlank
 	}
 	return textproc.NumberAll
-}
-
-type line struct {
-	body    string
-	newline string
-}
-
-func splitKeepNewline(s string) []line {
-	var lines []line
-	for s != "" {
-		i := strings.IndexByte(s, '\n')
-		if i < 0 {
-			lines = append(lines, line{body: s})
-			break
-		}
-		lines = append(lines, line{body: s[:i], newline: "\n"})
-		s = s[i+1:]
-	}
-	return lines
-}
-
-func squeezeBlank(lines []line) []line {
-	out := make([]line, 0, len(lines))
-	prevBlank := false
-	for _, l := range lines {
-		blank := l.body == ""
-		if blank && prevBlank {
-			continue
-		}
-		prevBlank = blank
-		out = append(out, l)
-	}
-	return out
 }
 
 func keep(existing error) error {

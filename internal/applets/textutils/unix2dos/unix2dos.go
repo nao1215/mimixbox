@@ -11,6 +11,7 @@ import (
 	"strings"
 
 	"github.com/nao1215/mimixbox/internal/command"
+	mb "github.com/nao1215/mimixbox/internal/lib"
 )
 
 // Command is the unix2dos applet.
@@ -53,7 +54,7 @@ func (c *Command) Run(_ context.Context, stdio command.IO, args []string) error 
 			continue
 		}
 		_, _ = fmt.Fprintln(stdio.Out, c.Name()+": converting file "+target+" to DOS format...")
-		if writeErr := listToFile(target, toCRLF(lines)); writeErr != nil {
+		if writeErr := mb.ListToFile(target, toCRLF(lines)); writeErr != nil {
 			_, _ = fmt.Fprintln(stdio.Err, writeErr)
 			firstErr = keep(firstErr)
 			continue
@@ -104,28 +105,6 @@ func readFileToStrList(path string) ([]string, error) {
 		strList = append(strList, line)
 	}
 	return strList, nil
-}
-
-// listToFile writes lines to path, truncating any existing content. A failed
-// Close is reported (it can mean the written data was not flushed to disk).
-func listToFile(path string, lines []string) (err error) {
-	fp, err := os.Create(path) //nolint:gosec // operating on a user-named file is the whole point
-	if err != nil {
-		return err
-	}
-	defer func() {
-		if cerr := fp.Close(); cerr != nil && err == nil {
-			err = cerr
-		}
-	}()
-
-	w := bufio.NewWriter(fp)
-	for _, line := range lines {
-		if _, werr := w.WriteString(line); werr != nil {
-			return werr
-		}
-	}
-	return w.Flush()
 }
 
 // keep returns the first error seen, creating a silent failure when none exists

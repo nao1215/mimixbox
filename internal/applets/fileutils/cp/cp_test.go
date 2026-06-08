@@ -218,3 +218,72 @@ func TestRunCopyFileOntoItselfViaDirectory(t *testing.T) {
 		t.Errorf("source was modified: content=%q err=%v", got, readErr)
 	}
 }
+
+func TestRunPreservesFileMode(t *testing.T) {
+	t.Parallel()
+	dir := t.TempDir()
+	src := filepath.Join(dir, "script.sh")
+	dst := filepath.Join(dir, "copy.sh")
+	if err := os.WriteFile(src, []byte("#!/bin/sh\n"), 0o755); err != nil {
+		t.Fatal(err)
+	}
+	if _, _, err := run(t, src, dst); err != nil {
+		t.Fatalf("Run error = %v", err)
+	}
+	info, err := os.Stat(dst)
+	if err != nil {
+		t.Fatal(err)
+	}
+	if info.Mode().Perm() != 0o755 {
+		t.Errorf("dst mode = %o, want 755 (execute bit must not be stripped)", info.Mode().Perm())
+	}
+}
+
+func TestRunPreservesDirMode(t *testing.T) {
+	t.Parallel()
+	dir := t.TempDir()
+	src := filepath.Join(dir, "private")
+	if err := os.Mkdir(src, 0o700); err != nil {
+		t.Fatal(err)
+	}
+	if err := os.WriteFile(filepath.Join(src, "f.txt"), []byte("x"), 0o600); err != nil {
+		t.Fatal(err)
+	}
+	dst := filepath.Join(dir, "private_copy")
+	if _, _, err := run(t, "-r", src, dst); err != nil {
+		t.Fatalf("Run error = %v", err)
+	}
+	info, err := os.Stat(dst)
+	if err != nil {
+		t.Fatal(err)
+	}
+	if info.Mode().Perm() != 0o700 {
+		t.Errorf("dst dir mode = %o, want 700 (a private tree must not be widened)", info.Mode().Perm())
+	}
+}
+
+func TestRunForceOverwritesReadOnly(t *testing.T) {
+	t.Parallel()
+	dir := t.TempDir()
+	src := filepath.Join(dir, "src.txt")
+	dst := filepath.Join(dir, "dst.txt")
+	if err := os.WriteFile(src, []byte("new\n"), 0o644); err != nil {
+		t.Fatal(err)
+	}
+	if err := os.WriteFile(dst, []byte("old\n"), 0o400); err != nil {
+		t.Fatal(err)
+	}
+
+	// Without -f, a read-only destination cannot be opened for writing.
+	if _, _, err := run(t, src, dst); err == nil {
+		t.Skip("environment allows writing a read-only file (likely running as root); skipping")
+	}
+
+	if _, _, err := run(t, "-f", src, dst); err != nil {
+		t.Fatalf("cp -f error = %v", err)
+	}
+	got, _ := os.ReadFile(dst) //nolint:gosec // test-written file
+	if string(got) != "new\n" {
+		t.Errorf("dst content = %q, want new", got)
+	}
+}

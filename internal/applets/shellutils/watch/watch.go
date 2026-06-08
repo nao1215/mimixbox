@@ -52,7 +52,7 @@ func (c *Command) Run(ctx context.Context, stdio command.IO, args []string) erro
 		return command.Failuref("interval must be positive")
 	}
 
-	render := func() error { return c.renderOnce(stdio, *interval, *noTitle, rest) }
+	render := func() error { return c.renderOnce(ctx, stdio, *interval, *noTitle, rest) }
 	if err := render(); err != nil {
 		return err
 	}
@@ -73,13 +73,13 @@ func (c *Command) Run(ctx context.Context, stdio command.IO, args []string) erro
 
 // renderOnce clears the screen, writes the optional header and then the output
 // of one run of the command.
-func (c *Command) renderOnce(stdio command.IO, interval float64, noTitle bool, argv []string) error {
+func (c *Command) renderOnce(ctx context.Context, stdio command.IO, interval float64, noTitle bool, argv []string) error {
 	var b bytes.Buffer
 	b.WriteString(clearScreen)
 	if !noTitle {
 		b.WriteString(header(interval, argv))
 	}
-	b.WriteString(runCommand(argv))
+	b.WriteString(runCommand(ctx, argv))
 	if _, err := io.Copy(stdio.Out, &b); err != nil {
 		return command.Failure(err)
 	}
@@ -92,9 +92,11 @@ func header(interval float64, argv []string) string {
 }
 
 // runCommand executes argv once and returns its combined output, or the error
-// text when it cannot run, so something is always shown on screen.
-func runCommand(argv []string) string {
-	cmd := exec.Command(argv[0], argv[1:]...) //nolint:gosec // running a user-named command is the point
+// text when it cannot run, so something is always shown on screen. The context
+// is honored, so a cancelled watch (Ctrl-C) terminates a still-running child
+// instead of hanging on it.
+func runCommand(ctx context.Context, argv []string) string {
+	cmd := exec.CommandContext(ctx, argv[0], argv[1:]...) //nolint:gosec // running a user-named command is the point
 	out, err := cmd.CombinedOutput()
 	if err != nil {
 		return string(out) + fmt.Sprintf("watch: %v\n", err)

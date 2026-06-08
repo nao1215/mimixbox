@@ -141,24 +141,68 @@ func IsSameFileName(src string, dest string) bool {
 	return filepath.Base(src) == filepath.Base(dest)
 }
 
-// Copy file(src) to dest
+// Copy copies the regular file src to dest, preserving the source's permission
+// bits and modification time. Preserving the mode matters for callers such as
+// mv's cross-filesystem fallback, where a plain os.Create would otherwise drop
+// the execute bit and reset timestamps.
 func Copy(src string, dest string) error {
+	info, err := os.Lstat(src)
+	if err != nil {
+		return err
+	}
+
 	s, err := os.Open(src)
 	if err != nil {
 		return err
 	}
-	defer s.Close()
+	defer func() { _ = s.Close() }()
 
-	d, err := os.Create(dest)
+	d, err := os.OpenFile(dest, os.O_WRONLY|os.O_CREATE|os.O_TRUNC, info.Mode().Perm())
 	if err != nil {
 		return err
 	}
-	defer d.Close()
 
-	_, err = io.Copy(d, s)
+	if _, err := io.Copy(d, s); err != nil {
+		_ = d.Close()
+		return err
+	}
+	if err := d.Close(); err != nil {
+		return err
+	}
+
+	// Restore the exact mode (umask may have masked it on creation) and mtime.
+	_ = os.Chmod(dest, info.Mode().Perm())
+	_ = os.Chtimes(dest, info.ModTime(), info.ModTime())
+	return nil
+}
+
+// CopyTree recursively copies the file or directory tree rooted at src to dest,
+// preserving each entry's permission bits and modification times. It is used by
+// mv when a rename crosses a filesystem boundary (os.Rename returns EXDEV), a
+// case a single-file Copy cannot handle.
+func CopyTree(src string, dest string) error {
+	info, err := os.Lstat(src)
 	if err != nil {
 		return err
 	}
+	if !info.IsDir() {
+		return Copy(src, dest)
+	}
+
+	if err := os.MkdirAll(dest, info.Mode().Perm()); err != nil {
+		return err
+	}
+	entries, err := os.ReadDir(src)
+	if err != nil {
+		return err
+	}
+	for _, e := range entries {
+		if err := CopyTree(filepath.Join(src, e.Name()), filepath.Join(dest, e.Name())); err != nil {
+			return err
+		}
+	}
+	_ = os.Chmod(dest, info.Mode().Perm())
+	_ = os.Chtimes(dest, info.ModTime(), info.ModTime())
 	return nil
 }
 
@@ -225,7 +269,7 @@ func ReadFileToStrList(path string) ([]string, error) {
 	if err != nil {
 		return nil, err
 	}
-	defer f.Close()
+	defer func() { _ = f.Close() }()
 
 	r := bufio.NewReader(f)
 	for {
@@ -241,18 +285,48 @@ func ReadFileToStrList(path string) ([]string, error) {
 	return strList, nil
 }
 
-func ListToFile(filepath string, lines []string) error {
-	fp, err := os.Create(filepath)
+// ListToFile writes lines to path atomically: it writes a temporary file in the
+// same directory and renames it over path on success. This way an interrupted
+// write or a full disk leaves the original file intact instead of a truncated
+// one (the danger of a plain os.Create on the target). When path already exists
+// its permission bits are preserved.
+func ListToFile(path string, lines []string) error {
+	mode := os.FileMode(0644)
+	if info, err := os.Stat(path); err == nil {
+		mode = info.Mode().Perm()
+	}
+
+	dir := filepath.Dir(path)
+	tmp, err := os.CreateTemp(dir, "."+filepath.Base(path)+".tmp-*")
 	if err != nil {
 		return err
 	}
-	defer fp.Close()
+	tmpName := tmp.Name()
+	// Clean up the temp file if anything below fails before the rename.
+	defer func() { _ = os.Remove(tmpName) }()
 
-	writer := bufio.NewWriter(fp)
+	writer := bufio.NewWriter(tmp)
 	for _, line := range lines {
-		writer.WriteString(line)
+		if _, err := writer.WriteString(line); err != nil {
+			_ = tmp.Close()
+			return err
+		}
 	}
-	return writer.Flush()
+	if err := writer.Flush(); err != nil {
+		_ = tmp.Close()
+		return err
+	}
+	if err := tmp.Sync(); err != nil {
+		_ = tmp.Close()
+		return err
+	}
+	if err := tmp.Close(); err != nil {
+		return err
+	}
+	if err := os.Chmod(tmpName, mode); err != nil {
+		return err
+	}
+	return os.Rename(tmpName, path)
 }
 
 // Return file size(Byte)

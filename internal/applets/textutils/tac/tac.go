@@ -9,7 +9,6 @@ import (
 	"strings"
 
 	"github.com/nao1215/mimixbox/internal/command"
-	"github.com/nao1215/mimixbox/internal/textproc"
 )
 
 // Command is the tac applet.
@@ -43,6 +42,11 @@ func (c *Command) Run(_ context.Context, stdio command.IO, args []string) error 
 		files = []string{"-"}
 	}
 
+	// tac has to read all of its input before it can emit anything (the first
+	// line it prints is the input's last record), so unlike a forward filter it
+	// is inherently non-streaming. Read each operand in turn into one buffer and
+	// then write the records out in reverse, separator-by-separator, straight to
+	// the output rather than materializing a second reversed copy of the data.
 	var b strings.Builder
 	var firstErr error
 	for _, name := range files {
@@ -60,10 +64,35 @@ func (c *Command) Run(_ context.Context, stdio command.IO, args []string) error 
 		}
 	}
 
-	if _, err := io.WriteString(stdio.Out, textproc.Reverse(b.String(), sep)); err != nil {
+	if err := writeReversed(stdio.Out, b.String(), sep); err != nil {
 		return command.Failure(err)
 	}
 	return firstErr
+}
+
+// writeReversed splits text into records terminated by sep and writes them to w
+// in reverse order, so it never builds a second full-size copy of the input the
+// way returning a reversed string would.
+func writeReversed(w io.Writer, text, sep string) error {
+	if text == "" {
+		return nil
+	}
+	var records []string
+	for text != "" {
+		i := strings.Index(text, sep)
+		if i < 0 {
+			records = append(records, text)
+			break
+		}
+		records = append(records, text[:i+len(sep)])
+		text = text[i+len(sep):]
+	}
+	for i := len(records) - 1; i >= 0; i-- {
+		if _, err := io.WriteString(w, records[i]); err != nil {
+			return err
+		}
+	}
+	return nil
 }
 
 func firstNonNil(existing error) error {

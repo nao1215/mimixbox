@@ -157,3 +157,26 @@ func TestRunMixedFilesAndDirectory(t *testing.T) {
 		t.Errorf("f3 content = %q, want %q", string(got3), "c\n")
 	}
 }
+
+func TestRunPreservesFileMode(t *testing.T) {
+	t.Parallel()
+	dir := t.TempDir()
+	file := filepath.Join(dir, "m.txt")
+	if err := os.WriteFile(file, []byte("a\r\nb\r\n"), 0o600); err != nil {
+		t.Fatal(err)
+	}
+	if _, _, err := run(t, file); err != nil {
+		t.Fatalf("Run error = %v", err)
+	}
+	info, err := os.Stat(file)
+	if err != nil {
+		t.Fatal(err)
+	}
+	if info.Mode().Perm() != 0o600 {
+		t.Errorf("mode = %o, want 600 (in-place conversion must keep the mode)", info.Mode().Perm())
+	}
+	got, _ := os.ReadFile(file) //nolint:gosec // test-written file
+	if string(got) != "a\nb\n" {
+		t.Errorf("content = %q", got)
+	}
+}

@@ -5,25 +5,28 @@ import (
 	"context"
 	"strings"
 	"testing"
+	"time"
 
 	"github.com/nao1215/mimixbox/internal/command"
 )
 
-func runCancelled(t *testing.T, args ...string) (string, string, error) {
+// runBounded runs watch with a context that cancels after a short delay, so the
+// refresh loop renders a few times and then returns (watch otherwise loops
+// forever). It returns the collected stdout and the run error.
+func runBounded(t *testing.T, timeout time.Duration, args ...string) (string, string, error) {
 	t.Helper()
 	out := &bytes.Buffer{}
 	errBuf := &bytes.Buffer{}
 	io := command.IO{In: strings.NewReader(""), Out: out, Err: errBuf}
-	// An already-cancelled context makes Run render exactly once and return.
-	ctx, cancel := context.WithCancel(context.Background())
-	cancel()
+	ctx, cancel := context.WithTimeout(context.Background(), timeout)
+	defer cancel()
 	err := New().Run(ctx, io, args)
 	return out.String(), errBuf.String(), err
 }
 
-func TestRendersOnceWithoutTitle(t *testing.T) {
+func TestRendersWithoutTitle(t *testing.T) {
 	t.Parallel()
-	out, _, err := runCancelled(t, "-t", "echo", "hello")
+	out, _, err := runBounded(t, 150*time.Millisecond, "-t", "-n", "0.05", "echo", "hello")
 	if err != nil {
 		t.Fatalf("Run error = %v", err)
 	}
@@ -40,18 +43,18 @@ func TestRendersOnceWithoutTitle(t *testing.T) {
 
 func TestRendersHeader(t *testing.T) {
 	t.Parallel()
-	out, _, err := runCancelled(t, "-n", "1", "echo", "hi")
+	out, _, err := runBounded(t, 150*time.Millisecond, "-n", "0.05", "echo", "hi")
 	if err != nil {
 		t.Fatalf("Run error = %v", err)
 	}
-	if !strings.Contains(out, "Every 1s: echo hi") {
+	if !strings.Contains(out, "Every 0.05s: echo hi") {
 		t.Errorf("missing header in %q", out)
 	}
 }
 
 func TestCommandError(t *testing.T) {
 	t.Parallel()
-	out, _, err := runCancelled(t, "-t", "false")
+	out, _, err := runBounded(t, 150*time.Millisecond, "-t", "-n", "0.05", "false")
 	if err != nil {
 		t.Fatalf("Run error = %v", err)
 	}
@@ -60,9 +63,24 @@ func TestCommandError(t *testing.T) {
 	}
 }
 
+func TestCancelInterruptsHungChild(t *testing.T) {
+	t.Parallel()
+	// The first render runs "sleep 30"; cancelling the context must kill that
+	// child (via exec.CommandContext) so Run returns promptly instead of
+	// blocking for the full sleep.
+	start := time.Now()
+	_, _, err := runBounded(t, 200*time.Millisecond, "-t", "sleep", "30")
+	if err != nil {
+		t.Fatalf("Run error = %v", err)
+	}
+	if elapsed := time.Since(start); elapsed > 5*time.Second {
+		t.Errorf("Run took %v; a hung child was not interrupted by cancellation", elapsed)
+	}
+}
+
 func TestMissingCommand(t *testing.T) {
 	t.Parallel()
-	_, _, err := runCancelled(t)
+	_, _, err := runBounded(t, 100*time.Millisecond)
 	if err == nil {
 		t.Fatal("expected error")
 	}
@@ -73,7 +91,7 @@ func TestMissingCommand(t *testing.T) {
 
 func TestInvalidInterval(t *testing.T) {
 	t.Parallel()
-	_, _, err := runCancelled(t, "-n", "0", "echo", "x")
+	_, _, err := runBounded(t, 100*time.Millisecond, "-n", "0", "echo", "x")
 	if err == nil {
 		t.Fatal("expected error")
 	}
