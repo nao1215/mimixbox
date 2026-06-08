@@ -12,6 +12,7 @@ import (
 	"syscall"
 
 	"github.com/nao1215/mimixbox/internal/command"
+	"github.com/nao1215/mimixbox/internal/signal"
 )
 
 // Command is the kill applet.
@@ -29,53 +30,8 @@ func (c *Command) Synopsis() string { return "Kill process or send signal to pro
 // defaultSignal is sent when no signal is specified, matching GNU/POSIX kill.
 const defaultSignal = 15 // SIGTERM
 
-// signal describes a single entry of the signal table.
-type signal struct {
-	number string
-	name   string
-	desc   string
-}
-
-// signals is the signal table the applet knows about. The list and the
-// descriptions are preserved from the original implementation.
-//
-// [Reference]
-// https://www-uxsup.csx.cam.ac.uk/courses/moved.Building/signals.pdf
-var signals = []signal{
-	{"1", "SIGHUP", "Hangup detected on controlling terminal or death of controlling process"},
-	{"2", "SIGINT", "The process was interrupted (When user hits Cnrl+C)"},
-	{"3", "SIGQUIT", "Quit program"},
-	{"4", "SIGILL", "Illegal instruction"},
-	{"5", "SIGTRAP", "Trace trap for debugging"},
-	{"6", "SIGABRT", "Emegency stop.  Abort program (formerly SIGIOT)"},
-	{"7", "SIGBUS", "Bus error. e.g. alignment errors in memory access"},
-	{"8", "SIGFPE", "A floating point exception happened in the program."},
-	{"9", "SIGKILL", "Kill program"},
-	{"10", "SIGUSR1", "Left for the programmers to do whatever they want"},
-	{"11", "SIGSEGV", "Segmentation violation"},
-	{"12", "SIGUSR2", "Left for the programmers to do whatever they want"},
-	{"13", "SIGPIPE", "Write on a pipe with no reader"},
-	{"14", "SIGALRM", "Real-time timer (request a wake up call) expired"},
-	{"15", "SIGTERM", "Software termination"},
-	{"16", "SIGSTKFLT", "Unused (Stack fault in the FPU)"},
-	{"17", "SIGCHLD", "Stop or exit child process"},
-	{"18", "SIGCONT", "Restart from stop"},
-	{"19", "SIGSTOP", "Stop process"},
-	{"20", "SIGTSTP", "Stop process from terminal (When user hits Cnrl+Z)"},
-	{"21", "SIGTTIN", "Signal to a backgrounded process when it tries to read input from its terminal"},
-	{"22", "SIGTTOU", "Signal to a backgrounded process when it tries to write output to its terminal"},
-	{"23", "SIGURG", "Network connection when urgent out of band data is sent to it"},
-	{"24", "SIGXCPU", "Exceeded CPU limit"},
-	{"25", "SIGXFSZ", "Exceeded file size limit"},
-	{"26", "SIGVTALRM", "Virtual alram cloc"},
-	{"27", "SIGPROF", "Profiling timer's timeout"},
-	{"28", "SIGWINCH", "Window resize signal"},
-	{"29", "SIGIO", "Input / output is possible"},
-	{"30", "SIGPWR", "Power failure"},
-	{"31", "SIGSYS", "Unused (Illegal argument to routine)"},
-	// signal number 33-64 is real-time signal.
-	// It has no predefined meaning and can be used for application-defined purposes.
-}
+// signals is the canonical signal table, shared with killall and timeout.
+var signals = signal.List()
 
 // Run executes kill.
 //
@@ -176,42 +132,15 @@ func isSignalSpec(spec string) bool {
 
 // resolveSignal converts a signal specification to its number. It accepts a
 // decimal number ("9"), a full name ("SIGKILL"), or a short name ("KILL"),
-// case-insensitively for names. Unknown specs return an error.
+// case-insensitively for names. Unknown specs return an error. It delegates to
+// the canonical strict resolver so kill, killall and timeout stay in sync.
 func resolveSignal(spec string) (int, error) {
-	if spec == "" {
-		return 0, fmt.Errorf("empty signal specification")
-	}
-	// Numeric form: 0 is the POSIX null signal (existence check); any other
-	// number must match a known signal in the table.
-	if n, err := strconv.Atoi(spec); err == nil {
-		if n == 0 {
-			return 0, nil
-		}
-		num := strconv.Itoa(n)
-		for _, s := range signals {
-			if s.number == num {
-				return n, nil
-			}
-		}
-		return 0, fmt.Errorf("unknown signal number %q", spec)
-	}
-	// Name form: normalize to the SIG-prefixed, upper-case name.
-	name := strings.ToUpper(spec)
-	if !strings.HasPrefix(name, "SIG") {
-		name = "SIG" + name
-	}
-	for _, s := range signals {
-		if s.name == name {
-			n, _ := strconv.Atoi(s.number)
-			return n, nil
-		}
-	}
-	return 0, fmt.Errorf("unknown signal name %q", spec)
+	return signal.Number(spec)
 }
 
 // writeSignalList writes the table of known signals to w, one per line.
 func writeSignalList(w io.Writer) {
 	for _, s := range signals {
-		_, _ = fmt.Fprintf(w, "%2s  %10s  %s\n", s.number, s.name, s.desc)
+		_, _ = fmt.Fprintf(w, "%2d  %10s  %s\n", s.Number, s.Name, s.Desc)
 	}
 }
