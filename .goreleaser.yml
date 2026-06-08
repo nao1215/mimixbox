@@ -21,7 +21,7 @@ archives:
 checksum:
   name_template: "checksums.txt"
 snapshot:
-  name_template: "{{ incpatch .Version }}-next"
+  version_template: "{{ incpatch .Version }}-next"
 changelog:
   sort: asc
   filters:
@@ -37,11 +37,3 @@ nfpms:
       - deb
       - rpm
       - apk
-brews:
-  - name: mimixbox
-    description: MimixBox - mimic BusyBox on Linux
-    license: Apache-2.0 license
-    repository:
-      owner: nao1215
-      name: homebrew-tap
-      token: "{{ .Env.TAP_GITHUB_TOKEN }}"

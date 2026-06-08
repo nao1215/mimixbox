@@ -149,12 +149,6 @@ $ go install github.com/nao1215/mimixbox/cmd/mimixbox@latest
 $ sudo mimixbox --install /usr/local/bin
 ```
 
-### Use homebrew
-
-```shell
-$ brew install nao1215/tap/mimixbox
-```
-
 ## Original commands
 
 MimixBox has its own commands that do not exist in packages like Coreutils.
