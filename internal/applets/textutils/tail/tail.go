@@ -44,6 +44,9 @@ func (c *Command) Run(ctx context.Context, stdio command.IO, args []string) erro
 	if *sleepInterval <= 0 {
 		return command.Failuref("invalid number of seconds: %g", *sleepInterval)
 	}
+	if fs.Changed("follow") && *followMode != "name" && *followMode != "descriptor" {
+		return command.Failuref("invalid argument %q for '--follow'; valid arguments are 'name', 'descriptor'", *followMode)
+	}
 
 	following := fs.Changed("follow") || *followName
 	reopen := *followName || *followMode == "name"

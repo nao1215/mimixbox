@@ -40,7 +40,12 @@ func newFollowTargets(paths []string, retry bool) []followTarget {
 			_ = f.Close()
 			continue
 		}
-		offset, _ := f.Seek(0, io.SeekEnd)
+		offset, err := f.Seek(0, io.SeekEnd)
+		if err != nil {
+			// Fall back to the stat size so the first poll does not re-emit
+			// the whole file (which the initial tail pass already printed).
+			offset = info.Size()
+		}
 		targets = append(targets, followTarget{path: path, file: f, info: info, offset: offset})
 	}
 	return targets
@@ -56,7 +61,7 @@ func closeAll(targets []followTarget) {
 }
 
 // follow polls the targets every interval, emitting newly appended data, until
-// the context is cancelled. reopen enables -F semantics (re-open a file that is
+// the context is canceled. reopen enables -F semantics (re-open a file that is
 // rotated or recreated); showHeader prints "==> FILE <==" banners when output
 // switches between files.
 func follow(ctx context.Context, stdio command.IO, targets []followTarget, interval float64, reopen, showHeader bool) {
@@ -144,6 +149,9 @@ func (t *followTarget) emit(stdio command.IO, size int64, showHeader bool, last 
 		writeHeader(stdio.Out, t.path, *last == "")
 		*last = t.path
 	}
-	n, _ := io.CopyN(stdio.Out, t.file, size-t.offset)
+	n, err := io.CopyN(stdio.Out, t.file, size-t.offset)
 	t.offset += n
+	if err != nil {
+		_, _ = fmt.Fprintf(stdio.Err, "tail: %s: %v\n", t.path, err)
+	}
 }

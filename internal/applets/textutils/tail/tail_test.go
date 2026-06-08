@@ -193,3 +193,19 @@ func TestInvalidSleepIntervalRejected(t *testing.T) {
 		t.Errorf("err = %v", err)
 	}
 }
+
+func TestInvalidFollowModeRejected(t *testing.T) {
+	t.Parallel()
+	dir := t.TempDir()
+	path := filepath.Join(dir, "f.txt")
+	if err := os.WriteFile(path, []byte("x\n"), 0o600); err != nil {
+		t.Fatal(err)
+	}
+	_, _, err := run(t, "", "--follow=bogus", path)
+	if err == nil {
+		t.Fatal("expected error for invalid --follow mode")
+	}
+	if !strings.Contains(err.Error(), "invalid argument") {
+		t.Errorf("err = %v", err)
+	}
+}
