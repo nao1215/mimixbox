@@ -17,6 +17,13 @@ Describe 'mbsh'
         The output should include 'status=1'
         The status should be success
     End
+End
+
+Describe 'mbsh cd'
+    Include shellutils/mbsh_test.sh
+    BeforeEach 'Setup'
+    AfterEach 'CleanUp'
+
     It 'changes directory with cd'
         When call TestMbshCd
         The output should include '/tmp/mimixbox/it/mbsh'

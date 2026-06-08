@@ -43,7 +43,10 @@ func cd(stdio command.IO, args []string) error {
 		return err
 	}
 
-	newDir, _ := os.Getwd()
+	newDir, err := os.Getwd()
+	if err != nil {
+		return err
+	}
 	_ = os.Setenv("OLDPWD", old)
 	_ = os.Setenv("PWD", newDir)
 
