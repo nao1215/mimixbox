@@ -7,6 +7,7 @@ import (
 	"path/filepath"
 	"strings"
 	"testing"
+	"time"
 
 	"github.com/nao1215/mimixbox/internal/applets/textutils/tail"
 	"github.com/nao1215/mimixbox/internal/command"
@@ -74,5 +75,121 @@ func TestRunMissingFile(t *testing.T) {
 	}
 	if !strings.Contains(errOut, "tail: /no/such/file:") {
 		t.Errorf("stderr = %q", errOut)
+	}
+}
+
+func appendToFile(t *testing.T, path, data string) {
+	t.Helper()
+	f, err := os.OpenFile(path, os.O_APPEND|os.O_WRONLY, 0o600)
+	if err != nil {
+		t.Fatalf("open for append: %v", err)
+	}
+	defer func() { _ = f.Close() }()
+	if _, err := f.WriteString(data); err != nil {
+		t.Fatalf("append: %v", err)
+	}
+}
+
+// runFollowBackground starts tail in a goroutine and returns the live stdout
+// buffer, a cancel function that stops the follow loop, and a channel that is
+// closed once Run returns. Only the tail goroutine writes to the buffer, and
+// callers read it after receiving from done, so access is synchronized.
+func runFollowBackground(ctx context.Context, args ...string) (*bytes.Buffer, <-chan error) {
+	out := &bytes.Buffer{}
+	errBuf := &bytes.Buffer{}
+	io := command.IO{In: strings.NewReader(""), Out: out, Err: errBuf}
+	done := make(chan error, 1)
+	go func() { done <- tail.New().Run(ctx, io, args) }()
+	return out, done
+}
+
+func TestFollowEmitsAppendedData(t *testing.T) {
+	dir := t.TempDir()
+	path := filepath.Join(dir, "f.txt")
+	if err := os.WriteFile(path, []byte("line1\n"), 0o600); err != nil {
+		t.Fatal(err)
+	}
+
+	ctx, cancel := context.WithCancel(context.Background())
+	out, done := runFollowBackground(ctx, "-f", "-s", "0.05", path)
+
+	time.Sleep(150 * time.Millisecond)
+	appendToFile(t, path, "line2\nline3\n")
+	time.Sleep(250 * time.Millisecond)
+	cancel()
+	if err := <-done; err != nil {
+		t.Fatalf("Run error = %v", err)
+	}
+
+	got := out.String()
+	if !strings.Contains(got, "line1\n") {
+		t.Errorf("initial tail missing in %q", got)
+	}
+	if !strings.Contains(got, "line2\nline3\n") {
+		t.Errorf("appended data missing in %q", got)
+	}
+}
+
+func TestFollowReturnsOnCancel(t *testing.T) {
+	dir := t.TempDir()
+	path := filepath.Join(dir, "f.txt")
+	if err := os.WriteFile(path, []byte("x\n"), 0o600); err != nil {
+		t.Fatal(err)
+	}
+	ctx, cancel := context.WithCancel(context.Background())
+	_, done := runFollowBackground(ctx, "-f", "-s", "0.05", path)
+	cancel()
+	select {
+	case err := <-done:
+		if err != nil {
+			t.Fatalf("Run error = %v", err)
+		}
+	case <-time.After(2 * time.Second):
+		t.Fatal("follow did not stop after cancel")
+	}
+}
+
+func TestFollowNameReopensRecreatedFile(t *testing.T) {
+	dir := t.TempDir()
+	path := filepath.Join(dir, "rotating.txt")
+	if err := os.WriteFile(path, []byte("first\n"), 0o600); err != nil {
+		t.Fatal(err)
+	}
+
+	ctx, cancel := context.WithCancel(context.Background())
+	out, done := runFollowBackground(ctx, "-F", "-s", "0.05", path)
+
+	time.Sleep(150 * time.Millisecond)
+	// Rotate: rename the original away and recreate the path with new content.
+	if err := os.Rename(path, path+".1"); err != nil {
+		t.Fatal(err)
+	}
+	if err := os.WriteFile(path, []byte("second\n"), 0o600); err != nil {
+		t.Fatal(err)
+	}
+	time.Sleep(300 * time.Millisecond)
+	cancel()
+	if err := <-done; err != nil {
+		t.Fatalf("Run error = %v", err)
+	}
+
+	if got := out.String(); !strings.Contains(got, "second\n") {
+		t.Errorf("recreated file content missing in %q", got)
+	}
+}
+
+func TestInvalidSleepIntervalRejected(t *testing.T) {
+	t.Parallel()
+	dir := t.TempDir()
+	path := filepath.Join(dir, "f.txt")
+	if err := os.WriteFile(path, []byte("x\n"), 0o600); err != nil {
+		t.Fatal(err)
+	}
+	_, _, err := run(t, "", "-f", "-s", "0", path)
+	if err == nil {
+		t.Fatal("expected error for non-positive sleep interval")
+	}
+	if !strings.Contains(err.Error(), "invalid number of seconds") {
+		t.Errorf("err = %v", err)
 	}
 }

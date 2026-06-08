@@ -75,3 +75,16 @@ Describe 'tail with a non-existent file'
         The status should be failure
     End
 End
+
+Describe 'tail --follow'
+    Include textutils/tail_test.sh
+    BeforeEach 'Setup'
+    AfterEach 'CleanUp'
+
+    It 'prints data appended while following'
+        When call TestTailFollow
+        The output should include 'start'
+        The output should include 'appended'
+        The status should be failure
+    End
+End
