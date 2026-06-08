@@ -27,6 +27,7 @@ import (
 	gzipCmd "github.com/nao1215/mimixbox/internal/applets/archival/gzip"
 	"github.com/nao1215/mimixbox/internal/applets/console-tools/clear"
 	"github.com/nao1215/mimixbox/internal/applets/console-tools/reset"
+	"github.com/nao1215/mimixbox/internal/applets/console-tools/resize"
 	addShell "github.com/nao1215/mimixbox/internal/applets/debianutils/add-shell"
 	"github.com/nao1215/mimixbox/internal/applets/debianutils/ischroot"
 	"github.com/nao1215/mimixbox/internal/applets/debianutils/mktemp"
@@ -187,6 +188,7 @@ func init() {
 		"remove-shell": reg(removeShell.New()),
 		"reboot":       reg(halt.NewReboot()),
 		"reset":        reg(reset.New()),
+		"resize":       reg(resize.New()),
 		"rm":           reg(rm.New()),
 		"rmdir":        reg(rmdir.New()),
 		"sddf":         reg(sddf.New()),
