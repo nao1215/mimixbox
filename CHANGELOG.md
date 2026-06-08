@@ -29,6 +29,12 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
   `fortune` (#190), `banner` (#191), `cowthink` (#192), `nyancat` (#193),
   `cmatrix` (#194). The animated `nyancat`/`cmatrix` expose pure frame helpers
   for testing and degrade gracefully when no terminal is available.
+- New ported applets (clean-room, no GPL source copied): `posixer` (#195)
+  reports which POSIX utilities are installed; `pwgen` (#201) generates
+  random passwords; `unshadow` (#202) merges passwd/shadow for authorized
+  auditing; `pwscore` (#203) rates password strength; `http-status-code`
+  (#206) explains HTTP status codes. New `netutils` and `securityutils`
+  applet categories were introduced.
 
 ## [0.34.0] - 2026-06-08
 
