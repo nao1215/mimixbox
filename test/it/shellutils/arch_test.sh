@@ -1,0 +1,3 @@
+TestArch() {
+    arch
+}

@@ -1,0 +1,3 @@
+TestLogname() {
+    LOGNAME=mimixuser logname
+}
