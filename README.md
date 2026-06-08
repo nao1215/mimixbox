@@ -21,7 +21,7 @@ The GIF above is generated from [assets/demo.tape](./assets/demo.tape) with [vhs
 The list below is generated from the registered applets by `make command-list`, so it never drifts from the binary. You can also run `mimixbox --list` to print it on the terminal.
 
 <!-- COMMAND_LIST_START -->
-There are 101 commands. Run `mimixbox --list` to see them on the terminal.
+There are 103 commands. Run `mimixbox --list` to see them on the terminal.
 
 | Command | Description |
 |:--|:--|
@@ -39,6 +39,7 @@ There are 101 commands. Run `mimixbox --list` to see them on the terminal.
 | chroot | Run command or interactive shell with special root directory |
 | clear | Clear terminal |
 | cmp | Compare two files byte by byte |
+| compress | Compress files with LZW (.Z) |
 | cowsay | Print message with cow's ASCII art |
 | cp | Copy file(s) otr Directory(s) |
 | cpio | Copy files to and from archives |
@@ -112,6 +113,7 @@ There are 101 commands. Run `mimixbox --list` to see them on the terminal.
 | touch | Update the access and modification times of each FILE to the current time |
 | tr | Translate or delete characters |
 | true | Do nothing. Return success(0) |
+| uncompress | Decompress LZW (.Z) files |
 | unexpand | Convert N space to TAB(default:N=8) |
 | uniq | Report or omit repeated lines |
 | unix2dos | Change LF to CRLF |
