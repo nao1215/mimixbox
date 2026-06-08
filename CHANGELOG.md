@@ -7,6 +7,8 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## [Unreleased]
 
+## [0.36.0] - 2026-06-09
+
 ### Changed
 
 - The top-level `mimixbox` dispatcher was rewritten without the go-flags
@@ -23,6 +25,12 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
   ignores the initial signal.
 - `internal/lib`: `Question` loops instead of recursing, and `FromPIPE` uses
   `io.ReadAll` instead of the deprecated `ioutil.ReadAll`.
+- Custom-parsed applets now share a single `--help`/`--version` contract via
+  `command.HandleHelpVersion`: `find --version` prints the version line
+  instead of usage text, and standalone `echo` honors a leading `--help`/
+  `--version` like GNU's `/usr/bin/echo` (a later `--help` stays literal, so
+  `echo foo --help` is unchanged). `true` and `false` delegate to the same
+  helper.
 
 ### Fixed
 
@@ -30,9 +38,16 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
   fixtures with `t.TempDir()` (no `/tmp/mimixbox/ut` dependency, parallel
   safe), and tests that need `chown`, loopback listen sockets or netlink now
   `t.Skip` when those are unavailable instead of failing.
+- CI installs shellspec from its canonical `install.sh` URL; the old
+  `git.io/shellspec` shortlink was shut down and returned 404, breaking the
+  integration-test job.
 
 ### Added
 
+- `tail` can follow a growing file: `-f`/`--follow[=name|descriptor]` prints
+  appended data, `-F` (and `--retry`) re-opens a rotated/recreated file, and
+  `-s`/`--sleep-interval` sets the poll interval. Following honors the context
+  so cancellation stops the loop without leaking a goroutine.
 - Top-level dispatch tests (`cmd/mimixbox`) and shellspec end-to-end specs
   for previously-untested applets: `printenv`, `printf`, `pwd`, `sleep`,
   `sync`, `uuidgen`, `tr`, `kill`, and a `gzip`/`gunzip` roundtrip.
