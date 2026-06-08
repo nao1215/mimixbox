@@ -35,6 +35,9 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
   auditing; `pwscore` (#203) rates password strength; `http-status-code`
   (#206) explains HTTP status codes. New `netutils` and `securityutils`
   applet categories were introduced.
+- A `Docker` CI workflow that builds the image from the local source tree
+  and verifies the in-image `mimixbox` binary runs, so building MimixBox in
+  Docker stays working (#4).
 
 ### Changed
 
