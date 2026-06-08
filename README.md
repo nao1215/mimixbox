@@ -21,7 +21,7 @@ The GIF above is generated from [assets/demo.tape](./assets/demo.tape) with [vhs
 The list below is generated from the registered applets by `make command-list`, so it never drifts from the binary. You can also run `mimixbox --list` to print it on the terminal.
 
 <!-- COMMAND_LIST_START -->
-There are 100 commands. Run `mimixbox --list` to see them on the terminal.
+There are 101 commands. Run `mimixbox --list` to see them on the terminal.
 
 | Command | Description |
 |:--|:--|
@@ -118,6 +118,7 @@ There are 100 commands. Run `mimixbox --list` to see them on the terminal.
 | unzip | Extract files from a ZIP archive |
 | uuidgen | Print UUID (Universal Unique IDentifier |
 | valid-shell | Verify if /etc/shells is valid |
+| vi | A minimal vi-style screen text editor |
 | wc | Print newline, word, and byte counts for each file |
 | wget | The non-interactive network downloader |
 | which | Returns the file path which would be executed in the current environment |

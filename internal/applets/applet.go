@@ -44,6 +44,7 @@ import (
 	"github.com/nao1215/mimixbox/internal/applets/editors/diff"
 	"github.com/nao1215/mimixbox/internal/applets/editors/patch"
 	"github.com/nao1215/mimixbox/internal/applets/editors/sed"
+	"github.com/nao1215/mimixbox/internal/applets/editors/vi"
 	"github.com/nao1215/mimixbox/internal/applets/fileutils/chgrp"
 	"github.com/nao1215/mimixbox/internal/applets/fileutils/chown"
 	"github.com/nao1215/mimixbox/internal/applets/fileutils/cp"
@@ -237,6 +238,7 @@ func init() {
 		"uniq":         reg(uniq.New()),
 		"unix2dos":     reg(unix2dos.New()),
 		"unzip":        reg(unzip.New()),
+		"vi":           reg(vi.New()),
 		"uuidgen":      reg(uuidgen.New()),
 		"valid-shell":  reg(validShell.New()),
 		"wc":           reg(wc.New()),
