@@ -26,10 +26,12 @@ import (
 
 	"github.com/nao1215/mimixbox/internal/applets/archival/ar"
 	"github.com/nao1215/mimixbox/internal/applets/archival/bunzip2"
+	compressCmd "github.com/nao1215/mimixbox/internal/applets/archival/compress"
 	"github.com/nao1215/mimixbox/internal/applets/archival/cpio"
 	"github.com/nao1215/mimixbox/internal/applets/archival/gunzip"
 	gzipCmd "github.com/nao1215/mimixbox/internal/applets/archival/gzip"
 	tarCmd "github.com/nao1215/mimixbox/internal/applets/archival/tar"
+	"github.com/nao1215/mimixbox/internal/applets/archival/uncompress"
 	"github.com/nao1215/mimixbox/internal/applets/archival/unzip"
 	zipCmd "github.com/nao1215/mimixbox/internal/applets/archival/zip"
 	"github.com/nao1215/mimixbox/internal/applets/console-tools/clear"
@@ -162,6 +164,7 @@ func init() {
 		//"chsh":         {chsh.Run, "Cqhange login shell"},
 		"clear":        reg(clear.New()),
 		"cmp":          reg(cmp.New()),
+		"compress":     reg(compressCmd.New()),
 		"cp":           reg(cp.New()),
 		"cpio":         reg(cpio.New()),
 		"cut":          reg(cut.New()),
@@ -234,6 +237,7 @@ func init() {
 		"touch":        reg(touch.New()),
 		"tr":           reg(tr.New()),
 		"true":         reg(booltrue.New()),
+		"uncompress":   reg(uncompress.New()),
 		"unexpand":     reg(unexpand.New()),
 		"uniq":         reg(uniq.New()),
 		"unix2dos":     reg(unix2dos.New()),
