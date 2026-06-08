@@ -1,0 +1,25 @@
+Describe 'mbsh'
+    Include shellutils/mbsh_test.sh
+
+    It 'runs an external command and shows a cwd-aware prompt'
+        When call TestMbshEcho
+        The output should include 'hello'
+        The output should include 'mbsh:'
+        The status should be success
+    End
+    It 'ignores comment lines'
+        When call TestMbshComment
+        The output should include 'ok'
+        The status should be success
+    End
+    It 'expands $? to the last exit status'
+        When call TestMbshLastStatus
+        The output should include 'status=1'
+        The status should be success
+    End
+    It 'changes directory with cd'
+        When call TestMbshCd
+        The output should include '/tmp/mimixbox/it/mbsh'
+        The status should be success
+    End
+End
