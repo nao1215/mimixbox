@@ -23,8 +23,6 @@ func run(t *testing.T, script string) (string, string, error) {
 	return out.String(), errBuf.String(), err
 }
 
-// TestRunExecutesExternalCommand feeds the shell a one-line script that runs the
-// external "echo" command, then exits. The command output must reach stdout.
 func TestRunExecutesExternalCommand(t *testing.T) {
 	out, errOut, err := run(t, "echo hello\nexit\n")
 	if err != nil {
@@ -33,14 +31,22 @@ func TestRunExecutesExternalCommand(t *testing.T) {
 	if !strings.Contains(out, "hello") {
 		t.Errorf("stdout = %q, want it to contain %q", out, "hello")
 	}
-	// Two prompts are printed: one before "echo hello" and one before "exit".
-	if got := strings.Count(out, "> "); got != 2 {
-		t.Errorf("prompt count = %d, want 2 (out=%q)", got, out)
+}
+
+func TestPromptShowsCwd(t *testing.T) {
+	cwd, err := os.Getwd()
+	if err != nil {
+		t.Fatal(err)
+	}
+	out, _, runErr := run(t, "exit\n")
+	if runErr != nil {
+		t.Fatalf("Run error = %v", runErr)
+	}
+	if !strings.Contains(out, "mbsh:"+cwd+"> ") {
+		t.Errorf("prompt = %q, want it to contain cwd %q", out, cwd)
 	}
 }
 
-// TestRunEOFEndsLoop feeds a script that never says "exit"; the loop must end
-// cleanly when stdio.In reaches EOF.
 func TestRunEOFEndsLoop(t *testing.T) {
 	out, errOut, err := run(t, "echo bye\n")
 	if err != nil {
@@ -51,20 +57,58 @@ func TestRunEOFEndsLoop(t *testing.T) {
 	}
 }
 
-// TestRunEmptyInputEndsImmediately verifies that immediate EOF (empty script)
-// returns without hanging or error.
+// TestRunFinalLineWithoutNewline exercises the EOF path that still runs a final
+// line lacking a trailing newline.
+func TestRunFinalLineWithoutNewline(t *testing.T) {
+	out, errOut, err := run(t, "echo tail")
+	if err != nil {
+		t.Fatalf("Run error = %v (stderr=%q)", err, errOut)
+	}
+	if !strings.Contains(out, "tail") {
+		t.Errorf("stdout = %q, want it to contain %q", out, "tail")
+	}
+}
+
+// TestRunExitOnFinalLineWithoutNewline covers the EOF branch where the trailing
+// line is the exit command.
+func TestRunExitOnFinalLineWithoutNewline(t *testing.T) {
+	_, _, err := run(t, "exit")
+	if err != nil {
+		t.Fatalf("Run error = %v", err)
+	}
+}
+
 func TestRunEmptyInputEndsImmediately(t *testing.T) {
 	out, errOut, err := run(t, "")
 	if err != nil {
 		t.Fatalf("Run error = %v (stderr=%q)", err, errOut)
 	}
-	if out != "> " {
-		t.Errorf("stdout = %q, want a single prompt", out)
+	if !strings.HasPrefix(out, "mbsh:") || !strings.HasSuffix(out, "> ") {
+		t.Errorf("stdout = %q, want a single mbsh prompt", out)
 	}
 }
 
-// TestCdBuiltinChangesDirectory verifies that the cd built-in changes the
-// process working directory through the REPL.
+func TestCommentLineIgnored(t *testing.T) {
+	out, errOut, err := run(t, "# this is a comment\necho ok\nexit\n")
+	if err != nil {
+		t.Fatalf("Run error = %v (stderr=%q)", err, errOut)
+	}
+	if !strings.Contains(out, "ok") {
+		t.Errorf("stdout = %q", out)
+	}
+}
+
+func TestLastStatusExpansion(t *testing.T) {
+	// "false" exits 1; "$?" must then expand to 1.
+	out, errOut, err := run(t, "false\necho $?\nexit\n")
+	if err != nil {
+		t.Fatalf("Run error = %v (stderr=%q)", err, errOut)
+	}
+	if !strings.Contains(out, "1") {
+		t.Errorf("stdout = %q, want it to contain exit status 1", out)
+	}
+}
+
 func TestCdBuiltinChangesDirectory(t *testing.T) {
 	orig, err := os.Getwd()
 	if err != nil {
@@ -73,7 +117,6 @@ func TestCdBuiltinChangesDirectory(t *testing.T) {
 	t.Cleanup(func() { _ = os.Chdir(orig) })
 
 	dir := t.TempDir()
-	// Resolve symlinks (macOS /tmp, etc.) so the comparison is exact.
 	want, err := filepath.EvalSymlinks(dir)
 	if err != nil {
 		t.Fatal(err)
@@ -97,21 +140,69 @@ func TestCdBuiltinChangesDirectory(t *testing.T) {
 	}
 }
 
-// TestCdWithoutPathReportsError verifies that "cd" with no argument writes the
-// path-required error to stderr without stopping the loop.
-func TestCdWithoutPathReportsError(t *testing.T) {
-	_, errOut, err := run(t, "cd\nexit\n")
+func TestCdNoArgGoesHome(t *testing.T) {
+	orig, err := os.Getwd()
 	if err != nil {
-		t.Fatalf("Run error = %v", err)
+		t.Fatal(err)
 	}
-	if !strings.Contains(errOut, "path required") {
-		t.Errorf("stderr = %q, want it to mention %q", errOut, "path required")
+	t.Cleanup(func() { _ = os.Chdir(orig) })
+
+	home := t.TempDir()
+	t.Setenv("HOME", home)
+	wantHome, err := filepath.EvalSymlinks(home)
+	if err != nil {
+		t.Fatal(err)
+	}
+
+	if _, errOut, runErr := run(t, "cd\nexit\n"); runErr != nil {
+		t.Fatalf("Run error = %v (stderr=%q)", runErr, errOut)
+	}
+	got, _ := os.Getwd()
+	got, _ = filepath.EvalSymlinks(got)
+	if got != wantHome {
+		t.Errorf("cd with no arg -> %q, want HOME %q", got, wantHome)
 	}
 }
 
-// TestHelp verifies the standard --help flag is wired through the flag set.
-// --help is an argument (not REPL input), so it must short-circuit before any
-// prompt is printed.
+func TestCdDashReturnsToPrevious(t *testing.T) {
+	orig, err := os.Getwd()
+	if err != nil {
+		t.Fatal(err)
+	}
+	t.Cleanup(func() { _ = os.Chdir(orig) })
+
+	start, _ := filepath.EvalSymlinks(orig)
+	dir := t.TempDir()
+
+	// cd into dir, then "cd -" must return to the starting directory.
+	if _, errOut, runErr := run(t, "cd "+dir+"\ncd -\nexit\n"); runErr != nil {
+		t.Fatalf("Run error = %v (stderr=%q)", runErr, errOut)
+	}
+	got, _ := os.Getwd()
+	got, _ = filepath.EvalSymlinks(got)
+	if got != start {
+		t.Errorf("cd - landed in %q, want %q", got, start)
+	}
+}
+
+func TestExitAndQuit(t *testing.T) {
+	for _, word := range []string{"exit", "quit"} {
+		word := word
+		t.Run(word, func(t *testing.T) {
+			out, _, err := run(t, "echo first\n"+word+"\necho second\n")
+			if err != nil {
+				t.Fatalf("Run error = %v", err)
+			}
+			if !strings.Contains(out, "first") {
+				t.Errorf("out = %q, want 'first'", out)
+			}
+			if strings.Contains(out, "second") {
+				t.Errorf("%q should have stopped the loop, out = %q", word, out)
+			}
+		})
+	}
+}
+
 func TestHelp(t *testing.T) {
 	out := &bytes.Buffer{}
 	errBuf := &bytes.Buffer{}
@@ -122,10 +213,7 @@ func TestHelp(t *testing.T) {
 	if !strings.Contains(out.String(), "Usage: mbsh") {
 		t.Errorf("--help out = %q", out.String())
 	}
-	if strings.Contains(out.String(), prompt) {
+	if strings.Contains(out.String(), "mbsh:") {
 		t.Errorf("--help should not print a prompt: %q", out.String())
 	}
 }
-
-// prompt is duplicated from the package under test for the assertion above.
-const prompt = "> "
