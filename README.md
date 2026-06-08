@@ -17,7 +17,7 @@ MimixBox packs many Unix commands into a single binary, like BusyBox. Unlike Bus
 The list below is generated from the registered applets by `make command-list`, so it never drifts from the binary. You can also run `mimixbox --list` to print it on the terminal.
 
 <!-- COMMAND_LIST_START -->
-There are 83 commands. Run `mimixbox --list` to see them on the terminal.
+There are 85 commands. Run `mimixbox --list` to see them on the terminal.
 
 | Command | Description |
 |:--|:--|
@@ -54,6 +54,7 @@ There are 83 commands. Run `mimixbox --list` to see them on the terminal.
 | head | Print the first NUMBER(default=10) lines |
 | hostid | Print the numeric identifier (in hexadecimal) for the current host |
 | id | Print User ID and Group ID |
+| install | Copy files and set attributes |
 | ischroot | Detect if running in a chroot |
 | kill | Kill process or send signal to process |
 | lifegame | Life game (Conway's Game of Life) |
@@ -62,6 +63,7 @@ There are 83 commands. Run `mimixbox --list` to see them on the terminal.
 | md5sum | Calculate or Check md5sum message digest |
 | mkdir | Make directories |
 | mkfifo | Make FIFO (named pipe) |
+| mknod | Make block or character special files |
 | mktemp | Create a temporary file or directory |
 | mv | Rename SOURCE to DESTINATION, or move SOURCE(s) to DIRECTORY |
 | nl | Write each FILE to standard output with line numbers added |
