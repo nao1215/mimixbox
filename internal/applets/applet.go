@@ -24,7 +24,12 @@ import (
 
 	"github.com/nao1215/mimixbox/internal/command"
 
+	"github.com/nao1215/mimixbox/internal/applets/archival/bunzip2"
+	"github.com/nao1215/mimixbox/internal/applets/archival/gunzip"
 	gzipCmd "github.com/nao1215/mimixbox/internal/applets/archival/gzip"
+	tarCmd "github.com/nao1215/mimixbox/internal/applets/archival/tar"
+	"github.com/nao1215/mimixbox/internal/applets/archival/unzip"
+	zipCmd "github.com/nao1215/mimixbox/internal/applets/archival/zip"
 	"github.com/nao1215/mimixbox/internal/applets/console-tools/clear"
 	"github.com/nao1215/mimixbox/internal/applets/console-tools/reset"
 	"github.com/nao1215/mimixbox/internal/applets/console-tools/resize"
@@ -137,6 +142,7 @@ func init() {
 		"add-shell": reg(addShell.New()),
 		"base64":    reg(base64.New()),
 		"basename":  reg(basename.New()),
+		"bunzip2":   reg(bunzip2.New()),
 		"cal":       reg(cal.New()),
 		"cat":       reg(cat.New()),
 		"chmod":     reg(chmod.New()),
@@ -165,6 +171,7 @@ func init() {
 		"ghrdc":        reg(ghrdc.New()),
 		"grep":         reg(grep.New()),
 		"groups":       reg(groups.New()),
+		"gunzip":       reg(gunzip.New()),
 		"gzip":         reg(gzipCmd.New()),
 		"halt":         reg(halt.NewHalt()),
 		"head":         reg(head.New()),
@@ -208,6 +215,7 @@ func init() {
 		"sync":         reg(sync.New()),
 		"tac":          reg(tac.New()),
 		"tail":         reg(tail.New()),
+		"tar":          reg(tarCmd.New()),
 		"tee":          reg(tee.New()),
 		"test":         reg(testcmd.New()),
 		"touch":        reg(touch.New()),
@@ -216,12 +224,14 @@ func init() {
 		"unexpand":     reg(unexpand.New()),
 		"uniq":         reg(uniq.New()),
 		"unix2dos":     reg(unix2dos.New()),
+		"unzip":        reg(unzip.New()),
 		"uuidgen":      reg(uuidgen.New()),
 		"valid-shell":  reg(validShell.New()),
 		"wc":           reg(wc.New()),
 		"wget":         reg(wget.New()),
 		"which":        reg(which.New()),
 		"xargs":        reg(xargs.New()),
+		"zip":          reg(zipCmd.New()),
 		"who":          reg(who.New()),
 		"whoami":       reg(whoami.New()),
 	}
