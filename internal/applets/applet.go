@@ -43,6 +43,9 @@ import (
 	"github.com/nao1215/mimixbox/internal/applets/fileutils/rm"
 	"github.com/nao1215/mimixbox/internal/applets/fileutils/rmdir"
 	"github.com/nao1215/mimixbox/internal/applets/fileutils/touch"
+	"github.com/nao1215/mimixbox/internal/applets/findutils/find"
+	"github.com/nao1215/mimixbox/internal/applets/findutils/grep"
+	"github.com/nao1215/mimixbox/internal/applets/findutils/xargs"
 	"github.com/nao1215/mimixbox/internal/applets/games/lifegame"
 	"github.com/nao1215/mimixbox/internal/applets/jokeutils/cowsay"
 	"github.com/nao1215/mimixbox/internal/applets/jokeutils/fakemovie"
@@ -158,7 +161,9 @@ func init() {
 		"expr":         reg(expr.New()),
 		"fakemovie":    reg(fakemovie.New()),
 		"false":        reg(boolfalse.New()),
+		"find":         reg(find.New()),
 		"ghrdc":        reg(ghrdc.New()),
+		"grep":         reg(grep.New()),
 		"groups":       reg(groups.New()),
 		"gzip":         reg(gzipCmd.New()),
 		"halt":         reg(halt.NewHalt()),
@@ -216,6 +221,7 @@ func init() {
 		"wc":           reg(wc.New()),
 		"wget":         reg(wget.New()),
 		"which":        reg(which.New()),
+		"xargs":        reg(xargs.New()),
 		"who":          reg(who.New()),
 		"whoami":       reg(whoami.New()),
 	}

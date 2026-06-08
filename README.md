@@ -17,7 +17,7 @@ MimixBox packs many Unix commands into a single binary, like BusyBox. Unlike Bus
 The list below is generated from the registered applets by `make command-list`, so it never drifts from the binary. You can also run `mimixbox --list` to print it on the terminal.
 
 <!-- COMMAND_LIST_START -->
-There are 86 commands. Run `mimixbox --list` to see them on the terminal.
+There are 89 commands. Run `mimixbox --list` to see them on the terminal.
 
 | Command | Description |
 |:--|:--|
@@ -47,7 +47,9 @@ There are 86 commands. Run `mimixbox --list` to see them on the terminal.
 | expr | Evaluate expressions |
 | fakemovie | Adds a video playback button to the image |
 | false | Do nothing. Return unsuccess(1) |
+| find | Search for files in a directory hierarchy |
 | ghrdc | GitHub Relase Download Counter |
+| grep | Print lines that match patterns |
 | groups | Print the groups to which USERNAME belongs |
 | gzip | Compress or uncompress FILEs (by default, compress FILES in-place) |
 | halt | Halt the system |
@@ -107,6 +109,7 @@ There are 86 commands. Run `mimixbox --list` to see them on the terminal.
 | which | Returns the file path which would be executed in the current environment |
 | who | Show who is logged on |
 | whoami | Print login user name |
+| xargs | Build and execute command lines from standard input |
 <!-- COMMAND_LIST_END -->
 
 ## Install
