@@ -126,6 +126,7 @@ import (
 	"github.com/nao1215/mimixbox/internal/applets/shellutils/nproc"
 	"github.com/nao1215/mimixbox/internal/applets/shellutils/od"
 	"github.com/nao1215/mimixbox/internal/applets/shellutils/path"
+	"github.com/nao1215/mimixbox/internal/applets/shellutils/pidof"
 	"github.com/nao1215/mimixbox/internal/applets/shellutils/posixer"
 	"github.com/nao1215/mimixbox/internal/applets/shellutils/printenv"
 	"github.com/nao1215/mimixbox/internal/applets/shellutils/printf"
@@ -281,6 +282,7 @@ func init() {
 		"paste":            reg(paste.New()),
 		"patch":            reg(patch.New()),
 		"path":             reg(path.New()),
+		"pidof":            reg(pidof.New()),
 		"posixer":          reg(posixer.New()),
 		"poweroff":         reg(halt.NewPoweroff()),
 		"printenv":         reg(printenv.New()),
