@@ -287,3 +287,66 @@ func TestRunForceOverwritesReadOnly(t *testing.T) {
 		t.Errorf("dst content = %q, want new", got)
 	}
 }
+
+func TestRunRecursiveDashRAlias(t *testing.T) {
+	t.Parallel()
+	dir := t.TempDir()
+	src := filepath.Join(dir, "tree")
+	if err := os.MkdirAll(src, 0o755); err != nil {
+		t.Fatal(err)
+	}
+	if err := os.WriteFile(filepath.Join(src, "f.txt"), []byte("x"), 0o644); err != nil {
+		t.Fatal(err)
+	}
+	dst := filepath.Join(dir, "copy")
+	// -R must work the same as -r.
+	if _, _, err := run(t, "-R", src, dst); err != nil {
+		t.Fatalf("cp -R error = %v", err)
+	}
+	if _, err := os.Stat(filepath.Join(dst, "f.txt")); err != nil {
+		t.Errorf("cp -R did not copy the tree: %v", err)
+	}
+}
+
+func TestRunNoClobber(t *testing.T) {
+	t.Parallel()
+	dir := t.TempDir()
+	src := filepath.Join(dir, "src.txt")
+	dst := filepath.Join(dir, "dst.txt")
+	if err := os.WriteFile(src, []byte("new\n"), 0o644); err != nil {
+		t.Fatal(err)
+	}
+	if err := os.WriteFile(dst, []byte("old\n"), 0o644); err != nil {
+		t.Fatal(err)
+	}
+	if _, _, err := run(t, "-n", src, dst); err != nil {
+		t.Fatalf("cp -n error = %v", err)
+	}
+	got, _ := os.ReadFile(dst) //nolint:gosec // test-written file
+	if string(got) != "old\n" {
+		t.Errorf("cp -n overwrote the destination: %q", got)
+	}
+}
+
+func TestRunArchiveImpliesRecursiveAndPreserve(t *testing.T) {
+	t.Parallel()
+	dir := t.TempDir()
+	src := filepath.Join(dir, "tree")
+	if err := os.MkdirAll(src, 0o755); err != nil {
+		t.Fatal(err)
+	}
+	if err := os.WriteFile(filepath.Join(src, "run.sh"), []byte("#!/bin/sh\n"), 0o755); err != nil {
+		t.Fatal(err)
+	}
+	dst := filepath.Join(dir, "copy")
+	if _, _, err := run(t, "-a", src, dst); err != nil {
+		t.Fatalf("cp -a error = %v", err)
+	}
+	info, err := os.Stat(filepath.Join(dst, "run.sh"))
+	if err != nil {
+		t.Fatalf("cp -a did not recurse: %v", err)
+	}
+	if info.Mode().Perm() != 0o755 {
+		t.Errorf("cp -a should preserve mode, got %o", info.Mode().Perm())
+	}
+}

@@ -19,198 +19,156 @@ package main
 import (
 	"errors"
 	"fmt"
+	"io"
 	"os"
 	"os/exec"
 	"path"
 	"path/filepath"
 	"strings"
 
-	mb "github.com/nao1215/mimixbox/internal/lib"
-
 	"github.com/nao1215/mimixbox/internal/applets"
+	"github.com/nao1215/mimixbox/internal/command"
+	"github.com/nao1215/mimixbox/internal/version"
 
-	"github.com/jessevdk/go-flags"
+	mb "github.com/nao1215/mimixbox/internal/lib"
 )
 
 const cmdName string = "mimixbox"
 
-// TODO: Change go-flags library to another one.
-// go-flags is not suitable for parsing "mimixbox options" and "applet options"
-// at the same time. There are other problems.
-// If the option type is string, an unnecessary "=" will be included in the description
-// of the long option. It's like this.
-//
-// Application Options:
-//  -i, --install=      Create symbolic links for commands that don't exist on the system.
-//  -f, --full-install= Create symbolic links regardless of system state.
-//
-type options struct {
-	Install     bool `short:"i" long:"install" description:"Create symbolic links for commands that don't exist on the system."`
-	FullInstall bool `short:"f" long:"full-install" description:"Create symbolic links regardless of system state."`
-	List        bool `short:"l" long:"list" description:"Show command name provided by mimixbox"`
-	Remove      bool `short:"r" long:"remove" description:"Remove symbolic links for commands provided by mimixbox."`
-	Version     bool `short:"v" long:"version" description:"Show mimixbox command version"`
-}
-
 var osExit = os.Exit
 
-const version = "0.35.1"
-
 func main() {
-	var opts options
-	var status int
-	var err error
-	parser := initParser(&opts)
+	stdio := command.IO{In: os.Stdin, Out: os.Stdout, Err: os.Stderr}
+	osExit(run(os.Args, stdio))
+}
 
-	// The contents of os.Args [0] are different when mimixbox is
-	// executed directly and when it is executed via a symbolic link.
-	// [e.g.]
-	// $ mimixbox cat
-	//   --> os.Args[0] = mimixbox
-	// $ cat                        ※ This is symbolic link for mimixbox.
-	//                                 cat --->   /bin/mimixbox
-	//   --> os.Args[0] = cat
-	if strings.Contains(os.Args[0], cmdName) {
-		handleMimixBoxOptionsIfNeeded(parser, &opts)
-		os.Args = os.Args[1:]
+// run is the whole program as a testable function: it returns the process exit
+// code instead of calling os.Exit, and writes through the injected IO instead
+// of touching the process streams directly.
+//
+// Dispatch is decided by the first argument. When MimixBox is invoked through a
+// symlink (argv[0] is an applet name), or when its first argument is a known
+// applet, that applet runs and receives the remaining arguments — so an
+// applet's own flags (cat --help, cp -f, ...) always reach the applet. Only
+// when the first argument is not an applet are MimixBox's own options parsed.
+func run(argv []string, stdio command.IO) int {
+	invoked := path.Base(argv[0])
+
+	// Symlink invocation: the binary was called as an applet name.
+	if invoked != cmdName {
+		return runApplet(invoked, argv[1:], stdio)
 	}
 
-	// If the specified command(applet) is not built in mimixbox.
-	if !hasAppletName() {
-		showSupportAppletAndExitFailure(os.Args[0])
+	rest := argv[1:]
+	if len(rest) == 0 {
+		// No applet and no option: a usage error. Help goes to stderr.
+		writeHelp(stdio.Err)
+		return command.ExitFailure
 	}
 
-	applet := path.Base(os.Args[0])
-	app, ok := applets.Applets[applet]
+	first := rest[0]
+	if applets.HasApplet(first) {
+		return runApplet(first, rest[1:], stdio)
+	}
+
+	return runOption(first, rest[1:], stdio)
+}
+
+// runApplet runs the named applet with args. The applet entry points still read
+// the process-level os.Args and streams (via internal/command.Adapt), so os.Args
+// is set to "<applet> <args...>" before the call. runApplet is a variable so
+// tests can substitute a fake dispatcher.
+var runApplet = func(name string, args []string, stdio command.IO) int {
+	app, ok := applets.Applets[name]
 	if !ok {
-		showSupportAppletAndExitFailure(os.Args[0])
+		return unsupported(name, stdio)
 	}
-
-	if status, err = app.Ep(); err != nil {
-		fmt.Fprintln(os.Stderr, applet+": "+err.Error())
-		osExit(status)
-	}
-	osExit(status)
-}
-
-func showSupportAppletAndExitFailure(userInputCmdName string) {
-	fmt.Fprintf(os.Stderr, "%s is not provided by mimixbox.\n\n", userInputCmdName)
-	fmt.Fprintln(os.Stderr, "[Commands supported by MimixBox]")
-	applets.ShowAppletsBySpaceSeparated()
-	osExit(mb.ExitFailure)
-}
-
-// If the mimixbox option exists, execute the processing for the option and exit.
-// TODO: Rewrite this function. This method is too complicated
-func handleMimixBoxOptionsIfNeeded(parser *flags.Parser, opts *options) {
-	mimixBoxPath := os.Args[0]
-
-	// As a temporary workaround for the bug, if the Applet name is included in the argument,
-	// it is considered not to be an argument of mimixbox.
-	// The directory with the same name as an applet can no longer be an installation directory.
-	if hasAppletName() {
-		return
-	}
-
-	// If user specify help option for applet command.
-	if hasHelpOption() && hasAppletName() {
-		return
-	}
-
-	// Only mimixbox. no option and no argument.
-	if len(os.Args) == 1 {
-		showHelp(parser)
-		osExit(mb.ExitFailure)
-	}
-
-	args, err := parser.Parse()
+	os.Args = append([]string{name}, args...)
+	status, err := app.Ep()
 	if err != nil {
-		osExit(mb.ExitFailure)
+		_, _ = fmt.Fprintln(stdio.Err, name+": "+err.Error())
 	}
+	return status
+}
 
-	if len(args) == 0 && opts.Version {
-		mb.ShowVersion(cmdName, version)
-		osExit(mb.ExitSuccess)
-	}
-
-	if len(args) == 0 && opts.List {
-		applets.ListApplets()
-		osExit(mb.ExitSuccess)
-	}
-
-	if len(args) == 1 && opts.Install {
-		if err = minimumInstall(mimixBoxPath, args[0]); err != nil {
-			fmt.Fprintln(os.Stderr, err)
-			osExit(mb.ExitFailure)
-		}
-		osExit(mb.ExitSuccess)
-	}
-
-	if len(args) == 1 && opts.Remove {
-		if err = remove(args[0]); err != nil {
-			fmt.Fprintln(os.Stderr, err)
-			osExit(mb.ExitFailure)
-		}
-		osExit(mb.ExitSuccess)
-	}
-
-	if len(args) == 1 && opts.FullInstall {
-		if err = fullInstall(mimixBoxPath, args[0]); err != nil {
-			fmt.Fprintln(os.Stderr, err)
-			osExit(mb.ExitFailure)
-		}
-		osExit(mb.ExitSuccess)
-	}
-
-	if len(args) == 0 && (opts.FullInstall || opts.Install || opts.Remove) {
-		showHelp(parser)
-		osExit(mb.ExitFailure)
+// runOption handles MimixBox's own options (everything that is not an applet).
+func runOption(first string, params []string, stdio command.IO) int {
+	switch first {
+	case "-h", "--help":
+		writeHelp(stdio.Out)
+		return command.ExitSuccess
+	case "-v", "--version":
+		version.Print(stdio.Out, cmdName)
+		return command.ExitSuccess
+	case "-l", "--list":
+		applets.ListAppletsTo(stdio.Out)
+		return command.ExitSuccess
+	case "-i", "--install":
+		return runInstall(params, stdio, false)
+	case "-f", "--full-install":
+		return runInstall(params, stdio, true)
+	case "-r", "--remove":
+		return runRemove(params, stdio)
+	default:
+		return unsupported(first, stdio)
 	}
 }
 
-// If go-flags find the help option while parsing the option,
-// go-flags show help message immediately.
-// The help option needs to determine whether it is specified for mimixbox or not.
-// The situation where a hack to the library is needed is not desirable.
-func hasHelpOption() bool {
-	for _, s := range os.Args[1:] {
-		if s == "--help" || s == "-h" || s == "--full-install" || s == "-f" {
-			return true
-		}
+// runInstall implements -i/--install (full=false) and -f/--full-install
+// (full=true). The single parameter is the directory to populate; it may share
+// a basename with an applet because options are no longer guessed from arg names.
+func runInstall(params []string, stdio command.IO, full bool) int {
+	if len(params) != 1 {
+		_, _ = fmt.Fprintf(stdio.Err, "%s: install requires a single DIRECTORY operand\n", cmdName)
+		return command.ExitFailure
 	}
-	return false
-}
-
-func hasAppletName() bool {
-	for _, app := range os.Args {
-		if applets.HasApplet(path.Base(app)) {
-			return true
-		}
+	if err := install(os.Args[0], params[0], full, stdio); err != nil {
+		_, _ = fmt.Fprintln(stdio.Err, err)
+		return command.ExitFailure
 	}
-	return false
+	return command.ExitSuccess
 }
 
-func initParser(opts *options) *flags.Parser {
-	parser := flags.NewParser(opts, flags.Default)
-	parser.Name = cmdName
-	parser.Usage = "[applet [arguments]...] [OPTIONS]"
-
-	return parser
+// runRemove implements -r/--remove.
+func runRemove(params []string, stdio command.IO) int {
+	if len(params) != 1 {
+		_, _ = fmt.Fprintf(stdio.Err, "%s: remove requires a single DIRECTORY operand\n", cmdName)
+		return command.ExitFailure
+	}
+	if err := remove(params[0], stdio); err != nil {
+		_, _ = fmt.Fprintln(stdio.Err, err)
+		return command.ExitFailure
+	}
+	return command.ExitSuccess
 }
 
-func showHelp(p *flags.Parser) {
-	p.WriteHelp(os.Stdout)
+// unsupported reports an unknown command/option and the supported applet list,
+// both on stderr so a script's stdout is never polluted by an error.
+func unsupported(name string, stdio command.IO) int {
+	_, _ = fmt.Fprintf(stdio.Err, "%s: %q is not a mimixbox command or option\n\n", cmdName, name)
+	_, _ = fmt.Fprintln(stdio.Err, "[Commands supported by MimixBox]")
+	applets.ShowAppletsBySpaceSeparatedTo(stdio.Err)
+	return command.ExitFailure
 }
 
-func minimumInstall(mimixboxPath string, installPath string) error {
-	return __install(mimixboxPath, installPath, false)
+// writeHelp prints the top-level usage in the same GNU style the applets use.
+func writeHelp(w io.Writer) {
+	_, _ = fmt.Fprint(w, `Usage: mimixbox [OPTION] | mimixbox APPLET [ARG]... | APPLET [ARG]...
+
+MimixBox packs many Unix commands (applets) into a single binary. Run an applet
+by name, either as "mimixbox APPLET ..." or through a symlink named APPLET.
+
+Options:
+  -i, --install DIR        create symlinks for applets that are not already on the system
+  -f, --full-install DIR   create symlinks for every applet, regardless of system state
+  -r, --remove DIR         remove the symlinks MimixBox created in DIR
+  -l, --list               list the applets MimixBox provides
+  -v, --version            print version information and exit
+  -h, --help               print this help and exit
+`)
 }
 
-func fullInstall(mimixboxPath string, installPath string) error {
-	return __install(mimixboxPath, installPath, true)
-}
-
-func __install(mimixboxPath string, installPath string, full bool) error {
+func install(mimixboxPath string, installPath string, full bool, stdio command.IO) error {
 	targetPath := os.ExpandEnv(installPath)
 	if !mb.IsDir(targetPath) {
 		return errors.New(targetPath + ": no such directory")
@@ -223,78 +181,62 @@ func __install(mimixboxPath string, installPath string, full bool) error {
 
 	for _, applet := range applets.SortApplet() {
 		if !full && mb.ExistCmd(applet) {
-			fmt.Fprintf(os.Stderr, "Same name command(%s) already exists. Not create symbolic link.\n", applet)
+			_, _ = fmt.Fprintf(stdio.Err, "Same name command(%s) already exists. Not create symbolic link.\n", applet)
 			continue // if same name command already exists, not install for safety.
 		}
 
-		// If a symbolic link with the same name already exists,
-		// delete that link. If the binary has the same name,
-		// do not delete it. The former is likely to have been
-		// created by mimixbox, while the latter may be binaries
-		// provided by other packages.
+		// If a symbolic link with the same name already exists, delete it. If a
+		// real binary has the same name, leave it: the former is likely ours,
+		// the latter probably belongs to another package.
 		newPath := filepath.Join(targetPath, applet)
 		if mb.IsSymlink(newPath) {
-			err := os.Remove(newPath) // Remove  even BusyBox's symbolic link
-			if err != nil {
-				fmt.Fprintln(os.Stderr, err)
+			if err := os.Remove(newPath); err != nil {
+				_, _ = fmt.Fprintln(stdio.Err, err)
 				continue
 			}
-			fmt.Fprintf(os.Stdout, "Delete              : %s\n", newPath)
+			_, _ = fmt.Fprintf(stdio.Out, "Delete              : %s\n", newPath)
 		}
 
-		err = os.Symlink(mimixboxAbsPath, newPath)
-		if err != nil {
-			fmt.Fprintln(os.Stderr, err)
+		if err := os.Symlink(mimixboxAbsPath, newPath); err != nil {
+			_, _ = fmt.Fprintln(stdio.Err, err)
 			continue
 		}
-
-		fmt.Fprintf(os.Stdout, "Create symbolic link: %s\n", newPath)
+		_, _ = fmt.Fprintf(stdio.Out, "Create symbolic link: %s\n", newPath)
 	}
 	return nil
 }
 
-func getMimixBoxAbsPath(mimixboxPath string) (string, error) {
-	// If mimixbox is installed on system (mimixbox in $PATH)
-	path, err := exec.LookPath(cmdName)
-	if err == nil {
-		return path, nil
+func getMimixBoxAbsPath(_ string) (string, error) {
+	// If mimixbox is installed on the system (mimixbox in $PATH).
+	if p, err := exec.LookPath(cmdName); err == nil {
+		return p, nil
 	}
-
-	path, err = filepath.Abs(os.Args[0])
-	if err != nil {
-		return "", err
-	}
-	return path, nil
+	return filepath.Abs(os.Args[0])
 }
 
-func remove(installPath string) error {
+func remove(installPath string, stdio command.IO) error {
 	targetPath := os.ExpandEnv(installPath)
-
 	if !mb.IsDir(targetPath) {
 		return errors.New(targetPath + ": no such directory")
 	}
 
 	for _, name := range applets.SortApplet() {
 		symbolicPath := filepath.Join(targetPath, name)
-
 		if !mb.IsSymlink(symbolicPath) {
 			continue
 		}
-
 		realPath, err := os.Readlink(symbolicPath)
 		if err != nil {
-			fmt.Fprintln(os.Stderr, err)
+			_, _ = fmt.Fprintln(stdio.Err, err)
 			continue
 		}
-
 		if strings.Contains(realPath, cmdName) {
-			err := os.Remove(symbolicPath)
-			if err != nil {
-				fmt.Fprintln(os.Stderr, err)
+			if err := os.Remove(symbolicPath); err != nil {
+				_, _ = fmt.Fprintln(stdio.Err, err)
 				continue
 			}
+			_, _ = fmt.Fprintf(stdio.Out, "Delete symbolic link: %s\n", symbolicPath)
 		}
-		fmt.Fprintf(os.Stdout, "Delete symbolic link: %s\n", symbolicPath)
 	}
 	return nil
 }

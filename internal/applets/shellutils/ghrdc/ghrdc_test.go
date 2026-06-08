@@ -3,6 +3,7 @@ package ghrdc_test
 import (
 	"bytes"
 	"context"
+	"net"
 	"net/http"
 	"net/http/httptest"
 	"strings"
@@ -11,6 +12,17 @@ import (
 	"github.com/nao1215/mimixbox/internal/applets/shellutils/ghrdc"
 	"github.com/nao1215/mimixbox/internal/command"
 )
+
+// requireLoopback skips the test when a loopback listen socket cannot be
+// created (e.g. a sandbox without networking), since httptest needs one.
+func requireLoopback(t *testing.T) {
+	t.Helper()
+	ln, err := net.Listen("tcp", "127.0.0.1:0")
+	if err != nil {
+		t.Skipf("loopback listen unavailable: %v", err)
+	}
+	_ = ln.Close()
+}
 
 // cannedReleases is a trimmed GitHub releases API response with two releases.
 // The first release has one binary asset and one source asset; the second has
@@ -36,6 +48,7 @@ const cannedReleases = `[
 
 func newServer(t *testing.T, status int, body string) string {
 	t.Helper()
+	requireLoopback(t)
 	srv := httptest.NewServer(http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
 		w.WriteHeader(status)
 		_, _ = w.Write([]byte(body))

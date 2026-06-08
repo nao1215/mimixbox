@@ -32,16 +32,22 @@ type options struct {
 	verbose     bool
 	interactive bool
 	preserve    bool
+	noClobber   bool
 }
 
 // Run executes cp.
 func (c *Command) Run(_ context.Context, stdio command.IO, args []string) error {
 	fs := command.NewFlagSet(c.Name(), "[OPTION]... SOURCE... DEST", stdio.Err)
-	recursive := fs.BoolP("recursive", "r", false, "copy directories recursively")
-	recursiveR := fs.BoolP("Recursive", "R", false, "copy directories recursively")
+	recursive := fs.BoolP("recursive", "r", false, "copy directories recursively (-R is an alias)")
+	// -R is the other GNU spelling of -r; pflag cannot give one flag two
+	// shorthands, so it is a hidden alias whose value is OR'd into recursive.
+	recursiveR := fs.BoolP("recursive-R", "R", false, "copy directories recursively")
+	_ = fs.MarkHidden("recursive-R")
+	archive := fs.BoolP("archive", "a", false, "same as -rp (recursive and preserve)")
 	force := fs.BoolP("force", "f", false, "if an existing destination file cannot be opened, remove it and try again")
 	verbose := fs.BoolP("verbose", "v", false, "explain what is being done")
 	interactive := fs.BoolP("interactive", "i", false, "prompt before overwrite")
+	noClobber := fs.BoolP("no-clobber", "n", false, "do not overwrite an existing file")
 	preserve := fs.BoolP("preserve", "p", false, "preserve mode and timestamps")
 
 	proceed, err := fs.Parse(stdio, args)
@@ -50,11 +56,12 @@ func (c *Command) Run(_ context.Context, stdio command.IO, args []string) error 
 	}
 
 	opts := options{
-		recursive:   *recursive || *recursiveR,
+		recursive:   *recursive || *recursiveR || *archive,
 		force:       *force,
 		verbose:     *verbose,
 		interactive: *interactive,
-		preserve:    *preserve,
+		preserve:    *preserve || *archive,
+		noClobber:   *noClobber,
 	}
 
 	operands := fs.Args()
@@ -134,6 +141,13 @@ func cpFile(stdio command.IO, src, dest string, info os.FileInfo, opts options) 
 		return fmt.Errorf("'%s' and '%s' are the same file", src, target)
 	}
 
+	// -n: never overwrite an existing destination.
+	if opts.noClobber {
+		if _, err := os.Stat(target); err == nil {
+			return nil // skip this file
+		}
+	}
+
 	if opts.interactive {
 		if _, err := os.Stat(target); err == nil {
 			if !question(stdio, fmt.Sprintf("cp: overwrite '%s'? ", target)) {
@@ -188,6 +202,11 @@ func cpDir(stdio command.IO, src, dest string, opts options) error {
 				_ = os.Chmod(target, info.Mode().Perm())
 			}
 			return nil
+		}
+		if opts.noClobber {
+			if _, statErr := os.Stat(target); statErr == nil {
+				return nil // -n: skip existing file
+			}
 		}
 		if err := copyFileContents(p, target, info, opts); err != nil {
 			return err

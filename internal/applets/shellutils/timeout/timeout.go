@@ -41,6 +41,7 @@ func (c *Command) Run(_ context.Context, stdio command.IO, args []string) error 
 	// for the wrapped command are passed through untouched.
 	fs.SetInterspersed(false)
 	signalName := fs.StringP("signal", "s", "TERM", "specify the signal to send on timeout")
+	killAfter := fs.StringP("kill-after", "k", "", "also send KILL if still running this long after the initial signal")
 
 	proceed, err := fs.Parse(stdio, args)
 	if err != nil || !proceed {
@@ -61,12 +62,21 @@ func (c *Command) Run(_ context.Context, stdio command.IO, args []string) error 
 		return command.Failuref("%v", err)
 	}
 
-	return c.runWithTimeout(stdio, dur, sig, rest[1], rest[2:])
+	var killGrace time.Duration
+	if *killAfter != "" {
+		if killGrace, err = parseDuration(*killAfter); err != nil {
+			return command.Failuref("invalid time interval %q", *killAfter)
+		}
+	}
+
+	return c.runWithTimeout(stdio, dur, killGrace, sig, rest[1], rest[2:])
 }
 
 // runWithTimeout starts name with args and sends sig to it if it is still alive
-// after dur, mapping the result to GNU timeout's exit codes.
-func (c *Command) runWithTimeout(stdio command.IO, dur time.Duration, sig syscall.Signal, name string, args []string) error {
+// after dur, mapping the result to GNU timeout's exit codes. When killGrace > 0
+// and the process is still running that long after the initial signal, SIGKILL
+// is sent (GNU timeout's -k/--kill-after).
+func (c *Command) runWithTimeout(stdio command.IO, dur, killGrace time.Duration, sig syscall.Signal, name string, args []string) error {
 	cmd := exec.Command(name, args...) //nolint:gosec // running a user-named command is the point
 	cmd.Stdin = stdio.In
 	cmd.Stdout = stdio.Out
@@ -88,7 +98,16 @@ func (c *Command) runWithTimeout(stdio command.IO, dur time.Duration, sig syscal
 	select {
 	case <-timer.C:
 		_ = cmd.Process.Signal(sig)
-		<-done
+		if killGrace > 0 {
+			select {
+			case <-done:
+			case <-time.After(killGrace):
+				_ = cmd.Process.Kill()
+				<-done
+			}
+		} else {
+			<-done
+		}
 		return &command.ExitError{Code: exitTimedOut}
 	case err := <-done:
 		if err == nil {

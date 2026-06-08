@@ -1,0 +1,1 @@
+TestSync() { sync && echo synced; }

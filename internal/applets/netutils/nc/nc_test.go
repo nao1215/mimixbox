@@ -15,7 +15,7 @@ func TestConnectSendsAndReceives(t *testing.T) {
 	t.Parallel()
 	ln, err := net.Listen("tcp", "127.0.0.1:0")
 	if err != nil {
-		t.Fatal(err)
+		t.Skipf("loopback TCP/UDP listen unavailable: %v", err)
 	}
 	defer func() { _ = ln.Close() }()
 
@@ -116,7 +116,7 @@ func TestUDPRoundTrip(t *testing.T) {
 	// serveUDP through Run using a fixed ephemeral port.
 	pc, err := net.ListenPacket("udp", "127.0.0.1:0")
 	if err != nil {
-		t.Fatal(err)
+		t.Skipf("loopback TCP/UDP listen unavailable: %v", err)
 	}
 	addr := pc.LocalAddr().String()
 	_ = pc.Close()
@@ -156,7 +156,7 @@ func TestListenTCP(t *testing.T) {
 	// Find a free TCP port, release it, then have the applet listen on it.
 	probe, err := net.Listen("tcp", "127.0.0.1:0")
 	if err != nil {
-		t.Fatal(err)
+		t.Skipf("loopback TCP/UDP listen unavailable: %v", err)
 	}
 	_, port, _ := net.SplitHostPort(probe.Addr().String())
 	_ = probe.Close()
