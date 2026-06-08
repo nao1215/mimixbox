@@ -70,8 +70,13 @@ import (
 	"github.com/nao1215/mimixbox/internal/applets/findutils/grep"
 	"github.com/nao1215/mimixbox/internal/applets/findutils/xargs"
 	"github.com/nao1215/mimixbox/internal/applets/games/lifegame"
+	"github.com/nao1215/mimixbox/internal/applets/jokeutils/banner"
+	"github.com/nao1215/mimixbox/internal/applets/jokeutils/cmatrix"
 	"github.com/nao1215/mimixbox/internal/applets/jokeutils/cowsay"
+	"github.com/nao1215/mimixbox/internal/applets/jokeutils/cowthink"
 	"github.com/nao1215/mimixbox/internal/applets/jokeutils/fakemovie"
+	"github.com/nao1215/mimixbox/internal/applets/jokeutils/fortune"
+	"github.com/nao1215/mimixbox/internal/applets/jokeutils/nyancat"
 	"github.com/nao1215/mimixbox/internal/applets/jokeutils/sl"
 
 	//"github.com/nao1215/mimixbox/internal/applets/loginutils/chsh"
@@ -184,6 +189,7 @@ func init() {
 		"ar":        reg(ar.New()),
 		"arch":      reg(arch.New()),
 		"awk":       reg(awk.New()),
+		"banner":    reg(banner.New()),
 		"base32":    reg(base32.New()),
 		"base64":    reg(base64.New()),
 		"basename":  reg(basename.New()),
@@ -199,8 +205,10 @@ func init() {
 		"chroot":    reg(chroot.New()),
 		//"chsh":         {chsh.Run, "Cqhange login shell"},
 		"clear":        reg(clear.New()),
+		"cmatrix":      reg(cmatrix.New()),
 		"cmp":          reg(cmp.New()),
 		"compress":     reg(compressCmd.New()),
+		"cowthink":     reg(cowthink.New()),
 		"cp":           reg(cp.New()),
 		"cpio":         reg(cpio.New()),
 		"cut":          reg(cut.New()),
@@ -220,6 +228,7 @@ func init() {
 		"find":         reg(find.New()),
 		"fmt":          reg(fmtCmd.New()),
 		"fold":         reg(fold.New()),
+		"fortune":      reg(fortune.New()),
 		"free":         reg(free.New()),
 		"ghrdc":        reg(ghrdc.New()),
 		"grep":         reg(grep.New()),
@@ -250,6 +259,7 @@ func init() {
 		"nl":           reg(nl.New()),
 		"nohup":        reg(nohup.New()),
 		"nproc":        reg(nproc.New()),
+		"nyancat":      reg(nyancat.New()),
 		"od":           reg(od.New()),
 		"paste":        reg(paste.New()),
 		"patch":        reg(patch.New()),

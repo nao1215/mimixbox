@@ -19,7 +19,7 @@ MimixBox packs many Unix commands into a single binary, like BusyBox. Unlike Bus
 The list below is generated from the registered applets by `make command-list`, so it never drifts from the binary. You can also run `mimixbox --list` to print it on the terminal.
 
 <!-- COMMAND_LIST_START -->
-There are 135 commands. Run `mimixbox --list` to see them on the terminal.
+There are 140 commands. Run `mimixbox --list` to see them on the terminal.
 
 | Command | Description |
 |:--|:--|
@@ -27,6 +27,7 @@ There are 135 commands. Run `mimixbox --list` to see them on the terminal.
 | ar | Create, modify and extract from archives |
 | arch | Print machine hardware name (same as uname -m) |
 | awk | Pattern scanning and processing language |
+| banner | Print a string as large ASCII-art letters |
 | base32 | Base32 encode/decode from FILE(or STDIN) to STDOUT |
 | base64 | Base64 encode/decode from FILR(or STDIN) to STDOUT |
 | basename | Print basename (PATH without "/") from file path |
@@ -39,10 +40,12 @@ There are 135 commands. Run `mimixbox --list` to see them on the terminal.
 | chroot | Run command or interactive shell with special root directory |
 | cksum | Print CRC checksum and byte count of each file |
 | clear | Clear terminal |
+| cmatrix | Show the falling-glyph digital rain effect |
 | cmp | Compare two files byte by byte |
 | comm | Compare two sorted files line by line |
 | compress | Compress files with LZW (.Z) |
 | cowsay | Print message with cow's ASCII art |
+| cowthink | Print message in a cow's thought bubble |
 | cp | Copy file(s) otr Directory(s) |
 | cpio | Copy files to and from archives |
 | cut | Remove sections from each line of files |
@@ -62,6 +65,7 @@ There are 135 commands. Run `mimixbox --list` to see them on the terminal.
 | find | Search for files in a directory hierarchy |
 | fmt | Simple optimal text formatter |
 | fold | Wrap each input line to fit in specified width |
+| fortune | Print a random, hopefully interesting, adage |
 | free | Display amount of free and used memory in the system |
 | ghrdc | GitHub Relase Download Counter |
 | grep | Print lines that match patterns |
@@ -92,6 +96,7 @@ There are 135 commands. Run `mimixbox --list` to see them on the terminal.
 | nl | Write each FILE to standard output with line numbers added |
 | nohup | Run a command immune to hangups, with output to a non-tty |
 | nproc | Print the number of processing units available |
+| nyancat | Animate the rainbow-trailing Nyan Cat |
 | od | Dump files in octal and other formats |
 | paste | Merge lines of files |
 | patch | Apply a diff file to an original |
