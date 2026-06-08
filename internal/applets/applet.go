@@ -24,7 +24,9 @@ import (
 
 	"github.com/nao1215/mimixbox/internal/command"
 
+	"github.com/nao1215/mimixbox/internal/applets/archival/ar"
 	"github.com/nao1215/mimixbox/internal/applets/archival/bunzip2"
+	"github.com/nao1215/mimixbox/internal/applets/archival/cpio"
 	"github.com/nao1215/mimixbox/internal/applets/archival/gunzip"
 	gzipCmd "github.com/nao1215/mimixbox/internal/applets/archival/gzip"
 	tarCmd "github.com/nao1215/mimixbox/internal/applets/archival/tar"
@@ -140,6 +142,7 @@ func reg(c command.Command) Applet {
 func init() {
 	Applets = map[string]Applet{
 		"add-shell": reg(addShell.New()),
+		"ar":        reg(ar.New()),
 		"base64":    reg(base64.New()),
 		"basename":  reg(basename.New()),
 		"bunzip2":   reg(bunzip2.New()),
@@ -154,6 +157,7 @@ func init() {
 		"clear":        reg(clear.New()),
 		"cmp":          reg(cmp.New()),
 		"cp":           reg(cp.New()),
+		"cpio":         reg(cpio.New()),
 		"cut":          reg(cut.New()),
 		"date":         reg(date.New()),
 		"dd":           reg(dd.New()),
