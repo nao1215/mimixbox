@@ -79,9 +79,11 @@ import (
 	"github.com/nao1215/mimixbox/internal/applets/jokeutils/nyancat"
 	"github.com/nao1215/mimixbox/internal/applets/jokeutils/sl"
 	"github.com/nao1215/mimixbox/internal/applets/netutils/httpstatus"
+	"github.com/nao1215/mimixbox/internal/applets/securityutils/pwcrack"
 	"github.com/nao1215/mimixbox/internal/applets/securityutils/pwgen"
 	"github.com/nao1215/mimixbox/internal/applets/securityutils/pwscore"
 	"github.com/nao1215/mimixbox/internal/applets/securityutils/unshadow"
+	"github.com/nao1215/mimixbox/internal/applets/securityutils/zippwcrack"
 
 	//"github.com/nao1215/mimixbox/internal/applets/loginutils/chsh"
 	validShell "github.com/nao1215/mimixbox/internal/applets/debianutils/valid-shell"
@@ -276,6 +278,7 @@ func init() {
 		"pwgen":            reg(pwgen.New()),
 		"pwscore":          reg(pwscore.New()),
 		"printf":           reg(printf.New()),
+		"pwcrack":          reg(pwcrack.New()),
 		"pwd":              reg(pwd.New()),
 		"readlink":         reg(readlink.New()),
 		"realpath":         reg(realpath.New()),
@@ -333,6 +336,7 @@ func init() {
 		"xargs":            reg(xargs.New()),
 		"xxd":              reg(xxd.New()),
 		"zip":              reg(zipCmd.New()),
+		"zip-pwcrack":      reg(zippwcrack.New()),
 		"who":              reg(who.New()),
 		"whoami":           reg(whoami.New()),
 		"yes":              reg(yes.New()),

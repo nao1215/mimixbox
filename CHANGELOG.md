@@ -35,6 +35,15 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
   auditing; `pwscore` (#203) rates password strength; `http-status-code`
   (#206) explains HTTP status codes. New `netutils` and `securityutils`
   applet categories were introduced.
+- New securityutils cracking applets (clean-room, no GPL source copied):
+  `pwcrack` (#205) audits crypt(3) hashes against a wordlist, and
+  `zip-pwcrack` (#204) recovers a ZipCrypto-encrypted archive's password.
+  Hashing uses the permissively licensed `github.com/GehirnInc/crypt`; the
+  ZipCrypto cipher is implemented from the documented PKWARE algorithm.
+- `internal/auth`: cross-platform basic authentication (#34). The default
+  static build verifies passwords against `/etc/shadow` via crypt(3); a PAM
+  backend can be selected with `-tags pam` so the no-PAM build never needs
+  cgo or libpam.
 
 ## [0.34.0] - 2026-06-08
 
