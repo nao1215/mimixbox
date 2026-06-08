@@ -9,7 +9,7 @@ import (
 
 // Version is the MimixBox version. It is over_written at build time with
 // -ldflags "-X github.com/nao1215/mimixbox/internal/version.Version=x.y.z".
-var Version = "0.33.3"
+var Version = "0.34.0"
 
 // Print writes the "--version" line for a single command to w, following the
 // GNU coreutils convention, e.g. "cat (mimixbox) 0.33.3".
