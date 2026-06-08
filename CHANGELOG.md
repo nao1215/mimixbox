@@ -39,6 +39,13 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
   and verifies the in-image `mimixbox` binary runs, so building MimixBox in
   Docker stays working (#4).
 
+### Changed
+
+- Raised overall test coverage above 80% (octocov target) by adding
+  unit tests for the previously-untested `internal/lib` helpers (string,
+  type, signal, option, path, shell, crypto, id, net, shadow, version)
+  and `internal/version`.
+
 ## [0.34.0] - 2026-06-08
 
 ### Added
