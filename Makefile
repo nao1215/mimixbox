@@ -31,9 +31,10 @@ remove: ## Remove mimixbox-symbolic link
 	mimixbox --remove /usr/local/bin
 
 test: pre_ut  ## Run unit tests with coverage (writes cover.out / cover.html)
-	-@go test -cover ./... -coverpkg=./... -coverprofile=cover.out
-	-@go tool cover -html=cover.out -o cover.html
-	-@rm -rf /tmp/mimixbox/ut/*
+	@go test -cover ./... -coverpkg=./... -coverprofile=cover.out; status=$$?; \
+	go tool cover -html=cover.out -o cover.html || true; \
+	rm -rf /tmp/mimixbox/ut/*; \
+	exit $$status
 
 test-e2e: ## Run the shellspec end-to-end tests against the built binary
 	cd test/it && shellspec --shell /bin/bash

@@ -19,6 +19,8 @@ make test-e2e   # shellspec end-to-end tests against the built binary
 make lint       # golangci-lint
 ```
 
+`make test` (and its `make ut` alias) exits non-zero when any unit test fails, so a failing `go test` fails the local build and the `UnitTest` GitHub Actions workflow. Coverage HTML generation and the temporary-directory cleanup still run afterwards, but they never mask a real test failure.
+
 The end-to-end tests live under `test/it/` and exercise the built binary the way a user does (applet name, flags, stdin, exit codes).
 
 ## Architecture
