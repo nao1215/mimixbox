@@ -70,8 +70,10 @@ import (
 	"github.com/nao1215/mimixbox/internal/applets/shellutils/groups"
 	"github.com/nao1215/mimixbox/internal/applets/shellutils/hostid"
 	"github.com/nao1215/mimixbox/internal/applets/shellutils/id"
+	"github.com/nao1215/mimixbox/internal/applets/shellutils/install"
 	"github.com/nao1215/mimixbox/internal/applets/shellutils/kill"
 	"github.com/nao1215/mimixbox/internal/applets/shellutils/mbsh"
+	"github.com/nao1215/mimixbox/internal/applets/shellutils/mknod"
 	"github.com/nao1215/mimixbox/internal/applets/shellutils/od"
 	"github.com/nao1215/mimixbox/internal/applets/shellutils/path"
 	"github.com/nao1215/mimixbox/internal/applets/shellutils/printenv"
@@ -162,6 +164,7 @@ func init() {
 		"head":         reg(head.New()),
 		"hostid":       reg(hostid.New()),
 		"id":           reg(id.New()),
+		"install":      reg(install.New()),
 		"ischroot":     reg(ischroot.New()),
 		"kill":         reg(kill.New()),
 		"lifegame":     reg(lifegame.New()),
@@ -170,6 +173,7 @@ func init() {
 		"md5sum":       reg(md5sum.New()),
 		"mkdir":        reg(mkdir.New()),
 		"mkfifo":       reg(mkfifo.New()),
+		"mknod":        reg(mknod.New()),
 		"mktemp":       reg(mktemp.New()),
 		"mv":           reg(mv.New()),
 		"nl":           reg(nl.New()),
