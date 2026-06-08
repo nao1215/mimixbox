@@ -20,7 +20,9 @@ jobs:
           check-latest: true
 
       - name: SetupShellScript
-        run: curl -fsSL https://git.io/shellspec | sh -s -- --yes
+        run: |
+          curl -fsSL https://raw.githubusercontent.com/shellspec/shellspec/master/install.sh | sh -s -- --yes
+          echo "$HOME/.local/bin" >> "$GITHUB_PATH"
 
       - name: Build
         run: make build
