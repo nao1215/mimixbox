@@ -244,14 +244,6 @@ $ serial -n photo .             # photo0, photo1, ... in the current directory
 $ serial -d -n photo .          # dry run: print the renames without applying them
 ```
 
-## Roadmap
-
-- Step 1. Implement many common Unix commands (〜Version 0.x.x).
-- Step 2. Increase the options for each command (〜Version 1.x.x).
-- Step 3. Move commands toward modern specifications (〜Version 2.x.x).
-
-MimixBox does not yet have enough commands, so the first priority is increasing their number until the project can be dogfooded. Next, command options are brought closer to Coreutils and other packages. MimixBox does not aim to copy Coreutils, but it does aim to provide the options Linux users expect. The final phase makes MimixBox unique by extending commands toward higher functionality, like [bat](https://github.com/sharkdp/bat) and [lsd](https://github.com/Peltoche/lsd), which are reimplementations of cat and ls.
-
 ## Development
 
 ### Tools & Libraries
