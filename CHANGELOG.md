@@ -7,7 +7,23 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## [Unreleased]
 
+## [0.34.0] - 2026-06-08
+
 ### Added
+
+- Many new applets, each with GNU-style options, unit tests and shellspec
+  integration tests: `cal`, `chmod`, `dd`, `df`, `du`, `od` (#144); `install`,
+  `mknod` (#146); `resize` (#147); `find`, `grep`, `xargs` (#148); `tar`,
+  `gunzip`, `bunzip2`, `zip`, `unzip` (#149); `ar`, `cpio` (#150); `sed`,
+  `diff` (#151); `awk`, `patch` (#152); `vi` (#155); `compress`, `uncompress`
+  (#156); `rpm2cpio`, `rpm` (#157).
+- `mbsh` grew into a minimally usable interactive shell: `cd` to `$HOME` and
+  `cd -`, a cwd-aware prompt, comment lines, `$?` expansion, `exit`/`quit`, and
+  a fallback that runs MimixBox applets when a command is not on `PATH` (#153).
+- `compress`/`uncompress` share a from-scratch Unix LZW (.Z) codec that is
+  byte-compatible with the system `compress` and `gzip -d`.
+- `rpm`/`rpm2cpio` share an internal RPM parser (lead, headers, gzip/bzip2
+  payloads).
 
 - `internal/command`: a small framework every applet can be built on. An applet
   is now a `Command` that receives its I/O streams and arguments as values, so
