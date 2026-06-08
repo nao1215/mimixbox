@@ -24,14 +24,17 @@ TestEchoRedirect() {
     cat /tmp/it/mimixbox/echo.txt
 }
 
+# echo is also a bash builtin, so the bare name would run the builtin instead of
+# the MimixBox applet. type -P resolves the on-PATH executable (the MimixBox
+# symlink) so these cases exercise the applet's --help/--version contract.
 TestEchoHelp() {
-    echo --help
+    "$(type -P echo)" --help
 }
 
 TestEchoVersion() {
-    echo --version
+    "$(type -P echo)" --version
 }
 
 TestEchoHelpNotFirst() {
-    echo foo --help
+    "$(type -P echo)" foo --help
 }
