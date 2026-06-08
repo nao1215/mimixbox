@@ -40,7 +40,9 @@ import (
 	"github.com/nao1215/mimixbox/internal/applets/debianutils/mktemp"
 	removeShell "github.com/nao1215/mimixbox/internal/applets/debianutils/remove-shell"
 	"github.com/nao1215/mimixbox/internal/applets/debianutils/which"
+	"github.com/nao1215/mimixbox/internal/applets/editors/awk"
 	"github.com/nao1215/mimixbox/internal/applets/editors/diff"
+	"github.com/nao1215/mimixbox/internal/applets/editors/patch"
 	"github.com/nao1215/mimixbox/internal/applets/editors/sed"
 	"github.com/nao1215/mimixbox/internal/applets/fileutils/chgrp"
 	"github.com/nao1215/mimixbox/internal/applets/fileutils/chown"
@@ -145,6 +147,7 @@ func init() {
 	Applets = map[string]Applet{
 		"add-shell": reg(addShell.New()),
 		"ar":        reg(ar.New()),
+		"awk":       reg(awk.New()),
 		"base64":    reg(base64.New()),
 		"basename":  reg(basename.New()),
 		"bunzip2":   reg(bunzip2.New()),
@@ -198,6 +201,7 @@ func init() {
 		"mv":           reg(mv.New()),
 		"nl":           reg(nl.New()),
 		"od":           reg(od.New()),
+		"patch":        reg(patch.New()),
 		"path":         reg(path.New()),
 		"poweroff":     reg(halt.NewPoweroff()),
 		"printenv":     reg(printenv.New()),
