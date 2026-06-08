@@ -10,9 +10,6 @@ import (
 	"encoding/binary"
 	"fmt"
 	"io"
-
-	"github.com/klauspost/compress/zstd"
-	"github.com/ulikunitz/xz"
 )
 
 // Common RPM header tags (from the main header).
@@ -87,7 +84,9 @@ func Open(r io.Reader) (*File, error) {
 }
 
 // Payload returns a reader over the decompressed cpio payload, detecting the
-// compression from its magic bytes.
+// compression from its magic bytes. gzip and bzip2 payloads are supported with
+// the standard library; xz and zstd payloads are recognized but reported as
+// unsupported rather than pulling in extra dependencies.
 func (f *File) Payload() (io.Reader, error) {
 	br := bufio.NewReader(f.payload)
 	magic, err := br.Peek(6)
@@ -101,13 +100,9 @@ func (f *File) Payload() (io.Reader, error) {
 		return bzip2.NewReader(br), nil
 	case len(magic) >= 6 && magic[0] == 0xfd && magic[1] == '7' && magic[2] == 'z' &&
 		magic[3] == 'X' && magic[4] == 'Z' && magic[5] == 0x00:
-		return xz.NewReader(br)
+		return nil, fmt.Errorf("xz payload is not supported yet")
 	case len(magic) >= 4 && magic[0] == 0x28 && magic[1] == 0xb5 && magic[2] == 0x2f && magic[3] == 0xfd:
-		zr, zerr := zstd.NewReader(br)
-		if zerr != nil {
-			return nil, zerr
-		}
-		return zr.IOReadCloser(), nil
+		return nil, fmt.Errorf("zstd payload is not supported yet")
 	default:
 		return nil, fmt.Errorf("unsupported or missing payload compression")
 	}
