@@ -35,6 +35,11 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
   auditing; `pwscore` (#203) rates password strength; `http-status-code`
   (#206) explains HTTP status codes. New `netutils` and `securityutils`
   applet categories were introduced.
+- New network/system ported applets, with original MIT/BSD-3 attribution
+  preserved where applicable and no source copied verbatim: `nc` (#197,
+  netcat), `ping` (#198, raw-socket ICMP), `whris` (#199, domain IP/AS
+  lookup), `log-collect` (#200, gather log files), `speaker` (#196,
+  TTS via an installed engine).
 
 ## [0.34.0] - 2026-06-08
 

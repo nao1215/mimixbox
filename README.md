@@ -19,7 +19,7 @@ MimixBox packs many Unix commands into a single binary, like BusyBox. Unlike Bus
 The list below is generated from the registered applets by `make command-list`, so it never drifts from the binary. You can also run `mimixbox --list` to print it on the terminal.
 
 <!-- COMMAND_LIST_START -->
-There are 145 commands. Run `mimixbox --list` to see them on the terminal.
+There are 150 commands. Run `mimixbox --list` to see them on the terminal.
 
 | Command | Description |
 |:--|:--|
@@ -85,6 +85,7 @@ There are 145 commands. Run `mimixbox --list` to see them on the terminal.
 | lifegame | Life game (Conway's Game of Life) |
 | link | Create a hard link to a file |
 | ln | Create hard or symbolic link |
+| log-collect | Gather system log files into one directory |
 | logname | Print the name of the current user |
 | mbsh | Mimix Box Shell |
 | md5sum | Calculate or Check md5sum message digest |
@@ -94,6 +95,7 @@ There are 145 commands. Run `mimixbox --list` to see them on the terminal.
 | mktemp | Create a temporary file or directory |
 | mountpoint | See if a directory is a mountpoint |
 | mv | Rename SOURCE to DESTINATION, or move SOURCE(s) to DIRECTORY |
+| nc | Read and write data across network connections |
 | nl | Write each FILE to standard output with line numbers added |
 | nohup | Run a command immune to hangups, with output to a non-tty |
 | nproc | Print the number of processing units available |
@@ -102,6 +104,7 @@ There are 145 commands. Run `mimixbox --list` to see them on the terminal.
 | paste | Merge lines of files |
 | patch | Apply a diff file to an original |
 | path | Manipulate filename path |
+| ping | Send ICMP ECHO_REQUEST to network hosts |
 | posixer | Report which POSIX utilities are installed |
 | poweroff | Power off the system |
 | printenv | Print environment variable |
@@ -132,6 +135,7 @@ There are 145 commands. Run `mimixbox --list` to see them on the terminal.
 | sl | Cure your bad habit of mistyping |
 | sleep | Pause for NUMBER seconds(minutes, hours, days) |
 | sort | Sort lines of text files |
+| speaker | Read text aloud using an installed TTS engine |
 | split | Split a file into pieces |
 | stat | Display file or file system status |
 | strings | Print printable character sequences in files |
@@ -164,6 +168,7 @@ There are 145 commands. Run `mimixbox --list` to see them on the terminal.
 | which | Returns the file path which would be executed in the current environment |
 | who | Show who is logged on |
 | whoami | Print login user name |
+| whris | Show management information for a domain's IP addresses |
 | xargs | Build and execute command lines from standard input |
 | xxd | Make a hex dump or do the reverse |
 | yes | Output a string repeatedly until killed |
