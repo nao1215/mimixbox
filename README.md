@@ -17,7 +17,7 @@ MimixBox packs many Unix commands into a single binary, like BusyBox. Unlike Bus
 The list below is generated from the registered applets by `make command-list`, so it never drifts from the binary. You can also run `mimixbox --list` to print it on the terminal.
 
 <!-- COMMAND_LIST_START -->
-There are 85 commands. Run `mimixbox --list` to see them on the terminal.
+There are 86 commands. Run `mimixbox --list` to see them on the terminal.
 
 | Command | Description |
 |:--|:--|
@@ -77,6 +77,7 @@ There are 85 commands. Run `mimixbox --list` to see them on the terminal.
 | reboot | Reboot the system |
 | remove-shell | Remove shell name from /etc/shells |
 | reset | Reset terminal |
+| resize | Print commands to set the terminal size |
 | rm | Remove file(s) or directory(s) |
 | rmdir | Remove directory |
 | sddf | Search & Delete Duplicated File |

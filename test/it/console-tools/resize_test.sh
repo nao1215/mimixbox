@@ -1,0 +1,3 @@
+TestResizeHelp() {
+    resize --help
+}
