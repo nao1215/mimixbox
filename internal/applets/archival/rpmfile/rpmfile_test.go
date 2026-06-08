@@ -235,6 +235,21 @@ func TestPaddedSignatureHeader(t *testing.T) {
 	}
 }
 
+func TestRejectsHugeHeader(t *testing.T) {
+	t.Parallel()
+	// Craft a lead + a signature header claiming a gigantic index/store.
+	lead := make([]byte, 96)
+	lead[0], lead[1], lead[2], lead[3] = 0xed, 0xab, 0xee, 0xdb
+	intro := make([]byte, 16)
+	intro[0], intro[1], intro[2], intro[3] = 0x8e, 0xad, 0xe8, 0x01
+	binary.BigEndian.PutUint32(intro[8:], 0xffffffff)  // nindex
+	binary.BigEndian.PutUint32(intro[12:], 0xffffffff) // hsize
+	_, err := rpmfile.Open(bytes.NewReader(append(lead, intro...)))
+	if err == nil {
+		t.Error("expected error for an oversized header")
+	}
+}
+
 func TestNotAnRPM(t *testing.T) {
 	t.Parallel()
 	_, err := rpmfile.Open(bytes.NewReader(make([]byte, 200)))

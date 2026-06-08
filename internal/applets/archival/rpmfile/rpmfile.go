@@ -35,6 +35,13 @@ const (
 
 const leadSize = 96
 
+// Sanity limits for header sizes, to reject malformed input before allocating.
+// Real RPM headers are far smaller than these bounds.
+const (
+	maxEntries = 1 << 20 // at most ~1M index entries
+	maxStore   = 1 << 28 // at most 256 MiB of header data
+)
+
 var headerMagic = []byte{0x8e, 0xad, 0xe8}
 
 // entry is one parsed index entry.
@@ -121,6 +128,12 @@ func readHeader(br *bufio.Reader, pad8 bool) (*Header, int, error) {
 	nindex := int(binary.BigEndian.Uint32(intro[8:12]))
 	hsize := int(binary.BigEndian.Uint32(intro[12:16]))
 
+	// Guard against a malformed header that claims an enormous index or data
+	// store, which would otherwise trigger a huge allocation.
+	if nindex < 0 || nindex > maxEntries || hsize < 0 || hsize > maxStore {
+		return nil, 0, fmt.Errorf("header too large (nindex=%d, hsize=%d)", nindex, hsize)
+	}
+
 	idx := make([]byte, nindex*16)
 	if _, err := io.ReadFull(br, idx); err != nil {
 		return nil, 0, err
@@ -170,9 +183,15 @@ func (h *Header) StringArray(tag int32) []string {
 	if !ok || (e.typ != typeStringArray && e.typ != typeString && e.typ != typeI18NString) {
 		return nil
 	}
+	if !validCount(e.count) {
+		return nil
+	}
 	out := make([]string, 0, e.count)
 	off := int(e.offset)
 	for i := int32(0); i < e.count; i++ {
+		if off < 0 || off >= len(h.store) {
+			break
+		}
 		s := cstr(h.store, off)
 		out = append(out, s)
 		off += len(s) + 1
@@ -180,24 +199,38 @@ func (h *Header) StringArray(tag int32) []string {
 	return out
 }
 
-// Int32Array returns an INT32 tag value.
+// Int32Array returns an INT32 (or INT16) tag value.
 func (h *Header) Int32Array(tag int32) []int32 {
 	e, ok := h.entries[tag]
 	if !ok || (e.typ != typeInt32 && e.typ != typeInt16) {
 		return nil
 	}
+	if !validCount(e.count) {
+		return nil
+	}
+	width := 4
+	if e.typ == typeInt16 {
+		width = 2
+	}
 	out := make([]int32, 0, e.count)
 	off := int(e.offset)
 	for i := int32(0); i < e.count; i++ {
-		if e.typ == typeInt32 {
+		if off < 0 || off+width > len(h.store) {
+			break
+		}
+		if width == 4 {
 			out = append(out, int32(binary.BigEndian.Uint32(h.store[off:off+4])))
-			off += 4
 		} else {
 			out = append(out, int32(binary.BigEndian.Uint16(h.store[off:off+2])))
-			off += 2
 		}
+		off += width
 	}
 	return out
+}
+
+// validCount reports whether an entry count is sane enough to allocate for.
+func validCount(count int32) bool {
+	return count >= 0 && int(count) <= maxEntries
 }
 
 // cstr reads a NUL-terminated string from store at offset off.

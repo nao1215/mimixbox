@@ -112,7 +112,7 @@ func fileList(h *rpmfile.Header) []string {
 	var out []string
 	for i, b := range base {
 		dir := ""
-		if i < len(idx) && int(idx[i]) < len(dirs) {
+		if i < len(idx) && idx[i] >= 0 && int(idx[i]) < len(dirs) {
 			dir = dirs[idx[i]]
 		}
 		out = append(out, path.Clean(dir+b))
