@@ -139,30 +139,49 @@ type Numberer struct {
 }
 
 // WriteTo copies r to w, numbering lines according to the Numberer's settings.
+// It reads r one line at a time rather than slurping it all into memory, so it
+// streams arbitrarily large input (a pipe or a multi-gigabyte file) in constant
+// space.
 func (n Numberer) WriteTo(w io.Writer, r io.Reader) error {
-	data, err := io.ReadAll(r)
-	if err != nil {
-		return err
-	}
+	br := bufio.NewReader(r)
 	num := n.Start
-	for _, line := range splitKeepNewline(string(data)) {
-		body, nl := line.body, line.newline
-		if n.numbered(body) {
-			if _, err := io.WriteString(w, n.format(num)+n.Separator+body+nl); err != nil {
-				return err
+	for {
+		chunk, err := br.ReadString('\n')
+		if chunk != "" {
+			body, nl := chunk, ""
+			if strings.HasSuffix(chunk, "\n") {
+				body, nl = chunk[:len(chunk)-1], "\n"
 			}
-			num += n.Increment
-			continue
+			numbered, werr := n.emitLine(w, body, nl, num)
+			if werr != nil {
+				return werr
+			}
+			if numbered {
+				num += n.Increment
+			}
 		}
-		prefix := ""
-		if n.PadBlank {
-			prefix = strings.Repeat(" ", n.Width+len(n.Separator))
+		if err == io.EOF {
+			return nil
 		}
-		if _, err := io.WriteString(w, prefix+body+nl); err != nil {
+		if err != nil {
 			return err
 		}
 	}
-	return nil
+}
+
+// emitLine writes one numbered (or blank-padded) line and reports whether it
+// consumed a line number.
+func (n Numberer) emitLine(w io.Writer, body, nl string, num int) (bool, error) {
+	if n.numbered(body) {
+		_, err := io.WriteString(w, n.format(num)+n.Separator+body+nl)
+		return true, err
+	}
+	prefix := ""
+	if n.PadBlank {
+		prefix = strings.Repeat(" ", n.Width+len(n.Separator))
+	}
+	_, err := io.WriteString(w, prefix+body+nl)
+	return false, err
 }
 
 func (n Numberer) numbered(body string) bool {
@@ -185,27 +204,6 @@ func (n Numberer) format(num int) string {
 	default:
 		return fmt.Sprintf("%*d", n.Width, num)
 	}
-}
-
-type line struct {
-	body    string
-	newline string
-}
-
-// splitKeepNewline splits s into lines, recording for each whether it ended
-// with a newline so the original line endings can be reproduced exactly.
-func splitKeepNewline(s string) []line {
-	var lines []line
-	for s != "" {
-		i := strings.IndexByte(s, '\n')
-		if i < 0 {
-			lines = append(lines, line{body: s})
-			break
-		}
-		lines = append(lines, line{body: s[:i], newline: "\n"})
-		s = s[i+1:]
-	}
-	return lines
 }
 
 // HeadLines writes the first n lines of r to w, preserving line endings.

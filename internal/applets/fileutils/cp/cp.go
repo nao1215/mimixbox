@@ -177,12 +177,15 @@ func cpDir(stdio command.IO, src, dest string, opts options) error {
 		target := filepath.Join(root, rel)
 
 		if info.IsDir() {
-			mode := os.FileMode(0755)
-			if opts.preserve {
-				mode = info.Mode().Perm()
-			}
-			if err := os.MkdirAll(target, mode); err != nil {
+			// Use the source directory's mode (GNU cp does this even without
+			// -p); a hardcoded 0755 would widen a private tree such as 0700.
+			if err := os.MkdirAll(target, info.Mode().Perm()); err != nil {
 				return err
+			}
+			// MkdirAll is a no-op when target already exists, and umask may have
+			// masked the mode on creation; with -p, set the exact source mode.
+			if opts.preserve {
+				_ = os.Chmod(target, info.Mode().Perm())
 			}
 			return nil
 		}
@@ -219,14 +222,24 @@ func copyFileContents(src, dst string, info os.FileInfo, opts options) error {
 	}
 	defer func() { _ = in.Close() }()
 
-	mode := os.FileMode(0644)
-	if opts.preserve {
-		mode = info.Mode().Perm()
-	}
+	// Create the destination with the source file's mode (GNU cp does this even
+	// without -p); a hardcoded 0644 would strip the execute bit from scripts and
+	// binaries. The mode only takes effect when the file is created, so an
+	// existing destination keeps its own permissions.
+	mode := info.Mode().Perm()
 
 	out, err := os.OpenFile(dst, os.O_WRONLY|os.O_CREATE|os.O_TRUNC, mode) //nolint:gosec // user-named destination
 	if err != nil {
-		return err
+		// cp -f: if an existing destination cannot be opened (for example it is
+		// read-only), remove it and try once more.
+		if opts.force && os.IsPermission(err) {
+			if rmErr := os.Remove(dst); rmErr == nil {
+				out, err = os.OpenFile(dst, os.O_WRONLY|os.O_CREATE|os.O_TRUNC, mode) //nolint:gosec // user-named destination
+			}
+		}
+		if err != nil {
+			return err
+		}
 	}
 
 	if _, err := io.Copy(out, in); err != nil {

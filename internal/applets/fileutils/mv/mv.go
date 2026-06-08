@@ -185,19 +185,22 @@ func (c *Command) report(stdio command.IO, src, dest string, opts options) {
 }
 
 // rename moves src to dest, falling back to copy+remove when the rename crosses
-// a device boundary (os.Rename fails with EXDEV in that case).
+// a device boundary (os.Rename fails with EXDEV in that case). The fallback
+// preserves mode and timestamps and handles directories recursively, so a
+// cross-filesystem move behaves like an in-filesystem one.
+// osRename is os.Rename, indirected so tests can force the cross-device
+// fallback path that real filesystems only take across mount points.
+var osRename = os.Rename
+
 func rename(src, dest string) error {
-	if err := os.Rename(src, dest); err != nil {
+	if err := osRename(src, dest); err != nil {
 		if !isCrossDevice(err) {
 			return err
 		}
-		if mb.IsDir(src) {
-			return err
-		}
-		if cerr := mb.Copy(src, dest); cerr != nil {
+		if cerr := mb.CopyTree(src, dest); cerr != nil {
 			return cerr
 		}
-		return os.Remove(src)
+		return os.RemoveAll(src)
 	}
 	return nil
 }

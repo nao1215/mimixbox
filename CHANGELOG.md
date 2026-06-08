@@ -7,6 +7,31 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## [Unreleased]
 
+### Fixed
+
+- `cp` now copies files and directories with the **source's** permission
+  bits instead of a hardcoded 0644/0755, so the execute bit on scripts is
+  kept and private directory trees are not widened. `cp -f` now actually
+  removes and replaces a destination that cannot be opened.
+- `mv` across filesystems (the `EXDEV` copy+remove fallback) preserves mode
+  and timestamps and moves directories recursively, instead of dropping
+  metadata and failing on directories.
+- `dos2unix`, `unix2dos` and `internal/lib.ListToFile` rewrite files
+  atomically (write a temp file, then rename) and preserve the original
+  mode, so an interrupted write or full disk no longer truncates the
+  original file.
+- `watch` runs the child command with the context, so cancelling watch
+  (Ctrl-C) interrupts a hung child instead of blocking on it.
+
+### Changed
+
+- `cat` and `nl` stream their input line by line instead of reading whole
+  files into memory, so they work in constant space on large files and
+  pipes; `internal/textproc.Numberer` streams likewise.
+- `internal/lib` file tests build their fixtures with `t.TempDir()` instead
+  of a shared `/tmp/mimixbox/ut` tree, so `go test ./...` passes on a clean
+  checkout and the suite is parallel-safe.
+
 ## [0.35.0] - 2026-06-08
 
 ### Added
