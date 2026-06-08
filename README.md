@@ -14,8 +14,6 @@ MimixBox packs many Unix commands into a single binary, like BusyBox. Unlike Bus
 
 ![demo](./assets/demo.gif)
 
-The GIF above is generated from [assets/demo.tape](./assets/demo.tape) with [vhs](https://github.com/charmbracelet/vhs); run `vhs assets/demo.tape` after `make build` to regenerate it.
-
 ## Commands
 
 The list below is generated from the registered applets by `make command-list`, so it never drifts from the binary. You can also run `mimixbox --list` to print it on the terminal.
