@@ -20,6 +20,11 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 - New shellutils system-information applets, each with unit tests and shellspec
   integration tests: `yes` (#177), `uname` (#178), `arch` (#179), `nproc`
   (#180), `hostname` (#181), `logname` (#182), `tty` (#183).
+- New shellutils process/system applets, each with unit tests and shellspec
+  integration tests: `nohup` (#184), `timeout` (#185), `watch` (#186),
+  `free` (#187), `pidof` (#188), `killall` (#189). The command-running
+  applets (`nohup`, `timeout`, `watch`) stop parsing their own options at the
+  wrapped command so its flags pass through unchanged.
 
 ## [0.34.0] - 2026-06-08
 
