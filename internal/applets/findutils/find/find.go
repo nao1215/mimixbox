@@ -12,6 +12,7 @@ import (
 	"strings"
 
 	"github.com/nao1215/mimixbox/internal/command"
+	"github.com/nao1215/mimixbox/internal/version"
 )
 
 // Command is the find applet.
@@ -45,14 +46,15 @@ type config struct {
 // Run executes find.
 func (c *Command) Run(_ context.Context, stdio command.IO, args []string) error {
 	// find has its own non-getopt expression grammar, so handle --help/--version
-	// by hand before splitting paths from the expression.
+	// by hand before splitting paths from the expression. --version prints the
+	// version line (not usage), matching every other applet's contract.
 	for _, a := range args {
 		switch a {
 		case "--help":
 			printUsage(stdio.Out)
 			return nil
 		case "--version":
-			printUsage(stdio.Out)
+			version.Print(stdio.Out, c.Name())
 			return nil
 		}
 	}

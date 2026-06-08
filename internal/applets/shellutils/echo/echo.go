@@ -1,7 +1,9 @@
 // Package echo implements the echo applet: write its arguments to standard
-// output. Like the GNU shell builtin, echo does not use getopt parsing: it only
-// recognizes a leading run of -n, -e and -E flags and treats everything else,
-// including --help and --version, as literal text.
+// output. echo does not use getopt parsing: it only recognizes a leading run of
+// -n, -e and -E flags and treats everything else as literal text. Like GNU's
+// standalone echo (and unlike the bash builtin), it honors --help and --version
+// when one is the first argument; anywhere else they are ordinary text, so
+// `echo foo --help` still prints "foo --help".
 package echo
 
 import (
@@ -27,6 +29,10 @@ func (c *Command) Synopsis() string { return "Display a line of text" }
 
 // Run executes echo.
 func (c *Command) Run(_ context.Context, stdio command.IO, args []string) error {
+	if command.HandleHelpVersion(stdio, c.Name(), "[OPTION]... [STRING]...", args) {
+		return nil
+	}
+
 	noNewline := false
 	interpret := false
 

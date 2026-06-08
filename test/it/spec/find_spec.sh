@@ -20,4 +20,16 @@ Describe 'find'
         The status should be failure
         The error should include 'unknown predicate'
     End
+
+    It 'prints usage for --help'
+        When call TestFindHelp
+        The output should include 'Usage: find'
+        The status should be success
+    End
+
+    It 'prints the version line for --version'
+        When call TestFindVersion
+        The output should include 'find (mimixbox)'
+        The status should be success
+    End
 End

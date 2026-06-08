@@ -262,3 +262,19 @@ func TestHelp(t *testing.T) {
 		t.Errorf("help = %q", out)
 	}
 }
+
+// TestVersion verifies that --version prints the version line, not usage text
+// (the bug fixed for issue #236).
+func TestVersion(t *testing.T) {
+	t.Parallel()
+	out, _, err := run(t, "--version")
+	if err != nil {
+		t.Fatalf("version err = %v", err)
+	}
+	if !strings.Contains(out, "find (mimixbox)") {
+		t.Errorf("version = %q", out)
+	}
+	if strings.Contains(out, "Usage:") {
+		t.Errorf("version output should not contain usage text: %q", out)
+	}
+}
