@@ -17,7 +17,7 @@ MimixBox packs many Unix commands into a single binary, like BusyBox. Unlike Bus
 The list below is generated from the registered applets by `make command-list`, so it never drifts from the binary. You can also run `mimixbox --list` to print it on the terminal.
 
 <!-- COMMAND_LIST_START -->
-There are 96 commands. Run `mimixbox --list` to see them on the terminal.
+There are 98 commands. Run `mimixbox --list` to see them on the terminal.
 
 | Command | Description |
 |:--|:--|
@@ -41,6 +41,7 @@ There are 96 commands. Run `mimixbox --list` to see them on the terminal.
 | date | Print or set the system date and time |
 | dd | Convert and copy a file |
 | df | Report file system disk space usage |
+| diff | Compare files line by line |
 | dirname | Print only directory path |
 | dos2unix | Change CRLF to LF |
 | du | Estimate file space usage |
@@ -87,6 +88,7 @@ There are 96 commands. Run `mimixbox --list` to see them on the terminal.
 | rm | Remove file(s) or directory(s) |
 | rmdir | Remove directory |
 | sddf | Search & Delete Duplicated File |
+| sed | Stream editor for filtering and transforming text |
 | seq | Print a column of numbers |
 | serial | Rename the file to the name with a serial number |
 | sha1sum | Calculate or Check secure hash 1 algorithm |

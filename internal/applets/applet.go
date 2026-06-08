@@ -40,6 +40,8 @@ import (
 	"github.com/nao1215/mimixbox/internal/applets/debianutils/mktemp"
 	removeShell "github.com/nao1215/mimixbox/internal/applets/debianutils/remove-shell"
 	"github.com/nao1215/mimixbox/internal/applets/debianutils/which"
+	"github.com/nao1215/mimixbox/internal/applets/editors/diff"
+	"github.com/nao1215/mimixbox/internal/applets/editors/sed"
 	"github.com/nao1215/mimixbox/internal/applets/fileutils/chgrp"
 	"github.com/nao1215/mimixbox/internal/applets/fileutils/chown"
 	"github.com/nao1215/mimixbox/internal/applets/fileutils/cp"
@@ -162,6 +164,7 @@ func init() {
 		"date":         reg(date.New()),
 		"dd":           reg(dd.New()),
 		"df":           reg(df.New()),
+		"diff":         reg(diff.New()),
 		"dirname":      reg(dirname.New()),
 		"du":           reg(du.New()),
 		"dos2unix":     reg(dos2unix.New()),
@@ -212,6 +215,7 @@ func init() {
 		"sha1sum":      reg(sha1sum.New()),
 		"sha256sum":    reg(sha256sum.New()),
 		"sha512sum":    reg(sha512sum.New()),
+		"sed":          reg(sed.New()),
 		"seq":          reg(seq.New()),
 		"sl":           reg(sl.New()),
 		"sleep":        reg(sleep.New()),
