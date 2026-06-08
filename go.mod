@@ -1,13 +1,15 @@
 module github.com/nao1215/mimixbox
 
-go 1.18
+go 1.24
 
 require (
 	github.com/fogleman/gg v1.3.0
 	github.com/jessevdk/go-flags v1.6.1
+	github.com/klauspost/compress v1.18.6
 	github.com/nsf/termbox-go v1.1.1
 	github.com/spf13/pflag v1.0.10
 	github.com/stretchr/testify v1.10.0
+	github.com/ulikunitz/xz v0.5.12
 	golang.org/x/sys v0.30.0
 	golang.org/x/term v0.29.0
 )
