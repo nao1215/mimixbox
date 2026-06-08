@@ -8,7 +8,7 @@
 ![GitHub](https://img.shields.io/github/license/nao1215/mimixbox)
 ![GitHub all releases](https://img.shields.io/github/downloads/nao1215/mimixbox/total)
 
-# MimixBox - mimic BusyBox on Linux
+![mimixbox-logo](./doc/image/mimixbox-logo-truss.jpg)
 
 MimixBox packs many Unix commands into a single binary, like BusyBox. Unlike BusyBox, it targets the desktop environment rather than embedded systems. The project aims for a wide range of built-in commands (applets), from the basics provided by Coreutils to its own experimental commands.
 
