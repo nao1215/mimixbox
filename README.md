@@ -17,13 +17,14 @@ MimixBox packs many Unix commands into a single binary, like BusyBox. Unlike Bus
 The list below is generated from the registered applets by `make command-list`, so it never drifts from the binary. You can also run `mimixbox --list` to print it on the terminal.
 
 <!-- COMMAND_LIST_START -->
-There are 89 commands. Run `mimixbox --list` to see them on the terminal.
+There are 94 commands. Run `mimixbox --list` to see them on the terminal.
 
 | Command | Description |
 |:--|:--|
 | add-shell | Add shell name to /etc/shells |
 | base64 | Base64 encode/decode from FILR(or STDIN) to STDOUT |
 | basename | Print basename (PATH without "/") from file path |
+| bunzip2 | Decompress bzip2 (.bz2) files |
 | cal | Display a calendar |
 | cat | Concatenate files and print on the standard output |
 | chgrp | Change the group of each FILE to GROUP |
@@ -51,6 +52,7 @@ There are 89 commands. Run `mimixbox --list` to see them on the terminal.
 | ghrdc | GitHub Relase Download Counter |
 | grep | Print lines that match patterns |
 | groups | Print the groups to which USERNAME belongs |
+| gunzip | Decompress gzip (.gz) files |
 | gzip | Compress or uncompress FILEs (by default, compress FILES in-place) |
 | halt | Halt the system |
 | head | Print the first NUMBER(default=10) lines |
@@ -94,6 +96,7 @@ There are 89 commands. Run `mimixbox --list` to see them on the terminal.
 | sync | Synchronize cached writes to persistent storage |
 | tac | Print the file contents from the end to the beginning |
 | tail | Print the last NUMBER(default=10) lines |
+| tar | Archive files (create, list, extract) |
 | tee | Read from standard input and write to standard output and files |
 | test | Evaluate a conditional expression |
 | touch | Update the access and modification times of each FILE to the current time |
@@ -102,6 +105,7 @@ There are 89 commands. Run `mimixbox --list` to see them on the terminal.
 | unexpand | Convert N space to TAB(default:N=8) |
 | uniq | Report or omit repeated lines |
 | unix2dos | Change LF to CRLF |
+| unzip | Extract files from a ZIP archive |
 | uuidgen | Print UUID (Universal Unique IDentifier |
 | valid-shell | Verify if /etc/shells is valid |
 | wc | Print newline, word, and byte counts for each file |
@@ -110,6 +114,7 @@ There are 89 commands. Run `mimixbox --list` to see them on the terminal.
 | who | Show who is logged on |
 | whoami | Print login user name |
 | xargs | Build and execute command lines from standard input |
+| zip | Package and compress files into a ZIP archive |
 <!-- COMMAND_LIST_END -->
 
 ## Install
