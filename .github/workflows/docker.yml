@@ -1,0 +1,26 @@
+name: Docker
+
+on:
+  push:
+    branches: [main]
+  pull_request:
+    branches: [main]
+  workflow_dispatch:
+
+# Builds the Docker image from the local source tree to guarantee that
+# "build mimixbox in Docker" keeps working (GitHub issue #4). The image's
+# Dockerfile compiles MimixBox inside the golang toolchain image, so a broken
+# go.mod or build step fails this job.
+jobs:
+  docker:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+
+      - name: Build the Docker image from local source
+        run: docker image build -t mimixbox/ci:${{ github.sha }} .
+
+      - name: Verify the in-image binary runs
+        run: |
+          docker container run --rm mimixbox/ci:${{ github.sha }} mimixbox --version
+          docker container run --rm mimixbox/ci:${{ github.sha }} mimixbox --list
