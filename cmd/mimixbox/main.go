@@ -54,7 +54,7 @@ type options struct {
 
 var osExit = os.Exit
 
-const version = "0.33.3"
+const version = "0.35.0"
 
 func main() {
 	var opts options
