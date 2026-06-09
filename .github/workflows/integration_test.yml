@@ -24,14 +24,8 @@ jobs:
           curl -fsSL https://raw.githubusercontent.com/shellspec/shellspec/master/install.sh | sh -s -- --yes
           echo "$HOME/.local/bin" >> "$GITHUB_PATH"
 
-      - name: Build
-        run: make build
-
-      - name: InstallMimixBox
-        run: sudo install -v -m 0755 -D mimixbox /usr/local/bin/.
-
-      - name: CreateSymbolicLink
-        run: mimixbox --full-install /usr/local/bin/
-
+      # `make it` (test-e2e) builds MimixBox and stages its applet symlinks in an
+      # isolated PATH directory itself, so the workflow and the local target
+      # exercise the exact same hermetic environment.
       - name: IntegrationTest
         run: make it
