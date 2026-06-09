@@ -48,7 +48,7 @@ func IsRootDir(path string) bool {
 func QuestionFrom(in io.Reader, out io.Writer, ask string) bool {
 	for {
 		var response string
-		fmt.Fprintf(out, ask+" [Y/n] ")
+		fmt.Fprintf(out, "%s [Y/n] ", ask)
 		_, err := fmt.Fscanln(in, &response)
 		if err != nil {
 			// An empty line (just Enter) reports "unexpected newline"; re-ask.

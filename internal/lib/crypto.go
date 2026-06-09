@@ -87,27 +87,27 @@ func PrintChecksums(cmdName string, hash hash.Hash, paths []string) (int, error)
 	for _, path := range paths {
 		p := os.ExpandEnv(path)
 		if !Exists(p) {
-			fmt.Fprintf(os.Stderr, cmdName+": "+p+": No such file or directory")
+			fmt.Fprint(os.Stderr, cmdName+": "+p+": No such file or directory")
 			status = 1
 			continue
 		}
 
 		if IsDir(p) {
-			fmt.Fprintf(os.Stderr, cmdName+": "+p+": It is directory")
+			fmt.Fprint(os.Stderr, cmdName+": "+p+": It is directory")
 			status = 1
 			continue
 		}
 
 		r, err := os.Open(p)
 		if err != nil {
-			fmt.Fprintf(os.Stderr, cmdName+": "+err.Error())
+			fmt.Fprint(os.Stderr, cmdName+": "+err.Error())
 			status = 1
 			continue
 		}
 		defer r.Close()
 
 		if err := ChecksumOutput(hash, r, p); err != nil {
-			fmt.Fprintf(os.Stderr, cmdName+": "+err.Error())
+			fmt.Fprint(os.Stderr, cmdName+": "+err.Error())
 			status = 1
 			continue
 		}
