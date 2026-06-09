@@ -156,6 +156,9 @@ func (sh *shell) execPipeline(ctx context.Context, stdio command.IO, pl pipeline
 		pr, pw, err := os.Pipe()
 		if err != nil {
 			_, _ = fmt.Fprintf(stdio.Err, "mbsh: %v\n", err)
+			for _, pf := range pipeFiles {
+				_ = pf.Close()
+			}
 			return 1
 		}
 		cmds[i].Stdout = pw
