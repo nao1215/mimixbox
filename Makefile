@@ -7,9 +7,14 @@ RELEASE     := scripts/release.sh
 # per applet. The end-to-end suite prepends it to PATH so every applet resolves
 # to MimixBox, never to whatever the host happens to provide.
 E2E_BIN_DIR := $(CURDIR)/test/it/.mbbin
+# Canonical version source: the latest git tag (without its leading "v"),
+# falling back to "dev" outside a tagged checkout. Injected into the binary so
+# `mimixbox --version` matches the tag it was built from.
+VERSION     := $(shell v=$$(git describe --tags --abbrev=0 2>/dev/null | sed 's/^v//'); echo "$${v:-dev}")
+LDFLAGS     := -s -w -X github.com/nao1215/mimixbox/internal/version.Version=$(VERSION)
 
 build:  ## Build the mimixbox binary
-	go build "-ldflags=-s -w" -trimpath -o $(APP) cmd/mimixbox/main.go
+	go build -ldflags="$(LDFLAGS)" -trimpath -o $(APP) cmd/mimixbox/main.go
 	$(MAKE) licenses
 
 clean: ## Clean project
@@ -42,7 +47,7 @@ test: pre_ut  ## Run unit tests with coverage (writes cover.out / cover.html)
 	exit $$status
 
 e2e-setup: ## Build MimixBox and stage its applet symlinks in an isolated PATH directory
-	go build "-ldflags=-s -w" -trimpath -o $(APP) cmd/mimixbox/main.go
+	go build -ldflags="$(LDFLAGS)" -trimpath -o $(APP) cmd/mimixbox/main.go
 	rm -rf "$(E2E_BIN_DIR)"
 	mkdir -p "$(E2E_BIN_DIR)"
 	install -m 0755 $(APP) "$(E2E_BIN_DIR)/$(APP)"

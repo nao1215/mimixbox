@@ -9,6 +9,7 @@ builds:
   - main: ./cmd/mimixbox
     ldflags:
       - -s -w
+      - -X github.com/nao1215/mimixbox/internal/version.Version={{ .Version }}
     env:
       - CGO_ENABLED=0
     goos:
