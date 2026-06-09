@@ -17,6 +17,11 @@ import (
 	ap_archival_uncompress "github.com/nao1215/mimixbox/internal/applets/archival/uncompress"
 	ap_archival_unzip "github.com/nao1215/mimixbox/internal/applets/archival/unzip"
 	ap_archival_zip "github.com/nao1215/mimixbox/internal/applets/archival/zip"
+	ap_compat_bracket "github.com/nao1215/mimixbox/internal/applets/compat/bracket"
+	ap_compat_busybox "github.com/nao1215/mimixbox/internal/applets/compat/busybox"
+	ap_compat_cttyhack "github.com/nao1215/mimixbox/internal/applets/compat/cttyhack"
+	ap_compat_shellfront "github.com/nao1215/mimixbox/internal/applets/compat/shellfront"
+	ap_compat_unit "github.com/nao1215/mimixbox/internal/applets/compat/unit"
 	ap_console_tools_clear "github.com/nao1215/mimixbox/internal/applets/console-tools/clear"
 	ap_console_tools_reset "github.com/nao1215/mimixbox/internal/applets/console-tools/reset"
 	ap_console_tools_resize "github.com/nao1215/mimixbox/internal/applets/console-tools/resize"
@@ -161,7 +166,7 @@ import (
 // init populates the applet table. Each command is registered under its own
 // Name(), so the key can never drift from the command it dispatches to.
 func init() {
-	Applets = make(map[string]Applet, 153)
+	Applets = make(map[string]Applet, 162)
 	register(ap_archival_ar.New())
 	register(ap_archival_bunzip2.New())
 	register(ap_archival_compress.New())
@@ -174,6 +179,15 @@ func init() {
 	register(ap_archival_uncompress.New())
 	register(ap_archival_unzip.New())
 	register(ap_archival_zip.New())
+	register(ap_compat_bracket.NewBracket())
+	register(ap_compat_bracket.NewDoubleBracket())
+	register(ap_compat_busybox.New())
+	register(ap_compat_cttyhack.New())
+	register(ap_compat_shellfront.NewAsh())
+	register(ap_compat_shellfront.NewBash())
+	register(ap_compat_shellfront.NewHush())
+	register(ap_compat_shellfront.NewSh())
+	register(ap_compat_unit.New())
 	register(ap_console_tools_clear.New())
 	register(ap_console_tools_reset.New())
 	register(ap_console_tools_resize.New())
