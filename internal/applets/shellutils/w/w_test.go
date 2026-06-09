@@ -60,7 +60,7 @@ func run(t *testing.T) string {
 }
 
 func TestHeaderAndRows(t *testing.T) {
-	t.Parallel()
+	// Not parallel: setup() mutates package-level paths and the clock.
 	recs := append(record("alice", "pts/0", "10.0.0.1", 0), record("bob", "tty1", "", 0)...)
 	setup(t, recs, "0.50 0.40 0.30 1/100 999\n", "90000.0 1.0\n")
 
@@ -89,7 +89,7 @@ func TestHeaderAndRows(t *testing.T) {
 }
 
 func TestNoUsers(t *testing.T) {
-	t.Parallel()
+	// Not parallel: setup() mutates package-level paths and the clock.
 	setup(t, nil, "0.00 0.00 0.00 1/1 1\n", "60.0 1.0\n")
 	out := run(t)
 	if !strings.Contains(out, "0 users") {

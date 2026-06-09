@@ -19,7 +19,7 @@ MimixBox packs many Unix commands into a single binary, like BusyBox. Unlike Bus
 The list below is generated from the registered applets by `make command-list`, so it never drifts from the binary. You can also run `mimixbox --list` to print it on the terminal.
 
 <!-- COMMAND_LIST_START -->
-There are 207 commands. Run `mimixbox --list` to see them on the terminal.
+There are 208 commands. Run `mimixbox --list` to see them on the terminal.
 
 | Command | Description |
 |:--|:--|
@@ -149,6 +149,7 @@ There are 207 commands. Run `mimixbox --list` to see them on the terminal.
 | realpath | Print the resolved absolute file name |
 | reboot | Reboot the system |
 | remove-shell | Remove shell name from /etc/shells |
+| renice | Alter the priority of running processes |
 | reset | Reset terminal |
 | resize | Print commands to set the terminal size |
 | rev | Reverse the order of characters in every line |
