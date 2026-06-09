@@ -19,19 +19,24 @@ MimixBox packs many Unix commands into a single binary, like BusyBox. Unlike Bus
 The list below is generated from the registered applets by `make command-list`, so it never drifts from the binary. You can also run `mimixbox --list` to print it on the terminal.
 
 <!-- COMMAND_LIST_START -->
-There are 153 commands. Run `mimixbox --list` to see them on the terminal.
+There are 162 commands. Run `mimixbox --list` to see them on the terminal.
 
 | Command | Description |
 |:--|:--|
+| [ | Evaluate a conditional expression (test alias requiring ]) |
+| [[ | Evaluate a conditional expression (test alias requiring ]]) |
 | add-shell | Add shell name to /etc/shells |
 | ar | Create, modify and extract from archives |
 | arch | Print machine hardware name (same as uname -m) |
+| ash | Command interpreter (MimixBox mbsh compatibility front-end) |
 | awk | Pattern scanning and processing language |
 | banner | Print a string as large ASCII-art letters |
 | base32 | Base32 encode/decode from FILE(or STDIN) to STDOUT |
 | base64 | Base64 encode/decode from FILE(or STDIN) to STDOUT |
 | basename | Print basename (PATH without "/") from file path |
+| bash | Command interpreter (MimixBox mbsh compatibility front-end) |
 | bunzip2 | Decompress bzip2 (.bz2) files |
+| busybox | BusyBox-style multi-call front-end for MimixBox applets |
 | cal | Display a calendar |
 | cat | Concatenate files and print on the standard output |
 | chgrp | Change the group of each FILE to GROUP |
@@ -48,6 +53,7 @@ There are 153 commands. Run `mimixbox --list` to see them on the terminal.
 | cowthink | Print message in a cow's thought bubble |
 | cp | Copy file(s) to Directory(s) |
 | cpio | Copy files to and from archives |
+| cttyhack | Run PROGRAM with the current stdio (no controlling-TTY trick) |
 | cut | Remove sections from each line of files |
 | date | Print or set the system date and time |
 | dd | Convert and copy a file |
@@ -77,6 +83,7 @@ There are 153 commands. Run `mimixbox --list` to see them on the terminal.
 | hostid | Print the numeric identifier (in hexadecimal) for the current host |
 | hostname | Show the system's host name |
 | http-status-code | Explain HTTP status codes and their RFC references |
+| hush | Command interpreter (MimixBox mbsh compatibility front-end) |
 | id | Print User ID and Group ID |
 | install | Copy files and set attributes |
 | ischroot | Detect if running in a chroot |
@@ -129,6 +136,7 @@ There are 153 commands. Run `mimixbox --list` to see them on the terminal.
 | sed | Stream editor for filtering and transforming text |
 | seq | Print a column of numbers |
 | serial | Rename the file to the name with a serial number |
+| sh | Command interpreter (MimixBox mbsh compatibility front-end) |
 | sha1sum | Calculate or Check secure hash 1 algorithm |
 | sha256sum | Calculate or Check secure hash 256 algorithm |
 | sha512sum | Calculate or Check secure hash 512 algorithm |
@@ -157,6 +165,7 @@ There are 153 commands. Run `mimixbox --list` to see them on the terminal.
 | uncompress | Decompress LZW (.Z) files |
 | unexpand | Convert N space to TAB(default:N=8) |
 | uniq | Report or omit repeated lines |
+| unit | BusyBox unit-test runner (not shipped by MimixBox) |
 | unix2dos | Change LF to CRLF |
 | unlink | Remove a single file by calling the unlink function |
 | unshadow | Combine passwd and shadow files for password auditing |

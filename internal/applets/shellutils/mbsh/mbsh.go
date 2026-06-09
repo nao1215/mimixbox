@@ -67,6 +67,16 @@ func (c *Command) Run(ctx context.Context, stdio command.IO, args []string) erro
 		return err
 	}
 
+	Interpret(ctx, stdio, true)
+	return nil
+}
+
+// Interpret runs the mbsh read-eval loop over stdio until EOF or an "exit"
+// command. When prompt is true it prints the interactive prompt before each
+// line; shell front-ends such as sh/bash pass false so non-interactive scripts
+// produce no prompt noise. It is exported so those launchers can reuse the
+// interpreter without re-implementing it.
+func Interpret(ctx context.Context, stdio command.IO, prompt bool) {
 	sh := &shell{}
 	// Read commands one byte at a time rather than through a buffered reader.
 	// A buffered reader would read past the current line, so a command launched
@@ -78,26 +88,28 @@ func (c *Command) Run(ctx context.Context, stdio command.IO, args []string) erro
 	// as it would under any other shell; in interactive mode each Enter yields
 	// one line and the foreground command shares the terminal.
 	for {
-		_, _ = fmt.Fprint(stdio.Out, sh.prompt())
+		if prompt {
+			_, _ = fmt.Fprint(stdio.Out, sh.prompt())
+		}
 
 		line, err := readLine(stdio.In)
 		if err != nil {
 			// Run whatever was read before EOF (a final line without a
 			// trailing newline), then stop the loop cleanly.
 			if errors.Is(err, io.EOF) {
+				// At EOF the loop ends regardless, so run the final partial line
+				// (if any) for its side effects and stop.
 				if strings.TrimSpace(line) != "" {
-					if stop := sh.execInput(ctx, stdio, line); stop {
-						return nil
-					}
+					sh.execInput(ctx, stdio, line)
 				}
-				return nil
+				return
 			}
 			_, _ = fmt.Fprintln(stdio.Err, err)
-			return nil
+			return
 		}
 
 		if stop := sh.execInput(ctx, stdio, line); stop {
-			return nil
+			return
 		}
 	}
 }
