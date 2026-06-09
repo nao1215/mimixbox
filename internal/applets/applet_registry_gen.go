@@ -164,6 +164,7 @@ import (
 	ap_textutils_sha1sum "github.com/nao1215/mimixbox/internal/applets/textutils/sha1sum"
 	ap_textutils_sha256sum "github.com/nao1215/mimixbox/internal/applets/textutils/sha256sum"
 	ap_textutils_sha384sum "github.com/nao1215/mimixbox/internal/applets/textutils/sha384sum"
+	ap_textutils_sha3sum "github.com/nao1215/mimixbox/internal/applets/textutils/sha3sum"
 	ap_textutils_sha512sum "github.com/nao1215/mimixbox/internal/applets/textutils/sha512sum"
 	ap_textutils_shuf "github.com/nao1215/mimixbox/internal/applets/textutils/shuf"
 	ap_textutils_split "github.com/nao1215/mimixbox/internal/applets/textutils/split"
@@ -186,7 +187,7 @@ import (
 // init populates the applet table. Each command is registered under its own
 // Name(), so the key can never drift from the command it dispatches to.
 func init() {
-	Applets = make(map[string]Applet, 192)
+	Applets = make(map[string]Applet, 193)
 	register(ap_archival_ar.New())
 	register(ap_archival_bunzip2.New())
 	register(ap_archival_compress.New())
@@ -360,6 +361,7 @@ func init() {
 	register(ap_textutils_sha1sum.New())
 	register(ap_textutils_sha256sum.New())
 	register(ap_textutils_sha384sum.New())
+	register(ap_textutils_sha3sum.New())
 	register(ap_textutils_sha512sum.New())
 	register(ap_textutils_shuf.New())
 	register(ap_textutils_split.New())
