@@ -19,7 +19,7 @@ MimixBox packs many Unix commands into a single binary, like BusyBox. Unlike Bus
 The list below is generated from the registered applets by `make command-list`, so it never drifts from the binary. You can also run `mimixbox --list` to print it on the terminal.
 
 <!-- COMMAND_LIST_START -->
-There are 201 commands. Run `mimixbox --list` to see them on the terminal.
+There are 203 commands. Run `mimixbox --list` to see them on the terminal.
 
 | Command | Description |
 |:--|:--|
@@ -153,6 +153,8 @@ There are 201 commands. Run `mimixbox --list` to see them on the terminal.
 | rmdir | Remove directory |
 | rpm | Query an RPM package file |
 | rpm2cpio | Extract the cpio payload from an RPM package |
+| script | Record a command's output to a typescript |
+| scriptreplay | Replay a typescript using its timing file |
 | sddf | Search & Delete Duplicated File |
 | sed | Stream editor for filtering and transforming text |
 | seq | Print a column of numbers |
