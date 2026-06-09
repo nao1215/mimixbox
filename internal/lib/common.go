@@ -17,6 +17,7 @@ package mb
 
 import (
 	"fmt"
+	"io"
 	"os"
 )
 
@@ -25,7 +26,13 @@ const (
 	ExitFailure
 )
 
-func ShowVersion(cmdName string, version string) {
+// ShowVersionTo writes the version banner to w.
+func ShowVersionTo(w io.Writer, cmdName string, version string) {
 	description := cmdName + " version " + version + " (under Apache License version 2.0)"
-	fmt.Fprintln(os.Stdout, description)
+	fmt.Fprintln(w, description)
+}
+
+// ShowVersion is ShowVersionTo wired to the process stdout.
+func ShowVersion(cmdName string, version string) {
+	ShowVersionTo(os.Stdout, cmdName, version)
 }
