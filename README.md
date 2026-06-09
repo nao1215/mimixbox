@@ -19,7 +19,7 @@ MimixBox packs many Unix commands into a single binary, like BusyBox. Unlike Bus
 The list below is generated from the registered applets by `make command-list`, so it never drifts from the binary. You can also run `mimixbox --list` to print it on the terminal.
 
 <!-- COMMAND_LIST_START -->
-There are 206 commands. Run `mimixbox --list` to see them on the terminal.
+There are 207 commands. Run `mimixbox --list` to see them on the terminal.
 
 | Command | Description |
 |:--|:--|
@@ -102,6 +102,7 @@ There are 206 commands. Run `mimixbox --list` to see them on the terminal.
 | ischroot | Detect if running in a chroot |
 | kill | Kill process or send signal to process |
 | killall | Kill processes by name |
+| last | Show a listing of last logged-in users |
 | less | Page through text one screen at a time |
 | lifegame | Life game (Conway's Game of Life) |
 | link | Create a hard link to a file |
