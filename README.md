@@ -19,7 +19,7 @@ MimixBox packs many Unix commands into a single binary, like BusyBox. Unlike Bus
 The list below is generated from the registered applets by `make command-list`, so it never drifts from the binary. You can also run `mimixbox --list` to print it on the terminal.
 
 <!-- COMMAND_LIST_START -->
-There are 208 commands. Run `mimixbox --list` to see them on the terminal.
+There are 209 commands. Run `mimixbox --list` to see them on the terminal.
 
 | Command | Description |
 |:--|:--|
@@ -186,6 +186,7 @@ There are 208 commands. Run `mimixbox --list` to see them on the terminal.
 | tac | Print the file contents from the end to the beginning |
 | tail | Print the last NUMBER(default=10) lines |
 | tar | Archive files (create, list, extract) |
+| taskset | Set or get a process's CPU affinity |
 | tee | Read from standard input and write to standard output and files |
 | test | Evaluate a conditional expression |
 | time | Run a command and report how long it took |
