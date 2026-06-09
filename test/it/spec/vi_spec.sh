@@ -25,4 +25,29 @@ world'
 world'
         The status should be success
     End
+    It 'duplicates a line with yy then p'
+        When call TestViYankPaste
+        The output should equal 'one
+one
+two'
+        The status should be success
+    End
+    It 'applies a count to an edit (2x)'
+        When call TestViCountedDelete
+        The output should equal 'cdef'
+        The status should be success
+    End
+    It 'undoes the last change with u'
+        When call TestViUndo
+        The output should equal 'keepme'
+        The status should be success
+    End
+    It 'searches with /pattern and moves to the next match with n'
+        When call TestViSearchNext
+        The output should equal 'x
+foo
+y
+z'
+        The status should be success
+    End
 End

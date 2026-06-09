@@ -41,8 +41,9 @@ func (c *Command) Run(_ context.Context, stdio command.IO, args []string) error 
 			{Command: "vi", Explain: "Open an empty buffer."},
 		},
 		Notes: []string{
-			"Normal mode: h j k l move, i insert, x delete a char, dd delete a line, :w save, :q quit, :wq save and quit.",
-			"Only this minimal key set is implemented; most ex commands and motions are not yet available.",
+			"Motions: h j k l, w b e (word), 0 $ (line), gg G (file); a count repeats them (3j, 2w).",
+			"Edits: i a A o O insert, x delete char, dd delete line, yy/p/P yank & paste, u undo (counts apply, e.g. 2x, 3dd).",
+			"Search: /pattern and ?pattern, then n / N for the next/previous match. Ex commands: :w :q :q! :wq and ZZ.",
 		},
 	})
 	proceed, err := fs.Parse(stdio, args)
@@ -153,6 +154,13 @@ func redraw(w io.Writer, ed *editor) {
 	if ed.mode == modeCommand {
 		status = ":" + ed.cmdline
 	}
+	if ed.mode == modeSearch {
+		prefix := "/"
+		if !ed.searchForward {
+			prefix = "?"
+		}
+		status = prefix + ed.searchPat
+	}
 	if ed.message != "" {
 		status = ed.message
 	}
@@ -175,6 +183,8 @@ func modeName(m mode) string {
 		return "INSERT"
 	case modeCommand:
 		return "COMMAND"
+	case modeSearch:
+		return "SEARCH"
 	default:
 		return "NORMAL"
 	}
