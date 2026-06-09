@@ -87,6 +87,7 @@ import (
 	ap_shellutils_cmp "github.com/nao1215/mimixbox/internal/applets/shellutils/cmp"
 	ap_shellutils_cut "github.com/nao1215/mimixbox/internal/applets/shellutils/cut"
 	ap_shellutils_date "github.com/nao1215/mimixbox/internal/applets/shellutils/date"
+	ap_shellutils_dc "github.com/nao1215/mimixbox/internal/applets/shellutils/dc"
 	ap_shellutils_dd "github.com/nao1215/mimixbox/internal/applets/shellutils/dd"
 	ap_shellutils_df "github.com/nao1215/mimixbox/internal/applets/shellutils/df"
 	ap_shellutils_dirname "github.com/nao1215/mimixbox/internal/applets/shellutils/dirname"
@@ -184,7 +185,7 @@ import (
 // init populates the applet table. Each command is registered under its own
 // Name(), so the key can never drift from the command it dispatches to.
 func init() {
-	Applets = make(map[string]Applet, 190)
+	Applets = make(map[string]Applet, 191)
 	register(ap_archival_ar.New())
 	register(ap_archival_bunzip2.New())
 	register(ap_archival_compress.New())
@@ -281,6 +282,7 @@ func init() {
 	register(ap_shellutils_cmp.New())
 	register(ap_shellutils_cut.New())
 	register(ap_shellutils_date.New())
+	register(ap_shellutils_dc.New())
 	register(ap_shellutils_dd.New())
 	register(ap_shellutils_df.New())
 	register(ap_shellutils_dirname.New())
