@@ -19,7 +19,7 @@ MimixBox packs many Unix commands into a single binary, like BusyBox. Unlike Bus
 The list below is generated from the registered applets by `make command-list`, so it never drifts from the binary. You can also run `mimixbox --list` to print it on the terminal.
 
 <!-- COMMAND_LIST_START -->
-There are 171 commands. Run `mimixbox --list` to see them on the terminal.
+There are 173 commands. Run `mimixbox --list` to see them on the terminal.
 
 | Command | Description |
 |:--|:--|
@@ -80,7 +80,9 @@ There are 171 commands. Run `mimixbox --list` to see them on the terminal.
 | gunzip | Decompress gzip (.gz) files |
 | gzip | Compress or uncompress FILEs (by default, compress FILES in-place) |
 | halt | Halt the system |
+| hd | Dump a file in canonical hex+ASCII (hexdump -C) |
 | head | Print the first NUMBER(default=10) lines |
+| hexdump | Display a file in hexadecimal (and other formats) |
 | hostid | Print the numeric identifier (in hexadecimal) for the current host |
 | hostname | Show the system's host name |
 | http-status-code | Explain HTTP status codes and their RFC references |
