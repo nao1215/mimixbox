@@ -25,6 +25,7 @@ import (
 	ap_compat_shellfront "github.com/nao1215/mimixbox/internal/applets/compat/shellfront"
 	ap_compat_unit "github.com/nao1215/mimixbox/internal/applets/compat/unit"
 	ap_console_tools_clear "github.com/nao1215/mimixbox/internal/applets/console-tools/clear"
+	ap_console_tools_pager "github.com/nao1215/mimixbox/internal/applets/console-tools/pager"
 	ap_console_tools_reset "github.com/nao1215/mimixbox/internal/applets/console-tools/reset"
 	ap_console_tools_resize "github.com/nao1215/mimixbox/internal/applets/console-tools/resize"
 	ap_debianutils_add_shell "github.com/nao1215/mimixbox/internal/applets/debianutils/add-shell"
@@ -187,7 +188,7 @@ import (
 // init populates the applet table. Each command is registered under its own
 // Name(), so the key can never drift from the command it dispatches to.
 func init() {
-	Applets = make(map[string]Applet, 193)
+	Applets = make(map[string]Applet, 195)
 	register(ap_archival_ar.New())
 	register(ap_archival_bunzip2.New())
 	register(ap_archival_compress.New())
@@ -219,6 +220,8 @@ func init() {
 	register(ap_compat_shellfront.NewSh())
 	register(ap_compat_unit.New())
 	register(ap_console_tools_clear.New())
+	register(ap_console_tools_pager.NewLess())
+	register(ap_console_tools_pager.NewMore())
 	register(ap_console_tools_reset.New())
 	register(ap_console_tools_resize.New())
 	register(ap_debianutils_add_shell.New())
