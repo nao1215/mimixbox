@@ -7,6 +7,57 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## [Unreleased]
 
+## [0.37.0] - 2026-06-09
+
+This release roughly doubles the applet count (to 208) by filling in the
+BusyBox/coreutils gaps surfaced in the 2026-06-08 project review. The
+`[coreutils]` batch is complete; the `[compat]` shell front-ends are done; and
+the `[archival]` and `[util-linux]` batches are well underway.
+
+### Added
+
+- coreutils: `bc` and `dc` (calculators), `ed` (line editor), `ls` (with -a,
+  -A, -d, -l, -F, -h, -R), `man` (manual-page lookup with MANPATH and gzip),
+  `more`/`less` (pagers), `tree`, `factor`, `tsort`, `nice`, `time`, `fsync`,
+  `usleep`, `uuencode`/`uudecode`, the `sum`/`crc32`/`sha384sum`/`sha3sum`
+  checksums, the `egrep`/`fgrep` grep wrappers, and `users`/`w`. This completes
+  the coreutils roadmap batch.
+- compat: the `[`/`[[` test aliases, the `sh`/`ash`/`hush`/`bash` shell
+  front-ends over mbsh, the `busybox` multi-call dispatcher, `cttyhack`, and
+  `unit`.
+- archival: `xz`/`unxz`/`xzcat` and `lzma`/`unlzma`/`lzcat` (via
+  github.com/ulikunitz/xz), the `zcat`/`bzcat` decompress-to-stdout aliases, and
+  `pipe_progress`.
+- util-linux: `hexdump`/`hd`, `getopt`, `setsid`, `fallocate`,
+  `script`/`scriptreplay`, `setarch`/`linux32`/`linux64`, `last`, and `renice`.
+- `vi` gained the everyday primitives: counts, the `w`/`b`/`e` word motions,
+  `yy`/`p`/`P` yank and paste, `u` undo, and `/`/`?`/`n`/`N` search.
+- `mbsh` gained quoted tokenization, parameter and environment expansion, and
+  `;`/`&&`/`||` separators, pipelines, and redirections.
+- `wget` gained `-P`, `-c`, `-T`, `-t`, and `--user-agent`; `cp` gained the
+  `-L`/`-P`/`-H`/`-d` symlink-dereference controls.
+- Every applet now has a self-describing `--help` (synopsis, options, examples,
+  exit status, and notes) aimed at both humans and LLMs.
+
+### Changed
+
+- The applet registry is generated from the package list instead of a
+  hand-maintained init, so a new applet is wired up by adding its package.
+- The version string is injected from the git tag across `make build` and the
+  GoReleaser release, and the release archive ships a self-contained installer.
+- The Go directive moved to 1.24.
+
+### Fixed
+
+- `pager` (more/less): use a real tty check so `/dev/null` is not treated as a
+  terminal, and drop the per-line length cap.
+- `mbsh`: share the stdin position so a launched command reads the remaining
+  input, and close already-open pipe fds when `os.Pipe` fails.
+- `vi`: decode terminal escape sequences as motions instead of running them as
+  commands.
+- `wget`: validate the resume `Content-Range` and retry mid-transfer failures.
+- `pidof` is now registered, so MimixBox ships and tests its own implementation.
+
 ## [0.36.0] - 2026-06-09
 
 ### Changed
