@@ -152,9 +152,16 @@ func TestDumpGroupsTo(t *testing.T) {
 func TestParrotFrom(t *testing.T) {
 	t.Parallel()
 
-	var out bytes.Buffer
-	ParrotFrom(strings.NewReader("alpha\nbeta\n"), &out, false)
-	if got, want := out.String(), "alpha\nbeta\n"; got != want {
+	var plain bytes.Buffer
+	ParrotFrom(strings.NewReader("alpha\nbeta\n"), &plain, false)
+	if got, want := plain.String(), "alpha\nbeta\n"; got != want {
 		t.Errorf("ParrotFrom(withNl=false) = %q, want %q", got, want)
+	}
+
+	// With line numbers, each echoed line must be numbered sequentially.
+	var numbered bytes.Buffer
+	ParrotFrom(strings.NewReader("alpha\nbeta\n"), &numbered, true)
+	if got, want := numbered.String(), "       1  alpha       2  beta"; got != want {
+		t.Errorf("ParrotFrom(withNl=true) = %q, want %q", got, want)
 	}
 }

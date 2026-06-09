@@ -86,6 +86,7 @@ func ParrotFrom(in io.Reader, out io.Writer, withNl bool) {
 		}
 		if withNl {
 			PrintStrWithNumberLineTo(out, nl, "  %6d  %s", response) // respect Coreutils
+			nl++
 		} else {
 			fmt.Fprintln(out, response)
 		}
