@@ -19,7 +19,7 @@ MimixBox packs many Unix commands into a single binary, like BusyBox. Unlike Bus
 The list below is generated from the registered applets by `make command-list`, so it never drifts from the binary. You can also run `mimixbox --list` to print it on the terminal.
 
 <!-- COMMAND_LIST_START -->
-There are 186 commands. Run `mimixbox --list` to see them on the terminal.
+There are 188 commands. Run `mimixbox --list` to see them on the terminal.
 
 | Command | Description |
 |:--|:--|
@@ -78,6 +78,7 @@ There are 186 commands. Run `mimixbox --list` to see them on the terminal.
 | fold | Wrap each input line to fit in specified width |
 | fortune | Print a random, hopefully interesting, adage |
 | free | Display amount of free and used memory in the system |
+| fsync | Flush a file's data to storage with fsync(2) |
 | getopt | Parse command options (enhanced, like util-linux getopt) |
 | ghrdc | GitHub Release Download Counter |
 | grep | Print lines that match patterns |
@@ -169,6 +170,7 @@ There are 186 commands. Run `mimixbox --list` to see them on the terminal.
 | tar | Archive files (create, list, extract) |
 | tee | Read from standard input and write to standard output and files |
 | test | Evaluate a conditional expression |
+| time | Run a command and report how long it took |
 | timeout | Run a command with a time limit |
 | touch | Update the access and modification times of each FILE to the current time |
 | tr | Translate or delete characters |

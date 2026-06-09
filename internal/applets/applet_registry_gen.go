@@ -97,6 +97,7 @@ import (
 	ap_shellutils_factor "github.com/nao1215/mimixbox/internal/applets/shellutils/factor"
 	ap_shellutils_false "github.com/nao1215/mimixbox/internal/applets/shellutils/false"
 	ap_shellutils_free "github.com/nao1215/mimixbox/internal/applets/shellutils/free"
+	ap_shellutils_fsync "github.com/nao1215/mimixbox/internal/applets/shellutils/fsync"
 	ap_shellutils_ghrdc "github.com/nao1215/mimixbox/internal/applets/shellutils/ghrdc"
 	ap_shellutils_groups "github.com/nao1215/mimixbox/internal/applets/shellutils/groups"
 	ap_shellutils_hostid "github.com/nao1215/mimixbox/internal/applets/shellutils/hostid"
@@ -129,6 +130,7 @@ import (
 	ap_shellutils_sync "github.com/nao1215/mimixbox/internal/applets/shellutils/sync"
 	ap_shellutils_tee "github.com/nao1215/mimixbox/internal/applets/shellutils/tee"
 	ap_shellutils_test "github.com/nao1215/mimixbox/internal/applets/shellutils/test"
+	ap_shellutils_timecmd "github.com/nao1215/mimixbox/internal/applets/shellutils/timecmd"
 	ap_shellutils_timeout "github.com/nao1215/mimixbox/internal/applets/shellutils/timeout"
 	ap_shellutils_tree "github.com/nao1215/mimixbox/internal/applets/shellutils/tree"
 	ap_shellutils_true "github.com/nao1215/mimixbox/internal/applets/shellutils/true"
@@ -180,7 +182,7 @@ import (
 // init populates the applet table. Each command is registered under its own
 // Name(), so the key can never drift from the command it dispatches to.
 func init() {
-	Applets = make(map[string]Applet, 186)
+	Applets = make(map[string]Applet, 188)
 	register(ap_archival_ar.New())
 	register(ap_archival_bunzip2.New())
 	register(ap_archival_compress.New())
@@ -287,6 +289,7 @@ func init() {
 	register(ap_shellutils_factor.New())
 	register(ap_shellutils_false.New())
 	register(ap_shellutils_free.New())
+	register(ap_shellutils_fsync.New())
 	register(ap_shellutils_ghrdc.New())
 	register(ap_shellutils_groups.New())
 	register(ap_shellutils_hostid.New())
@@ -319,6 +322,7 @@ func init() {
 	register(ap_shellutils_sync.New())
 	register(ap_shellutils_tee.New())
 	register(ap_shellutils_test.New())
+	register(ap_shellutils_timecmd.New())
 	register(ap_shellutils_timeout.New())
 	register(ap_shellutils_tree.New())
 	register(ap_shellutils_true.New())
