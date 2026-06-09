@@ -19,7 +19,7 @@ MimixBox packs many Unix commands into a single binary, like BusyBox. Unlike Bus
 The list below is generated from the registered applets by `make command-list`, so it never drifts from the binary. You can also run `mimixbox --list` to print it on the terminal.
 
 <!-- COMMAND_LIST_START -->
-There are 188 commands. Run `mimixbox --list` to see them on the terminal.
+There are 190 commands. Run `mimixbox --list` to see them on the terminal.
 
 | Command | Description |
 |:--|:--|
@@ -71,6 +71,7 @@ There are 188 commands. Run `mimixbox --list` to see them on the terminal.
 | expr | Evaluate expressions |
 | factor | Print the prime factors of each NUMBER |
 | fakemovie | Adds a video playback button to the image |
+| fallocate | Preallocate or extend space for a file |
 | false | Do nothing. Return failure(1) |
 | fgrep | Search for fixed strings (grep -F) |
 | find | Search for files in a directory hierarchy |
@@ -149,6 +150,7 @@ There are 188 commands. Run `mimixbox --list` to see them on the terminal.
 | sed | Stream editor for filtering and transforming text |
 | seq | Print a column of numbers |
 | serial | Rename the file to the name with a serial number |
+| setsid | Run a program in a new session |
 | sh | Command interpreter (MimixBox mbsh compatibility front-end) |
 | sha1sum | Calculate or Check secure hash 1 algorithm |
 | sha256sum | Calculate or Check secure hash 256 algorithm |
