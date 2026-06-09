@@ -41,17 +41,20 @@ func IsRootDir(path string) bool {
 	return p == "/"
 }
 
-func Question(ask string) bool {
+// QuestionFrom prompts ask on out and reads a yes/no answer from in. It returns
+// true for "y"/"yes", false for "n"/"no", re-prompts on a blank or invalid line,
+// and returns false on EOF or a read error. Injecting in/out keeps it
+// unit-testable with a strings.Reader and a bytes.Buffer.
+func QuestionFrom(in io.Reader, out io.Writer, ask string) bool {
 	for {
 		var response string
-		fmt.Fprintf(os.Stdout, ask+" [Y/n] ")
-		_, err := fmt.Scanln(&response)
+		fmt.Fprintf(out, ask+" [Y/n] ")
+		_, err := fmt.Fscanln(in, &response)
 		if err != nil {
-			// An empty line (just Enter) reports "expected newline"; re-ask.
+			// An empty line (just Enter) reports "unexpected newline"; re-ask.
 			if strings.Contains(err.Error(), "expected newline") {
 				continue
 			}
-			fmt.Fprint(os.Stderr, err.Error())
 			return false
 		}
 
@@ -66,24 +69,31 @@ func Question(ask string) bool {
 	}
 }
 
-func Parrot(withNl bool) {
-	var response string
-	var nl int = 1
+// Question is QuestionFrom wired to the process stdin/stdout.
+func Question(ask string) bool { return QuestionFrom(os.Stdin, os.Stdout, ask) }
+
+// ParrotFrom echoes each line read from in to out, optionally with a line
+// number, until in is exhausted. Injecting in/out keeps it testable.
+func ParrotFrom(in io.Reader, out io.Writer, withNl bool) {
+	nl := 1
 	for {
-		response = ""
-		_, err := fmt.Scanln(&response)
+		var response string
+		_, err := fmt.Fscanln(in, &response)
 		if err != nil {
 			if !strings.Contains(err.Error(), "expected newline") {
 				break // Ctrl+D or other error.
 			}
 		}
 		if withNl {
-			PrintStrWithNumberLine(nl, "  %6d  %s", response) // respect Coreutils
+			PrintStrWithNumberLineTo(out, nl, "  %6d  %s", response) // respect Coreutils
 		} else {
-			fmt.Fprintln(os.Stdout, response)
+			fmt.Fprintln(out, response)
 		}
 	}
 }
+
+// Parrot is ParrotFrom wired to the process stdin/stdout.
+func Parrot(withNl bool) { ParrotFrom(os.Stdin, os.Stdout, withNl) }
 
 func Input() (string, bool) {
 	var response string
@@ -135,20 +145,30 @@ func Concatenate(path []string) ([]string, error) {
 	return strList, nil
 }
 
-func PrintStrListWithNumberLine(strList []string, countEmpryLine bool) {
-	var nl int = 1
+// PrintStrListWithNumberLineTo writes the numbered lines to w.
+func PrintStrListWithNumberLineTo(w io.Writer, strList []string, countEmpryLine bool) {
+	nl := 1
 	for _, s := range strList {
 		if s == "\n" && !countEmpryLine {
-			fmt.Fprint(os.Stdout, s)
+			fmt.Fprint(w, s)
 			continue
 		}
-		PrintStrWithNumberLine(nl, "%6d  %s", s)
+		PrintStrWithNumberLineTo(w, nl, "%6d  %s", s)
 		nl++
 	}
 }
 
+func PrintStrListWithNumberLine(strList []string, countEmpryLine bool) {
+	PrintStrListWithNumberLineTo(os.Stdout, strList, countEmpryLine)
+}
+
+// PrintStrWithNumberLineTo writes one numbered line to w.
+func PrintStrWithNumberLineTo(w io.Writer, nl int, format string, message string) {
+	fmt.Fprintf(w, format, nl, message)
+}
+
 func PrintStrWithNumberLine(nl int, format string, message string) {
-	fmt.Fprintf(os.Stdout, format, nl, message)
+	PrintStrWithNumberLineTo(os.Stdout, nl, format, message)
 }
 
 func FromPIPE() (string, error) {
@@ -181,15 +201,18 @@ func Chop(line string) string {
 	return line
 }
 
-func Dump(lines []string, withNumber bool) {
+// DumpTo writes lines to w, optionally numbered.
+func DumpTo(w io.Writer, lines []string, withNumber bool) {
 	if withNumber {
-		PrintStrListWithNumberLine(lines, true)
+		PrintStrListWithNumberLineTo(w, lines, true)
 	} else {
 		for _, line := range lines {
-			fmt.Fprint(os.Stdout, line)
+			fmt.Fprint(w, line)
 		}
 	}
 }
+
+func Dump(lines []string, withNumber bool) { DumpTo(os.Stdout, lines, withNumber) }
 
 func Groups(uname string) ([]user.Group, error) {
 	u, err := user.Lookup(uname)
@@ -213,8 +236,9 @@ func Groups(uname string) ([]user.Group, error) {
 	return groupList, nil
 }
 
-func DumpGroups(groups []user.Group, showName bool) {
-	var resultLine string = ""
+// DumpGroupsTo writes the space-separated group names or GIDs to w.
+func DumpGroupsTo(w io.Writer, groups []user.Group, showName bool) {
+	resultLine := ""
 	if showName {
 		for _, g := range groups {
 			resultLine = resultLine + g.Name + " "
@@ -225,7 +249,11 @@ func DumpGroups(groups []user.Group, showName bool) {
 			resultLine = resultLine + g.Gid + " "
 		}
 	}
-	fmt.Fprintln(os.Stdout, strings.TrimSuffix(resultLine, " "))
+	fmt.Fprintln(w, strings.TrimSuffix(resultLine, " "))
+}
+
+func DumpGroups(groups []user.Group, showName bool) {
+	DumpGroupsTo(os.Stdout, groups, showName)
 }
 
 func HasOperand(args []string, cmdName string) bool {
