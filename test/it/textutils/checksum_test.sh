@@ -17,3 +17,6 @@ TestUuBase64() {
 TestUsleep() {
     usleep 1000 && echo slept
 }
+
+TestSha3Default() { printf 'hello\n' | sha3sum | cut -d' ' -f1; }
+TestSha3_512() { printf 'hello\n' | sha3sum -a 512 | cut -c1-16; }

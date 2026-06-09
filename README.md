@@ -19,7 +19,7 @@ MimixBox packs many Unix commands into a single binary, like BusyBox. Unlike Bus
 The list below is generated from the registered applets by `make command-list`, so it never drifts from the binary. You can also run `mimixbox --list` to print it on the terminal.
 
 <!-- COMMAND_LIST_START -->
-There are 192 commands. Run `mimixbox --list` to see them on the terminal.
+There are 193 commands. Run `mimixbox --list` to see them on the terminal.
 
 | Command | Description |
 |:--|:--|
@@ -157,6 +157,7 @@ There are 192 commands. Run `mimixbox --list` to see them on the terminal.
 | sha1sum | Calculate or Check secure hash 1 algorithm |
 | sha256sum | Calculate or Check secure hash 256 algorithm |
 | sha384sum | Calculate or Check secure hash 384 algorithm |
+| sha3sum | Calculate or Check SHA-3 message digest |
 | sha512sum | Calculate or Check secure hash 512 algorithm |
 | shred | Overwrite a file to hide its contents |
 | shuf | Generate a random permutation of input lines |
