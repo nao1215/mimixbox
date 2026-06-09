@@ -143,6 +143,7 @@ import (
 	ap_shellutils_tty "github.com/nao1215/mimixbox/internal/applets/shellutils/tty"
 	ap_shellutils_uname "github.com/nao1215/mimixbox/internal/applets/shellutils/uname"
 	ap_shellutils_uniq "github.com/nao1215/mimixbox/internal/applets/shellutils/uniq"
+	ap_shellutils_users "github.com/nao1215/mimixbox/internal/applets/shellutils/users"
 	ap_shellutils_usleep "github.com/nao1215/mimixbox/internal/applets/shellutils/usleep"
 	ap_shellutils_uuidgen "github.com/nao1215/mimixbox/internal/applets/shellutils/uuidgen"
 	ap_shellutils_watch "github.com/nao1215/mimixbox/internal/applets/shellutils/watch"
@@ -191,7 +192,7 @@ import (
 // init populates the applet table. Each command is registered under its own
 // Name(), so the key can never drift from the command it dispatches to.
 func init() {
-	Applets = make(map[string]Applet, 198)
+	Applets = make(map[string]Applet, 199)
 	register(ap_archival_ar.New())
 	register(ap_archival_bunzip2.New())
 	register(ap_archival_compress.New())
@@ -345,6 +346,7 @@ func init() {
 	register(ap_shellutils_tty.New())
 	register(ap_shellutils_uname.New())
 	register(ap_shellutils_uniq.New())
+	register(ap_shellutils_users.New())
 	register(ap_shellutils_usleep.New())
 	register(ap_shellutils_uuidgen.New())
 	register(ap_shellutils_watch.New())
