@@ -8,6 +8,7 @@ import (
 	"errors"
 	"fmt"
 	"io"
+	"net"
 	"net/http"
 	"net/url"
 	"os"
@@ -193,6 +194,16 @@ func fetchOnce(ctx context.Context, client *http.Client, stdio command.IO, opts 
 	case http.StatusOK:
 		// Server ignored the range (or none was sent): write from the start.
 	case http.StatusPartialContent:
+		// Only append when the server confirms it is resuming from exactly the
+		// byte we asked for; a mismatched Content-Range would corrupt the file.
+		if resumeFrom <= 0 {
+			return fmt.Errorf("server returned %s without a resume request", resp.Status)
+		}
+		var start, end, total int64
+		cr := resp.Header.Get("Content-Range")
+		if _, scanErr := fmt.Sscanf(cr, "bytes %d-%d/%d", &start, &end, &total); scanErr != nil || start != resumeFrom {
+			return fmt.Errorf("unexpected Content-Range %q for resume offset %d", cr, resumeFrom)
+		}
 		appendMode = true
 	case http.StatusRequestedRangeNotSatisfiable:
 		// The local file already has the whole body.
@@ -216,6 +227,13 @@ func fetchOnce(ctx context.Context, client *http.Client, stdio command.IO, opts 
 		}
 	}
 	if copyErr != nil {
+		// A failure partway through the body is transient, so let -t/--tries
+		// retry it (the next attempt resumes from the larger file under -c, or
+		// restarts from scratch otherwise).
+		var nerr net.Error
+		if errors.As(copyErr, &nerr) || errors.Is(copyErr, io.ErrUnexpectedEOF) || errors.Is(copyErr, context.DeadlineExceeded) {
+			return retryable(copyErr)
+		}
 		return copyErr
 	}
 
