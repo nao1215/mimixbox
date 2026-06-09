@@ -163,13 +163,14 @@ import (
 	ap_textutils_unix2dos "github.com/nao1215/mimixbox/internal/applets/textutils/unix2dos"
 	ap_textutils_wc "github.com/nao1215/mimixbox/internal/applets/textutils/wc"
 	ap_textutils_xxd "github.com/nao1215/mimixbox/internal/applets/textutils/xxd"
+	ap_util_linux_getopt "github.com/nao1215/mimixbox/internal/applets/util-linux/getopt"
 	ap_util_linux_hexdump "github.com/nao1215/mimixbox/internal/applets/util-linux/hexdump"
 )
 
 // init populates the applet table. Each command is registered under its own
 // Name(), so the key can never drift from the command it dispatches to.
 func init() {
-	Applets = make(map[string]Applet, 173)
+	Applets = make(map[string]Applet, 174)
 	register(ap_archival_ar.New())
 	register(ap_archival_bunzip2.New())
 	register(ap_archival_compress.New())
@@ -341,6 +342,7 @@ func init() {
 	register(ap_textutils_unix2dos.New())
 	register(ap_textutils_wc.New())
 	register(ap_textutils_xxd.New())
+	register(ap_util_linux_getopt.New())
 	register(ap_util_linux_hexdump.NewHd())
 	register(ap_util_linux_hexdump.NewHexdump())
 }
