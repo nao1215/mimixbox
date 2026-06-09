@@ -137,6 +137,7 @@ func runInteractive(stdio command.IO, ed *editor) {
 		}
 		ed.feed(buf[0])
 	}
+	ed.flush()
 	redraw(stdio.Out, ed)
 }
 

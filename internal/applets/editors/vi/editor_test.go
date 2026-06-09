@@ -147,8 +147,8 @@ func TestSplitAndBackspace(t *testing.T) {
 
 	// Backspace joining: on line 2 col 0, insert-mode backspace joins lines.
 	e2 := newEditor("f", "ab\ncd")
-	e2.feedString("j")  // line 2
-	e2.feedString("i")  // insert at col 0
+	e2.feedString("j")    // line 2
+	e2.feedString("i")    // insert at col 0
 	e2.feedString("\x7f") // backspace -> join
 	if len(e2.lines) != 1 || e2.lines[0] != "abcd" {
 		t.Errorf("after join lines = %v, want [abcd]", e2.lines)
@@ -309,5 +309,100 @@ func TestRunInteractiveFallsBackOnPipe(t *testing.T) {
 	}
 	if !e.save || !e.quit {
 		t.Errorf("batch fallback should have run :wq (save=%v quit=%v)", e.save, e.quit)
+	}
+}
+
+func TestEscapeArrowsMoveCursor(t *testing.T) {
+	t.Parallel()
+	e := drive("abc\ndef", "\x1b[B\x1b[C\x1b[C") // Down, Right, Right
+	if e.cy != 1 || e.cx != 2 {
+		t.Errorf("after Down,Right,Right cursor = (%d,%d), want (1,2)", e.cy, e.cx)
+	}
+	e.feedString("\x1b[A\x1b[D") // Up, Left
+	if e.cy != 0 || e.cx != 1 {
+		t.Errorf("after Up,Left cursor = (%d,%d), want (0,1)", e.cy, e.cx)
+	}
+	if e.mode != modeNormal {
+		t.Errorf("arrows must not change mode, mode = %s", modeName(e.mode))
+	}
+	if e.dirty {
+		t.Errorf("arrows must not modify the buffer")
+	}
+}
+
+// TestEscapeUpArrowDoesNotAppend is the issue #235 regression: ESC [ A (Up)
+// must move/ignore, never let its trailing 'A' trigger append/insert.
+func TestEscapeUpArrowDoesNotAppend(t *testing.T) {
+	t.Parallel()
+	e := drive("abc", "\x1b[A")
+	if e.mode != modeNormal {
+		t.Errorf("ESC[A switched to %s mode; it must stay normal", modeName(e.mode))
+	}
+	if e.dirty || e.lines[0] != "abc" {
+		t.Errorf("ESC[A modified the buffer: dirty=%v lines=%q", e.dirty, e.lines)
+	}
+}
+
+func TestEscapeHomeEndDelete(t *testing.T) {
+	t.Parallel()
+	e := drive("hello", "\x1b[F") // End
+	if e.cx != lastCol("hello") {
+		t.Errorf("End: cx = %d, want %d", e.cx, lastCol("hello"))
+	}
+	e.feedString("\x1b[H") // Home
+	if e.cx != 0 {
+		t.Errorf("Home: cx = %d, want 0", e.cx)
+	}
+	e.feedString("\x1b[1~") // Home (numbered form)
+	if e.cx != 0 {
+		t.Errorf("Home (1~): cx = %d, want 0", e.cx)
+	}
+	e.feedString("\x1b[3~") // Delete the char under the cursor
+	if e.lines[0] != "ello" {
+		t.Errorf("Delete: line = %q, want %q", e.lines[0], "ello")
+	}
+}
+
+func TestEscapeUnknownAndIncompleteIgnored(t *testing.T) {
+	t.Parallel()
+	// Unknown final byte.
+	e := drive("abc", "\x1b[Z")
+	if e.dirty || e.mode != modeNormal || e.lines[0] != "abc" {
+		t.Errorf("unknown CSI mutated state: dirty=%v mode=%s lines=%q", e.dirty, modeName(e.mode), e.lines)
+	}
+	// Incomplete sequence (just ESC [) is dropped on flush.
+	e = drive("abc", "\x1b[")
+	if e.dirty || e.mode != modeNormal || e.lines[0] != "abc" {
+		t.Errorf("incomplete CSI mutated state: dirty=%v mode=%s", e.dirty, modeName(e.mode))
+	}
+	// A lone trailing ESC is harmless.
+	e = drive("abc", "\x1b")
+	if e.dirty || e.mode != modeNormal {
+		t.Errorf("lone ESC mutated state: dirty=%v mode=%s", e.dirty, modeName(e.mode))
+	}
+}
+
+// TestEscapeSequenceThenCommand reproduces the full issue #235 scenario:
+// ESC[A ! ESC :wq must leave the buffer unchanged and save it.
+func TestEscapeSequenceThenCommand(t *testing.T) {
+	t.Parallel()
+	e := drive("abc", "\x1b[A!\x1b:wq\r")
+	if e.content() != "abc\n" {
+		t.Errorf("content = %q, want %q (no spurious append)", e.content(), "abc\n")
+	}
+	if !e.save || !e.quit {
+		t.Errorf("the :wq must still save and quit (save=%v quit=%v)", e.save, e.quit)
+	}
+}
+
+func TestEscapeSS3Arrows(t *testing.T) {
+	t.Parallel()
+	// Some terminals send cursor keys as SS3 (ESC O A) rather than CSI.
+	e := drive("abc\ndef", "\x1bOB\x1bOC") // Down, Right
+	if e.cy != 1 || e.cx != 1 {
+		t.Errorf("SS3 Down,Right cursor = (%d,%d), want (1,1)", e.cy, e.cx)
+	}
+	if e.dirty || e.mode != modeNormal {
+		t.Errorf("SS3 arrows mutated state: dirty=%v mode=%s", e.dirty, modeName(e.mode))
 	}
 }

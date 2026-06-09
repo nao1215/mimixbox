@@ -19,4 +19,10 @@ world'
         The output should equal 'created'
         The status should be success
     End
+    It 'treats an arrow-key escape sequence as a motion, not an edit'
+        When call TestViArrowNoAppend
+        The output should equal 'hello
+world'
+        The status should be success
+    End
 End
