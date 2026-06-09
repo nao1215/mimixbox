@@ -40,8 +40,12 @@ func TestPassthroughFiles(t *testing.T) {
 	dir := t.TempDir()
 	f1 := filepath.Join(dir, "1.txt")
 	f2 := filepath.Join(dir, "2.txt")
-	_ = os.WriteFile(f1, []byte("one\n"), 0o644)
-	_ = os.WriteFile(f2, []byte("two\n"), 0o644)
+	if err := os.WriteFile(f1, []byte("one\n"), 0o644); err != nil {
+		t.Fatal(err)
+	}
+	if err := os.WriteFile(f2, []byte("two\n"), 0o644); err != nil {
+		t.Fatal(err)
+	}
 
 	out := &bytes.Buffer{}
 	io := command.IO{In: strings.NewReader(""), Out: out, Err: &bytes.Buffer{}}

@@ -44,7 +44,7 @@ func (c *Command) Run(_ context.Context, stdio command.IO, args []string) error 
 			{Command: "ls -l | " + c.Name(), Explain: "Page command output on a terminal, or pass it through in a pipe."},
 		},
 		Notes: []string{
-			"Paging keys: Space or Enter for the next screen, q to quit. Backward scrolling is not implemented.",
+			"Paging keys: Enter advances one screen, a line starting with q quits. Input is line-buffered, so keys take effect on Enter; raw-mode single-key paging and backward scrolling are not implemented.",
 		},
 	})
 	proceed, err := fs.Parse(stdio, args)
@@ -113,22 +113,31 @@ func (c *Command) page(stdio command.IO, input io.Reader) error {
 	}
 	keyReader := bufio.NewReader(keys)
 
-	sc := bufio.NewScanner(input)
-	sc.Buffer(make([]byte, 0, 64*1024), 1024*1024)
+	// A bufio.Reader (rather than bufio.Scanner) has no per-line length cap, so a
+	// very long line cannot break paging the way it would the passthrough path.
+	r := bufio.NewReader(input)
 	shown := 0
-	for sc.Scan() {
-		_, _ = fmt.Fprintln(stdio.Out, sc.Text())
-		shown++
-		if shown >= pageSize {
-			_, _ = fmt.Fprint(stdio.Err, c.prompt)
-			line, _ := keyReader.ReadString('\n')
-			if strings.HasPrefix(strings.TrimSpace(line), "q") {
+	for {
+		line, err := r.ReadString('\n')
+		if line != "" {
+			_, _ = fmt.Fprint(stdio.Out, line)
+			shown++
+			if shown >= pageSize {
+				_, _ = fmt.Fprint(stdio.Err, c.prompt)
+				key, _ := keyReader.ReadString('\n')
+				if strings.HasPrefix(strings.TrimSpace(key), "q") {
+					return nil
+				}
+				shown = 0
+			}
+		}
+		if err != nil {
+			if err == io.EOF {
 				return nil
 			}
-			shown = 0
+			return err
 		}
 	}
-	return sc.Err()
 }
 
 // openTTY returns the terminal to read control keys from: /dev/tty when it can
@@ -140,17 +149,16 @@ func openTTY(stdin io.Reader) (*os.File, io.Reader) {
 	return nil, stdin
 }
 
-// isTerminal reports whether w is a character device (a terminal).
+// isTerminal reports whether w is a real terminal. It queries the terminal
+// attributes, which succeeds only on a tty - so non-interactive character
+// devices such as /dev/null are correctly treated as not a terminal.
 func isTerminal(w io.Writer) bool {
 	f, ok := w.(*os.File)
 	if !ok {
 		return false
 	}
-	fi, err := f.Stat()
-	if err != nil {
-		return false
-	}
-	return fi.Mode()&os.ModeCharDevice != 0
+	_, err := unix.IoctlGetTermios(int(f.Fd()), unix.TCGETS)
+	return err == nil
 }
 
 // terminalRows returns the height of w's terminal, defaulting to 24.
