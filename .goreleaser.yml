@@ -1,3 +1,4 @@
+version: 2
 project_name: mimixbox
 env:
   - GO111MODULE=on
@@ -19,6 +20,19 @@ builds:
       - arm64
 archives:
   - name_template: "{{ .ProjectName }}_{{ .Version }}_{{ .Os }}_{{ .Arch }}"
+    # Wrap the contents in a single directory and bundle the self-contained
+    # installer so `tar xf ...; cd ...; sudo ./installer.sh` works from a plain
+    # extracted archive (GitHub issue #267).
+    wrap_in_directory: true
+    files:
+      - LICENSE
+      - README.md
+      - src: scripts/installer.sh
+        strip_parent: true
+        info:
+          mode: 0755
+      - src: scripts/libshell.sh
+        strip_parent: true
 checksum:
   name_template: "checksums.txt"
 snapshot:
