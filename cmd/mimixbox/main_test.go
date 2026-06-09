@@ -222,20 +222,23 @@ func TestFullInstallCreatesOneSymlinkPerApplet(t *testing.T) {
 }
 
 func TestRemoveOnlyDeletesMimixBoxSymlinks(t *testing.T) {
-	// --remove must delete the symlinks MimixBox created (target path contains
-	// "mimixbox") while leaving foreign symlinks and real files untouched.
+	// --remove must delete only the symlinks that point at the exact running
+	// MimixBox binary, leaving foreign symlinks (even ones whose target merely
+	// contains "mimixbox") and real files untouched.
+	self, err := os.Executable()
+	if err != nil {
+		t.Fatal(err)
+	}
 	dir := t.TempDir()
 
-	mimixTarget := filepath.Join(dir, "mimixbox-binary")
-	if err := os.WriteFile(mimixTarget, []byte("fake"), 0o755); err != nil { //nolint:gosec // test fixture
-		t.Fatal(err)
-	}
 	owned := filepath.Join(dir, "cat")
-	if err := os.Symlink(mimixTarget, owned); err != nil {
+	if err := os.Symlink(self, owned); err != nil {
 		t.Fatal(err)
 	}
+	// Foreign: target contains "mimixbox" but is a different binary, so the old
+	// substring check would have wrongly deleted it.
 	foreign := filepath.Join(dir, "pidof")
-	if err := os.Symlink("/bin/sh", foreign); err != nil {
+	if err := os.Symlink("/opt/not-the-same-mimixbox-wrapper", foreign); err != nil {
 		t.Fatal(err)
 	}
 	realFile := filepath.Join(dir, "echo")
@@ -256,5 +259,28 @@ func TestRemoveOnlyDeletesMimixBoxSymlinks(t *testing.T) {
 	}
 	if _, err := os.Lstat(realFile); err != nil {
 		t.Errorf("real file %q should have been left in place", realFile)
+	}
+}
+
+func TestInstallTargetsExactInvokedBinary(t *testing.T) {
+	// Even when another "mimixbox" sits earlier on PATH, --install must link to
+	// the exact binary that is running (os.Executable), never to a PATH lookup.
+	const wantTarget = "/custom/install/source/mimixbox"
+	orig := osExecutable
+	osExecutable = func() (string, error) { return wantTarget, nil }
+	t.Cleanup(func() { osExecutable = orig })
+
+	dir := t.TempDir()
+	io, _, errBuf := newIO()
+	if code := run([]string{"mimixbox", "--full-install", dir}, io); code != command.ExitSuccess {
+		t.Fatalf("full-install exit = %d (stderr: %s)", code, errBuf.String())
+	}
+
+	target, err := os.Readlink(filepath.Join(dir, "cat"))
+	if err != nil {
+		t.Fatal(err)
+	}
+	if target != wantTarget {
+		t.Errorf("symlink target = %q, want the invoked binary %q", target, wantTarget)
 	}
 }
