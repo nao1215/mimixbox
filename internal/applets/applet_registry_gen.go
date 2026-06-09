@@ -36,6 +36,7 @@ import (
 	ap_debianutils_which "github.com/nao1215/mimixbox/internal/applets/debianutils/which"
 	ap_editors_awk "github.com/nao1215/mimixbox/internal/applets/editors/awk"
 	ap_editors_diff "github.com/nao1215/mimixbox/internal/applets/editors/diff"
+	ap_editors_ed "github.com/nao1215/mimixbox/internal/applets/editors/ed"
 	ap_editors_patch "github.com/nao1215/mimixbox/internal/applets/editors/patch"
 	ap_editors_sed "github.com/nao1215/mimixbox/internal/applets/editors/sed"
 	ap_editors_vi "github.com/nao1215/mimixbox/internal/applets/editors/vi"
@@ -188,7 +189,7 @@ import (
 // init populates the applet table. Each command is registered under its own
 // Name(), so the key can never drift from the command it dispatches to.
 func init() {
-	Applets = make(map[string]Applet, 195)
+	Applets = make(map[string]Applet, 196)
 	register(ap_archival_ar.New())
 	register(ap_archival_bunzip2.New())
 	register(ap_archival_compress.New())
@@ -232,6 +233,7 @@ func init() {
 	register(ap_debianutils_which.New())
 	register(ap_editors_awk.New())
 	register(ap_editors_diff.New())
+	register(ap_editors_ed.New())
 	register(ap_editors_patch.New())
 	register(ap_editors_sed.New())
 	register(ap_editors_vi.New())
