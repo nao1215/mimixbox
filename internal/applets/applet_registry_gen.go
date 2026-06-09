@@ -109,6 +109,7 @@ import (
 	ap_shellutils_logname "github.com/nao1215/mimixbox/internal/applets/shellutils/logname"
 	ap_shellutils_mbsh "github.com/nao1215/mimixbox/internal/applets/shellutils/mbsh"
 	ap_shellutils_mknod "github.com/nao1215/mimixbox/internal/applets/shellutils/mknod"
+	ap_shellutils_nice "github.com/nao1215/mimixbox/internal/applets/shellutils/nice"
 	ap_shellutils_nohup "github.com/nao1215/mimixbox/internal/applets/shellutils/nohup"
 	ap_shellutils_nproc "github.com/nao1215/mimixbox/internal/applets/shellutils/nproc"
 	ap_shellutils_od "github.com/nao1215/mimixbox/internal/applets/shellutils/od"
@@ -129,6 +130,7 @@ import (
 	ap_shellutils_tee "github.com/nao1215/mimixbox/internal/applets/shellutils/tee"
 	ap_shellutils_test "github.com/nao1215/mimixbox/internal/applets/shellutils/test"
 	ap_shellutils_timeout "github.com/nao1215/mimixbox/internal/applets/shellutils/timeout"
+	ap_shellutils_tree "github.com/nao1215/mimixbox/internal/applets/shellutils/tree"
 	ap_shellutils_true "github.com/nao1215/mimixbox/internal/applets/shellutils/true"
 	ap_shellutils_tsort "github.com/nao1215/mimixbox/internal/applets/shellutils/tsort"
 	ap_shellutils_tty "github.com/nao1215/mimixbox/internal/applets/shellutils/tty"
@@ -178,7 +180,7 @@ import (
 // init populates the applet table. Each command is registered under its own
 // Name(), so the key can never drift from the command it dispatches to.
 func init() {
-	Applets = make(map[string]Applet, 184)
+	Applets = make(map[string]Applet, 186)
 	register(ap_archival_ar.New())
 	register(ap_archival_bunzip2.New())
 	register(ap_archival_compress.New())
@@ -297,6 +299,7 @@ func init() {
 	register(ap_shellutils_logname.New())
 	register(ap_shellutils_mbsh.New())
 	register(ap_shellutils_mknod.New())
+	register(ap_shellutils_nice.New())
 	register(ap_shellutils_nohup.New())
 	register(ap_shellutils_nproc.New())
 	register(ap_shellutils_od.New())
@@ -317,6 +320,7 @@ func init() {
 	register(ap_shellutils_tee.New())
 	register(ap_shellutils_test.New())
 	register(ap_shellutils_timeout.New())
+	register(ap_shellutils_tree.New())
 	register(ap_shellutils_true.New())
 	register(ap_shellutils_tsort.New())
 	register(ap_shellutils_tty.New())
