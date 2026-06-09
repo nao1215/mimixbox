@@ -15,10 +15,8 @@ import (
 	"fmt"
 	"io"
 	"os"
-	"os/exec"
 	"strings"
 
-	"github.com/nao1215/mimixbox/internal/applets/shellutils/mbsh/builtin"
 	"github.com/nao1215/mimixbox/internal/command"
 )
 
@@ -35,9 +33,11 @@ func (c *Command) Name() string { return "mbsh" }
 func (c *Command) Synopsis() string { return "Mimix Box Shell" }
 
 // shell holds the small amount of mutable state the REPL keeps between lines:
-// the exit status of the last command (exposed as $?).
+// the exit status of the last command (exposed as $?) and a stop flag set by
+// the "exit"/"quit" command.
 type shell struct {
 	lastStatus int
+	stop       bool
 }
 
 // Run starts the read-eval-print loop. It parses its own flags (only the
@@ -52,10 +52,14 @@ func (c *Command) Run(ctx context.Context, stdio command.IO, args []string) erro
 		Examples: []command.Example{
 			{Command: "mbsh", Explain: "Start an interactive prompt; type 'exit' or Ctrl-D to quit."},
 			{Command: "echo 'echo hello' | mbsh", Explain: "Run commands fed on standard input."},
+			{Command: "echo one; echo two", Explain: "Run commands in sequence."},
+			{Command: "echo hi | wc -c", Explain: "Pipe one command into another."},
+			{Command: "echo hi > out.txt", Explain: "Redirect output (>, >>, < are supported)."},
 		},
 		Notes: []string{
 			"Tokenizing supports single/double quotes, backslash escapes, $VAR/${VAR}/$? expansion, ~ home expansion, and NAME=value prefixes.",
-			"Each line runs one command; pipelines, redirections, and scripting (if/for/while) are not yet supported.",
+			"Operators: ; sequences commands, | pipes them, and < > >> redirect I/O. A pipeline's status is its last command's; a list's is its last pipeline's.",
+			"Scripting (if/for/while) and background jobs are not yet supported.",
 		},
 	})
 	proceed, err := fs.Parse(stdio, args)
@@ -143,92 +147,21 @@ func (sh *shell) execInput(ctx context.Context, stdio command.IO, input string) 
 		return false
 	}
 
-	// Tokenize with quote handling, backslash escapes, and $VAR/${VAR}/$?/~
-	// expansion (see parser.go).
+	// Tokenize (quotes, escapes, $VAR/${VAR}/$?/~ expansion, operators), then
+	// parse into a list of pipelines and run it. See parser.go and executor.go.
 	toks, err := tokenize(input, sh.lastStatus)
 	if err != nil {
 		_, _ = fmt.Fprintf(stdio.Err, "mbsh: %v\n", err)
 		sh.lastStatus = 2
 		return false
 	}
-
-	// Leading NAME=value words are temporary environment assignments for the
-	// command; the rest are the command and its arguments.
-	var env []string
-	idx := 0
-	for idx < len(toks) && toks[idx].assignKey != "" {
-		env = append(env, toks[idx].assignKey+"="+toks[idx].assignVal)
-		idx++
-	}
-	args := make([]string, 0, len(toks)-idx)
-	for ; idx < len(toks); idx++ {
-		args = append(args, toks[idx].value)
-	}
-
-	if len(args) == 0 {
-		// A line of only assignments (FOO=bar) sets them for the session.
-		for _, kv := range env {
-			if k, v, ok := strings.Cut(kv, "="); ok {
-				_ = os.Setenv(k, v)
-			}
-		}
-		sh.lastStatus = 0
-		return false
-	}
-
-	switch args[0] {
-	case "exit", "quit":
-		return true
-	}
-
-	// A built-in is preferred over an external command of the same name.
-	if builtin.IsBuiltinCmd(args[0]) {
-		if err := builtin.Run(stdio, args[0], args[1:]); err != nil {
-			_, _ = fmt.Fprintln(stdio.Err, err)
-			sh.lastStatus = 1
-		} else {
-			sh.lastStatus = 0
-		}
-		return false
-	}
-
-	sh.lastStatus = sh.runExternal(ctx, stdio, args, env)
-	return false
-}
-
-// runExternal runs args[0] as an external program, falling back to running it as
-// a MimixBox applet (by re-executing this binary) when it is not on the PATH.
-// It returns the command's exit status.
-func (sh *shell) runExternal(ctx context.Context, stdio command.IO, args, env []string) int {
-	name := args[0]
-	if _, err := exec.LookPath(name); err != nil {
-		if self, e := os.Executable(); e == nil {
-			return run(ctx, stdio, self, append([]string{name}, args[1:]...), env)
-		}
-		_, _ = fmt.Fprintf(stdio.Err, "mbsh: %s: command not found\n", name)
-		return 127
-	}
-	return run(ctx, stdio, name, args[1:], env)
-}
-
-// run executes name with argv wired to the shell streams and returns its exit
-// status (127 when it cannot start). env holds NAME=value temporary assignments
-// to add to the child's environment.
-func run(ctx context.Context, stdio command.IO, name string, argv, env []string) int {
-	cmd := exec.CommandContext(ctx, name, argv...) //nolint:gosec // running a user-typed command is the whole point of a shell
-	cmd.Stdin = stdio.In
-	cmd.Stdout = stdio.Out
-	cmd.Stderr = stdio.Err
-	if len(env) > 0 {
-		cmd.Env = append(os.Environ(), env...)
-	}
-	if err := cmd.Run(); err != nil {
-		var exitErr *exec.ExitError
-		if errors.As(err, &exitErr) {
-			return exitErr.ExitCode()
-		}
+	list, err := parse(toks)
+	if err != nil {
 		_, _ = fmt.Fprintf(stdio.Err, "mbsh: %v\n", err)
-		return 127
+		sh.lastStatus = 2
+		return false
 	}
-	return 0
+
+	sh.lastStatus = sh.execList(ctx, stdio, list)
+	return sh.stop
 }

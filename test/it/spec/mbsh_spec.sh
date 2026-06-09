@@ -42,6 +42,22 @@ Describe 'mbsh'
         The output should include 'FOO=bar'
         The status should be success
     End
+    It 'runs commands in sequence and redirects output'
+        When call TestMbshSequence
+        The output should equal 'one
+two'
+        The status should be success
+    End
+    It 'pipes one command into another'
+        When call TestMbshPipeline
+        The output should equal '3'
+        The status should be success
+    End
+    It 'redirects input with <'
+        When call TestMbshRedirectIn
+        The output should equal '3'
+        The status should be success
+    End
 End
 
 Describe 'mbsh cd'
