@@ -57,6 +57,7 @@ import (
 	ap_fileutils_unlink "github.com/nao1215/mimixbox/internal/applets/fileutils/unlink"
 	ap_findutils_find "github.com/nao1215/mimixbox/internal/applets/findutils/find"
 	ap_findutils_grep "github.com/nao1215/mimixbox/internal/applets/findutils/grep"
+	ap_findutils_grepalias "github.com/nao1215/mimixbox/internal/applets/findutils/grepalias"
 	ap_findutils_xargs "github.com/nao1215/mimixbox/internal/applets/findutils/xargs"
 	ap_games_lifegame "github.com/nao1215/mimixbox/internal/applets/games/lifegame"
 	ap_jokeutils_banner "github.com/nao1215/mimixbox/internal/applets/jokeutils/banner"
@@ -93,6 +94,7 @@ import (
 	ap_shellutils_echo "github.com/nao1215/mimixbox/internal/applets/shellutils/echo"
 	ap_shellutils_env "github.com/nao1215/mimixbox/internal/applets/shellutils/env"
 	ap_shellutils_expr "github.com/nao1215/mimixbox/internal/applets/shellutils/expr"
+	ap_shellutils_factor "github.com/nao1215/mimixbox/internal/applets/shellutils/factor"
 	ap_shellutils_false "github.com/nao1215/mimixbox/internal/applets/shellutils/false"
 	ap_shellutils_free "github.com/nao1215/mimixbox/internal/applets/shellutils/free"
 	ap_shellutils_ghrdc "github.com/nao1215/mimixbox/internal/applets/shellutils/ghrdc"
@@ -128,6 +130,7 @@ import (
 	ap_shellutils_test "github.com/nao1215/mimixbox/internal/applets/shellutils/test"
 	ap_shellutils_timeout "github.com/nao1215/mimixbox/internal/applets/shellutils/timeout"
 	ap_shellutils_true "github.com/nao1215/mimixbox/internal/applets/shellutils/true"
+	ap_shellutils_tsort "github.com/nao1215/mimixbox/internal/applets/shellutils/tsort"
 	ap_shellutils_tty "github.com/nao1215/mimixbox/internal/applets/shellutils/tty"
 	ap_shellutils_uname "github.com/nao1215/mimixbox/internal/applets/shellutils/uname"
 	ap_shellutils_uniq "github.com/nao1215/mimixbox/internal/applets/shellutils/uniq"
@@ -170,7 +173,7 @@ import (
 // init populates the applet table. Each command is registered under its own
 // Name(), so the key can never drift from the command it dispatches to.
 func init() {
-	Applets = make(map[string]Applet, 174)
+	Applets = make(map[string]Applet, 178)
 	register(ap_archival_ar.New())
 	register(ap_archival_bunzip2.New())
 	register(ap_archival_compress.New())
@@ -234,6 +237,8 @@ func init() {
 	register(ap_fileutils_unlink.New())
 	register(ap_findutils_find.New())
 	register(ap_findutils_grep.New())
+	register(ap_findutils_grepalias.NewEgrep())
+	register(ap_findutils_grepalias.NewFgrep())
 	register(ap_findutils_xargs.New())
 	register(ap_games_lifegame.New())
 	register(ap_jokeutils_banner.New())
@@ -272,6 +277,7 @@ func init() {
 	register(ap_shellutils_echo.New())
 	register(ap_shellutils_env.New())
 	register(ap_shellutils_expr.New())
+	register(ap_shellutils_factor.New())
 	register(ap_shellutils_false.New())
 	register(ap_shellutils_free.New())
 	register(ap_shellutils_ghrdc.New())
@@ -307,6 +313,7 @@ func init() {
 	register(ap_shellutils_test.New())
 	register(ap_shellutils_timeout.New())
 	register(ap_shellutils_true.New())
+	register(ap_shellutils_tsort.New())
 	register(ap_shellutils_tty.New())
 	register(ap_shellutils_uname.New())
 	register(ap_shellutils_uniq.New())

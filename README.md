@@ -19,7 +19,7 @@ MimixBox packs many Unix commands into a single binary, like BusyBox. Unlike Bus
 The list below is generated from the registered applets by `make command-list`, so it never drifts from the binary. You can also run `mimixbox --list` to print it on the terminal.
 
 <!-- COMMAND_LIST_START -->
-There are 174 commands. Run `mimixbox --list` to see them on the terminal.
+There are 178 commands. Run `mimixbox --list` to see them on the terminal.
 
 | Command | Description |
 |:--|:--|
@@ -64,11 +64,14 @@ There are 174 commands. Run `mimixbox --list` to see them on the terminal.
 | dos2unix | Change CRLF to LF |
 | du | Estimate file space usage |
 | echo | Display a line of text |
+| egrep | Search with extended regular expressions (grep -E) |
 | env | Run a program in a modified environment / print the environment |
 | expand | Convert TAB to N space (default:N=8) |
 | expr | Evaluate expressions |
+| factor | Print the prime factors of each NUMBER |
 | fakemovie | Adds a video playback button to the image |
 | false | Do nothing. Return failure(1) |
+| fgrep | Search for fixed strings (grep -F) |
 | find | Search for files in a directory hierarchy |
 | fmt | Simple optimal text formatter |
 | fold | Wrap each input line to fit in specified width |
@@ -167,6 +170,7 @@ There are 174 commands. Run `mimixbox --list` to see them on the terminal.
 | tr | Translate or delete characters |
 | true | Do nothing. Return success(0) |
 | truncate | Shrink or extend the size of a file to a given size |
+| tsort | Topological sort of a directed graph |
 | tty | Print the file name of the terminal connected to stdin |
 | uname | Print system information |
 | uncompress | Decompress LZW (.Z) files |
