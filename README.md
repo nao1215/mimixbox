@@ -19,7 +19,7 @@ MimixBox packs many Unix commands into a single binary, like BusyBox. Unlike Bus
 The list below is generated from the registered applets by `make command-list`, so it never drifts from the binary. You can also run `mimixbox --list` to print it on the terminal.
 
 <!-- COMMAND_LIST_START -->
-There are 162 commands. Run `mimixbox --list` to see them on the terminal.
+There are 171 commands. Run `mimixbox --list` to see them on the terminal.
 
 | Command | Description |
 |:--|:--|
@@ -37,6 +37,7 @@ There are 162 commands. Run `mimixbox --list` to see them on the terminal.
 | bash | Command interpreter (MimixBox mbsh compatibility front-end) |
 | bunzip2 | Decompress bzip2 (.bz2) files |
 | busybox | BusyBox-style multi-call front-end for MimixBox applets |
+| bzcat | Decompress bz2 data to standard output |
 | cal | Display a calendar |
 | cat | Concatenate files and print on the standard output |
 | chgrp | Change the group of each FILE to GROUP |
@@ -94,6 +95,8 @@ There are 162 commands. Run `mimixbox --list` to see them on the terminal.
 | ln | Create hard or symbolic link |
 | log-collect | Gather system log files into one directory |
 | logname | Print the name of the current user |
+| lzcat | Decompress lzma data to standard output |
+| lzma | Compress or decompress files (lzma) |
 | mbsh | Mimix Box Shell |
 | md5sum | Calculate or Check md5sum message digest |
 | mkdir | Make directories |
@@ -113,6 +116,7 @@ There are 162 commands. Run `mimixbox --list` to see them on the terminal.
 | path | Manipulate filename path |
 | pidof | Find the process ID of a running program |
 | ping | Send ICMP ECHO_REQUEST to network hosts |
+| pipe_progress | Copy stdin to stdout, printing progress dots to stderr |
 | posixer | Report which POSIX utilities are installed |
 | poweroff | Power off the system |
 | printenv | Print environment variable |
@@ -168,7 +172,9 @@ There are 162 commands. Run `mimixbox --list` to see them on the terminal.
 | unit | BusyBox unit-test runner (not shipped by MimixBox) |
 | unix2dos | Change LF to CRLF |
 | unlink | Remove a single file by calling the unlink function |
+| unlzma | Decompress lzma files |
 | unshadow | Combine passwd and shadow files for password auditing |
+| unxz | Decompress xz files |
 | unzip | Extract files from a ZIP archive |
 | uuidgen | Print UUID (Universally Unique IDentifier) |
 | valid-shell | Verify if /etc/shells is valid |
@@ -182,7 +188,10 @@ There are 162 commands. Run `mimixbox --list` to see them on the terminal.
 | whris | Show management information for a domain's IP addresses |
 | xargs | Build and execute command lines from standard input |
 | xxd | Make a hex dump or do the reverse |
+| xz | Compress or decompress files (xz) |
+| xzcat | Decompress xz data to standard output |
 | yes | Output a string repeatedly until killed |
+| zcat | Decompress gz data to standard output |
 | zip | Package and compress files into a ZIP archive |
 | zip-pwcrack | Recover the password of a ZipCrypto-encrypted archive |
 <!-- COMMAND_LIST_END -->

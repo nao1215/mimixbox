@@ -11,11 +11,13 @@ import (
 	ap_archival_cpio "github.com/nao1215/mimixbox/internal/applets/archival/cpio"
 	ap_archival_gunzip "github.com/nao1215/mimixbox/internal/applets/archival/gunzip"
 	ap_archival_gzip "github.com/nao1215/mimixbox/internal/applets/archival/gzip"
+	ap_archival_pipeprogress "github.com/nao1215/mimixbox/internal/applets/archival/pipeprogress"
 	ap_archival_rpm "github.com/nao1215/mimixbox/internal/applets/archival/rpm"
 	ap_archival_rpm2cpio "github.com/nao1215/mimixbox/internal/applets/archival/rpm2cpio"
 	ap_archival_tar "github.com/nao1215/mimixbox/internal/applets/archival/tar"
 	ap_archival_uncompress "github.com/nao1215/mimixbox/internal/applets/archival/uncompress"
 	ap_archival_unzip "github.com/nao1215/mimixbox/internal/applets/archival/unzip"
+	ap_archival_xzcomp "github.com/nao1215/mimixbox/internal/applets/archival/xzcomp"
 	ap_archival_zip "github.com/nao1215/mimixbox/internal/applets/archival/zip"
 	ap_compat_bracket "github.com/nao1215/mimixbox/internal/applets/compat/bracket"
 	ap_compat_busybox "github.com/nao1215/mimixbox/internal/applets/compat/busybox"
@@ -166,18 +168,27 @@ import (
 // init populates the applet table. Each command is registered under its own
 // Name(), so the key can never drift from the command it dispatches to.
 func init() {
-	Applets = make(map[string]Applet, 162)
+	Applets = make(map[string]Applet, 171)
 	register(ap_archival_ar.New())
 	register(ap_archival_bunzip2.New())
 	register(ap_archival_compress.New())
 	register(ap_archival_cpio.New())
 	register(ap_archival_gunzip.New())
 	register(ap_archival_gzip.New())
+	register(ap_archival_pipeprogress.New())
 	register(ap_archival_rpm.New())
 	register(ap_archival_rpm2cpio.New())
 	register(ap_archival_tar.New())
 	register(ap_archival_uncompress.New())
 	register(ap_archival_unzip.New())
+	register(ap_archival_xzcomp.NewBzcat())
+	register(ap_archival_xzcomp.NewLzcat())
+	register(ap_archival_xzcomp.NewLzma())
+	register(ap_archival_xzcomp.NewUnlzma())
+	register(ap_archival_xzcomp.NewUnxz())
+	register(ap_archival_xzcomp.NewXz())
+	register(ap_archival_xzcomp.NewXzcat())
+	register(ap_archival_xzcomp.NewZcat())
 	register(ap_archival_zip.New())
 	register(ap_compat_bracket.NewBracket())
 	register(ap_compat_bracket.NewDoubleBracket())
