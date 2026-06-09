@@ -5,11 +5,14 @@ CWD=$(pwd)
 RELEASE=${CWD}/release
 BIN_INFO_TXT=${RELEASE}/binary_info.txt
 ROOT_DIR=$(git rev-parse --show-toplevel)
-MAIN_CODE="${ROOT_DIR}/cmd/mimixbox/main.go"
 # Not build windows binary.
 OS="linux darwin"
 ARCH="386 amd64 arm arm64"
-VERSION=$(grep "const version" ${MAIN_CODE} | sed -e "s/const version = \"\(.*\)\"/\1/g")
+# Canonical version source: the latest git tag (without its leading "v"). This
+# matches the value `make build` and GoReleaser inject into the binary, instead
+# of the long-removed `const version` that this script used to scrape.
+VERSION=$(git -C "${ROOT_DIR}" describe --tags --abbrev=0 2>/dev/null | sed 's/^v//')
+VERSION=${VERSION:-dev}
 
 function mkReleaseDir() {
     cd  ${CWD}

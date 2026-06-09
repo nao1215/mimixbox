@@ -7,9 +7,11 @@ import (
 	"io"
 )
 
-// Version is the MimixBox version. It is over_written at build time with
+// Version is the MimixBox version. The canonical source is the git tag: both
+// `make build` and the GoReleaser release inject it via
 // -ldflags "-X github.com/nao1215/mimixbox/internal/version.Version=x.y.z".
-var Version = "0.36.0"
+// "dev" is the fallback for a plain `go build`/`go install` with no injection.
+var Version = "dev"
 
 // Print writes the "--version" line for a single command to w, following the
 // GNU coreutils convention, e.g. "cat (mimixbox) 0.36.0".
