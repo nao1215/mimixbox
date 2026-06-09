@@ -19,7 +19,7 @@ MimixBox packs many Unix commands into a single binary, like BusyBox. Unlike Bus
 The list below is generated from the registered applets by `make command-list`, so it never drifts from the binary. You can also run `mimixbox --list` to print it on the terminal.
 
 <!-- COMMAND_LIST_START -->
-There are 203 commands. Run `mimixbox --list` to see them on the terminal.
+There are 206 commands. Run `mimixbox --list` to see them on the terminal.
 
 | Command | Description |
 |:--|:--|
@@ -105,6 +105,8 @@ There are 203 commands. Run `mimixbox --list` to see them on the terminal.
 | less | Page through text one screen at a time |
 | lifegame | Life game (Conway's Game of Life) |
 | link | Create a hard link to a file |
+| linux32 | Run a program with a 32-bit execution domain |
+| linux64 | Run a program with a 64-bit execution domain |
 | ln | Create hard or symbolic link |
 | log-collect | Gather system log files into one directory |
 | logname | Print the name of the current user |
@@ -159,6 +161,7 @@ There are 203 commands. Run `mimixbox --list` to see them on the terminal.
 | sed | Stream editor for filtering and transforming text |
 | seq | Print a column of numbers |
 | serial | Rename the file to the name with a serial number |
+| setarch | Run a program with a changed architecture personality |
 | setsid | Run a program in a new session |
 | sh | Command interpreter (MimixBox mbsh compatibility front-end) |
 | sha1sum | Calculate or Check secure hash 1 algorithm |
