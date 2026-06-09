@@ -47,6 +47,9 @@ func (c *Command) Run(ctx context.Context, stdio command.IO, args []string) erro
 		},
 		ExitStatus: "0  success.\n1  the adjustment or command was invalid.\n127  COMMAND was not found.",
 	})
+	// Stop parsing at COMMAND so its own flags (e.g. nice -n 5 sort -r) are
+	// passed through rather than consumed by nice.
+	fs.SetInterspersed(false)
 	adjust := fs.IntP("adjustment", "n", 10, "add ADJUST to the niceness")
 
 	proceed, err := fs.Parse(stdio, args)
