@@ -51,3 +51,25 @@ TestMbshVarExpand() {
 TestMbshEnvAssignment() {
     printf 'FOO=bar env\nexit\n' | mbsh 2>/dev/null | grep '^FOO=bar$'
 }
+
+TestMbshSequence() {
+    d=$(mktemp -d)
+    printf 'echo one > %s/o; echo two >> %s/o\nexit\n' "$d" "$d" | mbsh >/dev/null 2>&1
+    cat "$d/o"
+    rm -rf "$d"
+}
+
+TestMbshPipeline() {
+    d=$(mktemp -d)
+    printf 'printf foo | wc -c > %s/o\nexit\n' "$d" | mbsh >/dev/null 2>&1
+    tr -d ' \n' < "$d/o"
+    rm -rf "$d"
+}
+
+TestMbshRedirectIn() {
+    d=$(mktemp -d)
+    printf 'a\nb\nc\n' > "$d/in"
+    printf 'wc -l < %s/in > %s/o\nexit\n' "$d" "$d" | mbsh >/dev/null 2>&1
+    tr -d ' \n' < "$d/o"
+    rm -rf "$d"
+}

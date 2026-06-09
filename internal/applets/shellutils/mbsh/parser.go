@@ -8,12 +8,27 @@ import (
 	"strings"
 )
 
-// token is one word produced by the tokenizer: its fully expanded value, plus
-// the split name/value when the word is an unquoted NAME=value assignment.
+// tokKind distinguishes a word from a shell operator.
+type tokKind int
+
+const (
+	tokWord tokKind = iota
+	tokOp           // ; | < > >>
+)
+
+// token is one word or operator produced by the tokenizer. For a word it also
+// carries the split name/value when the word is an unquoted NAME=value
+// assignment.
 type token struct {
-	value     string // expanded word as a command argument
+	kind      tokKind
+	value     string // expanded word, or the operator string
 	assignKey string // non-empty when the word is an unquoted NAME=... assignment
 	assignVal string // expanded value part of an assignment
+}
+
+// isOperatorByte reports whether c begins an unquoted shell operator.
+func isOperatorByte(c byte) bool {
+	return c == ';' || c == '|' || c == '<' || c == '>'
 }
 
 // tokenize splits a command line into words the way a POSIX-ish shell does:
@@ -31,6 +46,12 @@ func tokenize(input string, lastStatus int) ([]token, error) {
 		if i >= n {
 			break
 		}
+		if isOperatorByte(input[i]) {
+			op, next := parseOperator(input, i)
+			toks = append(toks, token{kind: tokOp, value: op})
+			i = next
+			continue
+		}
 		tok, next, err := parseWord(input, i, lastStatus)
 		if err != nil {
 			return nil, err
@@ -39,6 +60,15 @@ func tokenize(input string, lastStatus int) ([]token, error) {
 		i = next
 	}
 	return toks, nil
+}
+
+// parseOperator reads the operator at input[i] (">>" or one of ; | < >) and
+// returns it with the index just past it.
+func parseOperator(input string, i int) (string, int) {
+	if input[i] == '>' && i+1 < len(input) && input[i+1] == '>' {
+		return ">>", i + 2
+	}
+	return string(input[i]), i + 1
 }
 
 // parseWord scans one word starting at start and returns it with the index just
@@ -54,7 +84,7 @@ func parseWord(input string, start, lastStatus int) (token, int, error) {
 	i, n := start, len(input)
 	for i < n {
 		c := input[i]
-		if c == ' ' || c == '\t' {
+		if c == ' ' || c == '\t' || isOperatorByte(c) {
 			break
 		}
 
