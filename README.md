@@ -19,7 +19,7 @@ MimixBox packs many Unix commands into a single binary, like BusyBox. Unlike Bus
 The list below is generated from the registered applets by `make command-list`, so it never drifts from the binary. You can also run `mimixbox --list` to print it on the terminal.
 
 <!-- COMMAND_LIST_START -->
-There are 209 commands. Run `mimixbox --list` to see them on the terminal.
+There are 210 commands. Run `mimixbox --list` to see them on the terminal.
 
 | Command | Description |
 |:--|:--|
@@ -99,6 +99,7 @@ There are 209 commands. Run `mimixbox --list` to see them on the terminal.
 | hush | Command interpreter (MimixBox mbsh compatibility front-end) |
 | id | Print User ID and Group ID |
 | install | Copy files and set attributes |
+| ipcs | Show System V IPC facilities status |
 | ischroot | Detect if running in a chroot |
 | kill | Kill process or send signal to process |
 | killall | Kill processes by name |
