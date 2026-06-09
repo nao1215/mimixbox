@@ -10,4 +10,13 @@ Describe 'wget CLI contract'
         The status should be failure
         The error should include 'wget'
     End
+    It 'documents the added download options'
+        When call WgetHelp
+        The status should be success
+        The output should include '--directory-prefix'
+        The output should include '--continue'
+        The output should include '--timeout'
+        The output should include '--tries'
+        The output should include '--user-agent'
+    End
 End
