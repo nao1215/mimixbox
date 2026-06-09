@@ -28,6 +28,7 @@ import (
 	ap_console_tools_pager "github.com/nao1215/mimixbox/internal/applets/console-tools/pager"
 	ap_console_tools_reset "github.com/nao1215/mimixbox/internal/applets/console-tools/reset"
 	ap_console_tools_resize "github.com/nao1215/mimixbox/internal/applets/console-tools/resize"
+	ap_console_tools_stty "github.com/nao1215/mimixbox/internal/applets/console-tools/stty"
 	ap_debianutils_add_shell "github.com/nao1215/mimixbox/internal/applets/debianutils/add-shell"
 	ap_debianutils_ischroot "github.com/nao1215/mimixbox/internal/applets/debianutils/ischroot"
 	ap_debianutils_mktemp "github.com/nao1215/mimixbox/internal/applets/debianutils/mktemp"
@@ -146,6 +147,7 @@ import (
 	ap_shellutils_users "github.com/nao1215/mimixbox/internal/applets/shellutils/users"
 	ap_shellutils_usleep "github.com/nao1215/mimixbox/internal/applets/shellutils/usleep"
 	ap_shellutils_uuidgen "github.com/nao1215/mimixbox/internal/applets/shellutils/uuidgen"
+	ap_shellutils_w "github.com/nao1215/mimixbox/internal/applets/shellutils/w"
 	ap_shellutils_watch "github.com/nao1215/mimixbox/internal/applets/shellutils/watch"
 	ap_shellutils_wget "github.com/nao1215/mimixbox/internal/applets/shellutils/wget"
 	ap_shellutils_who "github.com/nao1215/mimixbox/internal/applets/shellutils/who"
@@ -192,7 +194,7 @@ import (
 // init populates the applet table. Each command is registered under its own
 // Name(), so the key can never drift from the command it dispatches to.
 func init() {
-	Applets = make(map[string]Applet, 199)
+	Applets = make(map[string]Applet, 201)
 	register(ap_archival_ar.New())
 	register(ap_archival_bunzip2.New())
 	register(ap_archival_compress.New())
@@ -228,6 +230,7 @@ func init() {
 	register(ap_console_tools_pager.NewMore())
 	register(ap_console_tools_reset.New())
 	register(ap_console_tools_resize.New())
+	register(ap_console_tools_stty.New())
 	register(ap_debianutils_add_shell.New())
 	register(ap_debianutils_ischroot.New())
 	register(ap_debianutils_mktemp.New())
@@ -349,6 +352,7 @@ func init() {
 	register(ap_shellutils_users.New())
 	register(ap_shellutils_usleep.New())
 	register(ap_shellutils_uuidgen.New())
+	register(ap_shellutils_w.New())
 	register(ap_shellutils_watch.New())
 	register(ap_shellutils_wget.New())
 	register(ap_shellutils_who.New())
