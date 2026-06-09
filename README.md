@@ -180,10 +180,17 @@ There are 153 commands. Run `mimixbox --list` to see them on the terminal.
 
 ## Install
 
-The [Release Page](https://github.com/nao1215/mimixbox/releases) distributes the binary as a `tar.gz` archive for each OS/CPU architecture, plus `.deb`, `.rpm`, and `.apk` packages. The archive is named `mimixbox_<version>_<os>_<arch>.tar.gz` and contains the `mimixbox` binary. For example, on Linux (amd64):
+The [Release Page](https://github.com/nao1215/mimixbox/releases) distributes a `tar.gz` archive for each OS/CPU architecture, plus `.deb`, `.rpm`, and `.apk` packages. The archive is named `mimixbox_<version>_<os>_<arch>.tar.gz` and extracts into a directory containing the `mimixbox` binary and a self-contained `installer.sh`. For example, on Linux (amd64):
 
 ```shell
 $ tar xf mimixbox_0.36.0_linux_amd64.tar.gz
+$ cd mimixbox_0.36.0_linux_amd64
+$ sudo ./installer.sh
+```
+
+The installer copies the binary to `/usr/local/bin` and creates a symlink there for each applet. It resolves everything relative to itself, so it needs no Git checkout. If you prefer to do it by hand, just install the binary and let it create the symlinks:
+
+```shell
 $ sudo install -m 0755 mimixbox /usr/local/bin/
 $ sudo mimixbox --install /usr/local/bin
 ```
