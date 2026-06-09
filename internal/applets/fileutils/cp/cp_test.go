@@ -350,3 +350,134 @@ func TestRunArchiveImpliesRecursiveAndPreserve(t *testing.T) {
 		t.Errorf("cp -a should preserve mode, got %o", info.Mode().Perm())
 	}
 }
+
+// symlinkFixture creates dir/real.txt and a dir/link -> real.txt symlink and
+// returns their paths.
+func symlinkFixture(t *testing.T) (dir, realFile, link string) {
+	t.Helper()
+	dir = t.TempDir()
+	realFile = filepath.Join(dir, "real.txt")
+	if err := os.WriteFile(realFile, []byte("real\n"), 0o644); err != nil {
+		t.Fatal(err)
+	}
+	link = filepath.Join(dir, "link")
+	if err := os.Symlink("real.txt", link); err != nil {
+		t.Fatal(err)
+	}
+	return dir, realFile, link
+}
+
+func TestRunNoDereferenceCopiesLink(t *testing.T) {
+	t.Parallel()
+	dir, _, link := symlinkFixture(t)
+	dst := filepath.Join(dir, "copy")
+
+	if _, stderr, err := run(t, "-P", link, dst); err != nil {
+		t.Fatalf("cp -P error = %v (%s)", err, stderr)
+	}
+
+	fi, err := os.Lstat(dst)
+	if err != nil {
+		t.Fatal(err)
+	}
+	if fi.Mode()&os.ModeSymlink == 0 {
+		t.Errorf("cp -P should keep %q a symlink", dst)
+	}
+	if target, _ := os.Readlink(dst); target != "real.txt" {
+		t.Errorf("symlink target = %q, want real.txt", target)
+	}
+}
+
+func TestRunDereferenceCopiesTarget(t *testing.T) {
+	t.Parallel()
+	dir, _, link := symlinkFixture(t)
+	dst := filepath.Join(dir, "copy")
+
+	if _, stderr, err := run(t, "-L", link, dst); err != nil {
+		t.Fatalf("cp -L error = %v (%s)", err, stderr)
+	}
+
+	fi, err := os.Lstat(dst)
+	if err != nil {
+		t.Fatal(err)
+	}
+	if fi.Mode()&os.ModeSymlink != 0 {
+		t.Errorf("cp -L should copy the target, not the link, for %q", dst)
+	}
+	if got, _ := os.ReadFile(dst); string(got) != "real\n" {
+		t.Errorf("dst content = %q, want %q", got, "real\n")
+	}
+}
+
+func TestRunDefaultFollowsCommandLineLink(t *testing.T) {
+	t.Parallel()
+	dir, _, link := symlinkFixture(t)
+	dst := filepath.Join(dir, "copy")
+
+	if _, stderr, err := run(t, link, dst); err != nil {
+		t.Fatalf("cp error = %v (%s)", err, stderr)
+	}
+	fi, err := os.Lstat(dst)
+	if err != nil {
+		t.Fatal(err)
+	}
+	if fi.Mode()&os.ModeSymlink != 0 {
+		t.Errorf("default cp should follow the command-line symlink, got a link at %q", dst)
+	}
+}
+
+func TestRunNoDereferencePreservesLinkInTree(t *testing.T) {
+	t.Parallel()
+	dir := t.TempDir()
+	src := filepath.Join(dir, "src")
+	if err := os.MkdirAll(src, 0o755); err != nil {
+		t.Fatal(err)
+	}
+	if err := os.WriteFile(filepath.Join(src, "real.txt"), []byte("real\n"), 0o644); err != nil {
+		t.Fatal(err)
+	}
+	if err := os.Symlink("real.txt", filepath.Join(src, "lnk")); err != nil {
+		t.Fatal(err)
+	}
+	dst := filepath.Join(dir, "dst")
+
+	if _, stderr, err := run(t, "-d", "-r", src, dst); err != nil {
+		t.Fatalf("cp -d -r error = %v (%s)", err, stderr)
+	}
+
+	fi, err := os.Lstat(filepath.Join(dst, "lnk"))
+	if err != nil {
+		t.Fatal(err)
+	}
+	if fi.Mode()&os.ModeSymlink == 0 {
+		t.Errorf("cp -d should preserve the symlink within the copied tree")
+	}
+}
+
+func TestRunArchivePreservesLinkInTree(t *testing.T) {
+	t.Parallel()
+	dir := t.TempDir()
+	src := filepath.Join(dir, "src")
+	if err := os.MkdirAll(src, 0o755); err != nil {
+		t.Fatal(err)
+	}
+	if err := os.WriteFile(filepath.Join(src, "real.txt"), []byte("real\n"), 0o644); err != nil {
+		t.Fatal(err)
+	}
+	if err := os.Symlink("real.txt", filepath.Join(src, "lnk")); err != nil {
+		t.Fatal(err)
+	}
+	dst := filepath.Join(dir, "dst")
+
+	if _, stderr, err := run(t, "-a", src, dst); err != nil {
+		t.Fatalf("cp -a error = %v (%s)", err, stderr)
+	}
+
+	fi, err := os.Lstat(filepath.Join(dst, "lnk"))
+	if err != nil {
+		t.Fatal(err)
+	}
+	if fi.Mode()&os.ModeSymlink == 0 {
+		t.Errorf("cp -a should imply -d and preserve the symlink within the tree")
+	}
+}

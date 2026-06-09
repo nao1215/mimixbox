@@ -1,5 +1,6 @@
 // Package cp implements the cp applet: copy files and directories, with the
-// common GNU options (-r/-R, -f, -v, -i, -p).
+// common GNU options (-r/-R, -f, -v, -i, -p) and the symlink-dereference
+// controls (-P, -L, -H, -d).
 package cp
 
 import (
@@ -26,6 +27,22 @@ func (c *Command) Name() string { return "cp" }
 // Synopsis returns the one-line description shown in the applet list.
 func (c *Command) Synopsis() string { return "Copy file(s) to Directory(s)" }
 
+// derefMode selects how cp treats symbolic links in SOURCE.
+type derefMode int
+
+const (
+	// derefDefault follows command-line symlinks and symlinks within a copied
+	// tree (the historical behavior and GNU cp's default without -d/-P/-H).
+	derefDefault derefMode = iota
+	// derefNever (-P, -d) copies every symlink as a link.
+	derefNever
+	// derefAlways (-L) follows every symlink, copying what it points at.
+	derefAlways
+	// derefCmdline (-H) follows symlinks named on the command line but copies
+	// symlinks found within a tree as links.
+	derefCmdline
+)
+
 type options struct {
 	recursive   bool
 	force       bool
@@ -33,6 +50,7 @@ type options struct {
 	interactive bool
 	preserve    bool
 	noClobber   bool
+	deref       derefMode
 }
 
 // Run executes cp.
@@ -49,7 +67,8 @@ func (c *Command) Run(_ context.Context, stdio command.IO, args []string) error 
 		},
 		ExitStatus: "0  all files were copied successfully.\n1  one or more files could not be copied.",
 		Notes: []string{
-			"Symlink-handling flags (-L, -P, -d, -H) are not yet implemented; symlinks are followed.",
+			"Symlinks: by default they are followed. -P copies them as links, -L always follows, " +
+				"-H follows only those named on the command line, and -d is shorthand for -P. -a implies -d.",
 		},
 	})
 	recursive := fs.BoolP("recursive", "r", false, "copy directories recursively (-R is an alias)")
@@ -63,6 +82,14 @@ func (c *Command) Run(_ context.Context, stdio command.IO, args []string) error 
 	interactive := fs.BoolP("interactive", "i", false, "prompt before overwrite")
 	noClobber := fs.BoolP("no-clobber", "n", false, "do not overwrite an existing file")
 	preserve := fs.BoolP("preserve", "p", false, "preserve mode and timestamps")
+	noDeref := fs.BoolP("no-dereference", "P", false, "never follow symbolic links in SOURCE")
+	deref := fs.BoolP("dereference", "L", false, "always follow symbolic links in SOURCE")
+	// -H and -d are short-only in GNU cp; pflag needs a long name, so register
+	// hidden long aliases (the -R alias above uses the same trick).
+	followCmdline := fs.BoolP("dereference-cmdline", "H", false, "follow command-line symbolic links in SOURCE")
+	_ = fs.MarkHidden("dereference-cmdline")
+	noDerefPreserve := fs.BoolP("no-deref-preserve-links", "d", false, "same as --no-dereference")
+	_ = fs.MarkHidden("no-deref-preserve-links")
 
 	proceed, err := fs.Parse(stdio, args)
 	if err != nil || !proceed {
@@ -76,6 +103,7 @@ func (c *Command) Run(_ context.Context, stdio command.IO, args []string) error 
 		interactive: *interactive,
 		preserve:    *preserve || *archive,
 		noClobber:   *noClobber,
+		deref:       resolveDeref(*deref, *noDeref || *noDerefPreserve, *followCmdline, *archive),
 	}
 
 	operands := fs.Args()
@@ -108,6 +136,21 @@ func cp(stdio command.IO, operands []string, opts options) error {
 
 	for _, raw := range sources {
 		src := os.ExpandEnv(raw)
+
+		// A command-line symlink is copied as a link only with -P/-d; -L, -H
+		// and the default all follow it (handled by os.Stat below).
+		if li, lerr := os.Lstat(src); lerr == nil && li.Mode()&os.ModeSymlink != 0 && opts.deref == derefNever {
+			target := symlinkTarget(src, dest)
+			if isSamePath(src, target) {
+				_, _ = fmt.Fprintf(stdio.Err, "cp: %s and %s is same.\n", src, dest)
+				return command.SilentFailure()
+			}
+			if err := copySymlink(stdio, src, target, opts); err != nil {
+				_, _ = fmt.Fprintf(stdio.Err, "cp: %s\n", err)
+				return command.SilentFailure()
+			}
+			continue
+		}
 
 		info, err := os.Stat(src)
 		if err != nil {
@@ -204,6 +247,35 @@ func cpDir(stdio command.IO, src, dest string, opts options) error {
 		}
 		target := filepath.Join(root, rel)
 
+		// Walk reports symlinks via Lstat. Copy them as links for -P/-d and -H
+		// (within a tree); otherwise follow them and copy what they point at.
+		if info.Mode()&os.ModeSymlink != 0 {
+			if opts.deref == derefNever || opts.deref == derefCmdline {
+				return copySymlink(stdio, p, target, opts)
+			}
+			ti, terr := os.Stat(p)
+			if terr != nil {
+				return terr
+			}
+			if ti.IsDir() {
+				// Following a symlink to a directory within a tree is not
+				// recursed into; copying its contents is out of scope.
+				return nil
+			}
+			if opts.noClobber {
+				if _, statErr := os.Stat(target); statErr == nil {
+					return nil
+				}
+			}
+			if err := copyFileContents(p, target, ti, opts); err != nil {
+				return err
+			}
+			if opts.verbose {
+				_, _ = fmt.Fprintf(stdio.Out, "'%s' -> '%s'\n", p, target)
+			}
+			return nil
+		}
+
 		if info.IsDir() {
 			// Use the source directory's mode (GNU cp does this even without
 			// -p); a hardcoded 0755 would widen a private tree such as 0700.
@@ -286,6 +358,59 @@ func copyFileContents(src, dst string, info os.FileInfo, opts options) error {
 	if opts.preserve {
 		_ = os.Chmod(dst, info.Mode().Perm())
 		_ = os.Chtimes(dst, info.ModTime(), info.ModTime())
+	}
+	return nil
+}
+
+// resolveDeref maps the symlink flags to a derefMode. An explicit -L or -P/-d
+// wins over -a's implied -d, and -H applies when nothing stronger is set.
+func resolveDeref(deref, noDeref, followCmdline, archive bool) derefMode {
+	switch {
+	case deref:
+		return derefAlways
+	case noDeref:
+		return derefNever
+	case followCmdline:
+		return derefCmdline
+	case archive:
+		return derefNever // -a implies -d
+	default:
+		return derefDefault
+	}
+}
+
+// symlinkTarget returns where a command-line symlink src should be written:
+// dest itself, or dest/<base(src)> when dest is an existing directory.
+func symlinkTarget(src, dest string) string {
+	if di, err := os.Stat(dest); err == nil && di.IsDir() {
+		return filepath.Join(dest, filepath.Base(src))
+	}
+	return dest
+}
+
+// copySymlink copies the symbolic link src to dst as a link (rather than what
+// it points to), honoring -n (skip existing) and -f (replace existing).
+func copySymlink(stdio command.IO, src, dst string, opts options) error {
+	linkDest, err := os.Readlink(src)
+	if err != nil {
+		return err
+	}
+	if _, err := os.Lstat(dst); err == nil {
+		if opts.noClobber {
+			return nil
+		}
+		if rmErr := os.Remove(dst); rmErr != nil {
+			if !opts.force {
+				return rmErr
+			}
+			_ = os.Remove(dst)
+		}
+	}
+	if err := os.Symlink(linkDest, dst); err != nil {
+		return err
+	}
+	if opts.verbose {
+		_, _ = fmt.Fprintf(stdio.Out, "'%s' -> '%s'\n", src, dst)
 	}
 	return nil
 }
