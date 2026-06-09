@@ -19,7 +19,7 @@ MimixBox packs many Unix commands into a single binary, like BusyBox. Unlike Bus
 The list below is generated from the registered applets by `make command-list`, so it never drifts from the binary. You can also run `mimixbox --list` to print it on the terminal.
 
 <!-- COMMAND_LIST_START -->
-There are 178 commands. Run `mimixbox --list` to see them on the terminal.
+There are 181 commands. Run `mimixbox --list` to see them on the terminal.
 
 | Command | Description |
 |:--|:--|
@@ -54,6 +54,7 @@ There are 178 commands. Run `mimixbox --list` to see them on the terminal.
 | cowthink | Print message in a cow's thought bubble |
 | cp | Copy file(s) to Directory(s) |
 | cpio | Copy files to and from archives |
+| crc32 | Print the CRC-32 checksum of each file |
 | cttyhack | Run PROGRAM with the current stdio (no controlling-TTY trick) |
 | cut | Remove sections from each line of files |
 | date | Print or set the system date and time |
@@ -149,6 +150,7 @@ There are 178 commands. Run `mimixbox --list` to see them on the terminal.
 | sh | Command interpreter (MimixBox mbsh compatibility front-end) |
 | sha1sum | Calculate or Check secure hash 1 algorithm |
 | sha256sum | Calculate or Check secure hash 256 algorithm |
+| sha384sum | Calculate or Check secure hash 384 algorithm |
 | sha512sum | Calculate or Check secure hash 512 algorithm |
 | shred | Overwrite a file to hide its contents |
 | shuf | Generate a random permutation of input lines |
@@ -159,6 +161,7 @@ There are 178 commands. Run `mimixbox --list` to see them on the terminal.
 | split | Split a file into pieces |
 | stat | Display file or file system status |
 | strings | Print printable character sequences in files |
+| sum | Checksum and count the blocks in a file (BSD) |
 | sync | Synchronize cached writes to persistent storage |
 | tac | Print the file contents from the end to the beginning |
 | tail | Print the last NUMBER(default=10) lines |
