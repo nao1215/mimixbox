@@ -32,7 +32,7 @@ Describe 'self-describing --help'
     It 'vi --help lists the supported keys'
         When call ViHelp
         The status should be success
-        The output should include 'Normal mode'
+        The output should include 'Motions:'
     End
 
     It 'find --help has examples and notes'

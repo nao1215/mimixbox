@@ -406,3 +406,95 @@ func TestEscapeSS3Arrows(t *testing.T) {
 		t.Errorf("SS3 arrows mutated state: dirty=%v mode=%s", e.dirty, modeName(e.mode))
 	}
 }
+
+func TestCountedMotion(t *testing.T) {
+	t.Parallel()
+	e := drive("a\nb\nc\nd", "3j")
+	if e.cy != 3 {
+		t.Errorf("3j -> cy=%d, want 3", e.cy)
+	}
+	e = drive("a\nb\nc\nd", "3jk")
+	if e.cy != 2 {
+		t.Errorf("3jk -> cy=%d, want 2", e.cy)
+	}
+}
+
+func TestCountedDeleteChar(t *testing.T) {
+	t.Parallel()
+	e := drive("abcdef", "2x")
+	if e.lines[0] != "cdef" {
+		t.Errorf("2x -> %q, want %q", e.lines[0], "cdef")
+	}
+}
+
+func TestCountedDeleteLine(t *testing.T) {
+	t.Parallel()
+	e := drive("l1\nl2\nl3\nl4", "3dd")
+	if e.content() != "l4\n" {
+		t.Errorf("3dd -> %q, want %q", e.content(), "l4\n")
+	}
+}
+
+func TestWordMotions(t *testing.T) {
+	t.Parallel()
+	if e := drive("foo bar baz", "w"); e.cx != 4 {
+		t.Errorf("w -> cx=%d, want 4", e.cx)
+	}
+	if e := drive("foo bar baz", "ww"); e.cx != 8 {
+		t.Errorf("ww -> cx=%d, want 8", e.cx)
+	}
+	if e := drive("foo bar baz", "e"); e.cx != 2 {
+		t.Errorf("e -> cx=%d, want 2", e.cx)
+	}
+	if e := drive("foo bar baz", "$b"); e.cx != 8 {
+		t.Errorf("$b -> cx=%d, want 8", e.cx)
+	}
+}
+
+func TestYankPaste(t *testing.T) {
+	t.Parallel()
+	if e := drive("one\ntwo", "yyp"); e.content() != "one\none\ntwo\n" {
+		t.Errorf("yyp -> %q, want %q", e.content(), "one\none\ntwo\n")
+	}
+	if e := drive("one\ntwo", "yyP"); e.content() != "one\none\ntwo\n" {
+		t.Errorf("yyP -> %q, want %q", e.content(), "one\none\ntwo\n")
+	}
+	if e := drive("one\ntwo\nthree", "2yyGp"); e.content() != "one\ntwo\nthree\none\ntwo\n" {
+		t.Errorf("2yy G p -> %q", e.content())
+	}
+}
+
+func TestUndo(t *testing.T) {
+	t.Parallel()
+	if e := drive("abc", "xu"); e.content() != "abc\n" {
+		t.Errorf("xu -> %q, want %q", e.content(), "abc\n")
+	}
+	if e := drive("l1\nl2", "ddu"); e.content() != "l1\nl2\n" {
+		t.Errorf("ddu -> %q, want %q", e.content(), "l1\nl2\n")
+	}
+	// Undo a whole insertion as one step.
+	if e := drive("abc", "Axyz\x1bu"); e.content() != "abc\n" {
+		t.Errorf("A...ESC u -> %q, want %q", e.content(), "abc\n")
+	}
+}
+
+func TestSearch(t *testing.T) {
+	t.Parallel()
+	if e := drive("alpha\nbeta\ngamma", "/beta\r"); e.cy != 1 || e.cx != 0 {
+		t.Errorf("/beta -> (%d,%d), want (1,0)", e.cy, e.cx)
+	}
+	// The forward search starts after the cursor, so the first /foo lands on the
+	// second match; n then wraps back to the first.
+	e := drive("foo\nbar\nfoo", "/foo\r")
+	if e.cy != 2 {
+		t.Errorf("/foo -> cy=%d, want 2", e.cy)
+	}
+	e.feedString("n")
+	if e.cy != 0 {
+		t.Errorf("/foo then n -> cy=%d, want 0 (wrapped)", e.cy)
+	}
+	// Backward search.
+	if e := drive("find\nmid\nfind", "G?find\r"); e.cy != 0 {
+		t.Errorf("G ?find -> cy=%d, want 0", e.cy)
+	}
+}
