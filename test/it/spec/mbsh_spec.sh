@@ -17,6 +17,16 @@ Describe 'mbsh'
         The output should include 'status=1'
         The status should be success
     End
+    It 'lets a stdin-consuming command read the remaining script input'
+        When call TestMbshCatConsumesInput
+        The output should include 'hello'
+        The status should be success
+    End
+    It 'does not reparse command-consumed stdin as later commands'
+        When call TestMbshNoReparse
+        The output should equal 'ok'
+        The status should be success
+    End
 End
 
 Describe 'mbsh cd'

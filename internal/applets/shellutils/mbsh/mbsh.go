@@ -10,7 +10,6 @@
 package mbsh
 
 import (
-	"bufio"
 	"context"
 	"errors"
 	"fmt"
@@ -66,11 +65,19 @@ func (c *Command) Run(ctx context.Context, stdio command.IO, args []string) erro
 	}
 
 	sh := &shell{}
-	reader := bufio.NewReader(stdio.In)
+	// Read commands one byte at a time rather than through a buffered reader.
+	// A buffered reader would read past the current line, so a command launched
+	// below (which shares stdio.In) would see EOF instead of the bytes still
+	// sitting in the shell's buffer. Reading byte by byte leaves stdio.In
+	// positioned exactly after the line, which is what POSIX shells do when
+	// their input is a non-seekable stream. In script mode this means a
+	// stdin-consuming command (cat, sed, ...) reads the rest of the script, just
+	// as it would under any other shell; in interactive mode each Enter yields
+	// one line and the foreground command shares the terminal.
 	for {
 		_, _ = fmt.Fprint(stdio.Out, sh.prompt())
 
-		line, err := reader.ReadString('\n')
+		line, err := readLine(stdio.In)
 		if err != nil {
 			// Run whatever was read before EOF (a final line without a
 			// trailing newline), then stop the loop cleanly.
@@ -88,6 +95,27 @@ func (c *Command) Run(ctx context.Context, stdio command.IO, args []string) erro
 
 		if stop := sh.execInput(ctx, stdio, line); stop {
 			return nil
+		}
+	}
+}
+
+// readLine reads a single line (including the trailing newline) from r without
+// reading any further, so r is left positioned exactly after the line. The
+// returned error is io.EOF when the stream ends; any bytes read before EOF are
+// still returned so a final line without a newline is executed.
+func readLine(r io.Reader) (string, error) {
+	var b strings.Builder
+	buf := make([]byte, 1)
+	for {
+		n, err := r.Read(buf)
+		if n > 0 {
+			b.WriteByte(buf[0])
+			if buf[0] == '\n' {
+				return b.String(), nil
+			}
+		}
+		if err != nil {
+			return b.String(), err
 		}
 	}
 }

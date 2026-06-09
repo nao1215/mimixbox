@@ -4,6 +4,7 @@ import (
 	"bytes"
 	"context"
 	"os"
+	"os/exec"
 	"path/filepath"
 	"strings"
 	"testing"
@@ -215,5 +216,69 @@ func TestHelp(t *testing.T) {
 	}
 	if strings.Contains(out.String(), "mbsh:") {
 		t.Errorf("--help should not print a prompt: %q", out.String())
+	}
+}
+
+// runPipe drives the REPL with script delivered through an os.Pipe, so stdio.In
+// is a real *os.File and a command launched by the shell shares the same file
+// descriptor. This is the configuration that exercises stdin hand-off the way a
+// piped script does in production.
+func runPipe(t *testing.T, script string) (string, string) {
+	t.Helper()
+	pr, pw, err := os.Pipe()
+	if err != nil {
+		t.Fatal(err)
+	}
+	go func() {
+		_, _ = pw.WriteString(script)
+		_ = pw.Close()
+	}()
+	out := &bytes.Buffer{}
+	errBuf := &bytes.Buffer{}
+	stdio := command.IO{In: pr, Out: out, Err: errBuf}
+	if rerr := mbsh.New().Run(context.Background(), stdio, nil); rerr != nil {
+		t.Fatalf("Run error = %v (stderr=%q)", rerr, errBuf.String())
+	}
+	_ = pr.Close()
+	return out.String(), errBuf.String()
+}
+
+func requireCmd(t *testing.T, name string) {
+	t.Helper()
+	if _, err := exec.LookPath(name); err != nil {
+		t.Skipf("%s not on PATH: %v", name, err)
+	}
+}
+
+func TestCatConsumesRemainingScriptInput(t *testing.T) {
+	requireCmd(t, "cat")
+	out, errOut := runPipe(t, "cat\nhello\nexit\n")
+	if !strings.Contains(out, "hello") {
+		t.Errorf("cat should print the remaining input; stdout = %q", out)
+	}
+	// The remaining input must be consumed by cat, not re-parsed as commands.
+	if strings.Contains(errOut, "not a mimixbox command") || strings.Contains(errOut, "command not found") {
+		t.Errorf("remaining stdin was reparsed as commands; stderr = %q", errOut)
+	}
+}
+
+func TestNonStdinCommandsRunInSequence(t *testing.T) {
+	requireCmd(t, "echo")
+	out, _ := runPipe(t, "echo first\necho second\nexit\n")
+	if !strings.Contains(out, "first") || !strings.Contains(out, "second") {
+		t.Errorf("a command that ignores stdin must not swallow the next line; stdout = %q", out)
+	}
+}
+
+func TestPartialStdinConsumptionNoByteLoss(t *testing.T) {
+	requireCmd(t, "echo")
+	requireCmd(t, "cat")
+	// echo ignores stdin and runs; then cat consumes exactly the remaining
+	// lines with no loss or duplication.
+	out, _ := runPipe(t, "echo top\ncat\nr1\nr2\nexit\n")
+	for _, want := range []string{"top", "r1", "r2"} {
+		if !strings.Contains(out, want) {
+			t.Errorf("stdout = %q, want it to contain %q", out, want)
+		}
 	}
 }
