@@ -45,6 +45,7 @@ import (
 	ap_fileutils_cp "github.com/nao1215/mimixbox/internal/applets/fileutils/cp"
 	ap_fileutils_link "github.com/nao1215/mimixbox/internal/applets/fileutils/link"
 	ap_fileutils_ln "github.com/nao1215/mimixbox/internal/applets/fileutils/ln"
+	ap_fileutils_ls "github.com/nao1215/mimixbox/internal/applets/fileutils/ls"
 	ap_fileutils_mkdir "github.com/nao1215/mimixbox/internal/applets/fileutils/mkdir"
 	ap_fileutils_mkfifo "github.com/nao1215/mimixbox/internal/applets/fileutils/mkfifo"
 	ap_fileutils_mountpoint "github.com/nao1215/mimixbox/internal/applets/fileutils/mountpoint"
@@ -189,7 +190,7 @@ import (
 // init populates the applet table. Each command is registered under its own
 // Name(), so the key can never drift from the command it dispatches to.
 func init() {
-	Applets = make(map[string]Applet, 196)
+	Applets = make(map[string]Applet, 197)
 	register(ap_archival_ar.New())
 	register(ap_archival_bunzip2.New())
 	register(ap_archival_compress.New())
@@ -242,6 +243,7 @@ func init() {
 	register(ap_fileutils_cp.New())
 	register(ap_fileutils_link.New())
 	register(ap_fileutils_ln.New())
+	register(ap_fileutils_ls.New())
 	register(ap_fileutils_mkdir.New())
 	register(ap_fileutils_mkfifo.New())
 	register(ap_fileutils_mountpoint.New())
