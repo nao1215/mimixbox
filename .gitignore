@@ -28,3 +28,6 @@ cover.html
 
 # Directory that manages licenses for dependent libraries
 licenses
+
+# Isolated applet staging directory built by `make e2e-setup`
+test/it/.mbbin/
