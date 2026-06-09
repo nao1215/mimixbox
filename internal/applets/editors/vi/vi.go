@@ -32,7 +32,19 @@ func (c *Command) Synopsis() string { return "A minimal vi-style screen text edi
 
 // Run executes vi.
 func (c *Command) Run(_ context.Context, stdio command.IO, args []string) error {
-	fs := command.NewFlagSet(c.Name(), "[FILE]", stdio.Err)
+	fs := command.NewFlagSet(c.Name(), "[FILE]", stdio.Err).WithHelp(command.Help{
+		Description: "A minimal vi-style screen editor. It opens FILE (or an empty buffer) in a " +
+			"full-screen terminal. Like vi it starts in normal mode; press i to insert text and " +
+			"Esc to return to normal mode.",
+		Examples: []command.Example{
+			{Command: "vi notes.txt", Explain: "Edit notes.txt (created on save if missing)."},
+			{Command: "vi", Explain: "Open an empty buffer."},
+		},
+		Notes: []string{
+			"Normal mode: h j k l move, i insert, x delete a char, dd delete a line, :w save, :q quit, :wq save and quit.",
+			"Only this minimal key set is implemented; most ex commands and motions are not yet available.",
+		},
+	})
 	proceed, err := fs.Parse(stdio, args)
 	if err != nil || !proceed {
 		return err

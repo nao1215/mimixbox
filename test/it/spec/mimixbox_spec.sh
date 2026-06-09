@@ -5,6 +5,7 @@ Describe 'mimixbox top-level CLI'
         When call MbHelp
         The status should be success
         The output should include 'Usage: mimixbox'
+        The output should include 'Examples:'
     End
 
     It 'lists the applets with --list'

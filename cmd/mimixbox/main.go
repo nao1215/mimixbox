@@ -158,6 +158,15 @@ Options:
   -l, --list               list the applets MimixBox provides
   -v, --version            print version information and exit
   -h, --help               print this help and exit
+
+Examples:
+  mimixbox --list                    Show every applet and its one-line description.
+  mimixbox cat file.txt              Run the cat applet directly.
+  cat file.txt                       Same, when invoked through an installed symlink.
+  mimixbox APPLET --help             Show the applet's own help, options, and examples.
+  sudo mimixbox --full-install /usr/local/bin   Install a symlink for every applet.
+
+Run "mimixbox APPLET --help" for an applet's description, options, and examples.
 `)
 }
 

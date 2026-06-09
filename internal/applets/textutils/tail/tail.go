@@ -25,7 +25,18 @@ func (c *Command) Synopsis() string { return "Print the last NUMBER(default=10) 
 
 // Run executes tail.
 func (c *Command) Run(ctx context.Context, stdio command.IO, args []string) error {
-	fs := command.NewFlagSet(c.Name(), "[OPTION]... [FILE]...", stdio.Err)
+	fs := command.NewFlagSet(c.Name(), "[OPTION]... [FILE]...", stdio.Err).WithHelp(command.Help{
+		Description: "Print the last part of each FILE (10 lines by default) to standard output. " +
+			"With no FILE, or when FILE is -, read standard input. With -f the output keeps " +
+			"growing as the file does, which is useful for watching logs.",
+		Examples: []command.Example{
+			{Command: "tail file.log", Explain: "Print the last 10 lines."},
+			{Command: "tail -n 50 file.log", Explain: "Print the last 50 lines."},
+			{Command: "tail -f app.log", Explain: "Follow the file and print new lines as they arrive."},
+			{Command: "tail -F app.log", Explain: "Follow by name and retry if the file is rotated."},
+		},
+		ExitStatus: "0  success.\n1  a file could not be opened (without --retry).",
+	})
 	lines := fs.IntP("lines", "n", 10, "output the last NUM lines instead of the last 10")
 	bytesN := fs.IntP("bytes", "c", 0, "output the last NUM bytes of each file")
 	quiet := fs.BoolP("quiet", "q", false, "never print headers giving file names")
