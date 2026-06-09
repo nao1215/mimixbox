@@ -19,7 +19,7 @@ MimixBox packs many Unix commands into a single binary, like BusyBox. Unlike Bus
 The list below is generated from the registered applets by `make command-list`, so it never drifts from the binary. You can also run `mimixbox --list` to print it on the terminal.
 
 <!-- COMMAND_LIST_START -->
-There are 184 commands. Run `mimixbox --list` to see them on the terminal.
+There are 186 commands. Run `mimixbox --list` to see them on the terminal.
 
 | Command | Description |
 |:--|:--|
@@ -113,6 +113,7 @@ There are 184 commands. Run `mimixbox --list` to see them on the terminal.
 | mountpoint | See if a directory is a mountpoint |
 | mv | Rename SOURCE to DESTINATION, or move SOURCE(s) to DIRECTORY |
 | nc | Read and write data across network connections |
+| nice | Run a command with an adjusted niceness |
 | nl | Write each FILE to standard output with line numbers added |
 | nohup | Run a command immune to hangups, with output to a non-tty |
 | nproc | Print the number of processing units available |
@@ -171,6 +172,7 @@ There are 184 commands. Run `mimixbox --list` to see them on the terminal.
 | timeout | Run a command with a time limit |
 | touch | Update the access and modification times of each FILE to the current time |
 | tr | Translate or delete characters |
+| tree | List directory contents in a tree-like format |
 | true | Do nothing. Return success(0) |
 | truncate | Shrink or extend the size of a file to a given size |
 | tsort | Topological sort of a directed graph |
