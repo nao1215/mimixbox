@@ -56,7 +56,7 @@ func New() *Command { return &Command{} }
 func (c *Command) Name() string { return "ghrdc" }
 
 // Synopsis returns the one-line description shown in the applet list.
-func (c *Command) Synopsis() string { return "GitHub Relase Download Counter" }
+func (c *Command) Synopsis() string { return "GitHub Release Download Counter" }
 
 type options struct {
 	all   bool

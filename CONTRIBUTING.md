@@ -23,7 +23,7 @@ make lint       # golangci-lint
 
 The end-to-end tests live under `test/it/` and exercise the built binary the way a user does (applet name, flags, stdin, exit codes).
 
-`make test-e2e` is hermetic: it builds MimixBox, stages one symlink per applet in an isolated directory (`test/it/.mbbin`), and runs ShellSpec with that directory first on `PATH`. Every applet therefore resolves to MimixBox, never to a host command of the same name, so the suite can be run in a clean shell without installing MimixBox system-wide. Specs must invoke applets by bare name (e.g. `cat`, `unix2dos`) and must not hardcode an install prefix such as `/usr/local/bin`. `spec/hermetic_spec.sh` guards this contract by asserting that common applets resolve to the MimixBox binary.
+`make test-e2e` is hermetic: it builds MimixBox, stages one symlink per applet in an isolated directory (`test/it/.mbbin`), and runs ShellSpec with that directory first on `PATH`. Every applet therefore resolves to MimixBox, never to a host command of the same name, so the suite can be run in a clean shell without installing MimixBox system-wide. Specs must invoke applets by bare name (e.g. `cat`, `unix2dos`) and must not hardcode an install prefix such as `/usr/local/bin`. `test/it/spec/hermetic_spec.sh` guards this contract by asserting that common applets resolve to the MimixBox binary.
 
 ## Architecture
 
