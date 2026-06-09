@@ -24,7 +24,23 @@ type editor struct {
 	quit     bool   // set when the editor should stop
 	save     bool   // set when the buffer should be written on quit
 	message  string // status message (e.g. for :q with unsaved changes)
+
+	// Terminal escape-sequence decoding state. Arrow keys and similar keys
+	// arrive as multi-byte sequences (ESC [ A, ...); decoding them here keeps
+	// the trailing byte from being mistaken for an editing command.
+	escSt  escState
+	csiBuf []byte // parameter/intermediate bytes of a CSI sequence
 }
+
+// escState tracks where we are in decoding a terminal escape sequence.
+type escState int
+
+const (
+	escNone   escState = iota // not in a sequence
+	escGotEsc                 // saw ESC; the next byte decides
+	escCSI                    // saw ESC [ ; collecting until a final byte
+	escSS3                    // saw ESC O ; the next byte is the key
+)
 
 // newEditor builds an editor over the given file contents.
 func newEditor(filename, content string) *editor {
@@ -40,8 +56,54 @@ func (e *editor) content() string {
 	return strings.Join(e.lines, "\n") + "\n"
 }
 
-// feed processes one input byte according to the current mode.
+const esc = 0x1b
+
+// feed processes one input byte, first decoding terminal escape sequences
+// (arrow keys, Home/End, Delete, ...) into editor actions so their trailing
+// byte is never mistaken for an editing command, then dispatching ordinary keys
+// to the current mode.
 func (e *editor) feed(b byte) {
+	switch e.escSt {
+	case escGotEsc:
+		e.escSt = escNone
+		switch b {
+		case '[':
+			e.escSt = escCSI
+			e.csiBuf = e.csiBuf[:0]
+		case 'O':
+			e.escSt = escSS3
+		default:
+			// A lone ESC (not the start of a sequence): apply it, then process
+			// this byte normally.
+			e.handleEsc()
+			e.dispatch(b)
+		}
+		return
+	case escCSI:
+		// A CSI sequence ends at a final byte in 0x40..0x7e; earlier bytes are
+		// parameters/intermediates.
+		if b >= 0x40 && b <= 0x7e {
+			e.escSt = escNone
+			e.decodeCSI(append(e.csiBuf, b))
+		} else {
+			e.csiBuf = append(e.csiBuf, b)
+		}
+		return
+	case escSS3:
+		e.escSt = escNone
+		e.decodeArrow(b)
+		return
+	}
+
+	if b == esc {
+		e.escSt = escGotEsc
+		return
+	}
+	e.dispatch(b)
+}
+
+// dispatch routes an ordinary (non-escape) byte to the current mode.
+func (e *editor) dispatch(b byte) {
 	switch e.mode {
 	case modeInsert:
 		e.feedInsert(b)
@@ -52,14 +114,80 @@ func (e *editor) feed(b byte) {
 	}
 }
 
-// feedString feeds every byte of s in order (handy for tests and batch mode).
+// handleEsc applies a standalone Escape key: it leaves insert/command mode for
+// normal mode (a no-op when already in normal mode).
+func (e *editor) handleEsc() {
+	switch e.mode {
+	case modeInsert:
+		e.mode = modeNormal
+		if e.cx > 0 {
+			e.cx--
+		}
+	case modeCommand:
+		e.mode = modeNormal
+		e.cmdline = ""
+	}
+}
+
+// decodeCSI turns a CSI sequence (the bytes after ESC [) into a cursor motion
+// or edit. Unknown sequences are ignored so they can never mutate the buffer in
+// surprising ways.
+func (e *editor) decodeCSI(seq []byte) {
+	if len(seq) == 0 {
+		return
+	}
+	final := seq[len(seq)-1]
+	param := string(seq[:len(seq)-1])
+	switch final {
+	case 'A', 'B', 'C', 'D', 'H', 'F':
+		e.decodeArrow(final)
+	case '~':
+		switch param {
+		case "1", "7": // Home
+			e.cx = 0
+		case "4", "8": // End
+			e.cx = lastCol(e.lines[e.cy])
+		case "3": // Delete
+			e.deleteRune()
+		}
+	}
+}
+
+// decodeArrow maps a final byte shared by CSI and SS3 cursor keys to a motion.
+func (e *editor) decodeArrow(final byte) {
+	switch final {
+	case 'A':
+		e.moveUp()
+	case 'B':
+		e.moveDown()
+	case 'C':
+		e.moveRight()
+	case 'D':
+		e.moveLeft()
+	case 'H': // Home
+		e.cx = 0
+	case 'F': // End
+		e.cx = lastCol(e.lines[e.cy])
+	}
+}
+
+// flush resolves any pending escape state at end of input: a lone trailing ESC
+// is applied, and an incomplete sequence is dropped.
+func (e *editor) flush() {
+	if e.escSt == escGotEsc {
+		e.handleEsc()
+	}
+	e.escSt = escNone
+}
+
+// feedString feeds every byte of s in order (handy for tests and batch mode),
+// then flushes any pending escape state.
 func (e *editor) feedString(s string) {
 	for i := 0; i < len(s) && !e.quit; i++ {
 		e.feed(s[i])
 	}
+	e.flush()
 }
-
-const esc = 0x1b
 
 // feedNormal handles a key in normal mode.
 func (e *editor) feedNormal(b byte) {
@@ -119,14 +247,10 @@ func (e *editor) feedNormal(b byte) {
 	}
 }
 
-// feedInsert handles a key in insert mode.
+// feedInsert handles a key in insert mode. Escape is decoded earlier (see feed
+// and handleEsc), so it never reaches here.
 func (e *editor) feedInsert(b byte) {
 	switch b {
-	case esc:
-		e.mode = modeNormal
-		if e.cx > 0 {
-			e.cx--
-		}
 	case '\r', '\n':
 		e.splitLine()
 	case 0x7f, 0x08: // DEL / backspace
@@ -141,9 +265,6 @@ func (e *editor) feedCommand(b byte) {
 	switch b {
 	case '\r', '\n':
 		e.runExCommand(e.cmdline)
-		e.mode = modeNormal
-		e.cmdline = ""
-	case esc:
 		e.mode = modeNormal
 		e.cmdline = ""
 	case 0x7f, 0x08:

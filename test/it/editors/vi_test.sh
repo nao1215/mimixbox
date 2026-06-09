@@ -23,3 +23,11 @@ TestViNewFile() {
     printf 'icreated\033:wq\r' | vi ${TEST_DIR}/new.txt
     printf '%s' "$(< ${TEST_DIR}/new.txt)"
 }
+
+TestViArrowNoAppend() {
+    export TEST_DIR=/tmp/mimixbox/it/vi
+    # Up-arrow (ESC [ A) must not be treated as 'A' (append); the file with the
+    # following '!' must stay unchanged after :wq.
+    printf '\033[A!\033:wq\r' | vi ${TEST_DIR}/a.txt
+    printf '%s' "$(< ${TEST_DIR}/a.txt)"
+}
