@@ -15,7 +15,7 @@ jobs:
   docker:
     runs-on: ubuntu-latest
     steps:
-      - uses: actions/checkout@v4
+      - uses: actions/checkout@v6
 
       - name: Build the Docker image from local source
         run: docker image build -t mimixbox/ci:${{ github.sha }} .
