@@ -24,7 +24,7 @@ func New() *Command { return &Command{} }
 func (c *Command) Name() string { return "printf" }
 
 // Synopsis returns the one-line description shown in the applet list.
-func (c *Command) Synopsis() string { return "Formats and print data" }
+func (c *Command) Synopsis() string { return "Format and print data" }
 
 // Run executes printf. args[0] is the FORMAT string and args[1:] are the
 // arguments consumed by the conversion specifications. When the format consumes

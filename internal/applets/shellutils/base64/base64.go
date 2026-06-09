@@ -23,7 +23,7 @@ func (c *Command) Name() string { return "base64" }
 
 // Synopsis returns the one-line description shown in the applet list.
 func (c *Command) Synopsis() string {
-	return "Base64 encode/decode from FILR(or STDIN) to STDOUT"
+	return "Base64 encode/decode from FILE(or STDIN) to STDOUT"
 }
 
 // Run executes base64.

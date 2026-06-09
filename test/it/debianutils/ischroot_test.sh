@@ -1,0 +1,1 @@
+IschrootHelp() { ischroot --help; }

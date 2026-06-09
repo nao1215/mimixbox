@@ -37,7 +37,7 @@ func New() *Command { return &Command{} }
 func (c *Command) Name() string { return "uuidgen" }
 
 // Synopsis returns the one-line description shown in the applet list.
-func (c *Command) Synopsis() string { return "Print UUID (Universal Unique IDentifier" }
+func (c *Command) Synopsis() string { return "Print UUID (Universally Unique IDentifier)" }
 
 // Run executes uuidgen. It generates a random (version 4) UUID and prints it
 // lowercase, followed by a newline, to stdio.Out.

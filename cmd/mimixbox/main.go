@@ -1,13 +1,12 @@
-//
 // mimixbox/cmd/mimixbox/main.go
 //
-// Copyright 2021 Naohiro CHIKAMATSU
+// # Copyright 2021 Naohiro CHIKAMATSU
 //
 // Licensed under the Apache License, Version 2.0 (the "License");
 // you may not use this file except in compliance with the License.
 // You may obtain a copy of the License at
 //
-//    http://www.apache.org/licenses/LICENSE-2.0
+//	http://www.apache.org/licenses/LICENSE-2.0
 //
 // Unless required by applicable law or agreed to in writing, software
 // distributed under the License is distributed on an "AS IS" BASIS,
@@ -17,14 +16,13 @@
 package main
 
 import (
+	"context"
 	"errors"
 	"fmt"
 	"io"
 	"os"
-	"os/exec"
 	"path"
 	"path/filepath"
-	"strings"
 
 	"github.com/nao1215/mimixbox/internal/applets"
 	"github.com/nao1215/mimixbox/internal/command"
@@ -74,21 +72,16 @@ func run(argv []string, stdio command.IO) int {
 	return runOption(first, rest[1:], stdio)
 }
 
-// runApplet runs the named applet with args. The applet entry points still read
-// the process-level os.Args and streams (via internal/command.Adapt), so os.Args
-// is set to "<applet> <args...>" before the call. runApplet is a variable so
-// tests can substitute a fake dispatcher.
+// runApplet runs the named applet with args. The applet is executed through
+// internal/command.Execute with the injected IO, so dispatch touches neither
+// os.Args nor the process streams and can be exercised entirely in memory.
+// runApplet is a variable so tests can substitute a fake dispatcher.
 var runApplet = func(name string, args []string, stdio command.IO) int {
 	app, ok := applets.Applets[name]
 	if !ok {
 		return unsupported(name, stdio)
 	}
-	os.Args = append([]string{name}, args...)
-	status, err := app.Ep()
-	if err != nil {
-		_, _ = fmt.Fprintln(stdio.Err, name+": "+err.Error())
-	}
-	return status
+	return command.Execute(context.Background(), app.Cmd, stdio, args)
 }
 
 // runOption handles MimixBox's own options (everything that is not an applet).
@@ -135,7 +128,7 @@ func runRemove(params []string, stdio command.IO) int {
 		_, _ = fmt.Fprintf(stdio.Err, "%s: remove requires a single DIRECTORY operand\n", cmdName)
 		return command.ExitFailure
 	}
-	if err := remove(params[0], stdio); err != nil {
+	if err := remove(os.Args[0], params[0], stdio); err != nil {
 		_, _ = fmt.Fprintln(stdio.Err, err)
 		return command.ExitFailure
 	}
@@ -174,7 +167,7 @@ func install(mimixboxPath string, installPath string, full bool, stdio command.I
 		return errors.New(targetPath + ": no such directory")
 	}
 
-	mimixboxAbsPath, err := getMimixBoxAbsPath(targetPath)
+	mimixboxAbsPath, err := resolveSelf(mimixboxPath)
 	if err != nil {
 		return err
 	}
@@ -206,18 +199,30 @@ func install(mimixboxPath string, installPath string, full bool, stdio command.I
 	return nil
 }
 
-func getMimixBoxAbsPath(_ string) (string, error) {
-	// If mimixbox is installed on the system (mimixbox in $PATH).
-	if p, err := exec.LookPath(cmdName); err == nil {
-		return p, nil
+// osExecutable is os.Executable, indirected so tests can substitute it.
+var osExecutable = os.Executable
+
+// resolveSelf returns the absolute path of the exact MimixBox binary that is
+// running now. install() must link applet symlinks to this binary, not to some
+// other "mimixbox" that happens to be earlier on PATH, so that --install always
+// targets the binary the user actually invoked or just installed. invoked is the
+// argv[0] fallback used only when the executable path cannot be determined.
+func resolveSelf(invoked string) (string, error) {
+	if p, err := osExecutable(); err == nil {
+		return filepath.Clean(p), nil
 	}
-	return filepath.Abs(os.Args[0])
+	return filepath.Abs(invoked)
 }
 
-func remove(installPath string, stdio command.IO) error {
+func remove(mimixboxPath string, installPath string, stdio command.IO) error {
 	targetPath := os.ExpandEnv(installPath)
 	if !mb.IsDir(targetPath) {
 		return errors.New(targetPath + ": no such directory")
+	}
+
+	self, err := resolveSelf(mimixboxPath)
+	if err != nil {
+		return err
 	}
 
 	for _, name := range applets.SortApplet() {
@@ -230,13 +235,25 @@ func remove(installPath string, stdio command.IO) error {
 			_, _ = fmt.Fprintln(stdio.Err, err)
 			continue
 		}
-		if strings.Contains(realPath, cmdName) {
-			if err := os.Remove(symbolicPath); err != nil {
-				_, _ = fmt.Fprintln(stdio.Err, err)
-				continue
-			}
-			_, _ = fmt.Fprintf(stdio.Out, "Delete symbolic link: %s\n", symbolicPath)
+		// Only remove symlinks provably owned by this MimixBox install: their
+		// target must be exactly the running binary. A foreign symlink whose
+		// target merely contains "mimixbox" (e.g. cat -> /opt/other-mimixbox)
+		// is left untouched.
+		if !ownedBySelf(realPath, self) {
+			continue
 		}
+		if err := os.Remove(symbolicPath); err != nil {
+			_, _ = fmt.Fprintln(stdio.Err, err)
+			continue
+		}
+		_, _ = fmt.Fprintf(stdio.Out, "Delete symbolic link: %s\n", symbolicPath)
 	}
 	return nil
+}
+
+// ownedBySelf reports whether a symlink target points at the exact MimixBox
+// binary identified by self. Both paths are cleaned so equivalent spellings
+// compare equal.
+func ownedBySelf(target, self string) bool {
+	return filepath.Clean(target) == filepath.Clean(self)
 }
