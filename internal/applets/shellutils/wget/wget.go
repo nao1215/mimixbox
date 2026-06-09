@@ -33,7 +33,20 @@ type options struct {
 
 // Run executes wget.
 func (c *Command) Run(ctx context.Context, stdio command.IO, args []string) error {
-	fs := command.NewFlagSet(c.Name(), "[OPTION]... URL...", stdio.Err)
+	fs := command.NewFlagSet(c.Name(), "[OPTION]... URL...", stdio.Err).WithHelp(command.Help{
+		Description: "Download each URL over HTTP(S). By default the response is saved to a file " +
+			"named after the URL in the current directory; -O writes to a specific file, or to " +
+			"standard output when given -.",
+		Examples: []command.Example{
+			{Command: "wget https://example.com/a.tar.gz", Explain: "Save to a.tar.gz in the current directory."},
+			{Command: "wget -O out.html https://example.com", Explain: "Save the response to out.html."},
+			{Command: "wget -O - https://example.com | grep title", Explain: "Stream the body to standard output."},
+		},
+		ExitStatus: "0  the download succeeded.\n1  a request failed or a file could not be written.",
+		Notes: []string{
+			"Only a subset of GNU wget options is supported (currently -O and -q).",
+		},
+	})
 	output := fs.StringP("output-document", "O", "", "write documents to FILE (- for standard output)")
 	quiet := fs.BoolP("quiet", "q", false, "quiet (no output)")
 

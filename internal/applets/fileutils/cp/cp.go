@@ -37,7 +37,21 @@ type options struct {
 
 // Run executes cp.
 func (c *Command) Run(_ context.Context, stdio command.IO, args []string) error {
-	fs := command.NewFlagSet(c.Name(), "[OPTION]... SOURCE... DEST", stdio.Err)
+	fs := command.NewFlagSet(c.Name(), "[OPTION]... SOURCE... DEST", stdio.Err).WithHelp(command.Help{
+		Description: "Copy SOURCE to DEST, or one or more SOURCEs into a DEST directory. " +
+			"With -r/-R, directories are copied recursively. By default an existing " +
+			"destination is overwritten; -i prompts first and -n never overwrites.",
+		Examples: []command.Example{
+			{Command: "cp a.txt b.txt", Explain: "Copy a file."},
+			{Command: "cp -r src/ dst/", Explain: "Copy a directory tree."},
+			{Command: "cp -a src/ dst/", Explain: "Copy recursively, preserving mode and timestamps (= -rp)."},
+			{Command: "cp -i a.txt dir/", Explain: "Prompt before overwriting dir/a.txt."},
+		},
+		ExitStatus: "0  all files were copied successfully.\n1  one or more files could not be copied.",
+		Notes: []string{
+			"Symlink-handling flags (-L, -P, -d, -H) are not yet implemented; symlinks are followed.",
+		},
+	})
 	recursive := fs.BoolP("recursive", "r", false, "copy directories recursively (-R is an alias)")
 	// -R is the other GNU spelling of -r; pflag cannot give one flag two
 	// shorthands, so it is a hidden alias whose value is OR'd into recursive.

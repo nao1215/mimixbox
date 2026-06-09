@@ -47,7 +47,19 @@ type shell struct {
 // from stdio.In, and executes it. The loop ends, returning nil, when the reader
 // reaches EOF or the user types "exit".
 func (c *Command) Run(ctx context.Context, stdio command.IO, args []string) error {
-	fs := command.NewFlagSet(c.Name(), "[OPTION]", stdio.Err)
+	fs := command.NewFlagSet(c.Name(), "[OPTION]", stdio.Err).WithHelp(command.Help{
+		Description: "MimixBox Shell: a minimal interactive shell. It reads a command and its " +
+			"arguments from each line and runs the matching MimixBox applet. With no terminal " +
+			"it reads commands from standard input, so it can run a script piped on stdin.",
+		Examples: []command.Example{
+			{Command: "mbsh", Explain: "Start an interactive prompt; type 'exit' or Ctrl-D to quit."},
+			{Command: "echo 'echo hello' | mbsh", Explain: "Run commands fed on standard input."},
+		},
+		Notes: []string{
+			"Whitespace splits tokens; quoting, parameter expansion, pipelines, and redirections are not yet supported.",
+			"Each line runs one applet; there is no scripting (if/for/while) or variable assignment.",
+		},
+	})
 	proceed, err := fs.Parse(stdio, args)
 	if err != nil || !proceed {
 		return err

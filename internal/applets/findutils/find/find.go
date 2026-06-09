@@ -239,7 +239,17 @@ func printPath(stdio command.IO, path string, zero bool) {
 
 func printUsage(w interface{ Write([]byte) (int, error) }) {
 	_, _ = w.Write([]byte("Usage: find [PATH]... [EXPRESSION]\n\n" +
+		"Search each PATH (default: the current directory) recursively and act on the\n" +
+		"entries that match EXPRESSION. With no expression, every entry is printed.\n\n" +
 		"Tests: -name, -iname, -path, -type [f|d|l|p|s], -empty\n" +
 		"Depth: -maxdepth N, -mindepth N\n" +
-		"Actions: -print (default), -print0\n"))
+		"Actions: -print (default), -print0\n\n" +
+		"Examples:\n" +
+		"  find .                       Print every entry under the current directory.\n" +
+		"  find . -name '*.go'          Find files whose name ends in .go.\n" +
+		"  find /tmp -type d -empty     Find empty directories under /tmp.\n" +
+		"  find . -type f -print0       Print file paths separated by NUL (for xargs -0).\n\n" +
+		"Notes:\n" +
+		"  - This is a subset of GNU find: the tests, depth limits, and actions listed above.\n" +
+		"  - -print0 pairs with 'xargs -0' to handle paths that contain spaces or newlines.\n"))
 }
