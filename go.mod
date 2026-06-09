@@ -1,6 +1,6 @@
 module github.com/nao1215/mimixbox
 
-go 1.24
+go 1.25.0
 
 require (
 	github.com/GehirnInc/crypt v0.0.0-20230320061759-8cc1b52080c5
@@ -9,7 +9,7 @@ require (
 	github.com/nsf/termbox-go v1.1.1
 	github.com/spf13/pflag v1.0.10
 	github.com/stretchr/testify v1.11.1
-	golang.org/x/sys v0.30.0
+	golang.org/x/sys v0.46.0
 	golang.org/x/term v0.29.0
 )
 
