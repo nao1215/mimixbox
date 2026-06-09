@@ -35,3 +35,19 @@ TestMbshNoReparse() {
         *) echo ok ;;
     esac
 }
+
+TestMbshDoubleQuote() {
+    printf 'echo "a b"\nexit\n' | mbsh 2>/dev/null
+}
+
+TestMbshVarExpand() {
+    out=$(printf 'echo $HOME\nexit\n' | mbsh 2>/dev/null)
+    case "${out}" in
+        *"${HOME}"*) echo expanded ;;
+        *) echo literal ;;
+    esac
+}
+
+TestMbshEnvAssignment() {
+    printf 'FOO=bar env\nexit\n' | mbsh 2>/dev/null | grep '^FOO=bar$'
+}

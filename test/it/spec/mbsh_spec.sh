@@ -27,6 +27,21 @@ Describe 'mbsh'
         The output should equal 'ok'
         The status should be success
     End
+    It 'keeps double-quoted spaces in one argument'
+        When call TestMbshDoubleQuote
+        The output should include 'a b'
+        The status should be success
+    End
+    It 'expands $HOME'
+        When call TestMbshVarExpand
+        The output should equal 'expanded'
+        The status should be success
+    End
+    It 'passes a NAME=value prefix to the command environment'
+        When call TestMbshEnvAssignment
+        The output should include 'FOO=bar'
+        The status should be success
+    End
 End
 
 Describe 'mbsh cd'
