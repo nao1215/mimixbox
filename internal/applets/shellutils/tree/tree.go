@@ -49,7 +49,7 @@ func (c *Command) Run(_ context.Context, stdio command.IO, args []string) error 
 		ExitStatus: "0  success.\n1  a directory could not be read.",
 	})
 	all := fs.BoolP("all", "a", false, "list entries starting with a dot")
-	dirsOnly := fs.BoolP("dirsfirst", "d", false, "list directories only")
+	dirsOnly := fs.BoolP("dirs-only", "d", false, "list directories only")
 	level := fs.IntP("level", "L", -1, "descend only LEVEL directories deep")
 
 	proceed, err := fs.Parse(stdio, args)

@@ -1,5 +1,7 @@
 Describe 'tree / nice'
     Include shellutils/tree_test.sh
+    BeforeEach 'Setup'
+    AfterEach 'CleanUp'
 
     It 'tree counts directories and files in its summary'
         When call TestTreeSummary
