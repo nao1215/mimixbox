@@ -4,7 +4,6 @@ import (
 	"context"
 	"errors"
 	"fmt"
-	"os"
 )
 
 // Execute runs c with the given IO and arguments and returns the process exit
@@ -33,15 +32,4 @@ func Execute(ctx context.Context, c Command, io IO, args []string) int {
 
 	_, _ = fmt.Fprintf(io.Err, "%s: %s\n", c.Name(), err)
 	return ExitFailure
-}
-
-// Adapt bridges a Command to the legacy applet entry-point signature used by
-// internal/applets. It wires the command to the process streams and reports the
-// exit code; the error is always nil because Execute has already printed any
-// message, so the caller need only exit with the returned code.
-func Adapt(c Command) func() (int, error) {
-	return func() (int, error) {
-		stdio := IO{In: os.Stdin, Out: os.Stdout, Err: os.Stderr}
-		return Execute(context.Background(), c, stdio, os.Args[1:]), nil
-	}
 }

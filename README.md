@@ -19,7 +19,7 @@ MimixBox packs many Unix commands into a single binary, like BusyBox. Unlike Bus
 The list below is generated from the registered applets by `make command-list`, so it never drifts from the binary. You can also run `mimixbox --list` to print it on the terminal.
 
 <!-- COMMAND_LIST_START -->
-There are 152 commands. Run `mimixbox --list` to see them on the terminal.
+There are 153 commands. Run `mimixbox --list` to see them on the terminal.
 
 | Command | Description |
 |:--|:--|
@@ -29,7 +29,7 @@ There are 152 commands. Run `mimixbox --list` to see them on the terminal.
 | awk | Pattern scanning and processing language |
 | banner | Print a string as large ASCII-art letters |
 | base32 | Base32 encode/decode from FILE(or STDIN) to STDOUT |
-| base64 | Base64 encode/decode from FILR(or STDIN) to STDOUT |
+| base64 | Base64 encode/decode from FILE(or STDIN) to STDOUT |
 | basename | Print basename (PATH without "/") from file path |
 | bunzip2 | Decompress bzip2 (.bz2) files |
 | cal | Display a calendar |
@@ -46,7 +46,7 @@ There are 152 commands. Run `mimixbox --list` to see them on the terminal.
 | compress | Compress files with LZW (.Z) |
 | cowsay | Print message with cow's ASCII art |
 | cowthink | Print message in a cow's thought bubble |
-| cp | Copy file(s) otr Directory(s) |
+| cp | Copy file(s) to Directory(s) |
 | cpio | Copy files to and from archives |
 | cut | Remove sections from each line of files |
 | date | Print or set the system date and time |
@@ -61,13 +61,13 @@ There are 152 commands. Run `mimixbox --list` to see them on the terminal.
 | expand | Convert TAB to N space (default:N=8) |
 | expr | Evaluate expressions |
 | fakemovie | Adds a video playback button to the image |
-| false | Do nothing. Return unsuccess(1) |
+| false | Do nothing. Return failure(1) |
 | find | Search for files in a directory hierarchy |
 | fmt | Simple optimal text formatter |
 | fold | Wrap each input line to fit in specified width |
 | fortune | Print a random, hopefully interesting, adage |
 | free | Display amount of free and used memory in the system |
-| ghrdc | GitHub Relase Download Counter |
+| ghrdc | GitHub Release Download Counter |
 | grep | Print lines that match patterns |
 | groups | Print the groups to which USERNAME belongs |
 | gunzip | Decompress gzip (.gz) files |
@@ -104,11 +104,12 @@ There are 152 commands. Run `mimixbox --list` to see them on the terminal.
 | paste | Merge lines of files |
 | patch | Apply a diff file to an original |
 | path | Manipulate filename path |
+| pidof | Find the process ID of a running program |
 | ping | Send ICMP ECHO_REQUEST to network hosts |
 | posixer | Report which POSIX utilities are installed |
 | poweroff | Power off the system |
 | printenv | Print environment variable |
-| printf | Formats and print data |
+| printf | Format and print data |
 | pwcrack | Audit crypt(3) password hashes against a wordlist |
 | pwd | Print Working Directory |
 | pwgen | Generate random passwords for authorized testing |
@@ -160,7 +161,7 @@ There are 152 commands. Run `mimixbox --list` to see them on the terminal.
 | unlink | Remove a single file by calling the unlink function |
 | unshadow | Combine passwd and shadow files for password auditing |
 | unzip | Extract files from a ZIP archive |
-| uuidgen | Print UUID (Universal Unique IDentifier |
+| uuidgen | Print UUID (Universally Unique IDentifier) |
 | valid-shell | Verify if /etc/shells is valid |
 | vi | A minimal vi-style screen text editor |
 | watch | Execute a program periodically, showing output fullscreen |
@@ -179,12 +180,12 @@ There are 152 commands. Run `mimixbox --list` to see them on the terminal.
 
 ## Install
 
-The release page distributes source code and binaries in ZIP and tar.gz format. Pick the binary that matches your OS and CPU architecture from [the Release Page](https://github.com/nao1215/mimixbox/releases). For example, on Linux (amd64):
+The [Release Page](https://github.com/nao1215/mimixbox/releases) distributes the binary as a `tar.gz` archive for each OS/CPU architecture, plus `.deb`, `.rpm`, and `.apk` packages. The archive is named `mimixbox_<version>_<os>_<arch>.tar.gz` and contains the `mimixbox` binary. For example, on Linux (amd64):
 
 ```shell
-$ tar xf mimixbox-0.30.0-linux-amd64.tar.gz
-$ cd mimixbox-0.30.0-linux-amd64
-$ sudo ./installer.sh
+$ tar xf mimixbox_0.36.0_linux_amd64.tar.gz
+$ sudo install -m 0755 mimixbox /usr/local/bin/
+$ sudo mimixbox --install /usr/local/bin
 ```
 
 ### Use "go install"
@@ -310,7 +311,7 @@ To report a bug or request a feature, please use [GitHub Issue](https://github.c
 
 ## License
 
-The MimixBox project is licensed under the terms of the MIT license and Apache License 2.0. See [LICENSE](./LICENSE).
+The MimixBox project is licensed under the [Apache License 2.0](./LICENSE). It also incorporates portions of third-party code distributed under the MIT License (for example the `nc`, `whris`, and `fakemovie` applets), whose original copyright and license notices are preserved in the corresponding source files.
 
 ## Contributors
 

@@ -29,7 +29,8 @@ func TestRun(t *testing.T) {
 		{"no args", nil, "\n"},
 		{"no newline", []string{"-n", "hi"}, "hi"},
 		{"unknown flag is literal", []string{"-x", "y"}, "-x y\n"},
-		{"help is literal", []string{"--help"}, "--help\n"},
+		{"help not first is literal", []string{"foo", "--help"}, "foo --help\n"},
+		{"version not first is literal", []string{"foo", "--version"}, "foo --version\n"},
 		{"escapes off by default", []string{`a\tb`}, "a\\tb\n"},
 		{"escapes on", []string{"-e", `a\tb`}, "a\tb\n"},
 		{"combined flags", []string{"-ne", `a\nb`}, "a\nb"},
@@ -49,5 +50,31 @@ func TestRun(t *testing.T) {
 				t.Errorf("out = %q, want %q", out, tt.want)
 			}
 		})
+	}
+}
+
+// TestHelpAsFirstArg verifies that a leading --help prints usage rather than
+// echoing the literal text, matching GNU's standalone echo.
+func TestHelpAsFirstArg(t *testing.T) {
+	t.Parallel()
+	out, err := run(t, "--help")
+	if err != nil {
+		t.Fatalf("Run error = %v", err)
+	}
+	if !strings.Contains(out, "Usage: echo") {
+		t.Errorf("help out = %q", out)
+	}
+}
+
+// TestVersionAsFirstArg verifies that a leading --version prints the version
+// line rather than echoing the literal text.
+func TestVersionAsFirstArg(t *testing.T) {
+	t.Parallel()
+	out, err := run(t, "--version")
+	if err != nil {
+		t.Fatalf("Run error = %v", err)
+	}
+	if !strings.Contains(out, "echo (mimixbox)") {
+		t.Errorf("version out = %q", out)
 	}
 }

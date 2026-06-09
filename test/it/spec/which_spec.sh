@@ -1,8 +1,13 @@
+# The expected paths are derived from wherever MimixBox actually resolves on
+# PATH, so the suite stays correct under the isolated end-to-end harness
+# (test/it/.mbbin) without hardcoding an install prefix like /usr/local/bin.
+mb_bindir() { dirname "$(command -v mimixbox)"; }
+
 Describe 'Search mimixbox'
     Include shellutils/which_test.sh
-    It 'print /usr/local/bin/mimixbox'
+    It 'prints the MimixBox path'
         When call TestWhichExistBinary
-        The output should equal '/usr/local/bin/mimixbox'
+        The output should equal "$(mb_bindir)/mimixbox"
         The status should be success
     End
 End
@@ -19,10 +24,9 @@ End
 Describe 'Search three binary.'
     Include shellutils/which_test.sh
 
-    result() { %text
-      #|/usr/local/bin/mimixbox
-      #|/usr/local/bin/cat
-      #|/usr/local/bin/tac
+    result() {
+        d=$(mb_bindir)
+        printf '%s\n%s\n%s\n' "$d/mimixbox" "$d/cat" "$d/tac"
     }
 
     It 'print paths of three binary'
@@ -35,9 +39,9 @@ End
 Describe 'Search three binary. One of three binary does not exist'
     Include shellutils/which_test.sh
 
-    result() { %text
-      #|/usr/local/bin/mimixbox
-      #|/usr/local/bin/tac
+    result() {
+        d=$(mb_bindir)
+        printf '%s\n%s\n' "$d/mimixbox" "$d/tac"
     }
 
     It 'print paths of two binary and exit-status is fail'

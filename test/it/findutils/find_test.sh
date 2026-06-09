@@ -17,3 +17,9 @@ TestFindUnknown() {
     export TEST_DIR=/tmp/mimixbox/it/find
     find ${TEST_DIR} -bogus
 }
+TestFindHelp() {
+    find --help
+}
+TestFindVersion() {
+    find --version
+}

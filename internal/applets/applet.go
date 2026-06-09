@@ -126,6 +126,7 @@ import (
 	"github.com/nao1215/mimixbox/internal/applets/shellutils/nproc"
 	"github.com/nao1215/mimixbox/internal/applets/shellutils/od"
 	"github.com/nao1215/mimixbox/internal/applets/shellutils/path"
+	"github.com/nao1215/mimixbox/internal/applets/shellutils/pidof"
 	"github.com/nao1215/mimixbox/internal/applets/shellutils/posixer"
 	"github.com/nao1215/mimixbox/internal/applets/shellutils/printenv"
 	"github.com/nao1215/mimixbox/internal/applets/shellutils/printf"
@@ -180,20 +181,21 @@ import (
 	"github.com/nao1215/mimixbox/internal/applets/textutils/xxd"
 )
 
-type EntryPoint func() (int, error)
-
 type Applet struct {
-	Ep   EntryPoint
+	// Cmd is the applet itself. The top-level dispatcher runs it through
+	// internal/command.Execute with an injected command.IO, so an applet can be
+	// dispatched entirely in memory without mutating os.Args or touching the
+	// process streams.
+	Cmd  command.Command
 	Desc string
 }
 
 var Applets map[string]Applet
 
-// reg builds an Applet entry for a command that has been migrated to the
-// internal/command framework. The command's own Synopsis becomes the listed
-// description, so the two never drift apart.
+// reg builds an Applet entry for a command. The command's own Synopsis becomes
+// the listed description, so the two never drift apart.
 func reg(c command.Command) Applet {
-	return Applet{Ep: command.Adapt(c), Desc: c.Synopsis()}
+	return Applet{Cmd: c, Desc: c.Synopsis()}
 }
 
 func init() {
@@ -281,6 +283,7 @@ func init() {
 		"paste":            reg(paste.New()),
 		"patch":            reg(patch.New()),
 		"path":             reg(path.New()),
+		"pidof":            reg(pidof.New()),
 		"posixer":          reg(posixer.New()),
 		"poweroff":         reg(halt.NewPoweroff()),
 		"printenv":         reg(printenv.New()),

@@ -19,7 +19,11 @@ make test-e2e   # shellspec end-to-end tests against the built binary
 make lint       # golangci-lint
 ```
 
+`make test` (and its `make ut` alias) exits non-zero when any unit test fails, so a failing `go test` fails the local build and the `UnitTest` GitHub Actions workflow. Coverage HTML generation and the temporary-directory cleanup still run afterwards, but they never mask a real test failure.
+
 The end-to-end tests live under `test/it/` and exercise the built binary the way a user does (applet name, flags, stdin, exit codes).
+
+`make test-e2e` is hermetic: it builds MimixBox, stages one symlink per applet in an isolated directory (`test/it/.mbbin`), and runs ShellSpec with that directory first on `PATH`. Every applet therefore resolves to MimixBox, never to a host command of the same name, so the suite can be run in a clean shell without installing MimixBox system-wide. Specs must invoke applets by bare name (e.g. `cat`, `unix2dos`) and must not hardcode an install prefix such as `/usr/local/bin`. `test/it/spec/hermetic_spec.sh` guards this contract by asserting that common applets resolve to the MimixBox binary.
 
 ## Architecture
 

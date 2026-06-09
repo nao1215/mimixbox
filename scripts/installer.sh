@@ -9,7 +9,9 @@ source ${ROOT_DIR}/scripts/libshell.sh
 
 function installMimixBox() {
 	install -v -m 0755 -D mimixbox /usr/local/bin/.
-	mimixbox --install /usr/local/bin/.
+	# Invoke the exact binary just installed (not a PATH lookup) so the applet
+	# symlinks are guaranteed to target /usr/local/bin/mimixbox.
+	/usr/local/bin/mimixbox --install /usr/local/bin/.
 }
 
 function installLicense() {

@@ -19,36 +19,36 @@ Cleanup() {
 }
 
 TestUnix2dosCRLF() {
-    /usr/local/bin/unix2dos ${TEST_FILE1}
+    unix2dos ${TEST_FILE1}
     file ${TEST_FILE1}
 }
 
 TestUnix2dosCRLFStatus() {
-    /usr/local/bin/unix2dos ${TEST_FILE1}
+    unix2dos ${TEST_FILE1}
 }
 
 TestUnix2dosThreeFileAtSameTime() {
-    /usr/local/bin/unix2dos ${TEST_FILE1} ${TEST_FILE2} ${TEST_FILE3}
+    unix2dos ${TEST_FILE1} ${TEST_FILE2} ${TEST_FILE3}
     file ${TEST_FILE1}
     file ${TEST_FILE2}
     file ${TEST_FILE3}
 }
 
 TestUnix2dosThreeFileAtSameTime() {
-    /usr/local/bin/unix2dos ${TEST_FILE1} ${TEST_FILE2} ${TEST_FILE3}
+    unix2dos ${TEST_FILE1} ${TEST_FILE2} ${TEST_FILE3}
     file ${TEST_FILE1}
     file ${TEST_FILE2}
     file ${TEST_FILE3}
 }
 
 TestUnix2dosThreeFileAtSameTimeStatus() {
-    /usr/local/bin/unix2dos ${TEST_FILE1} ${TEST_FILE2} ${TEST_FILE3}
+    unix2dos ${TEST_FILE1} ${TEST_FILE2} ${TEST_FILE3}
 }
 
 TestUnix2dosDir() {
-    /usr/local/bin/unix2dos ${TEST_DIR}
+    unix2dos ${TEST_DIR}
 }
 
 TestUnix2dosOneOfThreeFail() {
-    /usr/local/bin/unix2dos ${TEST_FILE1}  ${TEST_DIR} ${TEST_FILE3} 
+    unix2dos ${TEST_FILE1}  ${TEST_DIR} ${TEST_FILE3} 
 }

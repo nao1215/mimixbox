@@ -4,7 +4,10 @@
 *.dll
 *.so
 *.dylib
-mimixbox
+# Anchor to the repo root so this only ignores the built ./mimixbox binary and
+# not the cmd/mimixbox/ source directory (an unanchored "mimixbox" silently hid
+# new files such as cmd/mimixbox/main_test.go from git).
+/mimixbox
 
 # Test binary, built with `go test -c`. And test directory
 *.test
@@ -28,3 +31,6 @@ cover.html
 
 # Directory that manages licenses for dependent libraries
 licenses
+
+# Isolated applet staging directory built by `make e2e-setup`
+test/it/.mbbin/

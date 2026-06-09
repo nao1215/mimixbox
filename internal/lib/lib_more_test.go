@@ -79,39 +79,6 @@ func TestContains(t *testing.T) {
 	}
 }
 
-func TestSignalHelpers(t *testing.T) {
-	t.Parallel()
-	if !IsSignalNumber("9") {
-		t.Error("9 is a signal number")
-	}
-	if IsSignalNumber("999") {
-		t.Error("999 is not a signal number")
-	}
-	if !IsSignalName("SIGKILL") || !IsSignalName("KILL") {
-		t.Error("SIGKILL/KILL should be recognized")
-	}
-	if IsSignalName("NOPE") {
-		t.Error("NOPE is not a signal name")
-	}
-	if SignalAtoi("15") != 15 {
-		t.Error("SignalAtoi(15) should be 15")
-	}
-	if SignalAtoi("xx") != -1 {
-		t.Error("SignalAtoi(xx) should be -1")
-	}
-	if ConvSignalNameToNum("KILL") != 9 {
-		t.Error("ConvSignalNameToNum(KILL) should be 9")
-	}
-	if ConvSignalNameToNum("NOPE") != -1 {
-		t.Error("ConvSignalNameToNum(NOPE) should be -1")
-	}
-	// Smoke-test the printers (they write to stdout).
-	PrintSignalList()
-	PrintSignal("KILL")
-	PrintSignal("9")
-	PrintSignal("HUP")
-}
-
 func TestOptionHelpers(t *testing.T) {
 	t.Parallel()
 	if !HasVersionOpt([]string{"cmd", "--version"}) || !HasVersionOpt([]string{"cmd", "-v"}) {

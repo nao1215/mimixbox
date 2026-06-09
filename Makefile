@@ -1,8 +1,12 @@
-APP        := mimixbox
-PREPARE_UT := test/ut/prepareUnitTest.sh
-INSTALLER  := scripts/installer.sh
-MK_JAIL    := scripts/mkJailForDebianFamily.sh
-RELEASE    := scripts/release.sh
+APP         := mimixbox
+PREPARE_UT  := test/ut/prepareUnitTest.sh
+INSTALLER   := scripts/installer.sh
+MK_JAIL     := scripts/mkJailForDebianFamily.sh
+RELEASE     := scripts/release.sh
+# Isolated directory holding the freshly built MimixBox binary and one symlink
+# per applet. The end-to-end suite prepends it to PATH so every applet resolves
+# to MimixBox, never to whatever the host happens to provide.
+E2E_BIN_DIR := $(CURDIR)/test/it/.mbbin
 
 build:  ## Build the mimixbox binary
 	go build "-ldflags=-s -w" -trimpath -o $(APP) cmd/mimixbox/main.go
@@ -15,6 +19,7 @@ clean: ## Clean project
 	-rm -rf /tmp/mimixbox/ut/*
 	-rm -rf release
 	-rm -rf licenses
+	-rm -rf $(E2E_BIN_DIR)
 
 docker: ## Run container for testing mimixbox
 	docker image build -t mimixbox/test:latest .
@@ -31,12 +36,20 @@ remove: ## Remove mimixbox-symbolic link
 	mimixbox --remove /usr/local/bin
 
 test: pre_ut  ## Run unit tests with coverage (writes cover.out / cover.html)
-	-@go test -cover ./... -coverpkg=./... -coverprofile=cover.out
-	-@go tool cover -html=cover.out -o cover.html
-	-@rm -rf /tmp/mimixbox/ut/*
+	@go test -cover ./... -coverpkg=./... -coverprofile=cover.out; status=$$?; \
+	go tool cover -html=cover.out -o cover.html || true; \
+	rm -rf /tmp/mimixbox/ut/*; \
+	exit $$status
 
-test-e2e: ## Run the shellspec end-to-end tests against the built binary
-	cd test/it && shellspec --shell /bin/bash
+e2e-setup: ## Build MimixBox and stage its applet symlinks in an isolated PATH directory
+	go build "-ldflags=-s -w" -trimpath -o $(APP) cmd/mimixbox/main.go
+	rm -rf "$(E2E_BIN_DIR)"
+	mkdir -p "$(E2E_BIN_DIR)"
+	install -m 0755 $(APP) "$(E2E_BIN_DIR)/$(APP)"
+	"$(E2E_BIN_DIR)/$(APP)" --full-install "$(E2E_BIN_DIR)" >/dev/null
+
+test-e2e: e2e-setup ## Run the shellspec end-to-end tests against MimixBox applets in an isolated PATH
+	cd test/it && PATH="$(E2E_BIN_DIR):$$PATH" shellspec --shell /bin/bash
 
 lint: ## Run golangci-lint
 	golangci-lint run ./...
@@ -63,7 +76,7 @@ ut: test  ## Alias for "make test"
 it: test-e2e  ## Alias for "make test-e2e"
 
 .DEFAULT_GOAL := help
-.PHONY: build clean docker install full-install remove test test-e2e lint command-list jail release licenses pre_ut ut it help
+.PHONY: build clean docker install full-install remove test e2e-setup test-e2e lint command-list jail release licenses pre_ut ut it help
 
 help:
 	@grep -E '^[0-9a-zA-Z_-]+[[:blank:]]*:.*?## .*$$' $(MAKEFILE_LIST) | sort \

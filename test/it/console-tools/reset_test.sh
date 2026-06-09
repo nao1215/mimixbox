@@ -1,0 +1,1 @@
+ResetHelp() { reset --help; }

@@ -12,6 +12,7 @@ import (
 	"syscall"
 
 	"github.com/nao1215/mimixbox/internal/command"
+	"github.com/nao1215/mimixbox/internal/signal"
 )
 
 // Command is the killall applet.
@@ -99,29 +100,14 @@ func (c *Command) killMatching(stdio command.IO, procs []process, names []string
 	return nil
 }
 
-// parseSignal resolves a signal given by name (with or without SIG) or number.
+// parseSignal resolves a signal given by name (with or without SIG) or number
+// using the canonical signal table.
 func parseSignal(name string) (syscall.Signal, error) {
-	if n, err := strconv.Atoi(name); err == nil {
-		return syscall.Signal(n), nil
+	n, err := signal.NumberLax(name)
+	if err != nil {
+		return 0, err
 	}
-	key := strings.TrimPrefix(strings.ToUpper(name), "SIG")
-	if sig, ok := signalNames[key]; ok {
-		return sig, nil
-	}
-	return 0, fmt.Errorf("unknown signal %q", name)
-}
-
-// signalNames maps commonly used signal names to their numbers.
-var signalNames = map[string]syscall.Signal{
-	"TERM": syscall.SIGTERM,
-	"KILL": syscall.SIGKILL,
-	"INT":  syscall.SIGINT,
-	"HUP":  syscall.SIGHUP,
-	"QUIT": syscall.SIGQUIT,
-	"USR1": syscall.SIGUSR1,
-	"USR2": syscall.SIGUSR2,
-	"STOP": syscall.SIGSTOP,
-	"CONT": syscall.SIGCONT,
+	return syscall.Signal(n), nil
 }
 
 // procFromProcfs reads the running processes from /proc.
