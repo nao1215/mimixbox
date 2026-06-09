@@ -282,3 +282,28 @@ func TestDownloadRetries(t *testing.T) {
 		t.Errorf("server was hit %d times, want 3 (the -t value)", got)
 	}
 }
+
+func TestDownloadContinueRejectsBadContentRange(t *testing.T) {
+	t.Parallel()
+	requireLoopback(t)
+	srv := httptest.NewServer(http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
+		// Claim a range starting at 0 even though byte 5 was requested.
+		w.Header().Set("Content-Range", "bytes 0-15/16")
+		w.WriteHeader(http.StatusPartialContent)
+		_, _ = w.Write([]byte("WRONGDATA"))
+	}))
+	t.Cleanup(srv.Close)
+
+	dir := t.TempDir()
+	dest := filepath.Join(dir, "out.bin")
+	if err := os.WriteFile(dest, []byte("01234"), 0o644); err != nil {
+		t.Fatal(err)
+	}
+
+	if _, _, err := run(t, "-c", "-O", dest, srv.URL+"/big"); err == nil {
+		t.Errorf("a mismatched Content-Range should fail, not corrupt the file")
+	}
+	if got, _ := os.ReadFile(dest); string(got) != "01234" {
+		t.Errorf("partial file was modified to %q", got)
+	}
+}
