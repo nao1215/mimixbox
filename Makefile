@@ -54,6 +54,10 @@ test-e2e: e2e-setup ## Run the shellspec end-to-end tests against MimixBox apple
 lint: ## Run golangci-lint
 	golangci-lint run ./...
 
+generate: ## Regenerate code (applet registry) and the README command list
+	go generate ./...
+	$(MAKE) command-list
+
 command-list: ## Regenerate the command list in README.md from the applet table
 	go run ./cmd/genlist
 
@@ -76,7 +80,7 @@ ut: test  ## Alias for "make test"
 it: test-e2e  ## Alias for "make test-e2e"
 
 .DEFAULT_GOAL := help
-.PHONY: build clean docker install full-install remove test e2e-setup test-e2e lint command-list jail release licenses pre_ut ut it help
+.PHONY: build clean docker install full-install remove test e2e-setup test-e2e lint generate command-list jail release licenses pre_ut ut it help
 
 help:
 	@grep -E '^[0-9a-zA-Z_-]+[[:blank:]]*:.*?## .*$$' $(MAKEFILE_LIST) | sort \
