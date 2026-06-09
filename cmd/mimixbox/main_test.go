@@ -178,6 +178,50 @@ func TestInstallRequiresDirOperand(t *testing.T) {
 	}
 }
 
+func TestRunDispatchesRealAppletInMemory(t *testing.T) {
+	// A concrete applet (echo) runs through the real dispatch path, and its
+	// output is captured entirely in memory via the injected IO — no os.Args
+	// mutation and no process stdio. This is the end-to-end property issue #273
+	// asks for.
+	io, out, errBuf := newIO()
+	if code := run([]string{"mimixbox", "echo", "hello", "world"}, io); code != command.ExitSuccess {
+		t.Fatalf("echo exit = %d, want 0", code)
+	}
+	if got := out.String(); got != "hello world\n" {
+		t.Errorf("echo stdout = %q, want %q", got, "hello world\n")
+	}
+	if errBuf.Len() != 0 {
+		t.Errorf("echo stderr = %q, want empty", errBuf.String())
+	}
+}
+
+func TestRunRealAppletErrorIsCapturedInMemory(t *testing.T) {
+	// A failing applet (cat of a missing file) reports its error through the
+	// injected stderr and a non-zero exit code, again without touching process
+	// globals.
+	io, out, errBuf := newIO()
+	code := run([]string{"mimixbox", "cat", "/no/such/file/mimixbox-test"}, io)
+	if code == command.ExitSuccess {
+		t.Errorf("cat of a missing file should fail, got exit 0")
+	}
+	if out.Len() != 0 {
+		t.Errorf("cat stdout = %q, want empty", out.String())
+	}
+	if !strings.Contains(errBuf.String(), "cat:") {
+		t.Errorf("cat stderr = %q, want it to mention the applet", errBuf.String())
+	}
+}
+
+func TestRunDoesNotMutateOSArgs(t *testing.T) {
+	// Dispatching an applet must leave the process-global os.Args untouched.
+	saved := append([]string(nil), os.Args...)
+	io, _, _ := newIO()
+	_ = run([]string{"mimixbox", "echo", "x"}, io)
+	if strings.Join(os.Args, " ") != strings.Join(saved, " ") {
+		t.Errorf("os.Args mutated by dispatch: got %v, want %v", os.Args, saved)
+	}
+}
+
 func TestRunUnsupportedAppletViaRunApplet(t *testing.T) {
 	// runApplet itself reports an unknown applet (e.g. a stale symlink).
 	io, _, errBuf := newIO()
