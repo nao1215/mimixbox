@@ -19,7 +19,7 @@ MimixBox packs many Unix commands into a single binary, like BusyBox. Unlike Bus
 The list below is generated from the registered applets by `make command-list`, so it never drifts from the binary. You can also run `mimixbox --list` to print it on the terminal.
 
 <!-- COMMAND_LIST_START -->
-There are 181 commands. Run `mimixbox --list` to see them on the terminal.
+There are 184 commands. Run `mimixbox --list` to see them on the terminal.
 
 | Command | Description |
 |:--|:--|
@@ -186,6 +186,9 @@ There are 181 commands. Run `mimixbox --list` to see them on the terminal.
 | unshadow | Combine passwd and shadow files for password auditing |
 | unxz | Decompress xz files |
 | unzip | Extract files from a ZIP archive |
+| usleep | Pause for N microseconds |
+| uudecode | Decode a uuencoded (or base64) file |
+| uuencode | Encode a file for transmission over text channels |
 | uuidgen | Print UUID (Universally Unique IDentifier) |
 | valid-shell | Verify if /etc/shells is valid |
 | vi | A minimal vi-style screen text editor |
