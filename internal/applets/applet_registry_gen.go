@@ -144,6 +144,7 @@ import (
 	ap_textutils_cat "github.com/nao1215/mimixbox/internal/applets/textutils/cat"
 	ap_textutils_cksum "github.com/nao1215/mimixbox/internal/applets/textutils/cksum"
 	ap_textutils_comm "github.com/nao1215/mimixbox/internal/applets/textutils/comm"
+	ap_textutils_crc32 "github.com/nao1215/mimixbox/internal/applets/textutils/crc32"
 	ap_textutils_dos2unix "github.com/nao1215/mimixbox/internal/applets/textutils/dos2unix"
 	ap_textutils_expand "github.com/nao1215/mimixbox/internal/applets/textutils/expand"
 	ap_textutils_fmt "github.com/nao1215/mimixbox/internal/applets/textutils/fmt"
@@ -155,10 +156,12 @@ import (
 	ap_textutils_rev "github.com/nao1215/mimixbox/internal/applets/textutils/rev"
 	ap_textutils_sha1sum "github.com/nao1215/mimixbox/internal/applets/textutils/sha1sum"
 	ap_textutils_sha256sum "github.com/nao1215/mimixbox/internal/applets/textutils/sha256sum"
+	ap_textutils_sha384sum "github.com/nao1215/mimixbox/internal/applets/textutils/sha384sum"
 	ap_textutils_sha512sum "github.com/nao1215/mimixbox/internal/applets/textutils/sha512sum"
 	ap_textutils_shuf "github.com/nao1215/mimixbox/internal/applets/textutils/shuf"
 	ap_textutils_split "github.com/nao1215/mimixbox/internal/applets/textutils/split"
 	ap_textutils_strings "github.com/nao1215/mimixbox/internal/applets/textutils/strings"
+	ap_textutils_sum "github.com/nao1215/mimixbox/internal/applets/textutils/sum"
 	ap_textutils_tac "github.com/nao1215/mimixbox/internal/applets/textutils/tac"
 	ap_textutils_tail "github.com/nao1215/mimixbox/internal/applets/textutils/tail"
 	ap_textutils_tr "github.com/nao1215/mimixbox/internal/applets/textutils/tr"
@@ -173,7 +176,7 @@ import (
 // init populates the applet table. Each command is registered under its own
 // Name(), so the key can never drift from the command it dispatches to.
 func init() {
-	Applets = make(map[string]Applet, 178)
+	Applets = make(map[string]Applet, 181)
 	register(ap_archival_ar.New())
 	register(ap_archival_bunzip2.New())
 	register(ap_archival_compress.New())
@@ -327,6 +330,7 @@ func init() {
 	register(ap_textutils_cat.New())
 	register(ap_textutils_cksum.New())
 	register(ap_textutils_comm.New())
+	register(ap_textutils_crc32.New())
 	register(ap_textutils_dos2unix.New())
 	register(ap_textutils_expand.New())
 	register(ap_textutils_fmt.New())
@@ -338,10 +342,12 @@ func init() {
 	register(ap_textutils_rev.New())
 	register(ap_textutils_sha1sum.New())
 	register(ap_textutils_sha256sum.New())
+	register(ap_textutils_sha384sum.New())
 	register(ap_textutils_sha512sum.New())
 	register(ap_textutils_shuf.New())
 	register(ap_textutils_split.New())
 	register(ap_textutils_strings.New())
+	register(ap_textutils_sum.New())
 	register(ap_textutils_tac.New())
 	register(ap_textutils_tail.New())
 	register(ap_textutils_tr.New())
