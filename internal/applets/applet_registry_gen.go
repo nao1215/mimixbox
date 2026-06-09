@@ -160,6 +160,7 @@ import (
 	ap_textutils_fmt "github.com/nao1215/mimixbox/internal/applets/textutils/fmt"
 	ap_textutils_fold "github.com/nao1215/mimixbox/internal/applets/textutils/fold"
 	ap_textutils_head "github.com/nao1215/mimixbox/internal/applets/textutils/head"
+	ap_textutils_man "github.com/nao1215/mimixbox/internal/applets/textutils/man"
 	ap_textutils_md5sum "github.com/nao1215/mimixbox/internal/applets/textutils/md5sum"
 	ap_textutils_nl "github.com/nao1215/mimixbox/internal/applets/textutils/nl"
 	ap_textutils_paste "github.com/nao1215/mimixbox/internal/applets/textutils/paste"
@@ -190,7 +191,7 @@ import (
 // init populates the applet table. Each command is registered under its own
 // Name(), so the key can never drift from the command it dispatches to.
 func init() {
-	Applets = make(map[string]Applet, 197)
+	Applets = make(map[string]Applet, 198)
 	register(ap_archival_ar.New())
 	register(ap_archival_bunzip2.New())
 	register(ap_archival_compress.New())
@@ -361,6 +362,7 @@ func init() {
 	register(ap_textutils_fmt.New())
 	register(ap_textutils_fold.New())
 	register(ap_textutils_head.New())
+	register(ap_textutils_man.New())
 	register(ap_textutils_md5sum.New())
 	register(ap_textutils_nl.New())
 	register(ap_textutils_paste.New())
