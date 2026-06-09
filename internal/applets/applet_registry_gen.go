@@ -81,6 +81,7 @@ import (
 	ap_shellutils_arch "github.com/nao1215/mimixbox/internal/applets/shellutils/arch"
 	ap_shellutils_base64 "github.com/nao1215/mimixbox/internal/applets/shellutils/base64"
 	ap_shellutils_basename "github.com/nao1215/mimixbox/internal/applets/shellutils/basename"
+	ap_shellutils_bc "github.com/nao1215/mimixbox/internal/applets/shellutils/bc"
 	ap_shellutils_cal "github.com/nao1215/mimixbox/internal/applets/shellutils/cal"
 	ap_shellutils_chmod "github.com/nao1215/mimixbox/internal/applets/shellutils/chmod"
 	ap_shellutils_chroot "github.com/nao1215/mimixbox/internal/applets/shellutils/chroot"
@@ -185,7 +186,7 @@ import (
 // init populates the applet table. Each command is registered under its own
 // Name(), so the key can never drift from the command it dispatches to.
 func init() {
-	Applets = make(map[string]Applet, 191)
+	Applets = make(map[string]Applet, 192)
 	register(ap_archival_ar.New())
 	register(ap_archival_bunzip2.New())
 	register(ap_archival_compress.New())
@@ -276,6 +277,7 @@ func init() {
 	register(ap_shellutils_arch.New())
 	register(ap_shellutils_base64.New())
 	register(ap_shellutils_basename.New())
+	register(ap_shellutils_bc.New())
 	register(ap_shellutils_cal.New())
 	register(ap_shellutils_chmod.New())
 	register(ap_shellutils_chroot.New())
