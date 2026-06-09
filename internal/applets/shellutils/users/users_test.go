@@ -67,7 +67,7 @@ func TestRunMissingFile(t *testing.T) {
 }
 
 func TestRunDefaultPath(t *testing.T) {
-	t.Parallel()
+	// Not parallel: it mutates the package-level utmpPath.
 	dir := t.TempDir()
 	f := filepath.Join(dir, "utmp")
 	if err := os.WriteFile(f, record(userProcess, "dave"), 0o644); err != nil {
