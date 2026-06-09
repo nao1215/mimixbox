@@ -24,7 +24,7 @@ func New() *Command { return &Command{} }
 func (c *Command) Name() string { return "cp" }
 
 // Synopsis returns the one-line description shown in the applet list.
-func (c *Command) Synopsis() string { return "Copy file(s) otr Directory(s)" }
+func (c *Command) Synopsis() string { return "Copy file(s) to Directory(s)" }
 
 type options struct {
 	recursive   bool
