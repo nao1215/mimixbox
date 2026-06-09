@@ -181,20 +181,21 @@ import (
 	"github.com/nao1215/mimixbox/internal/applets/textutils/xxd"
 )
 
-type EntryPoint func() (int, error)
-
 type Applet struct {
-	Ep   EntryPoint
+	// Cmd is the applet itself. The top-level dispatcher runs it through
+	// internal/command.Execute with an injected command.IO, so an applet can be
+	// dispatched entirely in memory without mutating os.Args or touching the
+	// process streams.
+	Cmd  command.Command
 	Desc string
 }
 
 var Applets map[string]Applet
 
-// reg builds an Applet entry for a command that has been migrated to the
-// internal/command framework. The command's own Synopsis becomes the listed
-// description, so the two never drift apart.
+// reg builds an Applet entry for a command. The command's own Synopsis becomes
+// the listed description, so the two never drift apart.
 func reg(c command.Command) Applet {
-	return Applet{Ep: command.Adapt(c), Desc: c.Synopsis()}
+	return Applet{Cmd: c, Desc: c.Synopsis()}
 }
 
 func init() {

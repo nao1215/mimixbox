@@ -16,6 +16,7 @@
 package main
 
 import (
+	"context"
 	"errors"
 	"fmt"
 	"io"
@@ -71,21 +72,16 @@ func run(argv []string, stdio command.IO) int {
 	return runOption(first, rest[1:], stdio)
 }
 
-// runApplet runs the named applet with args. The applet entry points still read
-// the process-level os.Args and streams (via internal/command.Adapt), so os.Args
-// is set to "<applet> <args...>" before the call. runApplet is a variable so
-// tests can substitute a fake dispatcher.
+// runApplet runs the named applet with args. The applet is executed through
+// internal/command.Execute with the injected IO, so dispatch touches neither
+// os.Args nor the process streams and can be exercised entirely in memory.
+// runApplet is a variable so tests can substitute a fake dispatcher.
 var runApplet = func(name string, args []string, stdio command.IO) int {
 	app, ok := applets.Applets[name]
 	if !ok {
 		return unsupported(name, stdio)
 	}
-	os.Args = append([]string{name}, args...)
-	status, err := app.Ep()
-	if err != nil {
-		_, _ = fmt.Fprintln(stdio.Err, name+": "+err.Error())
-	}
-	return status
+	return command.Execute(context.Background(), app.Cmd, stdio, args)
 }
 
 // runOption handles MimixBox's own options (everything that is not an applet).
