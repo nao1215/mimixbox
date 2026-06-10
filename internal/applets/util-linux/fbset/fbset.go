@@ -4,7 +4,6 @@ package fbset
 
 import (
 	"context"
-	"encoding/binary"
 	"fmt"
 	"os"
 	"unsafe"
@@ -41,16 +40,24 @@ var readVarFn = func(device string) (varScreenInfo, error) {
 	}
 	defer func() { _ = f.Close() }()
 
-	var buf [160]byte // struct fb_var_screeninfo is 160 bytes
-	_, _, errno := unix.Syscall(unix.SYS_IOCTL, f.Fd(), fbioGetVScreenInfo, uintptr(unsafe.Pointer(&buf[0])))
+	// The kernel writes struct fb_var_screeninfo in host byte order, so read the
+	// leading fields through a matching struct rather than a fixed endianness.
+	var raw fbVarScreenInfo
+	_, _, errno := unix.Syscall(unix.SYS_IOCTL, f.Fd(), fbioGetVScreenInfo, uintptr(unsafe.Pointer(&raw)))
 	if errno != 0 {
 		return varScreenInfo{}, errno
 	}
-	return varScreenInfo{
-		xres: binary.LittleEndian.Uint32(buf[0:]),
-		yres: binary.LittleEndian.Uint32(buf[4:]),
-		bpp:  binary.LittleEndian.Uint32(buf[24:]), // bits_per_pixel
-	}, nil
+	return varScreenInfo{xres: raw.Xres, yres: raw.Yres, bpp: raw.BitsPerPixel}, nil
+}
+
+// fbVarScreenInfo mirrors the leading fields of struct fb_var_screeninfo (the
+// full struct is 160 bytes; the trailing fields are not needed here).
+type fbVarScreenInfo struct {
+	Xres, Yres               uint32
+	XresVirtual, YresVirtual uint32
+	Xoffset, Yoffset         uint32
+	BitsPerPixel             uint32
+	_                        [160 - 7*4]byte // padding to the kernel struct size
 }
 
 // Run executes fbset.
