@@ -19,7 +19,7 @@ MimixBox packs many Unix commands into a single binary, like BusyBox. Unlike Bus
 The list below is generated from the registered applets by `make command-list`, so it never drifts from the binary. You can also run `mimixbox --list` to print it on the terminal.
 
 <!-- COMMAND_LIST_START -->
-There are 271 commands. Run `mimixbox --list` to see them on the terminal.
+There are 272 commands. Run `mimixbox --list` to see them on the terminal.
 
 | Command | Description |
 |:--|:--|
@@ -83,6 +83,7 @@ There are 271 commands. Run `mimixbox --list` to see them on the terminal.
 | fakemovie | Adds a video playback button to the image |
 | fallocate | Preallocate or extend space for a file |
 | false | Do nothing. Return failure(1) |
+| fatattr | Show or change FAT file attributes |
 | fdflush | Flush a floppy device's buffers |
 | fgrep | Search for fixed strings (grep -F) |
 | find | Search for files in a directory hierarchy |
