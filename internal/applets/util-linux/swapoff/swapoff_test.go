@@ -73,3 +73,19 @@ func TestNoArg(t *testing.T) {
 		t.Errorf("no target should fail")
 	}
 }
+
+func TestDisableAllEmpty(t *testing.T) {
+	// -a with no active swaps (empty table) is a no-op success, not an error.
+	dir := t.TempDir()
+	empty := filepath.Join(dir, "swaps")
+	if err := os.WriteFile(empty, []byte("Filename\tType\tSize\tUsed\tPriority\n"), 0o644); err != nil {
+		t.Fatal(err)
+	}
+	op, of := swapsPath, swapoffFn
+	swapsPath = empty
+	swapoffFn = func(string) error { t.Fatal("should not be called"); return nil }
+	defer func() { swapsPath, swapoffFn = op, of }()
+	if err := run(t, "-a"); err != nil {
+		t.Errorf("-a with no swaps should succeed, got %v", err)
+	}
+}
