@@ -19,7 +19,7 @@ MimixBox packs many Unix commands into a single binary, like BusyBox. Unlike Bus
 The list below is generated from the registered applets by `make command-list`, so it never drifts from the binary. You can also run `mimixbox --list` to print it on the terminal.
 
 <!-- COMMAND_LIST_START -->
-There are 213 commands. Run `mimixbox --list` to see them on the terminal.
+There are 214 commands. Run `mimixbox --list` to see them on the terminal.
 
 | Command | Description |
 |:--|:--|
@@ -115,6 +115,7 @@ There are 213 commands. Run `mimixbox --list` to see them on the terminal.
 | ls | List directory contents |
 | lsblk | List information about block devices |
 | lspci | List PCI devices |
+| lsusb | List USB devices |
 | lzcat | Decompress lzma data to standard output |
 | lzma | Compress or decompress files (lzma) |
 | man | Display a manual page |
