@@ -19,7 +19,7 @@ MimixBox packs many Unix commands into a single binary, like BusyBox. Unlike Bus
 The list below is generated from the registered applets by `make command-list`, so it never drifts from the binary. You can also run `mimixbox --list` to print it on the terminal.
 
 <!-- COMMAND_LIST_START -->
-There are 265 commands. Run `mimixbox --list` to see them on the terminal.
+There are 266 commands. Run `mimixbox --list` to see them on the terminal.
 
 | Command | Description |
 |:--|:--|
@@ -162,6 +162,7 @@ There are 265 commands. Run `mimixbox --list` to see them on the terminal.
 | nmeter | Print system statistics from a format string |
 | nohup | Run a command immune to hangups, with output to a non-tty |
 | nproc | Print the number of processing units available |
+| nsenter | Run a program in another process's namespaces |
 | nyancat | Animate the rainbow-trailing Nyan Cat |
 | od | Dump files in octal and other formats |
 | paste | Merge lines of files |
