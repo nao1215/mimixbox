@@ -207,6 +207,7 @@ import (
 	ap_textutils_uucode "github.com/nao1215/mimixbox/internal/applets/textutils/uucode"
 	ap_textutils_wc "github.com/nao1215/mimixbox/internal/applets/textutils/wc"
 	ap_textutils_xxd "github.com/nao1215/mimixbox/internal/applets/textutils/xxd"
+	ap_util_linux_blkdiscard "github.com/nao1215/mimixbox/internal/applets/util-linux/blkdiscard"
 	ap_util_linux_blkid "github.com/nao1215/mimixbox/internal/applets/util-linux/blkid"
 	ap_util_linux_blockdev "github.com/nao1215/mimixbox/internal/applets/util-linux/blockdev"
 	ap_util_linux_chattr "github.com/nao1215/mimixbox/internal/applets/util-linux/chattr"
@@ -249,7 +250,7 @@ import (
 // init populates the applet table. Each command is registered under its own
 // Name(), so the key can never drift from the command it dispatches to.
 func init() {
-	Applets = make(map[string]Applet, 260)
+	Applets = make(map[string]Applet, 261)
 	register(ap_archival_ar.New())
 	register(ap_archival_bunzip2.New())
 	register(ap_archival_compress.New())
@@ -469,6 +470,7 @@ func init() {
 	register(ap_textutils_uucode.NewUuencode())
 	register(ap_textutils_wc.New())
 	register(ap_textutils_xxd.New())
+	register(ap_util_linux_blkdiscard.New())
 	register(ap_util_linux_blkid.New())
 	register(ap_util_linux_blockdev.New())
 	register(ap_util_linux_chattr.New())
