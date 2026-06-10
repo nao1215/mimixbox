@@ -78,6 +78,7 @@ import (
 	ap_netutils_whris "github.com/nao1215/mimixbox/internal/applets/netutils/whris"
 	ap_pmutils_halt "github.com/nao1215/mimixbox/internal/applets/pmutils/halt"
 	ap_procps_pgrep "github.com/nao1215/mimixbox/internal/applets/procps/pgrep"
+	ap_procps_pmap "github.com/nao1215/mimixbox/internal/applets/procps/pmap"
 	ap_procps_pwdx "github.com/nao1215/mimixbox/internal/applets/procps/pwdx"
 	ap_procps_sysctl "github.com/nao1215/mimixbox/internal/applets/procps/sysctl"
 	ap_procps_uptime "github.com/nao1215/mimixbox/internal/applets/procps/uptime"
@@ -220,7 +221,7 @@ import (
 // init populates the applet table. Each command is registered under its own
 // Name(), so the key can never drift from the command it dispatches to.
 func init() {
-	Applets = make(map[string]Applet, 231)
+	Applets = make(map[string]Applet, 232)
 	register(ap_archival_ar.New())
 	register(ap_archival_bunzip2.New())
 	register(ap_archival_compress.New())
@@ -310,6 +311,7 @@ func init() {
 	register(ap_pmutils_halt.NewReboot())
 	register(ap_procps_pgrep.NewPgrep())
 	register(ap_procps_pgrep.NewPkill())
+	register(ap_procps_pmap.New())
 	register(ap_procps_pwdx.New())
 	register(ap_procps_sysctl.New())
 	register(ap_procps_uptime.New())
