@@ -5,9 +5,12 @@ package mkfsvfat
 import (
 	"context"
 	"encoding/binary"
+	"errors"
 	"os"
+	"unsafe"
 
 	"github.com/nao1215/mimixbox/internal/command"
+	"golang.org/x/sys/unix"
 )
 
 // Command is the mkfs.vfat applet. It is also registered under the traditional
@@ -32,9 +35,14 @@ const (
 	reservedSectors = 1
 	numFATs         = 2
 	mediaByte       = 0xF8
-	// FAT16 is only valid for at least this many data clusters.
+	// FAT16 is valid only for a data-cluster count in this inclusive range.
 	minFAT16Clusters = 4085
+	maxFAT16Clusters = 65524
 )
+
+// clusterSizes are the sectors-per-cluster values tried, smallest first, so the
+// cluster count lands in the FAT16 range as the device grows.
+var clusterSizes = []int{1, 2, 4, 8, 16, 32, 64}
 
 // Run executes mkfs.vfat.
 func (c *Command) Run(_ context.Context, stdio command.IO, args []string) error {
@@ -67,11 +75,10 @@ func (c *Command) Run(_ context.Context, stdio command.IO, args []string) error 
 	}
 	defer func() { _ = f.Close() }()
 
-	info, err := f.Stat()
+	totalSectors, err := deviceSectors(f)
 	if err != nil {
-		return command.Failuref("cannot stat %s: %v", rest[0], err)
+		return command.Failuref("cannot size %s: %v", rest[0], err)
 	}
-	totalSectors := int(info.Size() / sectorSize)
 
 	if err := writeFAT16(f, totalSectors, *label, hasLabel); err != nil {
 		return command.Failuref("%v", err)
@@ -79,46 +86,83 @@ func (c *Command) Run(_ context.Context, stdio command.IO, args []string) error 
 	return nil
 }
 
+// deviceSectors returns the size of f in 512-byte sectors. For a regular file
+// the stat size is used; for a block device (where st_size is 0) the real
+// capacity is queried with BLKGETSIZE64.
+func deviceSectors(f *os.File) (int, error) {
+	info, err := f.Stat()
+	if err != nil {
+		return 0, err
+	}
+	size := info.Size()
+	if size == 0 {
+		var bytes uint64
+		_, _, errno := unix.Syscall(unix.SYS_IOCTL, f.Fd(), uintptr(unix.BLKGETSIZE64), uintptr(unsafe.Pointer(&bytes)))
+		if errno != 0 {
+			return 0, errno
+		}
+		size = int64(bytes)
+	}
+	return int(size / sectorSize), nil
+}
+
 // geometry holds the computed FAT16 layout.
 type geometry struct {
-	totalSectors   int
-	rootDirSectors int
-	sectorsPerFAT  int
-	clusters       int
+	totalSectors      int
+	rootDirSectors    int
+	sectorsPerFAT     int
+	clusters          int
+	sectorsPerCluster int
 }
 
 func upper(a, b int) int { return (a + b - 1) / b }
 
-// computeGeometry derives the FAT16 layout for totalSectors 512-byte sectors,
-// using one sector per cluster.
-func computeGeometry(totalSectors int) geometry {
+// computeGeometry derives a FAT16 layout for totalSectors 512-byte sectors,
+// choosing the smallest sectors-per-cluster that keeps the data-cluster count
+// within the valid FAT16 range. It errors if no cluster size fits (the device
+// is too small for FAT16, or large enough to need FAT32).
+func computeGeometry(totalSectors int) (geometry, error) {
 	rootDirSectors := upper(rootEntries*32, sectorSize)
-	sectorsPerFAT := 1
-	for {
-		dataSectors := totalSectors - reservedSectors - rootDirSectors - numFATs*sectorsPerFAT
-		clusters := dataSectors // one sector per cluster
-		next := upper((clusters+2)*2, sectorSize)
-		if next == sectorsPerFAT {
-			return geometry{totalSectors, rootDirSectors, sectorsPerFAT, clusters}
+	tooSmall := false
+	for _, spc := range clusterSizes {
+		sectorsPerFAT := 1
+		var clusters int
+		for {
+			dataSectors := totalSectors - reservedSectors - rootDirSectors - numFATs*sectorsPerFAT
+			clusters = dataSectors / spc
+			next := upper((clusters+2)*2, sectorSize)
+			if next == sectorsPerFAT {
+				break
+			}
+			sectorsPerFAT = next
 		}
-		sectorsPerFAT = next
+		if clusters < minFAT16Clusters {
+			tooSmall = true
+			continue
+		}
+		if clusters <= maxFAT16Clusters {
+			return geometry{totalSectors, rootDirSectors, sectorsPerFAT, clusters, spc}, nil
+		}
 	}
+	if tooSmall {
+		return geometry{}, errors.New("device is too small for FAT16")
+	}
+	return geometry{}, errors.New("device is too large for FAT16; use FAT32")
 }
 
 // writeFAT16 writes the boot sector, the two FATs, and the root directory. When
 // hasLabel is set, the root directory gets a matching volume-label entry.
 func writeFAT16(f *os.File, totalSectors int, label string, hasLabel bool) error {
-	g := computeGeometry(totalSectors)
-	if g.clusters < minFAT16Clusters {
-		return command.Failuref("device is too small for FAT16 (%d clusters, need %d)",
-			g.clusters, minFAT16Clusters)
+	g, err := computeGeometry(totalSectors)
+	if err != nil {
+		return err
 	}
 
 	boot := make([]byte, sectorSize)
 	boot[0], boot[1], boot[2] = 0xEB, 0x3C, 0x90 // jump
 	copy(boot[3:11], "MIMIXBOX")
 	binary.LittleEndian.PutUint16(boot[11:], sectorSize)
-	boot[13] = 1 // sectors per cluster
+	boot[13] = byte(g.sectorsPerCluster)
 	binary.LittleEndian.PutUint16(boot[14:], reservedSectors)
 	boot[16] = numFATs
 	binary.LittleEndian.PutUint16(boot[17:], rootEntries)
@@ -160,7 +204,7 @@ func writeFAT16(f *os.File, totalSectors int, label string, hasLabel bool) error
 		root[11] = 0x08 // ATTR_VOLUME_ID
 	}
 	rootOff := int64(reservedSectors+numFATs*g.sectorsPerFAT) * sectorSize
-	_, err := f.WriteAt(root, rootOff)
+	_, err = f.WriteAt(root, rootOff)
 	return err
 }
 
