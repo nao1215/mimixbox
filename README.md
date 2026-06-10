@@ -19,7 +19,7 @@ MimixBox packs many Unix commands into a single binary, like BusyBox. Unlike Bus
 The list below is generated from the registered applets by `make command-list`, so it never drifts from the binary. You can also run `mimixbox --list` to print it on the terminal.
 
 <!-- COMMAND_LIST_START -->
-There are 262 commands. Run `mimixbox --list` to see them on the terminal.
+There are 263 commands. Run `mimixbox --list` to see them on the terminal.
 
 | Command | Description |
 |:--|:--|
@@ -75,6 +75,7 @@ There are 262 commands. Run `mimixbox --list` to see them on the terminal.
 | echo | Display a line of text |
 | ed | A line-oriented text editor |
 | egrep | Search with extended regular expressions (grep -E) |
+| eject | Eject removable media |
 | env | Run a program in a modified environment / print the environment |
 | expand | Convert TAB to N space (default:N=8) |
 | expr | Evaluate expressions |
