@@ -19,7 +19,7 @@ MimixBox packs many Unix commands into a single binary, like BusyBox. Unlike Bus
 The list below is generated from the registered applets by `make command-list`, so it never drifts from the binary. You can also run `mimixbox --list` to print it on the terminal.
 
 <!-- COMMAND_LIST_START -->
-There are 221 commands. Run `mimixbox --list` to see them on the terminal.
+There are 222 commands. Run `mimixbox --list` to see them on the terminal.
 
 | Command | Description |
 |:--|:--|
@@ -66,6 +66,7 @@ There are 221 commands. Run `mimixbox --list` to see them on the terminal.
 | df | Report file system disk space usage |
 | diff | Compare files line by line |
 | dirname | Print only directory path |
+| dmesg | Print or control the kernel ring buffer |
 | dos2unix | Change CRLF to LF |
 | du | Estimate file space usage |
 | echo | Display a line of text |
