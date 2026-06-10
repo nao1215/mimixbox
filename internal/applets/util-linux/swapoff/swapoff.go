@@ -59,13 +59,16 @@ func (c *Command) Run(_ context.Context, stdio command.IO, args []string) error 
 		return err
 	}
 
-	targets := fs.Args()
+	var targets []string
 	if *all {
+		// -a disables every active swap; having none to disable is success.
 		targets = activeSwaps()
-	}
-	if len(targets) == 0 {
-		_, _ = fmt.Fprintln(stdio.Err, "swapoff: a swap area or -a is required")
-		return command.SilentFailure()
+	} else {
+		targets = fs.Args()
+		if len(targets) == 0 {
+			_, _ = fmt.Fprintln(stdio.Err, "swapoff: a swap area or -a is required")
+			return command.SilentFailure()
+		}
 	}
 
 	failed := false
