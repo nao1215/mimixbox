@@ -24,13 +24,13 @@ func (c *Command) Name() string { return "syslogd" }
 // Synopsis returns the one-line description shown in the applet list.
 func (c *Command) Synopsis() string { return "Minimal system logging daemon" }
 
-// Run executes syslogd in the foreground until the context is cancelled.
+// Run executes syslogd in the foreground until the context is canceled.
 func (c *Command) Run(ctx context.Context, stdio command.IO, args []string) error {
 	fs := command.NewFlagSet(c.Name(), "[-l SOCKET] [-O LOGFILE]", stdio.Err).WithHelp(command.Help{
 		Description: "Receive log messages on a Unix datagram socket and append them to a log file, " +
 			"running in the foreground until interrupted. -l sets the socket (default /dev/log) and " +
 			"-O the log file (default /var/log/messages). The priority prefix is stripped from each " +
-			"message. Background daemonisation and the shared-memory buffer are not implemented.",
+			"message. Background daemonization and the shared-memory buffer are not implemented.",
 		Examples: []command.Example{
 			{Command: "syslogd -l /tmp/log -O /tmp/messages", Explain: "Log to a custom socket and file."},
 		},
@@ -59,7 +59,7 @@ func (c *Command) Run(ctx context.Context, stdio command.IO, args []string) erro
 	}
 	defer func() { _ = out.Close() }()
 
-	// Closing the connection when the context is cancelled unblocks Read.
+	// Closing the connection when the context is canceled unblocks Read.
 	go func() {
 		<-ctx.Done()
 		_ = conn.Close()
