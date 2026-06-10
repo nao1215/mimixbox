@@ -19,7 +19,7 @@ MimixBox packs many Unix commands into a single binary, like BusyBox. Unlike Bus
 The list below is generated from the registered applets by `make command-list`, so it never drifts from the binary. You can also run `mimixbox --list` to print it on the terminal.
 
 <!-- COMMAND_LIST_START -->
-There are 252 commands. Run `mimixbox --list` to see them on the terminal.
+There are 253 commands. Run `mimixbox --list` to see them on the terminal.
 
 | Command | Description |
 |:--|:--|
@@ -43,6 +43,7 @@ There are 252 commands. Run `mimixbox --list` to see them on the terminal.
 | bzcat | Decompress bz2 data to standard output |
 | cal | Display a calendar |
 | cat | Concatenate files and print on the standard output |
+| chattr | Change ext2/ext4 file attributes |
 | chgrp | Change the group of each FILE to GROUP |
 | chmod | Change file mode bits |
 | chown | Change the owner and/or group of each FILE to OWNER and/or GROUP |
