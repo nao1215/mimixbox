@@ -216,6 +216,7 @@ import (
 	ap_util_linux_eject "github.com/nao1215/mimixbox/internal/applets/util-linux/eject"
 	ap_util_linux_fallocate "github.com/nao1215/mimixbox/internal/applets/util-linux/fallocate"
 	ap_util_linux_fatattr "github.com/nao1215/mimixbox/internal/applets/util-linux/fatattr"
+	ap_util_linux_fbset "github.com/nao1215/mimixbox/internal/applets/util-linux/fbset"
 	ap_util_linux_fdflush "github.com/nao1215/mimixbox/internal/applets/util-linux/fdflush"
 	ap_util_linux_findfs "github.com/nao1215/mimixbox/internal/applets/util-linux/findfs"
 	ap_util_linux_flock "github.com/nao1215/mimixbox/internal/applets/util-linux/flock"
@@ -261,7 +262,7 @@ import (
 // init populates the applet table. Each command is registered under its own
 // Name(), so the key can never drift from the command it dispatches to.
 func init() {
-	Applets = make(map[string]Applet, 272)
+	Applets = make(map[string]Applet, 273)
 	register(ap_archival_ar.New())
 	register(ap_archival_bunzip2.New())
 	register(ap_archival_compress.New())
@@ -490,6 +491,7 @@ func init() {
 	register(ap_util_linux_eject.New())
 	register(ap_util_linux_fallocate.New())
 	register(ap_util_linux_fatattr.New())
+	register(ap_util_linux_fbset.New())
 	register(ap_util_linux_fdflush.New())
 	register(ap_util_linux_findfs.New())
 	register(ap_util_linux_flock.New())
