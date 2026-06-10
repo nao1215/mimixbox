@@ -25,13 +25,13 @@ func fixture(t *testing.T, self int, cmdlines map[int]string) *map[int]syscall.S
 			t.Fatal(err)
 		}
 	}
-	signalled := map[int]syscall.Signal{}
+	signaled := map[int]syscall.Signal{}
 	origP, origS, origSig := procDir, selfPid, sendSignal
 	procDir = dir
 	selfPid = func() int { return self }
-	sendSignal = func(pid int, sig syscall.Signal) error { signalled[pid] = sig; return nil }
+	sendSignal = func(pid int, sig syscall.Signal) error { signaled[pid] = sig; return nil }
 	t.Cleanup(func() { procDir, selfPid, sendSignal = origP, origS, origSig })
-	return &signalled
+	return &signaled
 }
 
 func fmtInt(n int) string { return strconv.Itoa(n) }
@@ -59,7 +59,7 @@ func TestSignalsAllButExcluded(t *testing.T) {
 	}
 	got := keys(*sig)
 	if len(got) != 2 || got[0] != 200 || got[1] != 300 {
-		t.Errorf("signalled = %v, want [200 300]", got)
+		t.Errorf("signaled = %v, want [200 300]", got)
 	}
 	if (*sig)[200] != syscall.SIGTERM {
 		t.Errorf("default signal = %v, want SIGTERM", (*sig)[200])
@@ -85,7 +85,7 @@ func TestOmit(t *testing.T) {
 		t.Errorf("PID 200 should be omitted")
 	}
 	if _, ok := (*sig)[300]; !ok {
-		t.Errorf("PID 300 should be signalled")
+		t.Errorf("PID 300 should be signaled")
 	}
 }
 
