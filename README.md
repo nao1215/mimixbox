@@ -19,7 +19,7 @@ MimixBox packs many Unix commands into a single binary, like BusyBox. Unlike Bus
 The list below is generated from the registered applets by `make command-list`, so it never drifts from the binary. You can also run `mimixbox --list` to print it on the terminal.
 
 <!-- COMMAND_LIST_START -->
-There are 243 commands. Run `mimixbox --list` to see them on the terminal.
+There are 244 commands. Run `mimixbox --list` to see them on the terminal.
 
 | Command | Description |
 |:--|:--|
@@ -204,6 +204,7 @@ There are 243 commands. Run `mimixbox --list` to see them on the terminal.
 | shuf | Generate a random permutation of input lines |
 | sl | Cure your bad habit of mistyping |
 | sleep | Pause for NUMBER seconds(minutes, hours, days) |
+| smemcap | Capture /proc memory data into a tar for smem |
 | sort | Sort lines of text files |
 | speaker | Read text aloud using an installed TTS engine |
 | split | Split a file into pieces |
