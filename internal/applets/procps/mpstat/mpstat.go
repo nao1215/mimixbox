@@ -30,7 +30,7 @@ var statPath = "/proc/stat"
 // Run executes mpstat.
 func (c *Command) Run(_ context.Context, stdio command.IO, args []string) error {
 	fs := command.NewFlagSet(c.Name(), "", stdio.Err).WithHelp(command.Help{
-		Description: "Print the CPU utilisation breakdown for the aggregate ('all') and each individual " +
+		Description: "Print the CPU utilization breakdown for the aggregate ('all') and each individual " +
 			"processor, as the percentage of time spent in user, nice, system, iowait, irq, softirq, " +
 			"steal, guest, and idle. The values are averages since boot.",
 		Examples: []command.Example{
