@@ -19,7 +19,7 @@ MimixBox packs many Unix commands into a single binary, like BusyBox. Unlike Bus
 The list below is generated from the registered applets by `make command-list`, so it never drifts from the binary. You can also run `mimixbox --list` to print it on the terminal.
 
 <!-- COMMAND_LIST_START -->
-There are 264 commands. Run `mimixbox --list` to see them on the terminal.
+There are 265 commands. Run `mimixbox --list` to see them on the terminal.
 
 | Command | Description |
 |:--|:--|
@@ -259,6 +259,7 @@ There are 264 commands. Run `mimixbox --list` to see them on the terminal.
 | unlink | Remove a single file by calling the unlink function |
 | unlzma | Decompress lzma files |
 | unshadow | Combine passwd and shadow files for password auditing |
+| unshare | Run a program with unshared namespaces |
 | unxz | Decompress xz files |
 | unzip | Extract files from a ZIP archive |
 | uptime | Tell how long the system has been running |
