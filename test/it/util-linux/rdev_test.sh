@@ -1,0 +1,1 @@
+TestRdev() { rdev; }
