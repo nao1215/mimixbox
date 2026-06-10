@@ -19,7 +19,7 @@ MimixBox packs many Unix commands into a single binary, like BusyBox. Unlike Bus
 The list below is generated from the registered applets by `make command-list`, so it never drifts from the binary. You can also run `mimixbox --list` to print it on the terminal.
 
 <!-- COMMAND_LIST_START -->
-There are 242 commands. Run `mimixbox --list` to see them on the terminal.
+There are 243 commands. Run `mimixbox --list` to see them on the terminal.
 
 | Command | Description |
 |:--|:--|
@@ -221,6 +221,7 @@ There are 242 commands. Run `mimixbox --list` to see them on the terminal.
 | test | Evaluate a conditional expression |
 | time | Run a command and report how long it took |
 | timeout | Run a command with a time limit |
+| top | Display system summary and top processes |
 | touch | Update the access and modification times of each FILE to the current time |
 | tr | Translate or delete characters |
 | tree | List directory contents in a tree-like format |
