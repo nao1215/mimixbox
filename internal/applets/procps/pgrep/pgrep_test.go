@@ -78,7 +78,7 @@ func TestPkillSignals(t *testing.T) {
 		t.Fatal(err)
 	}
 	if len(*calls) != 2 {
-		t.Fatalf("signalled %d processes, want 2", len(*calls))
+		t.Fatalf("signaled %d processes, want 2", len(*calls))
 	}
 	for _, c := range *calls {
 		if c.num != syscall.SIGTERM {
