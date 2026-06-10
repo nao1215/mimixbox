@@ -19,7 +19,7 @@ MimixBox packs many Unix commands into a single binary, like BusyBox. Unlike Bus
 The list below is generated from the registered applets by `make command-list`, so it never drifts from the binary. You can also run `mimixbox --list` to print it on the terminal.
 
 <!-- COMMAND_LIST_START -->
-There are 248 commands. Run `mimixbox --list` to see them on the terminal.
+There are 249 commands. Run `mimixbox --list` to see them on the terminal.
 
 | Command | Description |
 |:--|:--|
@@ -164,6 +164,7 @@ There are 248 commands. Run `mimixbox --list` to see them on the terminal.
 | pmap | Report the memory map of a process |
 | posixer | Report which POSIX utilities are installed |
 | poweroff | Power off the system |
+| powertop | Report the system power supplies |
 | printenv | Print environment variable |
 | printf | Format and print data |
 | ps | Report a snapshot of the current processes |
