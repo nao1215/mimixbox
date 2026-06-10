@@ -19,7 +19,7 @@ MimixBox packs many Unix commands into a single binary, like BusyBox. Unlike Bus
 The list below is generated from the registered applets by `make command-list`, so it never drifts from the binary. You can also run `mimixbox --list` to print it on the terminal.
 
 <!-- COMMAND_LIST_START -->
-There are 250 commands. Run `mimixbox --list` to see them on the terminal.
+There are 251 commands. Run `mimixbox --list` to see them on the terminal.
 
 | Command | Description |
 |:--|:--|
@@ -82,6 +82,7 @@ There are 250 commands. Run `mimixbox --list` to see them on the terminal.
 | false | Do nothing. Return failure(1) |
 | fgrep | Search for fixed strings (grep -F) |
 | find | Search for files in a directory hierarchy |
+| findfs | Find a filesystem by label or UUID |
 | flock | Run a command under an advisory file lock |
 | fmt | Simple optimal text formatter |
 | fold | Wrap each input line to fit in specified width |
