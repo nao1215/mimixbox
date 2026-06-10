@@ -19,7 +19,7 @@ MimixBox packs many Unix commands into a single binary, like BusyBox. Unlike Bus
 The list below is generated from the registered applets by `make command-list`, so it never drifts from the binary. You can also run `mimixbox --list` to print it on the terminal.
 
 <!-- COMMAND_LIST_START -->
-There are 238 commands. Run `mimixbox --list` to see them on the terminal.
+There are 239 commands. Run `mimixbox --list` to see them on the terminal.
 
 | Command | Description |
 |:--|:--|
@@ -244,6 +244,7 @@ There are 238 commands. Run `mimixbox --list` to see them on the terminal.
 | uuidgen | Print UUID (Universally Unique IDentifier) |
 | valid-shell | Verify if /etc/shells is valid |
 | vi | A minimal vi-style screen text editor |
+| vmstat | Report virtual memory statistics |
 | w | Show who is logged on and a system summary |
 | wall | Write a message to all logged-in users |
 | watch | Execute a program periodically, showing output fullscreen |
