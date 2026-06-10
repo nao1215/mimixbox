@@ -19,7 +19,7 @@ MimixBox packs many Unix commands into a single binary, like BusyBox. Unlike Bus
 The list below is generated from the registered applets by `make command-list`, so it never drifts from the binary. You can also run `mimixbox --list` to print it on the terminal.
 
 <!-- COMMAND_LIST_START -->
-There are 239 commands. Run `mimixbox --list` to see them on the terminal.
+There are 240 commands. Run `mimixbox --list` to see them on the terminal.
 
 | Command | Description |
 |:--|:--|
@@ -139,6 +139,7 @@ There are 239 commands. Run `mimixbox --list` to see them on the terminal.
 | mktemp | Create a temporary file or directory |
 | more | Page through text one screen at a time |
 | mountpoint | See if a directory is a mountpoint |
+| mpstat | Report per-processor CPU statistics |
 | mv | Rename SOURCE to DESTINATION, or move SOURCE(s) to DIRECTORY |
 | nc | Read and write data across network connections |
 | nice | Run a command with an adjusted niceness |
