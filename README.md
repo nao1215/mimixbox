@@ -19,7 +19,7 @@ MimixBox packs many Unix commands into a single binary, like BusyBox. Unlike Bus
 The list below is generated from the registered applets by `make command-list`, so it never drifts from the binary. You can also run `mimixbox --list` to print it on the terminal.
 
 <!-- COMMAND_LIST_START -->
-There are 223 commands. Run `mimixbox --list` to see them on the terminal.
+There are 224 commands. Run `mimixbox --list` to see them on the terminal.
 
 | Command | Description |
 |:--|:--|
@@ -37,6 +37,7 @@ There are 223 commands. Run `mimixbox --list` to see them on the terminal.
 | bash | Command interpreter (MimixBox mbsh compatibility front-end) |
 | bc | An arbitrary-precision calculator language |
 | blkid | Identify the filesystem type of a device or image |
+| blockdev | Report block device properties |
 | bunzip2 | Decompress bzip2 (.bz2) files |
 | busybox | BusyBox-style multi-call front-end for MimixBox applets |
 | bzcat | Decompress bz2 data to standard output |
