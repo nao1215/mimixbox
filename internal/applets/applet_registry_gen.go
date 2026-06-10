@@ -202,6 +202,8 @@ import (
 	ap_util_linux_lsusb "github.com/nao1215/mimixbox/internal/applets/util-linux/lsusb"
 	ap_util_linux_mesg "github.com/nao1215/mimixbox/internal/applets/util-linux/mesg"
 	ap_util_linux_rdate "github.com/nao1215/mimixbox/internal/applets/util-linux/rdate"
+	ap_util_linux_rdev "github.com/nao1215/mimixbox/internal/applets/util-linux/rdev"
+	ap_util_linux_readprofile "github.com/nao1215/mimixbox/internal/applets/util-linux/readprofile"
 	ap_util_linux_renice "github.com/nao1215/mimixbox/internal/applets/util-linux/renice"
 	ap_util_linux_script "github.com/nao1215/mimixbox/internal/applets/util-linux/script"
 	ap_util_linux_setarch "github.com/nao1215/mimixbox/internal/applets/util-linux/setarch"
@@ -214,7 +216,7 @@ import (
 // init populates the applet table. Each command is registered under its own
 // Name(), so the key can never drift from the command it dispatches to.
 func init() {
-	Applets = make(map[string]Applet, 224)
+	Applets = make(map[string]Applet, 226)
 	register(ap_archival_ar.New())
 	register(ap_archival_bunzip2.New())
 	register(ap_archival_compress.New())
@@ -429,6 +431,8 @@ func init() {
 	register(ap_util_linux_lsusb.New())
 	register(ap_util_linux_mesg.New())
 	register(ap_util_linux_rdate.New())
+	register(ap_util_linux_rdev.New())
+	register(ap_util_linux_readprofile.New())
 	register(ap_util_linux_renice.New())
 	register(ap_util_linux_script.NewScript())
 	register(ap_util_linux_script.NewScriptreplay())

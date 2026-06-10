@@ -19,7 +19,7 @@ MimixBox packs many Unix commands into a single binary, like BusyBox. Unlike Bus
 The list below is generated from the registered applets by `make command-list`, so it never drifts from the binary. You can also run `mimixbox --list` to print it on the terminal.
 
 <!-- COMMAND_LIST_START -->
-There are 224 commands. Run `mimixbox --list` to see them on the terminal.
+There are 226 commands. Run `mimixbox --list` to see them on the terminal.
 
 | Command | Description |
 |:--|:--|
@@ -158,7 +158,9 @@ There are 224 commands. Run `mimixbox --list` to see them on the terminal.
 | pwgen | Generate random passwords for authorized testing |
 | pwscore | Estimate the strength of a password |
 | rdate | Get the time from a remote host (RFC 868) |
+| rdev | Print the root filesystem device |
 | readlink | Print resolved symbolic links or canonical file names |
+| readprofile | Summarize the kernel profiling buffer |
 | realpath | Print the resolved absolute file name |
 | reboot | Reboot the system |
 | remove-shell | Remove shell name from /etc/shells |
