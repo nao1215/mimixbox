@@ -45,7 +45,7 @@ func (c *Command) Synopsis() string {
 // procDir is the /proc mount; tests point it at a fixture.
 var procDir = "/proc"
 
-// sendSignal is indirected so signalling is testable.
+// sendSignal is indirected so signaling is testable.
 var sendSignal = func(pid int, sig syscall.Signal) error { return syscall.Kill(pid, sig) }
 
 // Run executes pgrep/pkill.
@@ -98,7 +98,7 @@ func (c *Command) Run(_ context.Context, stdio command.IO, args []string) error 
 	failed := false
 	for _, pid := range pids {
 		if err := sendSignal(pid, syscall.Signal(sigNum)); err != nil {
-			_, _ = fmt.Fprintf(stdio.Err, "pkill: signalling %d failed: %v\n", pid, err)
+			_, _ = fmt.Fprintf(stdio.Err, "pkill: signaling %d failed: %v\n", pid, err)
 			failed = true
 		}
 	}
@@ -140,7 +140,7 @@ func (c *Command) help() command.Help {
 			Examples: []command.Example{
 				{Command: "pkill -9 firefox", Explain: "Force-kill processes named like firefox."},
 			},
-			ExitStatus: "0  at least one process was signalled.\n1  nothing matched.",
+			ExitStatus: "0  at least one process was signaled.\n1  nothing matched.",
 		}
 	}
 	return command.Help{
