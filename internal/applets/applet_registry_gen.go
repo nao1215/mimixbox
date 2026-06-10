@@ -237,6 +237,8 @@ import (
 	ap_util_linux_setarch "github.com/nao1215/mimixbox/internal/applets/util-linux/setarch"
 	ap_util_linux_setpriv "github.com/nao1215/mimixbox/internal/applets/util-linux/setpriv"
 	ap_util_linux_setsid "github.com/nao1215/mimixbox/internal/applets/util-linux/setsid"
+	ap_util_linux_swapoff "github.com/nao1215/mimixbox/internal/applets/util-linux/swapoff"
+	ap_util_linux_swapon "github.com/nao1215/mimixbox/internal/applets/util-linux/swapon"
 	ap_util_linux_taskset "github.com/nao1215/mimixbox/internal/applets/util-linux/taskset"
 	ap_util_linux_umount "github.com/nao1215/mimixbox/internal/applets/util-linux/umount"
 	ap_util_linux_wall "github.com/nao1215/mimixbox/internal/applets/util-linux/wall"
@@ -245,7 +247,7 @@ import (
 // init populates the applet table. Each command is registered under its own
 // Name(), so the key can never drift from the command it dispatches to.
 func init() {
-	Applets = make(map[string]Applet, 256)
+	Applets = make(map[string]Applet, 258)
 	register(ap_archival_ar.New())
 	register(ap_archival_bunzip2.New())
 	register(ap_archival_compress.New())
@@ -499,6 +501,8 @@ func init() {
 	register(ap_util_linux_setarch.NewSetarch())
 	register(ap_util_linux_setpriv.New())
 	register(ap_util_linux_setsid.New())
+	register(ap_util_linux_swapoff.New())
+	register(ap_util_linux_swapon.New())
 	register(ap_util_linux_taskset.New())
 	register(ap_util_linux_umount.New())
 	register(ap_util_linux_wall.New())
