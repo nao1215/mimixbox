@@ -7,7 +7,7 @@ Describe 'ps'
         The status should be success
     End
     It 'lists running processes'
-        When call TestPsHasInit
+        When call TestPsHasProcesses
         The status should be success
         The output should not equal '0'
     End
