@@ -78,16 +78,22 @@ func (c *Command) Run(_ context.Context, stdio command.IO, args []string) error 
 		_, _ = fmt.Fprintln(stdio.Out, "is n")
 		return &command.ExitError{Code: 1}
 	}
+	if len(operands) > 1 {
+		_, _ = fmt.Fprintln(stdio.Err, "mesg: too many arguments")
+		return &command.ExitError{Code: 2}
+	}
 
 	switch operands[0] {
 	case "y":
 		if err := os.Chmod(path, info.Mode()|groupWrite); err != nil {
-			return command.Failuref("%v", err)
+			_, _ = fmt.Fprintf(stdio.Err, "mesg: %v\n", err)
+			return &command.ExitError{Code: 2}
 		}
 		return nil
 	case "n":
 		if err := os.Chmod(path, info.Mode()&^groupWrite); err != nil {
-			return command.Failuref("%v", err)
+			_, _ = fmt.Fprintf(stdio.Err, "mesg: %v\n", err)
+			return &command.ExitError{Code: 2}
 		}
 		return &command.ExitError{Code: 1}
 	default:
