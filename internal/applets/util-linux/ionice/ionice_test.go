@@ -87,6 +87,19 @@ func TestSelfReport(t *testing.T) {
 	}
 }
 
+func TestValidation(t *testing.T) {
+	withStubs(t, 0)
+	if _, err := run(t, "-c", "2", "-n", "15", "echo"); err == nil {
+		t.Errorf("out-of-range -n should fail")
+	}
+	if _, err := run(t, "-c", "9", "echo"); err == nil {
+		t.Errorf("out-of-range -c should fail")
+	}
+	if _, err := run(t, "-c", "3", "-p", "1234", "--", "echo"); err == nil {
+		t.Errorf("-p with a command should fail")
+	}
+}
+
 func TestDescribe(t *testing.T) {
 	t.Parallel()
 	cases := map[int]string{
