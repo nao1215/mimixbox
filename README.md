@@ -19,7 +19,7 @@ MimixBox packs many Unix commands into a single binary, like BusyBox. Unlike Bus
 The list below is generated from the registered applets by `make command-list`, so it never drifts from the binary. You can also run `mimixbox --list` to print it on the terminal.
 
 <!-- COMMAND_LIST_START -->
-There are 267 commands. Run `mimixbox --list` to see them on the terminal.
+There are 268 commands. Run `mimixbox --list` to see them on the terminal.
 
 | Command | Description |
 |:--|:--|
@@ -173,6 +173,7 @@ There are 267 commands. Run `mimixbox --list` to see them on the terminal.
 | pidof | Find the process ID of a running program |
 | ping | Send ICMP ECHO_REQUEST to network hosts |
 | pipe_progress | Copy stdin to stdout, printing progress dots to stderr |
+| pivot_root | Change the root filesystem |
 | pkill | Signal processes by name |
 | pmap | Report the memory map of a process |
 | posixer | Report which POSIX utilities are installed |

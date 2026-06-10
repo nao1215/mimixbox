@@ -236,6 +236,7 @@ import (
 	ap_util_linux_mkswap "github.com/nao1215/mimixbox/internal/applets/util-linux/mkswap"
 	ap_util_linux_mount "github.com/nao1215/mimixbox/internal/applets/util-linux/mount"
 	ap_util_linux_nsenter "github.com/nao1215/mimixbox/internal/applets/util-linux/nsenter"
+	ap_util_linux_pivot_root "github.com/nao1215/mimixbox/internal/applets/util-linux/pivot_root"
 	ap_util_linux_rdate "github.com/nao1215/mimixbox/internal/applets/util-linux/rdate"
 	ap_util_linux_rdev "github.com/nao1215/mimixbox/internal/applets/util-linux/rdev"
 	ap_util_linux_readprofile "github.com/nao1215/mimixbox/internal/applets/util-linux/readprofile"
@@ -256,7 +257,7 @@ import (
 // init populates the applet table. Each command is registered under its own
 // Name(), so the key can never drift from the command it dispatches to.
 func init() {
-	Applets = make(map[string]Applet, 267)
+	Applets = make(map[string]Applet, 268)
 	register(ap_archival_ar.New())
 	register(ap_archival_bunzip2.New())
 	register(ap_archival_compress.New())
@@ -506,6 +507,7 @@ func init() {
 	register(ap_util_linux_mkswap.New())
 	register(ap_util_linux_mount.New())
 	register(ap_util_linux_nsenter.New())
+	register(ap_util_linux_pivot_root.New())
 	register(ap_util_linux_rdate.New())
 	register(ap_util_linux_rdev.New())
 	register(ap_util_linux_readprofile.New())
