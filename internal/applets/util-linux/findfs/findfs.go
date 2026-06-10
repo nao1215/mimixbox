@@ -36,7 +36,7 @@ func (c *Command) Run(_ context.Context, stdio command.IO, args []string) error 
 		Description: "Print the block device whose filesystem has the given LABEL or UUID, resolved " +
 			"through /dev/disk/by-label and /dev/disk/by-uuid.",
 		Examples: []command.Example{
-			{Command: "findfs LABEL=rootfs", Explain: "Print the device labelled rootfs."},
+			{Command: "findfs LABEL=rootfs", Explain: "Print the device labeled rootfs."},
 			{Command: "findfs UUID=1234-5678", Explain: "Print the device with that UUID."},
 		},
 		ExitStatus: "0  the device was found.\n1  the tag could not be resolved.",
