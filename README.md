@@ -19,7 +19,7 @@ MimixBox packs many Unix commands into a single binary, like BusyBox. Unlike Bus
 The list below is generated from the registered applets by `make command-list`, so it never drifts from the binary. You can also run `mimixbox --list` to print it on the terminal.
 
 <!-- COMMAND_LIST_START -->
-There are 244 commands. Run `mimixbox --list` to see them on the terminal.
+There are 245 commands. Run `mimixbox --list` to see them on the terminal.
 
 | Command | Description |
 |:--|:--|
@@ -113,6 +113,7 @@ There are 244 commands. Run `mimixbox --list` to see them on the terminal.
 | kill | Kill process or send signal to process |
 | killall | Kill processes by name |
 | killall5 | Send a signal to all processes |
+| klogd | Forward kernel messages to the system log |
 | last | Show a listing of last logged-in users |
 | less | Page through text one screen at a time |
 | lifegame | Life game (Conway's Game of Life) |
