@@ -19,7 +19,7 @@ MimixBox packs many Unix commands into a single binary, like BusyBox. Unlike Bus
 The list below is generated from the registered applets by `make command-list`, so it never drifts from the binary. You can also run `mimixbox --list` to print it on the terminal.
 
 <!-- COMMAND_LIST_START -->
-There are 276 commands. Run `mimixbox --list` to see them on the terminal.
+There are 278 commands. Run `mimixbox --list` to see them on the terminal.
 
 | Command | Description |
 |:--|:--|
@@ -153,8 +153,10 @@ There are 276 commands. Run `mimixbox --list` to see them on the terminal.
 | mesg | Display or control write access to your terminal |
 | minips | Minimal process lister (PID, user, command) |
 | mkdir | Make directories |
+| mkdosfs | Create a FAT16 filesystem |
 | mkfifo | Make FIFO (named pipe) |
 | mkfs.minix | Create a Minix filesystem |
+| mkfs.vfat | Create a FAT16 filesystem |
 | mknod | Make block or character special files |
 | mkswap | Set up a Linux swap area |
 | mktemp | Create a temporary file or directory |
