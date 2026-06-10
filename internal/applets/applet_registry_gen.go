@@ -191,6 +191,7 @@ import (
 	ap_util_linux_fallocate "github.com/nao1215/mimixbox/internal/applets/util-linux/fallocate"
 	ap_util_linux_getopt "github.com/nao1215/mimixbox/internal/applets/util-linux/getopt"
 	ap_util_linux_hexdump "github.com/nao1215/mimixbox/internal/applets/util-linux/hexdump"
+	ap_util_linux_hwclock "github.com/nao1215/mimixbox/internal/applets/util-linux/hwclock"
 	ap_util_linux_ionice "github.com/nao1215/mimixbox/internal/applets/util-linux/ionice"
 	ap_util_linux_ipcrm "github.com/nao1215/mimixbox/internal/applets/util-linux/ipcrm"
 	ap_util_linux_ipcs "github.com/nao1215/mimixbox/internal/applets/util-linux/ipcs"
@@ -212,7 +213,7 @@ import (
 // init populates the applet table. Each command is registered under its own
 // Name(), so the key can never drift from the command it dispatches to.
 func init() {
-	Applets = make(map[string]Applet, 222)
+	Applets = make(map[string]Applet, 223)
 	register(ap_archival_ar.New())
 	register(ap_archival_bunzip2.New())
 	register(ap_archival_compress.New())
@@ -416,6 +417,7 @@ func init() {
 	register(ap_util_linux_getopt.New())
 	register(ap_util_linux_hexdump.NewHd())
 	register(ap_util_linux_hexdump.NewHexdump())
+	register(ap_util_linux_hwclock.New())
 	register(ap_util_linux_ionice.New())
 	register(ap_util_linux_ipcrm.New())
 	register(ap_util_linux_ipcs.New())

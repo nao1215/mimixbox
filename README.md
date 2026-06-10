@@ -19,7 +19,7 @@ MimixBox packs many Unix commands into a single binary, like BusyBox. Unlike Bus
 The list below is generated from the registered applets by `make command-list`, so it never drifts from the binary. You can also run `mimixbox --list` to print it on the terminal.
 
 <!-- COMMAND_LIST_START -->
-There are 222 commands. Run `mimixbox --list` to see them on the terminal.
+There are 223 commands. Run `mimixbox --list` to see them on the terminal.
 
 | Command | Description |
 |:--|:--|
@@ -100,6 +100,7 @@ There are 222 commands. Run `mimixbox --list` to see them on the terminal.
 | hostname | Show the system's host name |
 | http-status-code | Explain HTTP status codes and their RFC references |
 | hush | Command interpreter (MimixBox mbsh compatibility front-end) |
+| hwclock | Read the hardware (RTC) clock |
 | id | Print User ID and Group ID |
 | install | Copy files and set attributes |
 | ionice | Get or set process I/O scheduling class and priority |
