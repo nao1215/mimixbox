@@ -82,6 +82,7 @@ import (
 	ap_procps_killall5 "github.com/nao1215/mimixbox/internal/applets/procps/killall5"
 	ap_procps_klogd "github.com/nao1215/mimixbox/internal/applets/procps/klogd"
 	ap_procps_logger "github.com/nao1215/mimixbox/internal/applets/procps/logger"
+	ap_procps_logread "github.com/nao1215/mimixbox/internal/applets/procps/logread"
 	ap_procps_lsof "github.com/nao1215/mimixbox/internal/applets/procps/lsof"
 	ap_procps_minips "github.com/nao1215/mimixbox/internal/applets/procps/minips"
 	ap_procps_mpstat "github.com/nao1215/mimixbox/internal/applets/procps/mpstat"
@@ -235,7 +236,7 @@ import (
 // init populates the applet table. Each command is registered under its own
 // Name(), so the key can never drift from the command it dispatches to.
 func init() {
-	Applets = make(map[string]Applet, 246)
+	Applets = make(map[string]Applet, 247)
 	register(ap_archival_ar.New())
 	register(ap_archival_bunzip2.New())
 	register(ap_archival_compress.New())
@@ -328,6 +329,7 @@ func init() {
 	register(ap_procps_killall5.New())
 	register(ap_procps_klogd.New())
 	register(ap_procps_logger.New())
+	register(ap_procps_logread.New())
 	register(ap_procps_lsof.New())
 	register(ap_procps_minips.New())
 	register(ap_procps_mpstat.New())
