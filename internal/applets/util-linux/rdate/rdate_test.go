@@ -82,9 +82,17 @@ func TestMissingHost(t *testing.T) {
 }
 
 func TestUnreachable(t *testing.T) {
-	t.Parallel()
+	// Bind an ephemeral port and immediately close it, so the port is known to
+	// be closed rather than assuming a fixed port is free.
+	ln, err := net.Listen("tcp", "127.0.0.1:0")
+	if err != nil {
+		t.Fatal(err)
+	}
+	_, p, _ := net.SplitHostPort(ln.Addr().String())
+	_ = ln.Close()
+
 	orig := port
-	port = "1" // nothing listens here
+	port = p
 	defer func() { port = orig }()
 	origTO := timeout
 	timeout = 500 * time.Millisecond

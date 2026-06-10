@@ -77,9 +77,10 @@ func (c *Command) Run(_ context.Context, stdio command.IO, args []string) error 
 			return command.SilentFailure()
 		}
 	}
-	if *printIt || !*setIt {
-		_, _ = fmt.Fprintln(stdio.Out, remote.Format("Mon Jan _2 15:04:05 2006"))
-	}
+	// rdate prints the remote time by default; -p makes that explicit and -s
+	// additionally sets the clock, so the time is always printed here.
+	_ = printIt
+	_, _ = fmt.Fprintln(stdio.Out, remote.Format("Mon Jan _2 15:04:05 2006"))
 	return nil
 }
 
