@@ -95,6 +95,13 @@ func TestInvalidArg(t *testing.T) {
 	}
 }
 
+func TestTooManyArgs(t *testing.T) {
+	withTTYFile(t, 0o620)
+	if _, code := run(t, "y", "extra"); code != 2 {
+		t.Errorf("extra operand code = %d, want 2", code)
+	}
+}
+
 func TestNotATTY(t *testing.T) {
 	// The real resolveTTY rejects a non-*os.File reader.
 	out := &bytes.Buffer{}
