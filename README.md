@@ -19,7 +19,7 @@ MimixBox packs many Unix commands into a single binary, like BusyBox. Unlike Bus
 The list below is generated from the registered applets by `make command-list`, so it never drifts from the binary. You can also run `mimixbox --list` to print it on the terminal.
 
 <!-- COMMAND_LIST_START -->
-There are 218 commands. Run `mimixbox --list` to see them on the terminal.
+There are 219 commands. Run `mimixbox --list` to see them on the terminal.
 
 | Command | Description |
 |:--|:--|
@@ -172,6 +172,7 @@ There are 218 commands. Run `mimixbox --list` to see them on the terminal.
 | seq | Print a column of numbers |
 | serial | Rename the file to the name with a serial number |
 | setarch | Run a program with a changed architecture personality |
+| setpriv | Run a program with different privilege settings |
 | setsid | Run a program in a new session |
 | sh | Command interpreter (MimixBox mbsh compatibility front-end) |
 | sha1sum | Calculate or Check secure hash 1 algorithm |
