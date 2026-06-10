@@ -19,7 +19,7 @@ MimixBox packs many Unix commands into a single binary, like BusyBox. Unlike Bus
 The list below is generated from the registered applets by `make command-list`, so it never drifts from the binary. You can also run `mimixbox --list` to print it on the terminal.
 
 <!-- COMMAND_LIST_START -->
-There are 259 commands. Run `mimixbox --list` to see them on the terminal.
+There are 260 commands. Run `mimixbox --list` to see them on the terminal.
 
 | Command | Description |
 |:--|:--|
@@ -90,6 +90,7 @@ There are 259 commands. Run `mimixbox --list` to see them on the terminal.
 | fortune | Print a random, hopefully interesting, adage |
 | free | Display amount of free and used memory in the system |
 | fsfreeze | Suspend or resume a filesystem |
+| fstrim | Discard unused blocks on a filesystem |
 | fsync | Flush a file's data to storage with fsync(2) |
 | fuser | Identify processes using a file |
 | getopt | Parse command options (enhanced, like util-linux getopt) |
