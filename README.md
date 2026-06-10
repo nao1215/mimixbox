@@ -19,7 +19,7 @@ MimixBox packs many Unix commands into a single binary, like BusyBox. Unlike Bus
 The list below is generated from the registered applets by `make command-list`, so it never drifts from the binary. You can also run `mimixbox --list` to print it on the terminal.
 
 <!-- COMMAND_LIST_START -->
-There are 226 commands. Run `mimixbox --list` to see them on the terminal.
+There are 228 commands. Run `mimixbox --list` to see them on the terminal.
 
 | Command | Description |
 |:--|:--|
@@ -155,6 +155,7 @@ There are 226 commands. Run `mimixbox --list` to see them on the terminal.
 | printf | Format and print data |
 | pwcrack | Audit crypt(3) password hashes against a wordlist |
 | pwd | Print Working Directory |
+| pwdx | Print the working directory of a process |
 | pwgen | Generate random passwords for authorized testing |
 | pwscore | Estimate the strength of a password |
 | rdate | Get the time from a remote host (RFC 868) |
@@ -225,6 +226,7 @@ There are 226 commands. Run `mimixbox --list` to see them on the terminal.
 | unshadow | Combine passwd and shadow files for password auditing |
 | unxz | Decompress xz files |
 | unzip | Extract files from a ZIP archive |
+| uptime | Tell how long the system has been running |
 | users | Print the user names of those currently logged in |
 | usleep | Pause for N microseconds |
 | uudecode | Decode a uuencoded (or base64) file |
