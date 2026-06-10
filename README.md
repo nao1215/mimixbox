@@ -19,7 +19,7 @@ MimixBox packs many Unix commands into a single binary, like BusyBox. Unlike Bus
 The list below is generated from the registered applets by `make command-list`, so it never drifts from the binary. You can also run `mimixbox --list` to print it on the terminal.
 
 <!-- COMMAND_LIST_START -->
-There are 211 commands. Run `mimixbox --list` to see them on the terminal.
+There are 212 commands. Run `mimixbox --list` to see them on the terminal.
 
 | Command | Description |
 |:--|:--|
@@ -113,6 +113,7 @@ There are 211 commands. Run `mimixbox --list` to see them on the terminal.
 | log-collect | Gather system log files into one directory |
 | logname | Print the name of the current user |
 | ls | List directory contents |
+| lsblk | List information about block devices |
 | lzcat | Decompress lzma data to standard output |
 | lzma | Compress or decompress files (lzma) |
 | man | Display a manual page |
