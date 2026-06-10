@@ -73,6 +73,22 @@ func (c *Command) Run(ctx context.Context, stdio command.IO, args []string) erro
 		return err
 	}
 
+	// Reject out-of-range class/priority rather than silently coercing them.
+	if *class < classNone || *class > classIdle {
+		return command.Failuref("invalid class: %d (expected 1 realtime, 2 best-effort, 3 idle)", *class)
+	}
+	if *data < 0 || *data > 7 {
+		return command.Failuref("invalid priority data: %d (expected 0-7)", *data)
+	}
+
+	rest := fs.Args()
+	if len(rest) > 0 && rest[0] == "--" {
+		rest = rest[1:]
+	}
+	if fs.Changed("pid") && len(rest) > 0 {
+		return command.Failuref("cannot run a command together with -p")
+	}
+
 	// Print mode: -p without -c.
 	if fs.Changed("pid") && !fs.Changed("class") {
 		v, gerr := ioprioGet(*pid)
@@ -83,7 +99,7 @@ func (c *Command) Run(ctx context.Context, stdio command.IO, args []string) erro
 		return nil
 	}
 
-	ioprio := (*class << ioprioClassShift) | (*data & 0x7)
+	ioprio := (*class << ioprioClassShift) | *data
 	if *class == classIdle || *class == classNone {
 		ioprio = *class << ioprioClassShift
 	}
@@ -95,10 +111,6 @@ func (c *Command) Run(ctx context.Context, stdio command.IO, args []string) erro
 		return nil
 	}
 
-	rest := fs.Args()
-	if len(rest) > 0 && rest[0] == "--" {
-		rest = rest[1:]
-	}
 	if len(rest) == 0 {
 		// No command and no PID: report this process's own class.
 		v, gerr := ioprioGet(0)
