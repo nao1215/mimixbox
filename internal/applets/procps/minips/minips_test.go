@@ -51,7 +51,7 @@ func TestListing(t *testing.T) {
 		}
 	}
 	// Sorted: 1 before 50 before 100.
-	if !(strings.Index(out, "init") < strings.Index(out, "sshd") && strings.Index(out, "sshd") < strings.Index(out, "bash")) {
+	if strings.Index(out, "init") >= strings.Index(out, "sshd") || strings.Index(out, "sshd") >= strings.Index(out, "bash") {
 		t.Errorf("not sorted by PID:\n%s", out)
 	}
 	// The non-numeric directory is ignored (4 lines: header + 3 procs).
