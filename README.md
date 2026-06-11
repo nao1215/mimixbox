@@ -19,7 +19,7 @@ MimixBox packs many Unix commands into a single binary, like BusyBox. Unlike Bus
 The list below is generated from the registered applets by `make command-list`, so it never drifts from the binary. You can also run `mimixbox --list` to print it on the terminal.
 
 <!-- COMMAND_LIST_START -->
-There are 289 commands. Run `mimixbox --list` to see them on the terminal.
+There are 290 commands. Run `mimixbox --list` to see them on the terminal.
 
 | Command | Description |
 |:--|:--|
@@ -48,6 +48,7 @@ There are 289 commands. Run `mimixbox --list` to see them on the terminal.
 | chgrp | Change the group of each FILE to GROUP |
 | chmod | Change file mode bits |
 | chown | Change the owner and/or group of each FILE to OWNER and/or GROUP |
+| chpasswd | Update passwords in batch |
 | chroot | Run command or interactive shell with special root directory |
 | chrt | Get or set a process's real-time scheduling attributes |
 | cksum | Print CRC checksum and byte count of each file |
