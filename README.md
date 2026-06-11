@@ -19,13 +19,14 @@ MimixBox packs many Unix commands into a single binary, like BusyBox. Unlike Bus
 The list below is generated from the registered applets by `make command-list`, so it never drifts from the binary. You can also run `mimixbox --list` to print it on the terminal.
 
 <!-- COMMAND_LIST_START -->
-There are 290 commands. Run `mimixbox --list` to see them on the terminal.
+There are 292 commands. Run `mimixbox --list` to see them on the terminal.
 
 | Command | Description |
 |:--|:--|
 | [ | Evaluate a conditional expression (test alias requiring ]) |
 | [[ | Evaluate a conditional expression (test alias requiring ]]) |
 | add-shell | Add shell name to /etc/shells |
+| addgroup | Add a group to /etc/group |
 | ar | Create, modify and extract from archives |
 | arch | Print machine hardware name (same as uname -m) |
 | ash | Command interpreter (MimixBox mbsh compatibility front-end) |
@@ -67,6 +68,7 @@ There are 290 commands. Run `mimixbox --list` to see them on the terminal.
 | date | Print or set the system date and time |
 | dc | Reverse-Polish (stack) desk calculator |
 | dd | Convert and copy a file |
+| delgroup | Remove a group from /etc/group |
 | df | Report file system disk space usage |
 | diff | Compare files line by line |
 | dirname | Print only directory path |
