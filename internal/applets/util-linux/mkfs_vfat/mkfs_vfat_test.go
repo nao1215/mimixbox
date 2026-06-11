@@ -68,7 +68,7 @@ func TestVolumeLabelEntry(t *testing.T) {
 		t.Errorf("boot label = %q", data[43:54])
 	}
 	// Root directory volume-label entry.
-	g := computeGeometry(16384)
+	g, _ := computeGeometry(16384)
 	rootOff := (reservedSectors + numFATs*g.sectorsPerFAT) * sectorSize
 	if string(data[rootOff:rootOff+5]) != "MYVOL" || data[rootOff+11] != 0x08 {
 		t.Errorf("root volume entry wrong")
@@ -81,7 +81,7 @@ func TestNoLabelNoRootEntry(t *testing.T) {
 		t.Fatal(err)
 	}
 	data, _ := os.ReadFile(img)
-	g := computeGeometry(16384)
+	g, _ := computeGeometry(16384)
 	rootOff := (reservedSectors + numFATs*g.sectorsPerFAT) * sectorSize
 	if data[rootOff] != 0 {
 		t.Errorf("root dir should be empty without -n")
@@ -107,5 +107,32 @@ func TestErrors(t *testing.T) {
 	}
 	if err := run(t, "/no/such/image"); err == nil {
 		t.Errorf("a missing image should fail")
+	}
+}
+
+func TestComputeGeometryClusterRange(t *testing.T) {
+	t.Parallel()
+	// Small device: spc 1, clusters in the FAT16 range.
+	g, err := computeGeometry(16384)
+	if err != nil || g.sectorsPerCluster != 1 {
+		t.Fatalf("small geometry = %+v, err %v", g, err)
+	}
+	if g.clusters < minFAT16Clusters || g.clusters > maxFAT16Clusters {
+		t.Errorf("clusters %d out of FAT16 range", g.clusters)
+	}
+	// Large device (200 MiB): a bigger cluster keeps the count within FAT16.
+	big, err := computeGeometry(409600)
+	if err != nil {
+		t.Fatalf("large geometry err: %v", err)
+	}
+	if big.sectorsPerCluster <= 1 {
+		t.Errorf("expected spc>1 for a large device, got %d", big.sectorsPerCluster)
+	}
+	if big.clusters > maxFAT16Clusters {
+		t.Errorf("large clusters %d exceed FAT16 max", big.clusters)
+	}
+	// Way too small: an error rather than silent FAT12.
+	if _, err := computeGeometry(64); err == nil {
+		t.Errorf("a tiny device should error")
 	}
 }
