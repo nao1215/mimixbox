@@ -19,7 +19,7 @@ MimixBox packs many Unix commands into a single binary, like BusyBox. Unlike Bus
 The list below is generated from the registered applets by `make command-list`, so it never drifts from the binary. You can also run `mimixbox --list` to print it on the terminal.
 
 <!-- COMMAND_LIST_START -->
-There are 295 commands. Run `mimixbox --list` to see them on the terminal.
+There are 296 commands. Run `mimixbox --list` to see them on the terminal.
 
 | Command | Description |
 |:--|:--|
@@ -251,6 +251,7 @@ There are 295 commands. Run `mimixbox --list` to see them on the terminal.
 | sort | Sort lines of text files |
 | speaker | Read text aloud using an installed TTS engine |
 | split | Split a file into pieces |
+| start-stop-daemon | Start or stop a background program |
 | stat | Display file or file system status |
 | strings | Print printable character sequences in files |
 | stty | Print or change terminal line settings |
