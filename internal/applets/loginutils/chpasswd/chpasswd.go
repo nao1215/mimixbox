@@ -8,6 +8,7 @@ import (
 	"fmt"
 	"io"
 	"os"
+	"path/filepath"
 	"strings"
 
 	"github.com/GehirnInc/crypt"
@@ -116,7 +117,7 @@ func readUpdates(r io.Reader, encrypted bool, method crypt.Crypt) (map[string]st
 			continue
 		}
 		user, password, ok := strings.Cut(line, ":")
-		if !ok {
+		if !ok || user == "" {
 			return nil, fmt.Errorf("malformed input line (need user:password): %q", line)
 		}
 		if encrypted {
@@ -144,7 +145,28 @@ func readLines(path string) ([]string, error) {
 	return strings.Split(trimmed, "\n"), nil
 }
 
+// writeLines atomically replaces path: it writes a temporary file in the same
+// directory and renames it into place, so an interrupted write cannot leave the
+// shadow database truncated or corrupted.
 func writeLines(path string, lines []string) error {
 	content := strings.Join(lines, "\n") + "\n"
-	return os.WriteFile(path, []byte(content), 0o600) //nolint:gosec // shadow is mode 0600
+	tmp, err := os.CreateTemp(filepath.Dir(path), ".chpasswd-*")
+	if err != nil {
+		return err
+	}
+	tmpName := tmp.Name()
+	defer func() { _ = os.Remove(tmpName) }() // no-op once the rename succeeds
+
+	if _, err := tmp.WriteString(content); err != nil {
+		_ = tmp.Close()
+		return err
+	}
+	if err := tmp.Chmod(0o600); err != nil { //nolint:gosec // shadow is mode 0600
+		_ = tmp.Close()
+		return err
+	}
+	if err := tmp.Close(); err != nil {
+		return err
+	}
+	return os.Rename(tmpName, path)
 }
