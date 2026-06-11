@@ -76,6 +76,7 @@ import (
 	ap_loginutils_adduser "github.com/nao1215/mimixbox/internal/applets/loginutils/adduser"
 	ap_loginutils_chpasswd "github.com/nao1215/mimixbox/internal/applets/loginutils/chpasswd"
 	ap_loginutils_delgroup "github.com/nao1215/mimixbox/internal/applets/loginutils/delgroup"
+	ap_loginutils_deluser "github.com/nao1215/mimixbox/internal/applets/loginutils/deluser"
 	ap_loginutils_mkpasswd "github.com/nao1215/mimixbox/internal/applets/loginutils/mkpasswd"
 	ap_loginutils_nologin "github.com/nao1215/mimixbox/internal/applets/loginutils/nologin"
 	ap_loginutils_runlevel "github.com/nao1215/mimixbox/internal/applets/loginutils/runlevel"
@@ -280,7 +281,7 @@ import (
 // init populates the applet table. Each command is registered under its own
 // Name(), so the key can never drift from the command it dispatches to.
 func init() {
-	Applets = make(map[string]Applet, 293)
+	Applets = make(map[string]Applet, 294)
 	register(ap_archival_ar.New())
 	register(ap_archival_bunzip2.New())
 	register(ap_archival_compress.New())
@@ -365,6 +366,7 @@ func init() {
 	register(ap_loginutils_adduser.New())
 	register(ap_loginutils_chpasswd.New())
 	register(ap_loginutils_delgroup.New())
+	register(ap_loginutils_deluser.New())
 	register(ap_loginutils_mkpasswd.New())
 	register(ap_loginutils_nologin.New())
 	register(ap_loginutils_runlevel.New())
