@@ -101,3 +101,35 @@ func TestErrors(t *testing.T) {
 		t.Errorf("a malformed input line should fail")
 	}
 }
+
+func TestRejectsEmptyUsername(t *testing.T) {
+	fixtureShadow(t, "alice:!:19000:0:99999:7:::\n")
+	if err := run(t, ":secret\n"); err == nil {
+		t.Errorf("an empty username should be rejected")
+	}
+}
+
+func TestAtomicWritePreservesModeAndContent(t *testing.T) {
+	p := fixtureShadow(t, "alice:!:19000:0:99999:7:::\n")
+	// -e stores the value verbatim, so the "hash" is just "secret".
+	if err := run(t, "alice:secret\n", "-e"); err != nil {
+		t.Fatal(err)
+	}
+	info, err := os.Stat(p)
+	if err != nil {
+		t.Fatal(err)
+	}
+	if info.Mode().Perm() != 0o600 {
+		t.Errorf("shadow mode = %o, want 0600", info.Mode().Perm())
+	}
+	if field(t, p, "alice", 1) != "secret" {
+		t.Errorf("atomic write lost the update")
+	}
+	// No stray temp files should remain in the directory.
+	entries, _ := os.ReadDir(filepath.Dir(p))
+	for _, e := range entries {
+		if strings.HasPrefix(e.Name(), ".chpasswd-") {
+			t.Errorf("temp file left behind: %s", e.Name())
+		}
+	}
+}
