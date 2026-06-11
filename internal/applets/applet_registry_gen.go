@@ -73,6 +73,7 @@ import (
 	ap_jokeutils_nyancat "github.com/nao1215/mimixbox/internal/applets/jokeutils/nyancat"
 	ap_jokeutils_sl "github.com/nao1215/mimixbox/internal/applets/jokeutils/sl"
 	ap_loginutils_nologin "github.com/nao1215/mimixbox/internal/applets/loginutils/nologin"
+	ap_loginutils_runparts "github.com/nao1215/mimixbox/internal/applets/loginutils/runparts"
 	ap_netutils_httpstatus "github.com/nao1215/mimixbox/internal/applets/netutils/httpstatus"
 	ap_netutils_nc "github.com/nao1215/mimixbox/internal/applets/netutils/nc"
 	ap_netutils_ping "github.com/nao1215/mimixbox/internal/applets/netutils/ping"
@@ -273,7 +274,7 @@ import (
 // init populates the applet table. Each command is registered under its own
 // Name(), so the key can never drift from the command it dispatches to.
 func init() {
-	Applets = make(map[string]Applet, 286)
+	Applets = make(map[string]Applet, 287)
 	register(ap_archival_ar.New())
 	register(ap_archival_bunzip2.New())
 	register(ap_archival_compress.New())
@@ -355,6 +356,7 @@ func init() {
 	register(ap_jokeutils_nyancat.New())
 	register(ap_jokeutils_sl.New())
 	register(ap_loginutils_nologin.New())
+	register(ap_loginutils_runparts.New())
 	register(ap_netutils_httpstatus.New())
 	register(ap_netutils_nc.New())
 	register(ap_netutils_ping.New())
