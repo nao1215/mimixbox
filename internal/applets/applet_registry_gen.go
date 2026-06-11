@@ -261,6 +261,7 @@ import (
 	ap_util_linux_switch_root "github.com/nao1215/mimixbox/internal/applets/util-linux/switch_root"
 	ap_util_linux_taskset "github.com/nao1215/mimixbox/internal/applets/util-linux/taskset"
 	ap_util_linux_tune2fs "github.com/nao1215/mimixbox/internal/applets/util-linux/tune2fs"
+	ap_util_linux_uevent "github.com/nao1215/mimixbox/internal/applets/util-linux/uevent"
 	ap_util_linux_umount "github.com/nao1215/mimixbox/internal/applets/util-linux/umount"
 	ap_util_linux_unshare "github.com/nao1215/mimixbox/internal/applets/util-linux/unshare"
 	ap_util_linux_wall "github.com/nao1215/mimixbox/internal/applets/util-linux/wall"
@@ -269,7 +270,7 @@ import (
 // init populates the applet table. Each command is registered under its own
 // Name(), so the key can never drift from the command it dispatches to.
 func init() {
-	Applets = make(map[string]Applet, 281)
+	Applets = make(map[string]Applet, 282)
 	register(ap_archival_ar.New())
 	register(ap_archival_bunzip2.New())
 	register(ap_archival_compress.New())
@@ -548,6 +549,7 @@ func init() {
 	register(ap_util_linux_switch_root.New())
 	register(ap_util_linux_taskset.New())
 	register(ap_util_linux_tune2fs.New())
+	register(ap_util_linux_uevent.New())
 	register(ap_util_linux_umount.New())
 	register(ap_util_linux_unshare.New())
 	register(ap_util_linux_wall.New())
