@@ -241,6 +241,7 @@ import (
 	ap_util_linux_lsusb "github.com/nao1215/mimixbox/internal/applets/util-linux/lsusb"
 	ap_util_linux_mdev "github.com/nao1215/mimixbox/internal/applets/util-linux/mdev"
 	ap_util_linux_mesg "github.com/nao1215/mimixbox/internal/applets/util-linux/mesg"
+	ap_util_linux_mke2fs "github.com/nao1215/mimixbox/internal/applets/util-linux/mke2fs"
 	ap_util_linux_mkfs_minix "github.com/nao1215/mimixbox/internal/applets/util-linux/mkfs_minix"
 	ap_util_linux_mkfs_vfat "github.com/nao1215/mimixbox/internal/applets/util-linux/mkfs_vfat"
 	ap_util_linux_mkswap "github.com/nao1215/mimixbox/internal/applets/util-linux/mkswap"
@@ -270,7 +271,7 @@ import (
 // init populates the applet table. Each command is registered under its own
 // Name(), so the key can never drift from the command it dispatches to.
 func init() {
-	Applets = make(map[string]Applet, 282)
+	Applets = make(map[string]Applet, 284)
 	register(ap_archival_ar.New())
 	register(ap_archival_bunzip2.New())
 	register(ap_archival_compress.New())
@@ -525,6 +526,8 @@ func init() {
 	register(ap_util_linux_lsusb.New())
 	register(ap_util_linux_mdev.New())
 	register(ap_util_linux_mesg.New())
+	register(ap_util_linux_mke2fs.New())
+	register(ap_util_linux_mke2fs.NewMkfsExt2())
 	register(ap_util_linux_mkfs_minix.New())
 	register(ap_util_linux_mkfs_vfat.New())
 	register(ap_util_linux_mkfs_vfat.NewMkdosfs())
