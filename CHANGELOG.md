@@ -7,6 +7,49 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## [Unreleased]
 
+## [0.38.0] - 2026-06-11
+
+This release grows the applet count to 297 by completing three more BusyBox
+roadmap batches and starting a fourth. The `[procps]` (#245) and the two
+`[util-linux]` batches (#248 device/system and #249 filesystem/device) are now
+complete, and the `[loginutils]` batch (#250) is underway. Several filesystem
+creators are byte-validated against the host `fsck.minix`, `fsck.vfat`, and
+`fsck.ext2`.
+
+### Added
+
+- procps (#245, complete): `top` (batch snapshot), `smemcap`, `klogd`,
+  `nmeter`, `logread`, `syslogd` (a minimal datagram-socket logging daemon), and
+  `powertop` (one-shot power-supply report).
+- util-linux filesystem/device (#249, complete): `flock`, `findfs`, `lsattr`,
+  `chattr`, `mount`/`umount` (read-only listing), `mkswap`, `swapon`/`swapoff`,
+  `fsfreeze`, `fstrim`, `blkdiscard`, `losetup`, `eject`, `tune2fs`, `unshare`,
+  `nsenter`, `freeramdisk`, `pivot_root`, `rtcwake`, `switch_root`, `fdflush`,
+  `fdformat`, `fatattr`, `fbset`, `mdev`, `uevent`, `fdisk` (MBR listing), and
+  the filesystem creators/checkers `mkfs.minix`/`fsck.minix`,
+  `mkfs.vfat`/`mkdosfs`, `mke2fs`/`mkfs.ext2`, `fsck` (type detection), and
+  `mkfs.reiser` (documented deprecation notice). The minix, FAT16, and ext2
+  creators produce images that pass the host `fsck.*` checkers.
+- loginutils (#250, in progress): `nologin`, `run-parts`, `mkpasswd` (crypt
+  hashing matching `openssl passwd`), `chpasswd`, `runlevel`, `addgroup`,
+  `delgroup`, `adduser`, `deluser`, `crontab`, `start-stop-daemon`, and `crond`
+  (foreground cron with a Vixie-style schedule matcher).
+
+### Changed
+
+- Privileged and kernel-facing applets keep their syscalls, ioctls, and
+  account/spool databases behind injectable helpers so the whole suite stays
+  hermetically unit-tested without root or real hardware.
+- Account-mutating applets (`chpasswd`, `addgroup`, `delgroup`, `adduser`,
+  `deluser`) replace `/etc/passwd`, `/etc/shadow`, and `/etc/group` atomically
+  (temp file plus rename) so an interrupted write cannot corrupt the database.
+
+### Fixed
+
+- Hardened the flaky `nc` loopback integration test: the one-shot listener is
+  restarted on a fresh port each attempt, the client send is retried, and only
+  the first received line is matched.
+
 ## [0.37.0] - 2026-06-09
 
 This release roughly doubles the applet count (to 208) by filling in the
