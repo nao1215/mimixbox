@@ -19,7 +19,7 @@ MimixBox packs many Unix commands into a single binary, like BusyBox. Unlike Bus
 The list below is generated from the registered applets by `make command-list`, so it never drifts from the binary. You can also run `mimixbox --list` to print it on the terminal.
 
 <!-- COMMAND_LIST_START -->
-There are 297 commands. Run `mimixbox --list` to see them on the terminal.
+There are 298 commands. Run `mimixbox --list` to see them on the terminal.
 
 | Command | Description |
 |:--|:--|
@@ -189,6 +189,7 @@ There are 297 commands. Run `mimixbox --list` to see them on the terminal.
 | nsenter | Run a program in another process's namespaces |
 | nyancat | Animate the rainbow-trailing Nyan Cat |
 | od | Dump files in octal and other formats |
+| passwd | Change a user's password |
 | paste | Merge lines of files |
 | patch | Apply a diff file to an original |
 | path | Manipulate filename path |
