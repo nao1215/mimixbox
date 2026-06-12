@@ -9,12 +9,16 @@ import (
 	"os"
 	"os/user"
 	"path/filepath"
+	"strconv"
 	"strings"
+	"syscall"
+	"time"
 
 	"github.com/GehirnInc/crypt"
 	_ "github.com/GehirnInc/crypt/sha512_crypt" // register $6$
 
 	"github.com/nao1215/mimixbox/internal/command"
+	"golang.org/x/sys/unix"
 )
 
 // Command is the passwd applet.
@@ -29,9 +33,12 @@ func (c *Command) Name() string { return "passwd" }
 // Synopsis returns the one-line description shown in the applet list.
 func (c *Command) Synopsis() string { return "Change a user's password" }
 
-// Injected so the database and the current user are testable.
+const secondsPerDay = 86400
+
+// Injected so the database, the current user, and the clock are testable.
 var (
 	shadowPath    = "/etc/shadow"
+	now           = time.Now
 	currentUserFn = func() (string, error) {
 		u, err := user.Current()
 		if err != nil {
@@ -66,41 +73,59 @@ func (c *Command) Run(_ context.Context, stdio command.IO, args []string) error 
 		return command.Failuref("-l, -u, and -d are mutually exclusive")
 	}
 
+	rest := fs.Args()
+	if len(rest) > 1 {
+		return command.Failuref("at most one user may be given")
+	}
 	target := ""
-	if rest := fs.Args(); len(rest) > 0 {
+	if len(rest) == 1 {
 		target = rest[0]
 	} else if target, err = currentUserFn(); err != nil {
 		return command.Failuref("cannot determine the current user: %v", err)
 	}
 
-	lines, idx, fields, err := findUser(target)
-	if err != nil {
-		return command.Failuref("%v", err)
+	// Compute the replacement hash before taking the lock so an empty/mismatched
+	// password fails without touching the database.
+	var newPassword string
+	if !*lock && !*unlock && !*del {
+		if newPassword, err = newHash(stdio); err != nil {
+			return command.Failuref("%v", err)
+		}
 	}
 
-	switch {
-	case *lock:
-		if !strings.HasPrefix(fields[1], "!") {
-			fields[1] = "!" + fields[1]
-		}
-	case *unlock:
-		fields[1] = strings.TrimPrefix(fields[1], "!")
-	case *del:
-		fields[1] = ""
-	default:
-		hash, err := newHash(stdio)
+	return withLock(shadowPath, func() error {
+		lines, idx, fields, err := findUser(target)
 		if err != nil {
 			return command.Failuref("%v", err)
 		}
-		fields[1] = hash
-	}
+		switch {
+		case *lock:
+			if !strings.HasPrefix(fields[1], "!") {
+				fields[1] = "!" + fields[1]
+			}
+		case *unlock:
+			fields[1] = strings.TrimPrefix(fields[1], "!")
+		case *del:
+			fields[1] = ""
+		default:
+			fields[1] = newPassword
+			setLastChange(fields)
+		}
+		lines[idx] = strings.Join(fields, ":")
+		if err := writeLines(lines); err != nil {
+			return command.Failuref("cannot write %s: %v", shadowPath, err)
+		}
+		_, _ = fmt.Fprintf(stdio.Err, "passwd: password for %q changed\n", target)
+		return nil
+	})
+}
 
-	lines[idx] = strings.Join(fields, ":")
-	if err := writeLines(lines); err != nil {
-		return command.Failuref("cannot write %s: %v", shadowPath, err)
+// setLastChange records today's date (days since the epoch) in the shadow
+// last-change field, so password-aging consumers see the update.
+func setLastChange(fields []string) {
+	if len(fields) > 2 {
+		fields[2] = strconv.FormatInt(now().Unix()/secondsPerDay, 10)
 	}
-	_, _ = fmt.Fprintf(stdio.Err, "passwd: password for %q changed\n", target)
-	return nil
 }
 
 func countTrue(bs ...bool) int {
@@ -111,6 +136,21 @@ func countTrue(bs ...bool) int {
 		}
 	}
 	return n
+}
+
+// withLock runs fn while holding an exclusive advisory lock on path, serializing
+// concurrent password changes. If the file cannot be opened for locking (e.g. an
+// unprivileged run), fn proceeds without the lock.
+func withLock(path string, fn func() error) error {
+	f, err := os.OpenFile(path, os.O_RDWR, 0) //nolint:gosec // well-known shadow path
+	if err != nil {
+		return fn()
+	}
+	defer func() { _ = f.Close() }()
+	if unix.Flock(int(f.Fd()), unix.LOCK_EX) == nil {
+		defer func() { _ = unix.Flock(int(f.Fd()), unix.LOCK_UN) }()
+	}
+	return fn()
 }
 
 // findUser returns the shadow lines, the index of target's line, and that
@@ -154,9 +194,19 @@ func newHash(stdio command.IO) (string, error) {
 	return hash, nil
 }
 
-// writeLines atomically replaces the shadow file.
+// writeLines atomically replaces the shadow file, preserving its existing mode
+// and ownership.
 func writeLines(lines []string) error {
 	content := strings.Join(lines, "\n") + "\n"
+	mode := os.FileMode(0o600)
+	var uid, gid = -1, -1
+	if info, err := os.Stat(shadowPath); err == nil {
+		mode = info.Mode().Perm()
+		if st, ok := info.Sys().(*syscall.Stat_t); ok {
+			uid, gid = int(st.Uid), int(st.Gid)
+		}
+	}
+
 	tmp, err := os.CreateTemp(filepath.Dir(shadowPath), ".passwd-*")
 	if err != nil {
 		return err
@@ -167,12 +217,15 @@ func writeLines(lines []string) error {
 		_ = tmp.Close()
 		return err
 	}
-	if err := tmp.Chmod(0o600); err != nil {
+	if err := tmp.Chmod(mode); err != nil {
 		_ = tmp.Close()
 		return err
 	}
 	if err := tmp.Close(); err != nil {
 		return err
+	}
+	if uid >= 0 {
+		_ = os.Chown(tmpName, uid, gid) // best effort: keep the original owner
 	}
 	return os.Rename(tmpName, shadowPath)
 }
