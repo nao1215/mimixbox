@@ -19,7 +19,7 @@ MimixBox packs many Unix commands into a single binary, like BusyBox. Unlike Bus
 The list below is generated from the registered applets by `make command-list`, so it never drifts from the binary. You can also run `mimixbox --list` to print it on the terminal.
 
 <!-- COMMAND_LIST_START -->
-There are 321 commands. Run `mimixbox --list` to see them on the terminal.
+There are 322 commands. Run `mimixbox --list` to see them on the terminal.
 
 | Command | Description |
 |:--|:--|
@@ -300,6 +300,7 @@ There are 321 commands. Run `mimixbox --list` to see them on the terminal.
 | tree | List directory contents in a tree-like format |
 | true | Do nothing. Return success(0) |
 | truncate | Shrink or extend the size of a file to a given size |
+| ts | Timestamp each input line |
 | tsort | Topological sort of a directed graph |
 | tty | Print the file name of the terminal connected to stdin |
 | tune2fs | Show ext2/ext3/ext4 filesystem parameters |
