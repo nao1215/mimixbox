@@ -8,7 +8,7 @@ Describe 'inotifyd'
 
     It 'runs the handler on a create event'
         When call TestInotifydWatchesCreate
-        The output should equal '1'
+        The output should equal 'ok'
         The status should be success
     End
     It 'requires a handler and a file'

@@ -133,3 +133,20 @@ func TestErrors(t *testing.T) {
 		t.Errorf("a watch setup failure should fail")
 	}
 }
+
+// errSource returns a non-EOF error on the first Recv (a broken watcher).
+type errSource struct{}
+
+func (errSource) Recv() (event, error) { return event{}, errors.New("read error") }
+func (errSource) Close() error         { return nil }
+
+func TestRealReadErrorFails(t *testing.T) {
+	od := dialFn
+	dialFn = func([]watch) (source, error) { return errSource{}, nil }
+	defer func() { dialFn = od }()
+	io2 := command.IO{In: strings.NewReader(""), Out: &bytes.Buffer{}, Err: &bytes.Buffer{}}
+	// Not cancelled and not EOF: a real read error must surface as a failure.
+	if err := New().Run(context.Background(), io2, []string{"./h", "/etc"}); err == nil {
+		t.Errorf("an unexpected read error should fail, not exit cleanly")
+	}
+}

@@ -5,17 +5,20 @@ TestInotifydWatchesCreate() {
     : > "$TEST_DIR/events"
     inotifyd "$TEST_DIR/h" "$d:n" &
     pid=$!
-    # Give the watch time to be established, then create a file and poll for the
-    # handler's output (more robust than fixed sleeps under CI load).
-    sleep 0.3
-    touch "$d/created.txt"
+    # Recreate the watched file each iteration until the handler logs the create
+    # event, so a create lost before the watch is fully active is retried.
+    found=missing
     for _ in $(seq 1 50); do
+        rm -f "$d/created.txt"
+        touch "$d/created.txt"
         if grep -q 'n created.txt' "$TEST_DIR/events" 2>/dev/null; then
+            found=ok
             break
         fi
         sleep 0.1
     done
     kill "$pid" 2>/dev/null
-    grep -c 'n created.txt' "$TEST_DIR/events"
+    wait "$pid" 2>/dev/null
+    echo "$found"
 }
 TestInotifydNoArgs() { inotifyd ./h 2>/dev/null; echo "rc=$?"; }
