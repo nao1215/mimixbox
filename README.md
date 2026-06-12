@@ -19,7 +19,7 @@ MimixBox packs many Unix commands into a single binary, like BusyBox. Unlike Bus
 The list below is generated from the registered applets by `make command-list`, so it never drifts from the binary. You can also run `mimixbox --list` to print it on the terminal.
 
 <!-- COMMAND_LIST_START -->
-There are 299 commands. Run `mimixbox --list` to see them on the terminal.
+There are 300 commands. Run `mimixbox --list` to see them on the terminal.
 
 | Command | Description |
 |:--|:--|
@@ -229,6 +229,7 @@ There are 299 commands. Run `mimixbox --list` to see them on the terminal.
 | rpm | Query an RPM package file |
 | rpm2cpio | Extract the cpio payload from an RPM package |
 | rtcwake | Arm the RTC to wake the system |
+| run-init | Switch to the real root and run init |
 | run-parts | Run all executables in a directory |
 | runlevel | Print the previous and current runlevel |
 | script | Record a command's output to a typescript |
