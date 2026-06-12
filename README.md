@@ -19,7 +19,7 @@ MimixBox packs many Unix commands into a single binary, like BusyBox. Unlike Bus
 The list below is generated from the registered applets by `make command-list`, so it never drifts from the binary. You can also run `mimixbox --list` to print it on the terminal.
 
 <!-- COMMAND_LIST_START -->
-There are 319 commands. Run `mimixbox --list` to see them on the terminal.
+There are 320 commands. Run `mimixbox --list` to see them on the terminal.
 
 | Command | Description |
 |:--|:--|
@@ -242,6 +242,7 @@ There are 319 commands. Run `mimixbox --list` to see them on the terminal.
 | run-parts | Run all executables in a directory |
 | runlevel | Print the previous and current runlevel |
 | runsv | Supervise a single service |
+| runsvdir | Supervise a directory of services |
 | script | Record a command's output to a typescript |
 | scriptreplay | Replay a typescript using its timing file |
 | sddf | Search & Delete Duplicated File |
