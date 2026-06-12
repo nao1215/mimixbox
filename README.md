@@ -19,7 +19,7 @@ MimixBox packs many Unix commands into a single binary, like BusyBox. Unlike Bus
 The list below is generated from the registered applets by `make command-list`, so it never drifts from the binary. You can also run `mimixbox --list` to print it on the terminal.
 
 <!-- COMMAND_LIST_START -->
-There are 320 commands. Run `mimixbox --list` to see them on the terminal.
+There are 321 commands. Run `mimixbox --list` to see them on the terminal.
 
 | Command | Description |
 |:--|:--|
@@ -31,6 +31,7 @@ There are 320 commands. Run `mimixbox --list` to see them on the terminal.
 | adduser | Create a user account |
 | ar | Create, modify and extract from archives |
 | arch | Print machine hardware name (same as uname -m) |
+| ascii | Print the ASCII code table |
 | ash | Command interpreter (MimixBox mbsh compatibility front-end) |
 | awk | Pattern scanning and processing language |
 | banner | Print a string as large ASCII-art letters |
