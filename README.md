@@ -19,7 +19,7 @@ MimixBox packs many Unix commands into a single binary, like BusyBox. Unlike Bus
 The list below is generated from the registered applets by `make command-list`, so it never drifts from the binary. You can also run `mimixbox --list` to print it on the terminal.
 
 <!-- COMMAND_LIST_START -->
-There are 326 commands. Run `mimixbox --list` to see them on the terminal.
+There are 327 commands. Run `mimixbox --list` to see them on the terminal.
 
 | Command | Description |
 |:--|:--|
@@ -40,6 +40,7 @@ There are 326 commands. Run `mimixbox --list` to see them on the terminal.
 | basename | Print basename (PATH without "/") from file path |
 | bash | Command interpreter (MimixBox mbsh compatibility front-end) |
 | bc | An arbitrary-precision calculator language |
+| beep | Sound the console speaker |
 | blkdiscard | Discard sectors on a block device |
 | blkid | Identify the filesystem type of a device or image |
 | blockdev | Report block device properties |
