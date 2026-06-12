@@ -19,7 +19,7 @@ MimixBox packs many Unix commands into a single binary, like BusyBox. Unlike Bus
 The list below is generated from the registered applets by `make command-list`, so it never drifts from the binary. You can also run `mimixbox --list` to print it on the terminal.
 
 <!-- COMMAND_LIST_START -->
-There are 298 commands. Run `mimixbox --list` to see them on the terminal.
+There are 299 commands. Run `mimixbox --list` to see them on the terminal.
 
 | Command | Description |
 |:--|:--|
@@ -66,6 +66,7 @@ There are 298 commands. Run `mimixbox --list` to see them on the terminal.
 | crc32 | Print the CRC-32 checksum of each file |
 | crond | Run scheduled cron jobs (foreground) |
 | crontab | Maintain a user's crontab |
+| cryptpw | Crypt-hash a password from stdin |
 | cttyhack | Run PROGRAM with the current stdio (no controlling-TTY trick) |
 | cut | Remove sections from each line of files |
 | date | Print or set the system date and time |
