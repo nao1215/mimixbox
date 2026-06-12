@@ -34,6 +34,7 @@ import (
 	ap_console_tools_pager "github.com/nao1215/mimixbox/internal/applets/console-tools/pager"
 	ap_console_tools_reset "github.com/nao1215/mimixbox/internal/applets/console-tools/reset"
 	ap_console_tools_resize "github.com/nao1215/mimixbox/internal/applets/console-tools/resize"
+	ap_console_tools_setconsole "github.com/nao1215/mimixbox/internal/applets/console-tools/setconsole"
 	ap_console_tools_setlogcons "github.com/nao1215/mimixbox/internal/applets/console-tools/setlogcons"
 	ap_console_tools_stty "github.com/nao1215/mimixbox/internal/applets/console-tools/stty"
 	ap_console_tools_ts "github.com/nao1215/mimixbox/internal/applets/console-tools/ts"
@@ -315,7 +316,7 @@ import (
 // init populates the applet table. Each command is registered under its own
 // Name(), so the key can never drift from the command it dispatches to.
 func init() {
-	Applets = make(map[string]Applet, 329)
+	Applets = make(map[string]Applet, 330)
 	register(ap_archival_ar.New())
 	register(ap_archival_bunzip2.New())
 	register(ap_archival_compress.New())
@@ -357,6 +358,7 @@ func init() {
 	register(ap_console_tools_pager.NewMore())
 	register(ap_console_tools_reset.New())
 	register(ap_console_tools_resize.New())
+	register(ap_console_tools_setconsole.New())
 	register(ap_console_tools_setlogcons.New())
 	register(ap_console_tools_stty.New())
 	register(ap_console_tools_ts.New())
