@@ -19,7 +19,7 @@ MimixBox packs many Unix commands into a single binary, like BusyBox. Unlike Bus
 The list below is generated from the registered applets by `make command-list`, so it never drifts from the binary. You can also run `mimixbox --list` to print it on the terminal.
 
 <!-- COMMAND_LIST_START -->
-There are 302 commands. Run `mimixbox --list` to see them on the terminal.
+There are 303 commands. Run `mimixbox --list` to see them on the terminal.
 
 | Command | Description |
 |:--|:--|
@@ -146,6 +146,7 @@ There are 302 commands. Run `mimixbox --list` to see them on the terminal.
 | ln | Create hard or symbolic link |
 | log-collect | Gather system log files into one directory |
 | logger | Write a message to the system log |
+| login | Authenticate a user and start their shell |
 | logname | Print the name of the current user |
 | logread | Show the system log |
 | losetup | List active loop devices |
