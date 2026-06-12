@@ -5,6 +5,8 @@ import (
 	"context"
 	"os"
 	"path/filepath"
+	"strconv"
+	"strings"
 	"sync/atomic"
 	"testing"
 	"time"
@@ -92,5 +94,51 @@ func TestNoDir(t *testing.T) {
 	io := command.IO{In: bytes.NewReader(nil), Out: &bytes.Buffer{}, Err: &bytes.Buffer{}}
 	if err := New().Run(context.Background(), io, nil); err == nil {
 		t.Errorf("a missing directory should fail")
+	}
+}
+
+func TestRejectsMissingDir(t *testing.T) {
+	var count int32
+	stub(t, &count)
+	io := command.IO{In: bytes.NewReader(nil), Out: &bytes.Buffer{}, Err: &bytes.Buffer{}}
+	if err := New().Run(context.Background(), io, []string{"/no/such/service/dir"}); err == nil {
+		t.Errorf("a nonexistent service directory should fail")
+	}
+}
+
+func TestChildPidRecorded(t *testing.T) {
+	// Use the real run step: a ./run that sleeps so we can read its pid.
+	od := restartDelay
+	restartDelay = time.Hour // the run blocks, so we only need one iteration
+	t.Cleanup(func() { restartDelay = od })
+
+	dir := t.TempDir()
+	if err := os.WriteFile(filepath.Join(dir, "run"), []byte("#!/bin/sh\nsleep 5\n"), 0o755); err != nil {
+		t.Fatal(err)
+	}
+	ctx, cancel := context.WithCancel(context.Background())
+	done := runAsync(ctx, dir)
+
+	pidPath := filepath.Join(dir, "supervise", "pid")
+	var pid string
+	deadline := time.Now().Add(2 * time.Second)
+	for {
+		if data, err := os.ReadFile(pidPath); err == nil {
+			if pid = strings.TrimSpace(string(data)); pid != "" {
+				break
+			}
+		}
+		if time.Now().After(deadline) {
+			cancel()
+			t.Fatal("supervise/pid was never written")
+		}
+		time.Sleep(2 * time.Millisecond)
+	}
+	cancel()
+	<-done
+
+	n, err := strconv.Atoi(pid)
+	if err != nil || n == os.Getpid() {
+		t.Errorf("pid = %q, want the child's pid (not the supervisor %d)", pid, os.Getpid())
 	}
 }

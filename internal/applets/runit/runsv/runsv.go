@@ -32,7 +32,13 @@ var (
 		cmd := exec.CommandContext(ctx, "./run") //nolint:gosec // running the service's run script is the point
 		cmd.Dir = dir
 		cmd.Stdin, cmd.Stdout, cmd.Stderr = stdio.In, stdio.Out, stdio.Err
-		return cmd.Run()
+		if err := cmd.Start(); err != nil {
+			return err
+		}
+		// Record the supervised child's pid (not the supervisor's) for sv/svok.
+		_ = os.WriteFile(filepath.Join(dir, "supervise", "pid"),
+			[]byte(strconv.Itoa(cmd.Process.Pid)+"\n"), 0o644)
+		return cmd.Wait()
 	}
 )
 
@@ -58,6 +64,9 @@ func (c *Command) Run(ctx context.Context, stdio command.IO, args []string) erro
 		return command.Failuref("a service directory is required")
 	}
 	dir := rest[0]
+	if info, err := os.Stat(dir); err != nil || !info.IsDir() {
+		return command.Failuref("%s: not a directory", dir)
+	}
 
 	cleanup, err := startSupervise(dir)
 	if err != nil {
@@ -95,7 +104,10 @@ func startSupervise(dir string) (func(), error) {
 	if err := os.WriteFile(okPath, nil, 0o644); err != nil {
 		return nil, err
 	}
-	_ = os.WriteFile(filepath.Join(sup, "control"), nil, 0o644)
-	_ = os.WriteFile(filepath.Join(sup, "pid"), []byte(strconv.Itoa(os.Getpid())+"\n"), 0o644)
+	// The control file is part of the supervision contract; fail if it cannot be
+	// created. The pid file is written by each run with the child's pid.
+	if err := os.WriteFile(filepath.Join(sup, "control"), nil, 0o644); err != nil {
+		return nil, err
+	}
 	return func() { _ = os.Remove(okPath) }, nil
 }
