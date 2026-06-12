@@ -19,7 +19,7 @@ MimixBox packs many Unix commands into a single binary, like BusyBox. Unlike Bus
 The list below is generated from the registered applets by `make command-list`, so it never drifts from the binary. You can also run `mimixbox --list` to print it on the terminal.
 
 <!-- COMMAND_LIST_START -->
-There are 332 commands. Run `mimixbox --list` to see them on the terminal.
+There are 333 commands. Run `mimixbox --list` to see them on the terminal.
 
 | Command | Description |
 |:--|:--|
@@ -240,6 +240,7 @@ There are 332 commands. Run `mimixbox --list` to see them on the terminal.
 | reset | Reset terminal |
 | resize | Print commands to set the terminal size |
 | rev | Reverse the order of characters in every line |
+| rfkill | List or block radio transmitters |
 | rm | Remove file(s) or directory(s) |
 | rmdir | Remove directory |
 | rpm | Query an RPM package file |
