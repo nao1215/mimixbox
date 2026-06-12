@@ -108,7 +108,9 @@ func TestParseCymruNoData(t *testing.T) {
 }
 
 func TestCymruLookupAgainstLocalServer(t *testing.T) {
-	t.Parallel()
+	// Not parallel: this test mutates the shared cymruServer global, so running it
+	// alongside another cymruServer-mutating test would race and could reach the
+	// real Cymru server.
 	ln, err := net.Listen("tcp", "127.0.0.1:0")
 	if err != nil {
 		t.Skipf("loopback TCP/UDP listen unavailable: %v", err)
@@ -142,7 +144,7 @@ func TestCymruLookupAgainstLocalServer(t *testing.T) {
 }
 
 func TestCymruLookupDialError(t *testing.T) {
-	t.Parallel()
+	// Not parallel: mutates the shared cymruServer global (see above).
 	orig := cymruServer
 	cymruServer = "127.0.0.1:1" // closed port
 	t.Cleanup(func() { cymruServer = orig })
