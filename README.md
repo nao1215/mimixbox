@@ -19,7 +19,7 @@ MimixBox packs many Unix commands into a single binary, like BusyBox. Unlike Bus
 The list below is generated from the registered applets by `make command-list`, so it never drifts from the binary. You can also run `mimixbox --list` to print it on the terminal.
 
 <!-- COMMAND_LIST_START -->
-There are 327 commands. Run `mimixbox --list` to see them on the terminal.
+There are 328 commands. Run `mimixbox --list` to see them on the terminal.
 
 | Command | Description |
 |:--|:--|
@@ -145,6 +145,7 @@ There are 327 commands. Run `mimixbox --list` to see them on the terminal.
 | ipcrm | Remove System V IPC objects by id |
 | ipcs | Show System V IPC facilities status |
 | ischroot | Detect if running in a chroot |
+| kbd_mode | Report or set the keyboard mode |
 | kill | Kill process or send signal to process |
 | killall | Kill processes by name |
 | killall5 | Send a signal to all processes |
