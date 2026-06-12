@@ -127,6 +127,7 @@ import (
 	ap_runit_envuidgid "github.com/nao1215/mimixbox/internal/applets/runit/envuidgid"
 	ap_runit_setuidgid "github.com/nao1215/mimixbox/internal/applets/runit/setuidgid"
 	ap_runit_softlimit "github.com/nao1215/mimixbox/internal/applets/runit/softlimit"
+	ap_runit_svok "github.com/nao1215/mimixbox/internal/applets/runit/svok"
 	ap_securityutils_pwcrack "github.com/nao1215/mimixbox/internal/applets/securityutils/pwcrack"
 	ap_securityutils_pwgen "github.com/nao1215/mimixbox/internal/applets/securityutils/pwgen"
 	ap_securityutils_pwscore "github.com/nao1215/mimixbox/internal/applets/securityutils/pwscore"
@@ -300,7 +301,7 @@ import (
 // init populates the applet table. Each command is registered under its own
 // Name(), so the key can never drift from the command it dispatches to.
 func init() {
-	Applets = make(map[string]Applet, 314)
+	Applets = make(map[string]Applet, 315)
 	register(ap_archival_ar.New())
 	register(ap_archival_bunzip2.New())
 	register(ap_archival_compress.New())
@@ -440,6 +441,7 @@ func init() {
 	register(ap_runit_envuidgid.New())
 	register(ap_runit_setuidgid.New())
 	register(ap_runit_softlimit.New())
+	register(ap_runit_svok.New())
 	register(ap_securityutils_pwcrack.New())
 	register(ap_securityutils_pwgen.New())
 	register(ap_securityutils_pwscore.New())
