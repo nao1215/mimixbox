@@ -84,3 +84,26 @@ func TestErrors(t *testing.T) {
 		t.Errorf("a missing directory should fail")
 	}
 }
+
+func TestSkipsFilenamesWithEquals(t *testing.T) {
+	dir := envDir(t, map[string]string{"A=B": "content", "OK": "value"})
+	got, err := applyDir([]string{}, dir)
+	if err != nil {
+		t.Fatal(err)
+	}
+	for _, kv := range got {
+		if strings.HasPrefix(kv, "A=") {
+			t.Errorf("a filename containing '=' must be skipped, got %q", kv)
+		}
+	}
+	// The well-formed file is still applied.
+	var hasOK bool
+	for _, kv := range got {
+		if kv == "OK=value" {
+			hasOK = true
+		}
+	}
+	if !hasOK {
+		t.Errorf("the valid file should still be applied: %v", got)
+	}
+}

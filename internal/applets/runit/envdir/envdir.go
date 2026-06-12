@@ -25,7 +25,7 @@ func (c *Command) Name() string { return "envdir" }
 func (c *Command) Synopsis() string { return "Run a program with env from a directory" }
 
 // Run executes envdir.
-func (c *Command) Run(_ context.Context, stdio command.IO, args []string) error {
+func (c *Command) Run(ctx context.Context, stdio command.IO, args []string) error {
 	fs := command.NewFlagSet(c.Name(), "DIR PROG [ARG...]", stdio.Err).WithHelp(command.Help{
 		Description: "Run PROG with the environment modified by the files in DIR: each file sets the " +
 			"variable named after it to its first line (with trailing whitespace removed), and an " +
@@ -54,7 +54,7 @@ func (c *Command) Run(_ context.Context, stdio command.IO, args []string) error 
 		return command.Failuref("%s: %v", dir, err)
 	}
 
-	cmd := exec.Command(prog, progArgs...) //nolint:gosec // running the user's program is the point
+	cmd := exec.CommandContext(ctx, prog, progArgs...) //nolint:gosec // running the user's program is the point
 	cmd.Env = env
 	cmd.Stdin, cmd.Stdout, cmd.Stderr = stdio.In, stdio.Out, stdio.Err
 	if err := cmd.Run(); err != nil {
@@ -76,8 +76,8 @@ func applyDir(env []string, dir string) ([]string, error) {
 
 	vars := toMap(env)
 	for _, e := range entries {
-		if e.IsDir() {
-			continue
+		if e.IsDir() || strings.ContainsRune(e.Name(), '=') {
+			continue // env keys cannot contain '=' (daemontools skips such files)
 		}
 		data, err := os.ReadFile(dir + "/" + e.Name()) //nolint:gosec // env directory file
 		if err != nil {
