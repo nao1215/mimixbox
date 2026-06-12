@@ -88,6 +88,7 @@ import (
 	ap_loginutils_runparts "github.com/nao1215/mimixbox/internal/applets/loginutils/runparts"
 	ap_loginutils_startstopdaemon "github.com/nao1215/mimixbox/internal/applets/loginutils/startstopdaemon"
 	ap_loginutils_su "github.com/nao1215/mimixbox/internal/applets/loginutils/su"
+	ap_loginutils_sulogin "github.com/nao1215/mimixbox/internal/applets/loginutils/sulogin"
 	ap_netutils_httpstatus "github.com/nao1215/mimixbox/internal/applets/netutils/httpstatus"
 	ap_netutils_nc "github.com/nao1215/mimixbox/internal/applets/netutils/nc"
 	ap_netutils_ping "github.com/nao1215/mimixbox/internal/applets/netutils/ping"
@@ -288,7 +289,7 @@ import (
 // init populates the applet table. Each command is registered under its own
 // Name(), so the key can never drift from the command it dispatches to.
 func init() {
-	Applets = make(map[string]Applet, 301)
+	Applets = make(map[string]Applet, 302)
 	register(ap_archival_ar.New())
 	register(ap_archival_bunzip2.New())
 	register(ap_archival_compress.New())
@@ -385,6 +386,7 @@ func init() {
 	register(ap_loginutils_runparts.New())
 	register(ap_loginutils_startstopdaemon.New())
 	register(ap_loginutils_su.New())
+	register(ap_loginutils_sulogin.New())
 	register(ap_netutils_httpstatus.New())
 	register(ap_netutils_nc.New())
 	register(ap_netutils_ping.New())
