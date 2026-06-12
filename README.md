@@ -19,7 +19,7 @@ MimixBox packs many Unix commands into a single binary, like BusyBox. Unlike Bus
 The list below is generated from the registered applets by `make command-list`, so it never drifts from the binary. You can also run `mimixbox --list` to print it on the terminal.
 
 <!-- COMMAND_LIST_START -->
-There are 311 commands. Run `mimixbox --list` to see them on the terminal.
+There are 312 commands. Run `mimixbox --list` to see them on the terminal.
 
 | Command | Description |
 |:--|:--|
@@ -88,6 +88,7 @@ There are 311 commands. Run `mimixbox --list` to see them on the terminal.
 | eject | Eject removable media |
 | env | Run a program in a modified environment / print the environment |
 | envdir | Run a program with env from a directory |
+| envuidgid | Run a program with $UID/$GID from a user |
 | expand | Convert TAB to N space (default:N=8) |
 | expr | Evaluate expressions |
 | factor | Print the prime factors of each NUMBER |

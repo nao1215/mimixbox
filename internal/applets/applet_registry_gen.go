@@ -123,6 +123,7 @@ import (
 	ap_procps_uptime "github.com/nao1215/mimixbox/internal/applets/procps/uptime"
 	ap_procps_vmstat "github.com/nao1215/mimixbox/internal/applets/procps/vmstat"
 	ap_runit_envdir "github.com/nao1215/mimixbox/internal/applets/runit/envdir"
+	ap_runit_envuidgid "github.com/nao1215/mimixbox/internal/applets/runit/envuidgid"
 	ap_runit_setuidgid "github.com/nao1215/mimixbox/internal/applets/runit/setuidgid"
 	ap_securityutils_pwcrack "github.com/nao1215/mimixbox/internal/applets/securityutils/pwcrack"
 	ap_securityutils_pwgen "github.com/nao1215/mimixbox/internal/applets/securityutils/pwgen"
@@ -297,7 +298,7 @@ import (
 // init populates the applet table. Each command is registered under its own
 // Name(), so the key can never drift from the command it dispatches to.
 func init() {
-	Applets = make(map[string]Applet, 311)
+	Applets = make(map[string]Applet, 312)
 	register(ap_archival_ar.New())
 	register(ap_archival_bunzip2.New())
 	register(ap_archival_compress.New())
@@ -433,6 +434,7 @@ func init() {
 	register(ap_procps_uptime.New())
 	register(ap_procps_vmstat.New())
 	register(ap_runit_envdir.New())
+	register(ap_runit_envuidgid.New())
 	register(ap_runit_setuidgid.New())
 	register(ap_securityutils_pwcrack.New())
 	register(ap_securityutils_pwgen.New())
