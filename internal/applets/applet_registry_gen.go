@@ -30,6 +30,7 @@ import (
 	ap_console_tools_clear "github.com/nao1215/mimixbox/internal/applets/console-tools/clear"
 	ap_console_tools_deallocvt "github.com/nao1215/mimixbox/internal/applets/console-tools/deallocvt"
 	ap_console_tools_fgconsole "github.com/nao1215/mimixbox/internal/applets/console-tools/fgconsole"
+	ap_console_tools_inotifyd "github.com/nao1215/mimixbox/internal/applets/console-tools/inotifyd"
 	ap_console_tools_kbd_mode "github.com/nao1215/mimixbox/internal/applets/console-tools/kbd_mode"
 	ap_console_tools_pager "github.com/nao1215/mimixbox/internal/applets/console-tools/pager"
 	ap_console_tools_reset "github.com/nao1215/mimixbox/internal/applets/console-tools/reset"
@@ -316,7 +317,7 @@ import (
 // init populates the applet table. Each command is registered under its own
 // Name(), so the key can never drift from the command it dispatches to.
 func init() {
-	Applets = make(map[string]Applet, 330)
+	Applets = make(map[string]Applet, 331)
 	register(ap_archival_ar.New())
 	register(ap_archival_bunzip2.New())
 	register(ap_archival_compress.New())
@@ -353,6 +354,7 @@ func init() {
 	register(ap_console_tools_clear.New())
 	register(ap_console_tools_deallocvt.New())
 	register(ap_console_tools_fgconsole.New())
+	register(ap_console_tools_inotifyd.New())
 	register(ap_console_tools_kbd_mode.New())
 	register(ap_console_tools_pager.NewLess())
 	register(ap_console_tools_pager.NewMore())
