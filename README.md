@@ -19,7 +19,7 @@ MimixBox packs many Unix commands into a single binary, like BusyBox. Unlike Bus
 The list below is generated from the registered applets by `make command-list`, so it never drifts from the binary. You can also run `mimixbox --list` to print it on the terminal.
 
 <!-- COMMAND_LIST_START -->
-There are 316 commands. Run `mimixbox --list` to see them on the terminal.
+There are 317 commands. Run `mimixbox --list` to see them on the terminal.
 
 | Command | Description |
 |:--|:--|
@@ -273,6 +273,7 @@ There are 316 commands. Run `mimixbox --list` to see them on the terminal.
 | su | Run a shell as another user |
 | sulogin | Single-user root login |
 | sum | Checksum and count the blocks in a file (BSD) |
+| sv | Control or query a runit service |
 | svlogd | Log standard input to a directory |
 | svok | Check if a service is supervised |
 | swapoff | Disable a swap area |
