@@ -7,6 +7,7 @@ import (
 	"path/filepath"
 	"strings"
 	"testing"
+	"time"
 
 	"github.com/GehirnInc/crypt"
 	_ "github.com/GehirnInc/crypt/sha512_crypt"
@@ -33,17 +34,25 @@ func run(t *testing.T, stdin string, args ...string) error {
 	return New().Run(context.Background(), io, args)
 }
 
-func hashField(t *testing.T, path, user string) string {
+func field(t *testing.T, path, user string, idx int) string {
 	t.Helper()
-	data, _ := os.ReadFile(path)
+	data, err := os.ReadFile(path)
+	if err != nil {
+		t.Fatalf("reading shadow: %v", err)
+	}
 	for _, l := range strings.Split(strings.TrimRight(string(data), "\n"), "\n") {
 		f := strings.Split(l, ":")
-		if f[0] == user {
-			return f[1]
+		if len(f) > idx && f[0] == user {
+			return f[idx]
 		}
 	}
-	t.Fatalf("user %s not found", user)
+	t.Fatalf("user %s (field %d) not found", user, idx)
 	return ""
+}
+
+func hashField(t *testing.T, path, user string) string {
+	t.Helper()
+	return field(t, path, user, 1)
 }
 
 func TestSetPassword(t *testing.T) {
@@ -97,6 +106,26 @@ func TestDefaultsToCurrentUser(t *testing.T) {
 	}
 	if !strings.HasPrefix(hashField(t, p, "tester"), "$6$") {
 		t.Errorf("current user's password not set")
+	}
+}
+
+func TestSetUpdatesLastChange(t *testing.T) {
+	on := now
+	now = func() time.Time { return time.Unix(20000*86400, 0) } // day 20000
+	defer func() { now = on }()
+	p := fixture(t, "alice:!:1:0:99999:7:::\n")
+	if err := run(t, "newsecret\n", "alice"); err != nil {
+		t.Fatal(err)
+	}
+	if got := field(t, p, "alice", 2); got != "20000" {
+		t.Errorf("lastchg = %q, want 20000", got)
+	}
+}
+
+func TestRejectsExtraArgs(t *testing.T) {
+	fixture(t, "alice:!:19000:0:99999:7:::\n")
+	if err := run(t, "x\n", "alice", "bob"); err == nil {
+		t.Errorf("extra positional args should fail")
 	}
 }
 
