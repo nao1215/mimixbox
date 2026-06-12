@@ -19,12 +19,13 @@ MimixBox packs many Unix commands into a single binary, like BusyBox. Unlike Bus
 The list below is generated from the registered applets by `make command-list`, so it never drifts from the binary. You can also run `mimixbox --list` to print it on the terminal.
 
 <!-- COMMAND_LIST_START -->
-There are 305 commands. Run `mimixbox --list` to see them on the terminal.
+There are 306 commands. Run `mimixbox --list` to see them on the terminal.
 
 | Command | Description |
 |:--|:--|
 | [ | Evaluate a conditional expression (test alias requiring ]) |
 | [[ | Evaluate a conditional expression (test alias requiring ]]) |
+| acpid | Dispatch ACPI events (foreground) |
 | add-shell | Add shell name to /etc/shells |
 | addgroup | Add a group to /etc/group |
 | adduser | Create a user account |
