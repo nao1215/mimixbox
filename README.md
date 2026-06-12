@@ -19,7 +19,7 @@ MimixBox packs many Unix commands into a single binary, like BusyBox. Unlike Bus
 The list below is generated from the registered applets by `make command-list`, so it never drifts from the binary. You can also run `mimixbox --list` to print it on the terminal.
 
 <!-- COMMAND_LIST_START -->
-There are 325 commands. Run `mimixbox --list` to see them on the terminal.
+There are 326 commands. Run `mimixbox --list` to see them on the terminal.
 
 | Command | Description |
 |:--|:--|
@@ -77,6 +77,7 @@ There are 325 commands. Run `mimixbox --list` to see them on the terminal.
 | date | Print or set the system date and time |
 | dc | Reverse-Polish (stack) desk calculator |
 | dd | Convert and copy a file |
+| deallocvt | Deallocate a virtual terminal |
 | delgroup | Remove a group from /etc/group |
 | deluser | Remove a user account |
 | df | Report file system disk space usage |
