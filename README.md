@@ -19,7 +19,7 @@ MimixBox packs many Unix commands into a single binary, like BusyBox. Unlike Bus
 The list below is generated from the registered applets by `make command-list`, so it never drifts from the binary. You can also run `mimixbox --list` to print it on the terminal.
 
 <!-- COMMAND_LIST_START -->
-There are 322 commands. Run `mimixbox --list` to see them on the terminal.
+There are 323 commands. Run `mimixbox --list` to see them on the terminal.
 
 | Command | Description |
 |:--|:--|
@@ -303,6 +303,7 @@ There are 322 commands. Run `mimixbox --list` to see them on the terminal.
 | ts | Timestamp each input line |
 | tsort | Topological sort of a directed graph |
 | tty | Print the file name of the terminal connected to stdin |
+| ttysize | Print the terminal width and height |
 | tune2fs | Show ext2/ext3/ext4 filesystem parameters |
 | uevent | Monitor kernel uevents |
 | umount | Unmount a filesystem |

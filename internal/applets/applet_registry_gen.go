@@ -31,6 +31,7 @@ import (
 	ap_console_tools_resize "github.com/nao1215/mimixbox/internal/applets/console-tools/resize"
 	ap_console_tools_stty "github.com/nao1215/mimixbox/internal/applets/console-tools/stty"
 	ap_console_tools_ts "github.com/nao1215/mimixbox/internal/applets/console-tools/ts"
+	ap_console_tools_ttysize "github.com/nao1215/mimixbox/internal/applets/console-tools/ttysize"
 	ap_debianutils_add_shell "github.com/nao1215/mimixbox/internal/applets/debianutils/add-shell"
 	ap_debianutils_ischroot "github.com/nao1215/mimixbox/internal/applets/debianutils/ischroot"
 	ap_debianutils_mktemp "github.com/nao1215/mimixbox/internal/applets/debianutils/mktemp"
@@ -308,7 +309,7 @@ import (
 // init populates the applet table. Each command is registered under its own
 // Name(), so the key can never drift from the command it dispatches to.
 func init() {
-	Applets = make(map[string]Applet, 322)
+	Applets = make(map[string]Applet, 323)
 	register(ap_archival_ar.New())
 	register(ap_archival_bunzip2.New())
 	register(ap_archival_compress.New())
@@ -347,6 +348,7 @@ func init() {
 	register(ap_console_tools_resize.New())
 	register(ap_console_tools_stty.New())
 	register(ap_console_tools_ts.New())
+	register(ap_console_tools_ttysize.New())
 	register(ap_debianutils_add_shell.New())
 	register(ap_debianutils_ischroot.New())
 	register(ap_debianutils_mktemp.New())
