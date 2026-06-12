@@ -138,11 +138,14 @@ func countTrue(bs ...bool) int {
 	return n
 }
 
-// withLock runs fn while holding an exclusive advisory lock on path, serializing
-// concurrent password changes. If the file cannot be opened for locking (e.g. an
-// unprivileged run), fn proceeds without the lock.
+// withLock runs fn while holding an exclusive advisory lock, serializing
+// concurrent password changes. The lock is taken on a dedicated, stable lockfile
+// ("<path>.lock") rather than on the shadow file itself: writeLines replaces the
+// shadow file's inode via rename, so a lock held on that inode would not be seen
+// by a concurrent run. If the lockfile cannot be created (e.g. an unprivileged
+// run), fn proceeds without the lock.
 func withLock(path string, fn func() error) error {
-	f, err := os.OpenFile(path, os.O_RDWR, 0) //nolint:gosec // well-known shadow path
+	f, err := os.OpenFile(path+".lock", os.O_CREATE|os.O_RDWR, 0o600) //nolint:gosec // adjacent to the shadow path
 	if err != nil {
 		return fn()
 	}

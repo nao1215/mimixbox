@@ -141,3 +141,15 @@ func TestErrors(t *testing.T) {
 		t.Errorf("an empty password should fail")
 	}
 }
+
+func TestUsesStableLockfile(t *testing.T) {
+	p := fixture(t, "alice:!:19000:0:99999:7:::\n")
+	if err := run(t, "newsecret\n", "alice"); err != nil {
+		t.Fatal(err)
+	}
+	// The lock is taken on a dedicated lockfile next to the shadow file, which
+	// survives the atomic rename of the shadow file's inode.
+	if _, err := os.Stat(p + ".lock"); err != nil {
+		t.Errorf("expected a %s.lock lockfile: %v", p, err)
+	}
+}
