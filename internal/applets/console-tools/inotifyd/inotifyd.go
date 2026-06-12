@@ -6,8 +6,11 @@ import (
 	"bytes"
 	"context"
 	"encoding/binary"
+	"errors"
+	"io"
 	"os/exec"
 	"strings"
+	"sync"
 
 	"github.com/nao1215/mimixbox/internal/command"
 	"golang.org/x/sys/unix"
@@ -70,7 +73,11 @@ type watch struct {
 var (
 	dialFn    = openInotify
 	handlerFn = func(stdio command.IO, prog, actions, path, name string) {
-		cmd := exec.Command(prog, actions, path, name) //nolint:gosec // running the handler is the point
+		argv := []string{actions, path}
+		if name != "" { // the NAME argument is omitted for an event on the watched file itself
+			argv = append(argv, name)
+		}
+		cmd := exec.Command(prog, argv...) //nolint:gosec // running the handler is the point
 		cmd.Stdin, cmd.Stdout, cmd.Stderr = stdio.In, stdio.Out, stdio.Err
 		_ = cmd.Run()
 	}
@@ -117,7 +124,10 @@ func (c *Command) Run(ctx context.Context, stdio command.IO, args []string) erro
 	for {
 		ev, err := src.Recv()
 		if err != nil {
-			return nil // closed via cancellation, or the source ended
+			if ctx.Err() != nil || errors.Is(err, io.EOF) {
+				return nil // cancelled, or the source ended cleanly
+			}
+			return command.Failuref("watch error: %v", err)
 		}
 		handlerFn(stdio, prog, maskToLetters(ev.mask), ev.path, ev.name)
 	}
@@ -157,10 +167,12 @@ func maskToLetters(mask uint32) string {
 
 // inotifySource reads events from a real inotify file descriptor.
 type inotifySource struct {
-	fd     int
-	wdPath map[int32]string
-	buf    []byte
-	queue  []event
+	fd        int
+	wdPath    map[int32]string
+	buf       []byte
+	queue     []event
+	closeOnce sync.Once
+	closeErr  error
 }
 
 // openInotify sets up an inotify watch for each path.
@@ -210,5 +222,9 @@ func (s *inotifySource) parse(data []byte) {
 	}
 }
 
-// Close closes the inotify descriptor.
-func (s *inotifySource) Close() error { return unix.Close(s.fd) }
+// Close closes the inotify descriptor, idempotently (it is closed from both the
+// cancellation goroutine and the deferred cleanup).
+func (s *inotifySource) Close() error {
+	s.closeOnce.Do(func() { s.closeErr = unix.Close(s.fd) })
+	return s.closeErr
+}
