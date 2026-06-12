@@ -19,7 +19,7 @@ MimixBox packs many Unix commands into a single binary, like BusyBox. Unlike Bus
 The list below is generated from the registered applets by `make command-list`, so it never drifts from the binary. You can also run `mimixbox --list` to print it on the terminal.
 
 <!-- COMMAND_LIST_START -->
-There are 323 commands. Run `mimixbox --list` to see them on the terminal.
+There are 324 commands. Run `mimixbox --list` to see them on the terminal.
 
 | Command | Description |
 |:--|:--|
@@ -102,6 +102,7 @@ There are 323 commands. Run `mimixbox --list` to see them on the terminal.
 | fdflush | Flush a floppy device's buffers |
 | fdformat | Low-level format a floppy device |
 | fdisk | List the MBR partition table |
+| fgconsole | Print the active virtual terminal |
 | fgrep | Search for fixed strings (grep -F) |
 | find | Search for files in a directory hierarchy |
 | findfs | Find a filesystem by label or UUID |
