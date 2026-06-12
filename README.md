@@ -19,7 +19,7 @@ MimixBox packs many Unix commands into a single binary, like BusyBox. Unlike Bus
 The list below is generated from the registered applets by `make command-list`, so it never drifts from the binary. You can also run `mimixbox --list` to print it on the terminal.
 
 <!-- COMMAND_LIST_START -->
-There are 331 commands. Run `mimixbox --list` to see them on the terminal.
+There are 332 commands. Run `mimixbox --list` to see them on the terminal.
 
 | Command | Description |
 |:--|:--|
@@ -258,6 +258,7 @@ There are 331 commands. Run `mimixbox --list` to see them on the terminal.
 | serial | Rename the file to the name with a serial number |
 | setarch | Run a program with a changed architecture personality |
 | setconsole | Redirect console output to a device |
+| setkeycodes | Map scancodes to keycodes |
 | setlogcons | Send kernel messages to a VT |
 | setpriv | Run a program with different privilege settings |
 | setsid | Run a program in a new session |
