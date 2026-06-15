@@ -181,6 +181,7 @@ import (
 	ap_shellutils_install "github.com/nao1215/mimixbox/internal/applets/shellutils/install"
 	ap_shellutils_kill "github.com/nao1215/mimixbox/internal/applets/shellutils/kill"
 	ap_shellutils_killall "github.com/nao1215/mimixbox/internal/applets/shellutils/killall"
+	ap_shellutils_leadtime "github.com/nao1215/mimixbox/internal/applets/shellutils/leadtime"
 	ap_shellutils_logcollect "github.com/nao1215/mimixbox/internal/applets/shellutils/logcollect"
 	ap_shellutils_logname "github.com/nao1215/mimixbox/internal/applets/shellutils/logname"
 	ap_shellutils_mbsh "github.com/nao1215/mimixbox/internal/applets/shellutils/mbsh"
@@ -319,7 +320,7 @@ import (
 // init populates the applet table. Each command is registered under its own
 // Name(), so the key can never drift from the command it dispatches to.
 func init() {
-	Applets = make(map[string]Applet, 333)
+	Applets = make(map[string]Applet, 334)
 	register(ap_archival_ar.New())
 	register(ap_archival_bunzip2.New())
 	register(ap_archival_compress.New())
@@ -513,6 +514,7 @@ func init() {
 	register(ap_shellutils_install.New())
 	register(ap_shellutils_kill.New())
 	register(ap_shellutils_killall.New())
+	register(ap_shellutils_leadtime.New())
 	register(ap_shellutils_logcollect.New())
 	register(ap_shellutils_logname.New())
 	register(ap_shellutils_mbsh.New())
