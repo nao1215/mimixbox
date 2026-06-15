@@ -16,6 +16,7 @@
 package mb
 
 import (
+	"bytes"
 	"crypto/md5"
 	"os"
 	"path/filepath"
@@ -167,16 +168,6 @@ func TestHasOperand(t *testing.T) {
 	}
 }
 
-func TestPrintNumberLines(t *testing.T) {
-	t.Parallel()
-	// Smoke-test the stdout printers for coverage.
-	PrintStrWithNumberLine(1, "%6d  %s", "hello")
-	PrintStrListWithNumberLine([]string{"a", "\n", "b"}, false)
-	PrintStrListWithNumberLine([]string{"a", "b"}, true)
-	Dump([]string{"x\n"}, false)
-	Dump([]string{"x"}, true)
-}
-
 func TestConcatenate(t *testing.T) {
 	t.Parallel()
 	dir := t.TempDir()
@@ -219,23 +210,58 @@ func TestChecksumHelpers(t *testing.T) {
 		t.Error("CalcChecksum should error on a missing file")
 	}
 
-	// PrintChecksums over a present and an absent path.
-	status, err := PrintChecksums("md5sum", md5.New(), []string{data})
+	// PrintChecksums over a present path writes "<digest>  <path>" to out and
+	// nothing to errw.
+	var out, errw bytes.Buffer
+	status, err := PrintChecksums(&out, &errw, "md5sum", md5.New(), []string{data})
 	if err != nil || status != 0 {
 		t.Errorf("PrintChecksums = %d, %v", status, err)
 	}
-	status, _ = PrintChecksums("md5sum", md5.New(), []string{"/no/such/file"})
+	if want := sum + "  " + data + "\n"; out.String() != want {
+		t.Errorf("PrintChecksums out = %q, want %q", out.String(), want)
+	}
+	if errw.Len() != 0 {
+		t.Errorf("PrintChecksums errw = %q, want empty", errw.String())
+	}
+
+	// An absent path reports status 1 and a diagnostic on errw, not out.
+	out.Reset()
+	errw.Reset()
+	status, _ = PrintChecksums(&out, &errw, "md5sum", md5.New(), []string{"/no/such/file"})
 	if status != 1 {
 		t.Errorf("PrintChecksums missing-file status = %d, want 1", status)
 	}
+	if out.Len() != 0 {
+		t.Errorf("PrintChecksums missing-file out = %q, want empty", out.String())
+	}
+	if !strings.Contains(errw.String(), "No such file or directory") {
+		t.Errorf("PrintChecksums missing-file errw = %q", errw.String())
+	}
 
-	// CompareChecksum against a valid checksum file.
+	// CompareChecksum against a valid checksum file writes "<file>: OK".
 	sumFile := filepath.Join(dir, "sums.txt")
 	if err := os.WriteFile(sumFile, []byte(sum+"  "+data+"\n"), 0o600); err != nil {
 		t.Fatal(err)
 	}
-	if err := CompareChecksum(md5.New(), []string{sumFile}); err != nil {
+	var cmp bytes.Buffer
+	if err := CompareChecksum(&cmp, md5.New(), []string{sumFile}); err != nil {
 		t.Errorf("CompareChecksum error = %v", err)
+	}
+	if want := data + ": OK\n"; cmp.String() != want {
+		t.Errorf("CompareChecksum out = %q, want %q", cmp.String(), want)
+	}
+
+	// A tampered checksum makes CompareChecksum report "<file>: Fail".
+	badSumFile := filepath.Join(dir, "bad-sums.txt")
+	if err := os.WriteFile(badSumFile, []byte("00000000000000000000000000000000  "+data+"\n"), 0o600); err != nil {
+		t.Fatal(err)
+	}
+	cmp.Reset()
+	if err := CompareChecksum(&cmp, md5.New(), []string{badSumFile}); err != nil {
+		t.Errorf("CompareChecksum error = %v", err)
+	}
+	if want := data + ": Fail\n"; cmp.String() != want {
+		t.Errorf("CompareChecksum tampered out = %q, want %q", cmp.String(), want)
 	}
 }
 
@@ -279,10 +305,8 @@ func TestShadowHelpers(t *testing.T) {
 	_ = IsRootUser()
 }
 
-func TestShowVersion(t *testing.T) {
+func TestExitConstants(t *testing.T) {
 	t.Parallel()
-	// Smoke-test; writes to stdout.
-	ShowVersion("mimixbox", "1.2.3")
 	if ExitSuccess != 0 || ExitFailure != 1 {
 		t.Error("exit code constants are wrong")
 	}
@@ -299,6 +323,7 @@ func TestGroups(t *testing.T) {
 	if err != nil {
 		t.Skipf("Groups(%s) error = %v (user may not be in the user database)", u, err)
 	}
-	DumpGroups(groups, true)
-	DumpGroups(groups, false)
+	// The space-separated rendering is covered by TestDumpGroupsTo; here we just
+	// assert the lookup itself succeeds for a real user.
+	_ = groups
 }

@@ -16,6 +16,7 @@
 package applets
 
 import (
+	"bytes"
 	"go/ast"
 	"go/parser"
 	"go/token"
@@ -67,6 +68,60 @@ func TestRegistryKeyMatchesName(t *testing.T) {
 	for key, applet := range Applets {
 		if name := applet.Cmd.Name(); name != key {
 			t.Errorf("registry key %q maps to a command whose Name() is %q", key, name)
+		}
+	}
+}
+
+// TestListAppletsTo asserts the "name - description" table is written to the
+// injected writer (not os.Stdout) and that every registered applet appears with
+// its synopsis. This is the writer-injected replacement for the removed
+// process-global ListApplets wrapper (issue #492).
+func TestListAppletsTo(t *testing.T) {
+	t.Parallel()
+
+	var out bytes.Buffer
+	ListAppletsTo(&out)
+	got := out.String()
+
+	if len(Applets) == 0 {
+		t.Fatal("registry is empty; cannot validate the listing")
+	}
+	for name, applet := range Applets {
+		line := name + " - " + applet.Desc
+		if !strings.Contains(got, line) {
+			t.Errorf("ListAppletsTo output is missing %q", line)
+		}
+	}
+	if want := len(Applets); strings.Count(got, "\n") != want {
+		t.Errorf("ListAppletsTo wrote %d lines, want %d", strings.Count(got, "\n"), want)
+	}
+}
+
+// TestShowAppletsBySpaceSeparatedTo asserts the space-separated listing goes to
+// the injected writer, wraps at the 60-column boundary, and contains every
+// applet name exactly once. Replacement for the removed process-global wrapper.
+func TestShowAppletsBySpaceSeparatedTo(t *testing.T) {
+	t.Parallel()
+
+	var out bytes.Buffer
+	ShowAppletsBySpaceSeparatedTo(&out)
+	got := out.String()
+
+	if !strings.HasSuffix(got, "\n") {
+		t.Errorf("output should end with a newline, got %q", got[max(0, len(got)-10):])
+	}
+	fields := strings.Fields(got)
+	if len(fields) != len(Applets) {
+		t.Errorf("output has %d names, want %d", len(fields), len(Applets))
+	}
+	for _, name := range SortApplet() {
+		if !strings.Contains(got, name) {
+			t.Errorf("output is missing applet %q", name)
+		}
+	}
+	for _, line := range strings.Split(strings.TrimRight(got, "\n"), "\n") {
+		if len(line) > 60 {
+			t.Errorf("line exceeds the 60-column wrap: %q (%d)", line, len(line))
 		}
 	}
 }

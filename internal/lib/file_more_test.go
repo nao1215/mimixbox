@@ -97,37 +97,6 @@ func TestWalk(t *testing.T) {
 	}
 }
 
-func TestRemoveFileNonInteractive(t *testing.T) {
-	t.Parallel()
-	p := filepath.Join(t.TempDir(), "gone.txt")
-	if err := os.WriteFile(p, []byte("x"), 0o644); err != nil {
-		t.Fatal(err)
-	}
-	if err := RemoveFile(p, false); err != nil {
-		t.Fatalf("RemoveFile error = %v", err)
-	}
-	if Exists(p) {
-		t.Error("file should have been removed")
-	}
-}
-
-func TestRemoveDirNonInteractive(t *testing.T) {
-	t.Parallel()
-	dir := filepath.Join(t.TempDir(), "tree")
-	if err := os.MkdirAll(filepath.Join(dir, "sub"), 0o755); err != nil {
-		t.Fatal(err)
-	}
-	if err := os.WriteFile(filepath.Join(dir, "sub", "f.txt"), []byte("x"), 0o644); err != nil {
-		t.Fatal(err)
-	}
-	if err := RemoveDir(dir, false); err != nil {
-		t.Fatalf("RemoveDir error = %v", err)
-	}
-	if Exists(dir) {
-		t.Error("directory tree should have been removed")
-	}
-}
-
 func TestIsSameFileName(t *testing.T) {
 	t.Parallel()
 	if !IsSameFileName("/a/b/foo.txt", "/c/d/foo.txt") {

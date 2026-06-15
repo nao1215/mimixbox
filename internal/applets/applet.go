@@ -20,7 +20,6 @@ package applets
 import (
 	"fmt"
 	"io"
-	"os"
 	"sort"
 	"strconv"
 	"strings"
@@ -59,9 +58,6 @@ func HasApplet(target string) bool {
 	return ok
 }
 
-// ListApplets writes the "name - description" table to os.Stdout.
-func ListApplets() { ListAppletsTo(os.Stdout) }
-
 // ListAppletsTo writes the "name - description" table to w.
 func ListAppletsTo(w io.Writer) {
 	format := "%" + strconv.Itoa(longestAppletLength()) + "s - %s\n"
@@ -69,10 +65,6 @@ func ListAppletsTo(w io.Writer) {
 		_, _ = fmt.Fprintf(w, format, key, Applets[key].Desc)
 	}
 }
-
-// ShowAppletsBySpaceSeparated writes the space-separated applet names to
-// os.Stdout.
-func ShowAppletsBySpaceSeparated() { ShowAppletsBySpaceSeparatedTo(os.Stdout) }
 
 // ShowAppletsBySpaceSeparatedTo writes the space-separated, wrapped applet
 // names to w.
