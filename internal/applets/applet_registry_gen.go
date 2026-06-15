@@ -108,9 +108,24 @@ import (
 	ap_loginutils_su "github.com/nao1215/mimixbox/internal/applets/loginutils/su"
 	ap_loginutils_sulogin "github.com/nao1215/mimixbox/internal/applets/loginutils/sulogin"
 	ap_loginutils_vlock "github.com/nao1215/mimixbox/internal/applets/loginutils/vlock"
+	ap_netutils_dnsd "github.com/nao1215/mimixbox/internal/applets/netutils/dnsd"
+	ap_netutils_dumpleases "github.com/nao1215/mimixbox/internal/applets/netutils/dumpleases"
+	ap_netutils_fakeidentd "github.com/nao1215/mimixbox/internal/applets/netutils/fakeidentd"
+	ap_netutils_ftpd "github.com/nao1215/mimixbox/internal/applets/netutils/ftpd"
+	ap_netutils_httpd "github.com/nao1215/mimixbox/internal/applets/netutils/httpd"
 	ap_netutils_httpstatus "github.com/nao1215/mimixbox/internal/applets/netutils/httpstatus"
+	ap_netutils_ifupdown "github.com/nao1215/mimixbox/internal/applets/netutils/ifupdown"
+	ap_netutils_inetd "github.com/nao1215/mimixbox/internal/applets/netutils/inetd"
 	ap_netutils_nc "github.com/nao1215/mimixbox/internal/applets/netutils/nc"
+	ap_netutils_netctl "github.com/nao1215/mimixbox/internal/applets/netutils/netctl"
+	ap_netutils_ntpd "github.com/nao1215/mimixbox/internal/applets/netutils/ntpd"
 	ap_netutils_ping "github.com/nao1215/mimixbox/internal/applets/netutils/ping"
+	ap_netutils_sslutil "github.com/nao1215/mimixbox/internal/applets/netutils/sslutil"
+	ap_netutils_tcpsvd "github.com/nao1215/mimixbox/internal/applets/netutils/tcpsvd"
+	ap_netutils_telnetd "github.com/nao1215/mimixbox/internal/applets/netutils/telnetd"
+	ap_netutils_tftpd "github.com/nao1215/mimixbox/internal/applets/netutils/tftpd"
+	ap_netutils_udhcpc "github.com/nao1215/mimixbox/internal/applets/netutils/udhcpc"
+	ap_netutils_udhcpd "github.com/nao1215/mimixbox/internal/applets/netutils/udhcpd"
 	ap_netutils_whris "github.com/nao1215/mimixbox/internal/applets/netutils/whris"
 	ap_pmutils_halt "github.com/nao1215/mimixbox/internal/applets/pmutils/halt"
 	ap_procps_fuser "github.com/nao1215/mimixbox/internal/applets/procps/fuser"
@@ -319,7 +334,7 @@ import (
 // init populates the applet table. Each command is registered under its own
 // Name(), so the key can never drift from the command it dispatches to.
 func init() {
-	Applets = make(map[string]Applet, 333)
+	Applets = make(map[string]Applet, 359)
 	register(ap_archival_ar.New())
 	register(ap_archival_bunzip2.New())
 	register(ap_archival_compress.New())
@@ -437,9 +452,35 @@ func init() {
 	register(ap_loginutils_su.New())
 	register(ap_loginutils_sulogin.New())
 	register(ap_loginutils_vlock.New())
+	register(ap_netutils_dnsd.New())
+	register(ap_netutils_dumpleases.New())
+	register(ap_netutils_fakeidentd.New())
+	register(ap_netutils_ftpd.New())
+	register(ap_netutils_httpd.New())
 	register(ap_netutils_httpstatus.New())
+	register(ap_netutils_ifupdown.NewIfdown())
+	register(ap_netutils_ifupdown.NewIfplugd())
+	register(ap_netutils_ifupdown.NewIfup())
+	register(ap_netutils_inetd.New())
 	register(ap_netutils_nc.New())
+	register(ap_netutils_netctl.NewBrctl())
+	register(ap_netutils_netctl.NewIfenslave())
+	register(ap_netutils_netctl.NewNbdClient())
+	register(ap_netutils_netctl.NewTunctl())
+	register(ap_netutils_netctl.NewVconfig())
+	register(ap_netutils_netctl.NewZcip())
+	register(ap_netutils_ntpd.New())
 	register(ap_netutils_ping.New())
+	register(ap_netutils_sslutil.NewSSLClient())
+	register(ap_netutils_sslutil.NewSSLServer())
+	register(ap_netutils_tcpsvd.NewTcpsvd())
+	register(ap_netutils_tcpsvd.NewUdpsvd())
+	register(ap_netutils_telnetd.New())
+	register(ap_netutils_tftpd.New())
+	register(ap_netutils_udhcpc.NewUdhcpc())
+	register(ap_netutils_udhcpc.NewUdhcpc6())
+	register(ap_netutils_udhcpd.NewDhcprelay())
+	register(ap_netutils_udhcpd.NewUdhcpd())
 	register(ap_netutils_whris.New())
 	register(ap_pmutils_halt.NewHalt())
 	register(ap_pmutils_halt.NewPoweroff())

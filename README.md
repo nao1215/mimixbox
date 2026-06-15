@@ -19,7 +19,7 @@ MimixBox packs many Unix commands into a single binary, like BusyBox. Unlike Bus
 The list below is generated from the registered applets by `make command-list`, so it never drifts from the binary. You can also run `mimixbox --list` to print it on the terminal.
 
 <!-- COMMAND_LIST_START -->
-There are 333 commands. Run `mimixbox --list` to see them on the terminal.
+There are 359 commands. Run `mimixbox --list` to see them on the terminal.
 
 | Command | Description |
 |:--|:--|
@@ -45,6 +45,7 @@ There are 333 commands. Run `mimixbox --list` to see them on the terminal.
 | blkid | Identify the filesystem type of a device or image |
 | blockdev | Report block device properties |
 | bootchartd | Collect a bootchart performance sample |
+| brctl | Manage Ethernet bridges (capability-gated) |
 | bunzip2 | Decompress bzip2 (.bz2) files |
 | busybox | BusyBox-style multi-call front-end for MimixBox applets |
 | bzcat | Decompress bz2 data to standard output |
@@ -82,11 +83,14 @@ There are 333 commands. Run `mimixbox --list` to see them on the terminal.
 | delgroup | Remove a group from /etc/group |
 | deluser | Remove a user account |
 | df | Report file system disk space usage |
+| dhcprelay | Relay DHCP requests between networks |
 | diff | Compare files line by line |
 | dirname | Print only directory path |
 | dmesg | Print or control the kernel ring buffer |
+| dnsd | Tiny authoritative DNS server for a hosts file |
 | dos2unix | Change CRLF to LF |
 | du | Estimate file space usage |
+| dumpleases | Display DHCP server leases |
 | echo | Display a line of text |
 | ed | A line-oriented text editor |
 | egrep | Search with extended regular expressions (grep -E) |
@@ -97,6 +101,7 @@ There are 333 commands. Run `mimixbox --list` to see them on the terminal.
 | expand | Convert TAB to N space (default:N=8) |
 | expr | Evaluate expressions |
 | factor | Print the prime factors of each NUMBER |
+| fakeidentd | Answer ident (RFC 1413) queries with a fixed user |
 | fakemovie | Adds a video playback button to the image |
 | fallocate | Preallocate or extend space for a file |
 | false | Do nothing. Return failure(1) |
@@ -120,6 +125,7 @@ There are 333 commands. Run `mimixbox --list` to see them on the terminal.
 | fsfreeze | Suspend or resume a filesystem |
 | fstrim | Discard unused blocks on a filesystem |
 | fsync | Flush a file's data to storage with fsync(2) |
+| ftpd | Minimal read-only FTP server (foreground) |
 | fuser | Identify processes using a file |
 | getopt | Parse command options (enhanced, like util-linux getopt) |
 | getty | Prompt for a username and run login |
@@ -135,9 +141,15 @@ There are 333 commands. Run `mimixbox --list` to see them on the terminal.
 | hostid | Print the numeric identifier (in hexadecimal) for the current host |
 | hostname | Show the system's host name |
 | http-status-code | Explain HTTP status codes and their RFC references |
+| httpd | Serve static files over HTTP |
 | hush | Command interpreter (MimixBox mbsh compatibility front-end) |
 | hwclock | Read the hardware (RTC) clock |
 | id | Print User ID and Group ID |
+| ifdown | Take a network interface down |
+| ifenslave | Attach/detach bonding slaves (capability-gated) |
+| ifplugd | Bring interfaces up/down on link change |
+| ifup | Bring a network interface up |
+| inetd | Internet super-server (minimal) |
 | init | Run an inittab's startup actions |
 | inotifyd | Run a handler on file inotify events |
 | install | Copy files and set attributes |
@@ -196,6 +208,7 @@ There are 333 commands. Run `mimixbox --list` to see them on the terminal.
 | mountpoint | See if a directory is a mountpoint |
 | mpstat | Report per-processor CPU statistics |
 | mv | Rename SOURCE to DESTINATION, or move SOURCE(s) to DIRECTORY |
+| nbd-client | Attach a network block device (capability-gated) |
 | nc | Read and write data across network connections |
 | nice | Run a command with an adjusted niceness |
 | nl | Write each FILE to standard output with line numbers added |
@@ -204,6 +217,7 @@ There are 333 commands. Run `mimixbox --list` to see them on the terminal.
 | nologin | Refuse a login and exit non-zero |
 | nproc | Print the number of processing units available |
 | nsenter | Run a program in another process's namespaces |
+| ntpd | NTP client/daemon (query implemented; clock set gated) |
 | nyancat | Animate the rainbow-trailing Nyan Cat |
 | od | Dump files in octal and other formats |
 | passwd | Change a user's password |
@@ -279,6 +293,8 @@ There are 333 commands. Run `mimixbox --list` to see them on the terminal.
 | sort | Sort lines of text files |
 | speaker | Read text aloud using an installed TTS engine |
 | split | Split a file into pieces |
+| ssl_client | Open a TLS connection and pipe stdio |
+| ssl_server | Minimal TLS server (foreground) |
 | start-stop-daemon | Start or stop a background program |
 | stat | Display file or file system status |
 | strings | Print printable character sequences in files |
@@ -300,8 +316,11 @@ There are 333 commands. Run `mimixbox --list` to see them on the terminal.
 | tail | Print the last NUMBER(default=10) lines |
 | tar | Archive files (create, list, extract) |
 | taskset | Set or get a process's CPU affinity |
+| tcpsvd | Accept TCP connections and run a program for each |
 | tee | Read from standard input and write to standard output and files |
+| telnetd | Minimal telnet server (foreground) |
 | test | Evaluate a conditional expression |
+| tftpd | Read-only TFTP server |
 | time | Run a command and report how long it took |
 | timeout | Run a command with a time limit |
 | top | Display system summary and top processes |
@@ -314,7 +333,12 @@ There are 333 commands. Run `mimixbox --list` to see them on the terminal.
 | tsort | Topological sort of a directed graph |
 | tty | Print the file name of the terminal connected to stdin |
 | ttysize | Print the terminal width and height |
+| tunctl | Create/delete TUN/TAP devices (capability-gated) |
 | tune2fs | Show ext2/ext3/ext4 filesystem parameters |
+| udhcpc | DHCP client |
+| udhcpc6 | DHCPv6 client |
+| udhcpd | DHCP server |
+| udpsvd | Accept UDP datagrams and run a program for each |
 | uevent | Monitor kernel uevents |
 | umount | Unmount a filesystem |
 | uname | Print system information |
@@ -336,6 +360,7 @@ There are 333 commands. Run `mimixbox --list` to see them on the terminal.
 | uuencode | Encode a file for transmission over text channels |
 | uuidgen | Print UUID (Universally Unique IDentifier) |
 | valid-shell | Verify if /etc/shells is valid |
+| vconfig | Manage 802.1q VLAN interfaces (capability-gated) |
 | vi | A minimal vi-style screen text editor |
 | vlock | Lock the terminal until the password is entered |
 | vmstat | Report virtual memory statistics |
@@ -354,6 +379,7 @@ There are 333 commands. Run `mimixbox --list` to see them on the terminal.
 | xzcat | Decompress xz data to standard output |
 | yes | Output a string repeatedly until killed |
 | zcat | Decompress gz data to standard output |
+| zcip | Manage IPv4 link-local addresses (capability-gated) |
 | zip | Package and compress files into a ZIP archive |
 | zip-pwcrack | Recover the password of a ZipCrypto-encrypted archive |
 <!-- COMMAND_LIST_END -->
