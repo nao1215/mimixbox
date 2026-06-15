@@ -3,9 +3,11 @@ package netcat
 import (
 	"bytes"
 	"context"
+	"io"
 	"net"
 	"strings"
 	"testing"
+	"time"
 
 	"github.com/nao1215/mimixbox/internal/command"
 )
@@ -14,8 +16,8 @@ func run(t *testing.T, in string, args ...string) (string, string, error) {
 	t.Helper()
 	out := &bytes.Buffer{}
 	errBuf := &bytes.Buffer{}
-	io := command.IO{In: strings.NewReader(in), Out: out, Err: errBuf}
-	err := New().Run(context.Background(), io, args)
+	stdio := command.IO{In: strings.NewReader(in), Out: out, Err: errBuf}
+	err := New().Run(context.Background(), stdio, args)
 	return out.String(), errBuf.String(), err
 }
 
@@ -52,7 +54,14 @@ func TestDelegatesToNc(t *testing.T) {
 			return
 		}
 		defer func() { _ = conn.Close() }()
+		// A deadline keeps the drain from blocking forever if the client never
+		// closes its side.
+		_ = conn.SetDeadline(time.Now().Add(5 * time.Second))
 		_, _ = conn.Write([]byte("pong"))
+		// Drain whatever the client sends before closing. Closing with unread
+		// bytes still buffered makes the kernel send an RST, which the client
+		// surfaces as "connection reset by peer" and made this test flaky.
+		_, _ = io.Copy(io.Discard, conn)
 	}()
 
 	host, port, _ := net.SplitHostPort(ln.Addr().String())
