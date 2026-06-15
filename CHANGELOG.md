@@ -9,7 +9,7 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## [0.39.0] - 2026-06-15
 
-This release grows the applet count to 449 by landing eight issues in parallel:
+This release grows the applet count to 450 by landing eight issues in parallel:
 six BusyBox roadmap batches and two migrations of archived `nao1215` projects.
 The batches add their first slices — the prioritized low-risk / high-value
 commands are fully implemented and tested, while privileged or kernel-facing
