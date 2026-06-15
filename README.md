@@ -19,7 +19,7 @@ MimixBox packs many Unix commands into a single binary, like BusyBox. Unlike Bus
 The list below is generated from the registered applets by `make command-list`, so it never drifts from the binary. You can also run `mimixbox --list` to print it on the terminal.
 
 <!-- COMMAND_LIST_START -->
-There are 434 commands. Run `mimixbox --list` to see them on the terminal.
+There are 450 commands. Run `mimixbox --list` to see them on the terminal.
 
 | Command | Description |
 |:--|:--|
@@ -91,6 +91,7 @@ There are 434 commands. Run `mimixbox --list` to see them on the terminal.
 | delgroup | Remove a group from /etc/group |
 | deluser | Remove a user account |
 | depmod | Build the module dependency list |
+| devmem | Read or write physical memory |
 | df | Report file system disk space usage |
 | dhcprelay | Relay DHCP requests between networks |
 | diff | Compare files line by line |
@@ -144,6 +145,7 @@ There are 434 commands. Run `mimixbox --list` to see them on the terminal.
 | ftpput | Upload a file to an FTP server |
 | fuser | Identify processes using a file |
 | getenforce | Print the current SELinux enforcing mode |
+| getfattr | Get extended attributes of files |
 | getopt | Parse command options (enhanced, like util-linux getopt) |
 | getsebool | Show the state of SELinux booleans |
 | getty | Prompt for a username and run login |
@@ -162,6 +164,10 @@ There are 434 commands. Run `mimixbox --list` to see them on the terminal.
 | httpd | Serve static files over HTTP |
 | hush | Command interpreter (MimixBox mbsh compatibility front-end) |
 | hwclock | Read the hardware (RTC) clock |
+| i2cdetect | Detect I2C chips on a bus |
+| i2cdump | Dump the registers of an I2C device |
+| i2cget | Read a byte from an I2C device |
+| i2cset | Write a byte to an I2C device |
 | id | Print User ID and Group ID |
 | ifconfig | Show network interface configuration (read-only) |
 | ifdown | Take a network interface down |
@@ -218,11 +224,13 @@ There are 434 commands. Run `mimixbox --list` to see them on the terminal.
 | lsmod | List loaded kernel modules |
 | lsof | List open files of processes |
 | lspci | List PCI devices |
+| lsscsi | List SCSI devices |
 | lsusb | List USB devices |
 | lzcat | Decompress lzma data to standard output |
 | lzma | Compress or decompress files (lzma) |
 | lzop | Compress or decompress files (.lzo) |
 | lzopcat | Decompress lzop (.lzo) data to standard output |
+| makedevs | Create a device tree from a table |
 | makemime | Create a MIME-encoded message from files |
 | man | Display a manual page |
 | matchpathcon | Show the default file context for a path |
@@ -268,6 +276,7 @@ There are 434 commands. Run `mimixbox --list` to see them on the terminal.
 | nyancat | Animate the rainbow-trailing Nyan Cat |
 | od | Dump files in octal and other formats |
 | openvt | Start a program on a new virtual terminal |
+| partprobe | Re-read the partition table of a device |
 | passwd | Change a user's password |
 | paste | Merge lines of files |
 | patch | Apply a diff file to an original |
@@ -294,8 +303,10 @@ There are 434 commands. Run `mimixbox --list` to see them on the terminal.
 | pwdx | Print the working directory of a process |
 | pwgen | Generate random passwords for authorized testing |
 | pwscore | Estimate the strength of a password |
+| raidautorun | Auto-detect and start RAID arrays |
 | rdate | Get the time from a remote host (RFC 868) |
 | rdev | Print the root filesystem device |
+| readahead | Preload files into the page cache |
 | readlink | Print resolved symbolic links or canonical file names |
 | readprofile | Summarize the kernel profiling buffer |
 | realpath | Print the resolved absolute file name |
@@ -306,6 +317,7 @@ There are 434 commands. Run `mimixbox --list` to see them on the terminal.
 | reset | Reset terminal |
 | resize | Print commands to set the terminal size |
 | restorecon | Restore default SELinux contexts on files (privileged) |
+| resume | Resume from a hibernation image |
 | rev | Reverse the order of characters in every line |
 | rfkill | List or block radio transmitters |
 | rm | Remove file(s) or directory(s) |
@@ -326,6 +338,7 @@ There are 434 commands. Run `mimixbox --list` to see them on the terminal.
 | scriptreplay | Replay a typescript using its timing file |
 | sddf | Search & Delete Duplicated File |
 | sed | Stream editor for filtering and transforming text |
+| seedrng | Seed the RNG from a persistent seed file |
 | selinuxenabled | Exit 0 if SELinux is enabled, 1 otherwise |
 | sendmail | Deliver a message to a local mbox file |
 | seq | Print a column of numbers |
@@ -334,6 +347,7 @@ There are 434 commands. Run `mimixbox --list` to see them on the terminal.
 | setarch | Run a program with a changed architecture personality |
 | setconsole | Redirect console output to a device |
 | setenforce | Set the SELinux enforcing mode (privileged) |
+| setfattr | Set extended attributes of files |
 | setfiles | Set file SELinux contexts from a spec file (privileged) |
 | setfont | Load a console font from a file |
 | setkeycodes | Map scancodes to keycodes |
@@ -438,9 +452,11 @@ There are 434 commands. Run `mimixbox --list` to see them on the terminal.
 | vi | A minimal vi-style screen text editor |
 | vlock | Lock the terminal until the password is entered |
 | vmstat | Report virtual memory statistics |
+| volname | Print the volume name of an ISO 9660 filesystem |
 | w | Show who is logged on and a system summary |
 | wall | Write a message to all logged-in users |
 | watch | Execute a program periodically, showing output fullscreen |
+| watchdog | Pet a watchdog timer to prevent a reset |
 | wc | Print newline, word, and byte counts for each file |
 | wget | The non-interactive network downloader |
 | which | Returns the file path which would be executed in the current environment |

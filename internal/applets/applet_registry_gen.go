@@ -70,6 +70,19 @@ import (
 	ap_editors_patch "github.com/nao1215/mimixbox/internal/applets/editors/patch"
 	ap_editors_sed "github.com/nao1215/mimixbox/internal/applets/editors/sed"
 	ap_editors_vi "github.com/nao1215/mimixbox/internal/applets/editors/vi"
+	ap_embedded_devmem "github.com/nao1215/mimixbox/internal/applets/embedded/devmem"
+	ap_embedded_getfattr "github.com/nao1215/mimixbox/internal/applets/embedded/getfattr"
+	ap_embedded_i2c "github.com/nao1215/mimixbox/internal/applets/embedded/i2c"
+	ap_embedded_lsscsi "github.com/nao1215/mimixbox/internal/applets/embedded/lsscsi"
+	ap_embedded_makedevs "github.com/nao1215/mimixbox/internal/applets/embedded/makedevs"
+	ap_embedded_partprobe "github.com/nao1215/mimixbox/internal/applets/embedded/partprobe"
+	ap_embedded_raidautorun "github.com/nao1215/mimixbox/internal/applets/embedded/raidautorun"
+	ap_embedded_readahead "github.com/nao1215/mimixbox/internal/applets/embedded/readahead"
+	ap_embedded_resume "github.com/nao1215/mimixbox/internal/applets/embedded/resume"
+	ap_embedded_seedrng "github.com/nao1215/mimixbox/internal/applets/embedded/seedrng"
+	ap_embedded_setfattr "github.com/nao1215/mimixbox/internal/applets/embedded/setfattr"
+	ap_embedded_volname "github.com/nao1215/mimixbox/internal/applets/embedded/volname"
+	ap_embedded_watchdog "github.com/nao1215/mimixbox/internal/applets/embedded/watchdog"
 	ap_fileutils_chgrp "github.com/nao1215/mimixbox/internal/applets/fileutils/chgrp"
 	ap_fileutils_chown "github.com/nao1215/mimixbox/internal/applets/fileutils/chown"
 	ap_fileutils_cp "github.com/nao1215/mimixbox/internal/applets/fileutils/cp"
@@ -378,7 +391,7 @@ import (
 // init populates the applet table. Each command is registered under its own
 // Name(), so the key can never drift from the command it dispatches to.
 func init() {
-	Applets = make(map[string]Applet, 434)
+	Applets = make(map[string]Applet, 450)
 	register(ap_archival_ar.New())
 	register(ap_archival_bunzip2.New())
 	register(ap_archival_bzip2comp.New())
@@ -459,6 +472,22 @@ func init() {
 	register(ap_editors_patch.New())
 	register(ap_editors_sed.New())
 	register(ap_editors_vi.New())
+	register(ap_embedded_devmem.New())
+	register(ap_embedded_getfattr.New())
+	register(ap_embedded_i2c.NewI2cdetect())
+	register(ap_embedded_i2c.NewI2cdump())
+	register(ap_embedded_i2c.NewI2cget())
+	register(ap_embedded_i2c.NewI2cset())
+	register(ap_embedded_lsscsi.New())
+	register(ap_embedded_makedevs.New())
+	register(ap_embedded_partprobe.New())
+	register(ap_embedded_raidautorun.New())
+	register(ap_embedded_readahead.New())
+	register(ap_embedded_resume.New())
+	register(ap_embedded_seedrng.New())
+	register(ap_embedded_setfattr.New())
+	register(ap_embedded_volname.New())
+	register(ap_embedded_watchdog.New())
 	register(ap_fileutils_chgrp.New())
 	register(ap_fileutils_chown.New())
 	register(ap_fileutils_cp.New())
