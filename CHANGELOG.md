@@ -7,6 +7,47 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## [Unreleased]
 
+## [0.40.1] - 2026-06-16
+
+This is an internal test- and library-hardening release on top of the 451-command
+tree shipped in 0.40.0. There is no user-facing behavior change: the applet count,
+command surface, and output formats are unchanged. It closes two follow-up issues
+from the 2026-06-15 whole-project review refresh (roadmap #494).
+
+### Changed
+
+- internal/lib (#492): removed the residual process-global helper surfaces so
+  pure in-memory command execution is the only path. The checksum helpers
+  (`CompareChecksum`, `ChecksumOutput`, `PrintChecksums`) now take injected
+  `io.Writer`(s) instead of writing to `os.Stdout` / `os.Stderr`. The thin
+  process-global wrappers whose injected `...To` / `...From` equivalent already
+  existed and which had no production callers were deleted (`Question`, `Parrot`,
+  `Dump`, `DumpGroups`, `PrintStrWithNumberLine`, `PrintStrListWithNumberLine`,
+  `ShowVersion`, `ListApplets`, `ShowAppletsBySpaceSeparated`), along with the
+  dead legacy `rm` helpers (`RemoveFile`, `RemoveDir`, `interactiveRemoveDir`)
+  that the self-contained `rm` applet had already superseded. The `resize` applet
+  keeps its direct `TIOCGWINSZ` probe of the std file descriptors by design
+  (terminal geometry cannot be injected through `command.IO`); the decision is now
+  recorded in the code.
+
+### Fixed
+
+- test/it (#490): hardened the two environment-sensitive ShellSpec contracts that
+  failed `make it` on the review host. `cp_spec` no longer asserts one exact errno
+  string for the "cannot copy a directory into /" case — it accepts the failure
+  class (`cp: mkdir /cp: *`, covering both `permission denied` and `read-only file
+  system`) and skips entirely when running as root. `nc_spec` now probes whether
+  the host permits opening the loopback sockets and skips cleanly (instead of
+  failing) on locked-down hosts that report `operation not permitted`, while still
+  failing on a genuine `nc` regression.
+
+### Added
+
+- test: writer-injected unit coverage for the refactored helpers —
+  `TestChecksumHelpers` now asserts the `OK` / `Fail` / diagnostic routing on the
+  injected writers, and new `TestListAppletsTo` / `TestShowAppletsBySpaceSeparatedTo`
+  cover the applet-listing writers that previously had no tests.
+
 ## [0.40.0] - 2026-06-15
 
 This release closes the eight follow-up issues from the 2026-06-15 whole-project
