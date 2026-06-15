@@ -1,11 +1,11 @@
 Setup() {
-    export TEST_DIR=/tmp/mimixbox/it/test
+    export TEST_DIR=${MIMIXBOX_IT_ROOT}/test
     mkdir -p ${TEST_DIR}
     touch ${TEST_DIR}/file.txt
 }
 
 CleanUp() {
-    rm -rf /tmp/mimixbox/it/test
+    rm -rf ${MIMIXBOX_IT_ROOT}/test
 }
 
 TestTestStringEqual() {
@@ -24,7 +24,7 @@ TestTestIntFalse() {
 }
 
 TestTestFileExists() {
-    export TEST_DIR=/tmp/mimixbox/it/test
+    export TEST_DIR=${MIMIXBOX_IT_ROOT}/test
     test -f ${TEST_DIR}/file.txt
     echo "rc=$?"
 }

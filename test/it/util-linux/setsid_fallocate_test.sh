@@ -1,9 +1,9 @@
 Setup() {
-    export TEST_DIR=/tmp/mimixbox/it/fallocate
+    export TEST_DIR=${MIMIXBOX_IT_ROOT}/fallocate
     mkdir -p ${TEST_DIR}
 }
 
-CleanUp() { rm -rf /tmp/mimixbox/it/fallocate; }
+CleanUp() { rm -rf ${MIMIXBOX_IT_ROOT}/fallocate; }
 
 TestSetsid() {
     setsid echo "session ok"

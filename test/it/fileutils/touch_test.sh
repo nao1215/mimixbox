@@ -1,4 +1,4 @@
-export TEST_DIR=/tmp/mimixbox/it/touch
+export TEST_DIR=${MIMIXBOX_IT_ROOT}/touch
 
 Setup() {
     mkdir -p ${TEST_DIR}

@@ -1,7 +1,7 @@
 Describe 'svlogd'
     Include runit/svlogd_test.sh
 
-    setup() { TEST_DIR=/tmp/mimixbox/it/svlogd; mkdir -p "$TEST_DIR"; }
+    setup() { TEST_DIR=${MIMIXBOX_IT_ROOT}/svlogd; mkdir -p "$TEST_DIR"; }
     cleanup() { rm -rf "$TEST_DIR"; }
     BeforeEach 'setup'
     AfterEach 'cleanup'

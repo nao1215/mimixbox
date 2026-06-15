@@ -1,7 +1,7 @@
-Setup() { export TEST_DIR=/tmp/mimixbox/it; mkdir -p ${TEST_DIR}; }
-CleanUp() { rm -rf /tmp/mimixbox/it; }
+Setup() { export TEST_DIR=${MIMIXBOX_IT_ROOT}; mkdir -p ${TEST_DIR}; }
+CleanUp() { rm -rf ${MIMIXBOX_IT_ROOT}; }
 TestNcLoopback() {
-    recv=/tmp/mimixbox/it/nc_recv.txt
+    recv=${MIMIXBOX_IT_ROOT}/nc_recv.txt
     : > "$recv"
 
     # Each outer attempt starts a fresh listener on a fresh port and then retries

@@ -1,7 +1,7 @@
 Describe 'sv'
     Include runit/sv_test.sh
 
-    setup() { TEST_DIR=/tmp/mimixbox/it/sv; mkdir -p "$TEST_DIR"; }
+    setup() { TEST_DIR=${MIMIXBOX_IT_ROOT}/sv; mkdir -p "$TEST_DIR"; }
     cleanup() { rm -rf "$TEST_DIR"; }
     BeforeEach 'setup'
     AfterEach 'cleanup'

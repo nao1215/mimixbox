@@ -1,10 +1,10 @@
 Setup() {
-    export TEST_DIR=/tmp/mimixbox/it/ed
+    export TEST_DIR=${MIMIXBOX_IT_ROOT}/ed
     mkdir -p ${TEST_DIR}
     printf 'one\ntwo\nthree\n' > ${TEST_DIR}/buf.txt
 }
 
-CleanUp() { rm -rf /tmp/mimixbox/it/ed; }
+CleanUp() { rm -rf ${MIMIXBOX_IT_ROOT}/ed; }
 
 TestEdPrint() {
     printf '1,$p\nq\n' | ed ${TEST_DIR}/buf.txt

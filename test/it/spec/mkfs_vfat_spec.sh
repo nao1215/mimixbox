@@ -1,7 +1,7 @@
 Describe 'mkfs.vfat / mkdosfs'
     Include util-linux/mkfs_vfat_test.sh
 
-    setup() { TEST_DIR=/tmp/mimixbox/it/mkfs_vfat; mkdir -p "$TEST_DIR"; }
+    setup() { TEST_DIR=${MIMIXBOX_IT_ROOT}/mkfs_vfat; mkdir -p "$TEST_DIR"; }
     cleanup() { rm -rf "$TEST_DIR"; }
     BeforeEach 'setup'
     AfterEach 'cleanup'

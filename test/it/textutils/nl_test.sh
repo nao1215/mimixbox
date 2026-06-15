@@ -1,7 +1,7 @@
 Setup() {
-    export TEST_DIR=/tmp/mimixbox/it
-    export TEST_FILE_NL=/tmp/mimixbox/it/nl.txt
-    export TEST_FILE_NL2=/tmp/mimixbox/it/nl2.txt
+    export TEST_DIR=${MIMIXBOX_IT_ROOT}
+    export TEST_FILE_NL=${MIMIXBOX_IT_ROOT}/nl.txt
+    export TEST_FILE_NL2=${MIMIXBOX_IT_ROOT}/nl2.txt
     export LANG=C
 
     mkdir -p ${TEST_DIR}
@@ -16,34 +16,34 @@ Setup() {
 }
 
 Cleanup() {
-    export TEST_DIR=/tmp/mimixbox/it
+    export TEST_DIR=${MIMIXBOX_IT_ROOT}
     rm  -rf ${TEST_DIR} 
 }
 
 TestNlNoArg() {
-    export TEST_FILE_NL=/tmp/mimixbox/it/nl.txt
+    export TEST_FILE_NL=${MIMIXBOX_IT_ROOT}/nl.txt
     nl ${TEST_FILE_NL}
 }
 
 TestNlFromPipeData() {
-    export TEST_FILE_NL=/tmp/mimixbox/it/nl.txt
+    export TEST_FILE_NL=${MIMIXBOX_IT_ROOT}/nl.txt
     echo ${TEST_FILE_NL} | nl
 }
 
 TestNlOnlyOperandWithPipeData() {
-    export TEST_FILE_NL=/tmp/mimixbox/it/nl.txt
+    export TEST_FILE_NL=${MIMIXBOX_IT_ROOT}/nl.txt
     echo ${TEST_FILE_NL} | nl ${TEST_FILE_NL}
 }
 
 TestNlConcatenateTwoFile() {
-    export TEST_FILE_NL=/tmp/mimixbox/it/nl.txt
-    export TEST_FILE_NL2=/tmp/mimixbox/it/nl2.txt
+    export TEST_FILE_NL=${MIMIXBOX_IT_ROOT}/nl.txt
+    export TEST_FILE_NL2=${MIMIXBOX_IT_ROOT}/nl2.txt
     nl ${TEST_FILE_NL} ${TEST_FILE_NL2}
 }
 
 TestNlHeredoc() {
-    export TEST_FILE_NL=/tmp/mimixbox/it/nl.txt
-    export TEST_FILE_NL2=/tmp/mimixbox/it/nl2.txt
+    export TEST_FILE_NL=${MIMIXBOX_IT_ROOT}/nl.txt
+    export TEST_FILE_NL2=${MIMIXBOX_IT_ROOT}/nl2.txt
     nl - << EOS ${TEST_FILE_NL} > ${TEST_FILE_NL2}
 fish
 zsh
@@ -52,8 +52,8 @@ EOS
 }
 
 TestNlHeredocStatus() {
-    export TEST_FILE_NL=/tmp/mimixbox/it/nl.txt
-    export TEST_FILE_NL2=/tmp/mimixbox/it/nl2.txt
+    export TEST_FILE_NL=${MIMIXBOX_IT_ROOT}/nl.txt
+    export TEST_FILE_NL2=${MIMIXBOX_IT_ROOT}/nl2.txt
     nl - << EOS ${TEST_FILE_NL} > ${TEST_FILE_NL2}
 fish
 zsh

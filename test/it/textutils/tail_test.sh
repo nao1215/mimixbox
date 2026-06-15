@@ -1,22 +1,22 @@
 Setup() {
-    export TEST_DIR=/tmp/mimixbox/it
-    export TEST_FILE=/tmp/mimixbox/it/tail.txt
+    export TEST_DIR=${MIMIXBOX_IT_ROOT}
+    export TEST_FILE=${MIMIXBOX_IT_ROOT}/tail.txt
     mkdir -p ${TEST_DIR}
     printf '1\n2\n3\n4\n5\n6\n7\n8\n9\n10\n11\n12\n' > ${TEST_FILE}
 }
 
 CleanUp() {
-    export TEST_DIR=/tmp/mimixbox/it
+    export TEST_DIR=${MIMIXBOX_IT_ROOT}
     rm -rf ${TEST_DIR}
 }
 
 TestTailDefault() {
-    export TEST_FILE=/tmp/mimixbox/it/tail.txt
+    export TEST_FILE=${MIMIXBOX_IT_ROOT}/tail.txt
     tail ${TEST_FILE}
 }
 
 TestTailLines() {
-    export TEST_FILE=/tmp/mimixbox/it/tail.txt
+    export TEST_FILE=${MIMIXBOX_IT_ROOT}/tail.txt
     tail -n 3 ${TEST_FILE}
 }
 
@@ -33,8 +33,8 @@ TestTailNoExistFile() {
 }
 
 TestTailFollow() {
-    export TEST_DIR=/tmp/mimixbox/it
-    export FOLLOW_FILE=/tmp/mimixbox/it/follow.txt
+    export TEST_DIR=${MIMIXBOX_IT_ROOT}
+    export FOLLOW_FILE=${MIMIXBOX_IT_ROOT}/follow.txt
     mkdir -p "${TEST_DIR}"
     printf 'start\n' > "${FOLLOW_FILE}"
     # Append more data shortly after tail starts following.

@@ -1,11 +1,11 @@
-export TEST_DIR=/tmp/mimixbox/it/mv
-export DIR_IN_TEST_DIR=/tmp/mimixbox/it/mv/inner
-export TEST_DIR2=/tmp/mimixbox/it/mv2
-export TEST_DIR3=/tmp/mimixbox/it/mv3
-export TEST_DIR4=/tmp/mimixbox/it/mv4
-export TEST_FILE=/tmp/mimixbox/it/mv/1.txt
-export TEST_FILE2=/tmp/mimixbox/it/mv/2.txt
-export TEST_FILE3=/tmp/mimixbox/it/mv/3.txt
+export TEST_DIR=${MIMIXBOX_IT_ROOT}/mv
+export DIR_IN_TEST_DIR=${MIMIXBOX_IT_ROOT}/mv/inner
+export TEST_DIR2=${MIMIXBOX_IT_ROOT}/mv2
+export TEST_DIR3=${MIMIXBOX_IT_ROOT}/mv3
+export TEST_DIR4=${MIMIXBOX_IT_ROOT}/mv4
+export TEST_FILE=${MIMIXBOX_IT_ROOT}/mv/1.txt
+export TEST_FILE2=${MIMIXBOX_IT_ROOT}/mv/2.txt
+export TEST_FILE3=${MIMIXBOX_IT_ROOT}/mv/3.txt
 export TEST_FILE_INNER=${DIR_IN_TEST_DIR}/inner.txt
 
 Setup() {
@@ -21,7 +21,7 @@ Setup() {
 }
 
 Cleanup() {
-    rm -rf /tmp/mimixbox
+    rm -rf "${MIMIXBOX_IT_ROOT}"
 }
 
 TestMvRename() {

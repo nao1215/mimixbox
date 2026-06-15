@@ -1,4 +1,4 @@
-export TEST_DIR=/tmp/mimixbox/it/md5sum
+export TEST_DIR=${MIMIXBOX_IT_ROOT}/md5sum
 export TEST_FILE1=${TEST_DIR}/1.txt
 export TEST_FILE2=${TEST_DIR}/2.txt
 export TEST_FILE3=${TEST_DIR}/3.txt
@@ -10,9 +10,9 @@ Setup() {
     echo "DEMONION" > ${TEST_FILE2}
     echo "Dungeon Crusadearz" > ${TEST_FILE3}
 
-    echo "d0d8ffef81b3c7160ac655d5939548c5  /tmp/mimixbox/it/md5sum/1.txt" > ${CHECK_SUM_FILE}
-    echo "07e280ad4bd77b9321f0ce3386775019  /tmp/mimixbox/it/md5sum/2.txt" >> ${CHECK_SUM_FILE}
-    echo "15e924f84517598e828f49dc85765bc5  /tmp/mimixbox/it/md5sum/3.txt" >> ${CHECK_SUM_FILE}
+    echo "d0d8ffef81b3c7160ac655d5939548c5  ${MIMIXBOX_IT_ROOT}/md5sum/1.txt" > ${CHECK_SUM_FILE}
+    echo "07e280ad4bd77b9321f0ce3386775019  ${MIMIXBOX_IT_ROOT}/md5sum/2.txt" >> ${CHECK_SUM_FILE}
+    echo "15e924f84517598e828f49dc85765bc5  ${MIMIXBOX_IT_ROOT}/md5sum/3.txt" >> ${CHECK_SUM_FILE}
 }
 
 Cleanup() {

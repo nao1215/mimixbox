@@ -1,6 +1,6 @@
-Setup() { export TEST_DIR=/tmp/mimixbox/it; mkdir -p ${TEST_DIR}; printf 'secret' > ${TEST_DIR}/shred_file; }
-CleanUp() { rm -rf /tmp/mimixbox/it; }
+Setup() { export TEST_DIR=${MIMIXBOX_IT_ROOT}; mkdir -p ${TEST_DIR}; printf 'secret' > ${TEST_DIR}/shred_file; }
+CleanUp() { rm -rf ${MIMIXBOX_IT_ROOT}; }
 TestShredRemove() {
-    shred -u /tmp/mimixbox/it/shred_file
-    test ! -e /tmp/mimixbox/it/shred_file && echo gone
+    shred -u ${MIMIXBOX_IT_ROOT}/shred_file
+    test ! -e ${MIMIXBOX_IT_ROOT}/shred_file && echo gone
 }

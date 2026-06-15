@@ -4,7 +4,7 @@ Describe 'Get sha1sum of one file'
     AfterEach 'Cleanup'
     It 'says 9dc2936d38932f9ffc6738cb677e4a8722116070'
         When call TestMd5sumOneFile
-        The output should equal '9dc2936d38932f9ffc6738cb677e4a8722116070  /tmp/mimixbox/it/sha1sum/1.txt'
+        The output should equal "9dc2936d38932f9ffc6738cb677e4a8722116070  ${MIMIXBOX_IT_ROOT}/sha1sum/1.txt"
         The status should be success
     End
 End
@@ -15,7 +15,7 @@ Describe 'Can not get sha1sum of one directory'
     AfterEach 'Cleanup'
     It 'says "It is directory"'
         When call TestMd5sumOneDirectory
-        The error should equal 'sha1sum: /tmp/mimixbox/it/sha1sum: It is directory'
+        The error should equal "sha1sum: ${MIMIXBOX_IT_ROOT}/sha1sum: It is directory"
         The status should be failure
     End
 End
@@ -36,10 +36,12 @@ Describe 'Get sha1sum of three files'
     BeforeEach 'Setup'
     AfterEach 'Cleanup'
 
-    result() { %text
-        #|9dc2936d38932f9ffc6738cb677e4a8722116070  /tmp/mimixbox/it/sha1sum/1.txt
-        #|317e30648976d62fae4662fe4435e6568648e8a7  /tmp/mimixbox/it/sha1sum/2.txt
-        #|d4e9619d949de0c0182a09757346ad22e80114b3  /tmp/mimixbox/it/sha1sum/3.txt
+    result() {
+        r="${MIMIXBOX_IT_ROOT}"
+        printf '%s\n%s\n%s\n' \
+          "9dc2936d38932f9ffc6738cb677e4a8722116070  $r/sha1sum/1.txt" \
+          "317e30648976d62fae4662fe4435e6568648e8a7  $r/sha1sum/2.txt" \
+          "d4e9619d949de0c0182a09757346ad22e80114b3  $r/sha1sum/3.txt"
     }
 
     It 'show checksum of three file'
@@ -54,10 +56,12 @@ Describe 'Check sha1sum with --check option'
     BeforeEach 'Setup'
     AfterEach 'Cleanup'
 
-    result() { %text
-        #|/tmp/mimixbox/it/sha1sum/1.txt: OK
-        #|/tmp/mimixbox/it/sha1sum/2.txt: OK
-        #|/tmp/mimixbox/it/sha1sum/3.txt: OK
+    result() {
+        r="${MIMIXBOX_IT_ROOT}"
+        printf '%s\n%s\n%s\n' \
+          "$r/sha1sum/1.txt: OK" \
+          "$r/sha1sum/2.txt: OK" \
+          "$r/sha1sum/3.txt: OK"
     }
 
     It 'show all files "OK"'
@@ -86,7 +90,7 @@ Describe 'Get sha1sum for pipe data and file at same time'
 
     It 'only show checksum of file.'
         When call TestMd5sumFileAndDataFromPipeAtSameTime
-        The output should equal "9dc2936d38932f9ffc6738cb677e4a8722116070  /tmp/mimixbox/it/sha1sum/1.txt"
+        The output should equal "9dc2936d38932f9ffc6738cb677e4a8722116070  ${MIMIXBOX_IT_ROOT}/sha1sum/1.txt"
         The status should be success
     End
 End

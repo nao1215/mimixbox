@@ -1,12 +1,12 @@
 Setup() {
-    export TEST_DIR=/tmp/mimixbox/it
-    export TEST_FILE=/tmp/mimixbox/it/base64.txt
+    export TEST_DIR=${MIMIXBOX_IT_ROOT}
+    export TEST_FILE=${MIMIXBOX_IT_ROOT}/base64.txt
     mkdir -p ${TEST_DIR}
     printf 'hello\n' > ${TEST_FILE}
 }
 
 CleanUp() {
-    export TEST_DIR=/tmp/mimixbox/it
+    export TEST_DIR=${MIMIXBOX_IT_ROOT}
     rm -rf ${TEST_DIR}
 }
 
@@ -15,7 +15,7 @@ TestBase64EncodePipe() {
 }
 
 TestBase64EncodeFile() {
-    export TEST_FILE=/tmp/mimixbox/it/base64.txt
+    export TEST_FILE=${MIMIXBOX_IT_ROOT}/base64.txt
     base64 ${TEST_FILE}
 }
 

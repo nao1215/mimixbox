@@ -1,12 +1,12 @@
 Setup() {
-    export TEST_DIR=/tmp/mimixbox/it/cpio
+    export TEST_DIR=${MIMIXBOX_IT_ROOT}/cpio
     mkdir -p ${TEST_DIR}/in
     printf 'payload' > ${TEST_DIR}/in/file.txt
 }
-CleanUp() { rm -rf /tmp/mimixbox/it/cpio; }
+CleanUp() { rm -rf ${MIMIXBOX_IT_ROOT}/cpio; }
 
 TestCpioRoundTrip() {
-    export TEST_DIR=/tmp/mimixbox/it/cpio
+    export TEST_DIR=${MIMIXBOX_IT_ROOT}/cpio
     cd ${TEST_DIR}/in
     printf 'file.txt\n' | cpio -o > ${TEST_DIR}/arch.cpio
     mkdir -p ${TEST_DIR}/out && cd ${TEST_DIR}/out
@@ -14,7 +14,7 @@ TestCpioRoundTrip() {
     printf '%s' "$(< ${TEST_DIR}/out/file.txt)"
 }
 TestCpioList() {
-    export TEST_DIR=/tmp/mimixbox/it/cpio
+    export TEST_DIR=${MIMIXBOX_IT_ROOT}/cpio
     cd ${TEST_DIR}/in
     printf 'file.txt\n' | cpio -o > ${TEST_DIR}/arch2.cpio
     cpio -i -t < ${TEST_DIR}/arch2.cpio

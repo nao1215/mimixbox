@@ -1,5 +1,5 @@
 Setup() {
-    export TEST_DIR=/tmp/mimixbox/it/dos2unix
+    export TEST_DIR=${MIMIXBOX_IT_ROOT}/dos2unix
     export TEST_FILE1=${TEST_DIR}/1.txt
     export TEST_FILE2=${TEST_DIR}/2.txt
     export TEST_FILE3=${TEST_DIR}/3.txt
@@ -15,12 +15,12 @@ Setup() {
 }
 
 Cleanup() {
-    export TEST_DIR=/tmp/mimixbox/it/dos2unix
+    export TEST_DIR=${MIMIXBOX_IT_ROOT}/dos2unix
     rm -rf ${TEST_DIR}
 }
 
 TestDos2unixCRLF() {
-    export TEST_DIR=/tmp/mimixbox/it/dos2unix
+    export TEST_DIR=${MIMIXBOX_IT_ROOT}/dos2unix
     export TEST_FILE1=${TEST_DIR}/1.txt
 
     dos2unix ${TEST_FILE1}
@@ -28,14 +28,14 @@ TestDos2unixCRLF() {
 }
 
 TestDos2unixCRLFStatus() {
-    export TEST_DIR=/tmp/mimixbox/it/dos2unix
+    export TEST_DIR=${MIMIXBOX_IT_ROOT}/dos2unix
     export TEST_FILE1=${TEST_DIR}/1.txt
 
     dos2unix ${TEST_FILE1}
 }
 
 TestDos2unixThreeFileAtSameTime() {
-    export TEST_DIR=/tmp/mimixbox/it/dos2unix
+    export TEST_DIR=${MIMIXBOX_IT_ROOT}/dos2unix
     export TEST_FILE1=${TEST_DIR}/1.txt
     export TEST_FILE2=${TEST_DIR}/2.txt
     export TEST_FILE3=${TEST_DIR}/3.txt
@@ -47,7 +47,7 @@ TestDos2unixThreeFileAtSameTime() {
 }
 
 TestDos2unixThreeFileAtSameTime() {
-    export TEST_DIR=/tmp/mimixbox/it/dos2unix
+    export TEST_DIR=${MIMIXBOX_IT_ROOT}/dos2unix
     export TEST_FILE1=${TEST_DIR}/1.txt
     export TEST_FILE2=${TEST_DIR}/2.txt
     export TEST_FILE3=${TEST_DIR}/3.txt
@@ -59,7 +59,7 @@ TestDos2unixThreeFileAtSameTime() {
 }
 
 TestDos2unixThreeFileAtSameTimeStatus() {
-    export TEST_DIR=/tmp/mimixbox/it/dos2unix
+    export TEST_DIR=${MIMIXBOX_IT_ROOT}/dos2unix
     export TEST_FILE1=${TEST_DIR}/1.txt
     export TEST_FILE2=${TEST_DIR}/2.txt
     export TEST_FILE3=${TEST_DIR}/3.txt
@@ -68,12 +68,12 @@ TestDos2unixThreeFileAtSameTimeStatus() {
 }
 
 TestDos2unixDir() {
-    export TEST_DIR=/tmp/mimixbox/it/dos2unix
+    export TEST_DIR=${MIMIXBOX_IT_ROOT}/dos2unix
     dos2unix ${TEST_DIR}
 }
 
 TestDos2unixOneOfThreeFail() {
-    export TEST_DIR=/tmp/mimixbox/it/dos2unix
+    export TEST_DIR=${MIMIXBOX_IT_ROOT}/dos2unix
     export TEST_FILE1=${TEST_DIR}/1.txt
     export TEST_FILE2=${TEST_DIR}/2.txt
     export TEST_FILE3=${TEST_DIR}/3.txt

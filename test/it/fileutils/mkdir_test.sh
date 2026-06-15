@@ -1,4 +1,4 @@
-export TEST_DIR=/tmp/mimixbox/it/mkdir
+export TEST_DIR=${MIMIXBOX_IT_ROOT}/mkdir
 
 Setup() {
     mkdir -p ${TEST_DIR}

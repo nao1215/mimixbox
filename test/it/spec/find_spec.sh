@@ -5,7 +5,7 @@ Describe 'find'
 
     It 'finds a file by -name'
         When call TestFindName
-        The output should equal '/tmp/mimixbox/it/find/a.txt'
+        The output should equal "${MIMIXBOX_IT_ROOT}/find/a.txt"
         The status should be success
     End
 

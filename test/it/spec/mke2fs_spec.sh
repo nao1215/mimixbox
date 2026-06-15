@@ -1,7 +1,7 @@
 Describe 'mke2fs / mkfs.ext2'
     Include util-linux/mke2fs_test.sh
 
-    setup() { TEST_DIR=/tmp/mimixbox/it/mke2fs; mkdir -p "$TEST_DIR"; }
+    setup() { TEST_DIR=${MIMIXBOX_IT_ROOT}/mke2fs; mkdir -p "$TEST_DIR"; }
     cleanup() { rm -rf "$TEST_DIR"; }
     BeforeEach 'setup'
     AfterEach 'cleanup'

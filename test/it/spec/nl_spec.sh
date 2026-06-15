@@ -21,8 +21,10 @@ Describe 'Show text file with number line'
     BeforeEach 'Setup'
     AfterEach 'Cleanup'
 
-    result() { %text
-        #|     1	/tmp/mimixbox/it/nl.txt
+    result() {
+        r="${MIMIXBOX_IT_ROOT}"
+        printf '%s\n' \
+          "     1	$r/nl.txt"
     }
     It 'show shell family-name wiht number line'
         When call TestNlFromPipeData

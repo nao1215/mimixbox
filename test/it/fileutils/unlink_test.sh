@@ -1,10 +1,10 @@
 Setup() {
-    export TEST_DIR=/tmp/mimixbox/it
+    export TEST_DIR=${MIMIXBOX_IT_ROOT}
     mkdir -p ${TEST_DIR}
     printf 'x' > ${TEST_DIR}/unlink.txt
 }
-CleanUp() { rm -rf /tmp/mimixbox/it; }
+CleanUp() { rm -rf ${MIMIXBOX_IT_ROOT}; }
 TestUnlink() {
-    unlink /tmp/mimixbox/it/unlink.txt
-    test ! -e /tmp/mimixbox/it/unlink.txt && echo gone
+    unlink ${MIMIXBOX_IT_ROOT}/unlink.txt
+    test ! -e ${MIMIXBOX_IT_ROOT}/unlink.txt && echo gone
 }

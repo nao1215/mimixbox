@@ -64,7 +64,7 @@ Describe 'If the same name file already exists, '
 
     It 'print "already exist"'
         When call TestMkfifoAlreadyExistSameName
-        The error should equal "mkfifo: can't make /tmp/mimixbox/it/mkfifo/1: already exist"
+        The error should equal "mkfifo: can't make ${MIMIXBOX_IT_ROOT}/mkfifo/1: already exist"
         The status should be failure
     End
 End

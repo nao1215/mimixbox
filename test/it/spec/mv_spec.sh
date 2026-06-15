@@ -4,7 +4,7 @@ Describe 'Rename file-name'
     AfterEach 'Cleanup'
     It 'rename 1.txt to rename.txt'
         When call TestMvRename
-        The output should equal '/tmp/mimixbox/it/mv/rename.txt'
+        The output should equal "${MIMIXBOX_IT_ROOT}/mv/rename.txt"
     End
 End
 
@@ -85,7 +85,7 @@ Describe 'Move three file to inner direcroty. And One of three can not move'
 
     It 'move two file to inner directory'
         When call TestMvThreeFileAndOneOfThreeFail
-        The error should equal "mv: /tmp/mimixbox/it/mv/no_exist_file doesn't exist"
+        The error should equal "mv: ${MIMIXBOX_IT_ROOT}/mv/no_exist_file doesn't exist"
         The output should equal "$(result)"
     End
 End
@@ -96,7 +96,7 @@ Describe 'Check status after moving three files and one of them fail'
     AfterEach 'Cleanup'
     It 'status failure'
         When call TestMvThreeFileAndOneOfThreeFailStatus
-        The error should equal "mv: /tmp/mimixbox/it/mv/no_exist_file doesn't exist"
+        The error should equal "mv: ${MIMIXBOX_IT_ROOT}/mv/no_exist_file doesn't exist"
         The status should be failure
     End
 End
@@ -145,7 +145,7 @@ Describe 'Move three directory'
         #|mv4
     }
 
-    It 'move three directory under /tmp/mimixbox/it/mv'
+    It 'move three directory under ${MIMIXBOX_IT_ROOT}/mv'
         When call TestMvThreeDirs
         The output should equal "$(result)"
     End
@@ -174,7 +174,7 @@ Describe 'Move three directories to inner direcroty. And One of three can not mo
 
     It 'move two directory to inner directory'
         When call TestMvThreeDirsAndOneOfThreeFail
-        The error should equal "mv: /tmp/mimixbox/it/mv/no_exist_dir doesn't exist"
+        The error should equal "mv: ${MIMIXBOX_IT_ROOT}/mv/no_exist_dir doesn't exist"
         The output should equal "$(result)"
         The status should be success
     End
@@ -186,7 +186,7 @@ Describe 'Check status after moving directory'
     AfterEach 'Cleanup'
     It 'status failure'
         When call TestMvThreeDirsAndOneOfThreeFailStatus
-        The error should equal "mv: /tmp/mimixbox/it/mv/no_exist_dir doesn't exist"
+        The error should equal "mv: ${MIMIXBOX_IT_ROOT}/mv/no_exist_dir doesn't exist"
         The status should be failure
     End
 End
@@ -198,7 +198,7 @@ Describe 'Move file with back up option.'
 
     It 'status failure'
         When call TestMvFileAtSampePath
-        The error should equal "mv: source '/tmp/mimixbox/it/mv/1.txt' and destination '/tmp/mimixbox/it/mv/1.txt' is same"
+        The error should equal "mv: source '${MIMIXBOX_IT_ROOT}/mv/1.txt' and destination '${MIMIXBOX_IT_ROOT}/mv/1.txt' is same"
         The status should be failure
     End
 End

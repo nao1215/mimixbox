@@ -4,7 +4,7 @@ Describe 'Get md5sum of one file'
     AfterEach 'Cleanup'
     It 'says d0d8ffef81b3c7160ac655d5939548c5'
         When call TestMd5sumOneFile
-        The output should equal 'd0d8ffef81b3c7160ac655d5939548c5  /tmp/mimixbox/it/md5sum/1.txt'
+        The output should equal "d0d8ffef81b3c7160ac655d5939548c5  ${MIMIXBOX_IT_ROOT}/md5sum/1.txt"
         The status should be success
     End
 End
@@ -15,7 +15,7 @@ Describe 'Can not get md5sum of one directory'
     AfterEach 'Cleanup'
     It 'says "It is directory"'
         When call TestMd5sumOneDirectory
-        The error should equal 'md5sum: /tmp/mimixbox/it/md5sum: It is directory'
+        The error should equal "md5sum: ${MIMIXBOX_IT_ROOT}/md5sum: It is directory"
         The status should be failure
     End
 End
@@ -36,10 +36,12 @@ Describe 'Get md5sum of three files'
     BeforeEach 'Setup'
     AfterEach 'Cleanup'
 
-    result() { %text
-        #|d0d8ffef81b3c7160ac655d5939548c5  /tmp/mimixbox/it/md5sum/1.txt
-        #|07e280ad4bd77b9321f0ce3386775019  /tmp/mimixbox/it/md5sum/2.txt
-        #|15e924f84517598e828f49dc85765bc5  /tmp/mimixbox/it/md5sum/3.txt
+    result() {
+        r="${MIMIXBOX_IT_ROOT}"
+        printf '%s\n%s\n%s\n' \
+          "d0d8ffef81b3c7160ac655d5939548c5  $r/md5sum/1.txt" \
+          "07e280ad4bd77b9321f0ce3386775019  $r/md5sum/2.txt" \
+          "15e924f84517598e828f49dc85765bc5  $r/md5sum/3.txt"
     }
 
     It 'show checksum of three file'
@@ -54,10 +56,12 @@ Describe 'Check md5sum with --check option'
     BeforeEach 'Setup'
     AfterEach 'Cleanup'
 
-    result() { %text
-        #|/tmp/mimixbox/it/md5sum/1.txt: OK
-        #|/tmp/mimixbox/it/md5sum/2.txt: OK
-        #|/tmp/mimixbox/it/md5sum/3.txt: OK
+    result() {
+        r="${MIMIXBOX_IT_ROOT}"
+        printf '%s\n%s\n%s\n' \
+          "$r/md5sum/1.txt: OK" \
+          "$r/md5sum/2.txt: OK" \
+          "$r/md5sum/3.txt: OK"
     }
 
     It 'show all files "OK"'
@@ -86,7 +90,7 @@ Describe 'Get md5sum for pipe data and file at same time'
 
     It 'only show checksum of file.'
         When call TestMd5sumFileAndDataFromPipeAtSameTime
-        The output should equal "d0d8ffef81b3c7160ac655d5939548c5  /tmp/mimixbox/it/md5sum/1.txt"
+        The output should equal "d0d8ffef81b3c7160ac655d5939548c5  ${MIMIXBOX_IT_ROOT}/md5sum/1.txt"
         The status should be success
     End
 End

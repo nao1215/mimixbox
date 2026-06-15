@@ -3,9 +3,11 @@ Describe 'unix2dos CRLF file'
     BeforeEach 'Setup'
     AfterEach 'Cleanup'
 
-    result() { %text
-        #|unix2dos: converting file /tmp/mimixbox/it/unix2dos/1.txt to DOS format...
-        #|/tmp/mimixbox/it/unix2dos/1.txt: ASCII text, with CRLF line terminators
+    result() {
+        r="${MIMIXBOX_IT_ROOT}"
+        printf '%s\n%s\n' \
+          "unix2dos: converting file $r/unix2dos/1.txt to DOS format..." \
+          "$r/unix2dos/1.txt: ASCII text, with CRLF line terminators"
     }
 
     It 'change LF'
@@ -19,8 +21,10 @@ Describe 'Check status after unix2dos CRLF file'
     BeforeEach 'Setup'
     AfterEach 'Cleanup'
 
-    result() { %text
-        #|unix2dos: converting file /tmp/mimixbox/it/unix2dos/1.txt to DOS format...
+    result() {
+        r="${MIMIXBOX_IT_ROOT}"
+        printf '%s\n' \
+          "unix2dos: converting file $r/unix2dos/1.txt to DOS format..."
     }
 
     It 'status success'
@@ -35,13 +39,15 @@ Describe 'unix2dos three CRLF file'
     BeforeEach 'Setup'
     AfterEach 'Cleanup'
 
-    result() { %text
-        #|unix2dos: converting file /tmp/mimixbox/it/unix2dos/1.txt to DOS format...
-        #|unix2dos: converting file /tmp/mimixbox/it/unix2dos/2.txt to DOS format...
-        #|unix2dos: converting file /tmp/mimixbox/it/unix2dos/3.txt to DOS format...
-        #|/tmp/mimixbox/it/unix2dos/1.txt: ASCII text, with CRLF line terminators
-        #|/tmp/mimixbox/it/unix2dos/2.txt: ASCII text, with CRLF line terminators
-        #|/tmp/mimixbox/it/unix2dos/3.txt: ASCII text, with CRLF line terminators
+    result() {
+        r="${MIMIXBOX_IT_ROOT}"
+        printf '%s\n%s\n%s\n%s\n%s\n%s\n' \
+          "unix2dos: converting file $r/unix2dos/1.txt to DOS format..." \
+          "unix2dos: converting file $r/unix2dos/2.txt to DOS format..." \
+          "unix2dos: converting file $r/unix2dos/3.txt to DOS format..." \
+          "$r/unix2dos/1.txt: ASCII text, with CRLF line terminators" \
+          "$r/unix2dos/2.txt: ASCII text, with CRLF line terminators" \
+          "$r/unix2dos/3.txt: ASCII text, with CRLF line terminators"
     }
 
     It 'change LF'
@@ -55,10 +61,12 @@ Describe 'Check status after unix2dos three CRLF file'
     BeforeEach 'Setup'
     AfterEach 'Cleanup'
 
-    result() { %text
-        #|unix2dos: converting file /tmp/mimixbox/it/unix2dos/1.txt to DOS format...
-        #|unix2dos: converting file /tmp/mimixbox/it/unix2dos/2.txt to DOS format...
-        #|unix2dos: converting file /tmp/mimixbox/it/unix2dos/3.txt to DOS format...
+    result() {
+        r="${MIMIXBOX_IT_ROOT}"
+        printf '%s\n%s\n%s\n' \
+          "unix2dos: converting file $r/unix2dos/1.txt to DOS format..." \
+          "unix2dos: converting file $r/unix2dos/2.txt to DOS format..." \
+          "unix2dos: converting file $r/unix2dos/3.txt to DOS format..."
     }
 
     It 'status success'
@@ -73,8 +81,10 @@ Describe 'Unix2dos directory'
     BeforeEach 'Setup'
     AfterEach 'Cleanup'
 
-    result() { %text
-        #|unix2dos: skip /tmp/mimixbox/it/unix2dos: not regular file
+    result() {
+        r="${MIMIXBOX_IT_ROOT}"
+        printf '%s\n' \
+          "unix2dos: skip $r/unix2dos: not regular file"
     }
 
     It 'print "no regular file error"'
@@ -89,13 +99,17 @@ Describe 'Unix2dos two file and one directory'
     BeforeEach 'Setup'
     AfterEach 'Cleanup'
 
-    output_result() { %text
-        #|unix2dos: converting file /tmp/mimixbox/it/unix2dos/1.txt to DOS format...
-        #|unix2dos: converting file /tmp/mimixbox/it/unix2dos/3.txt to DOS format...
+    output_result() {
+        r="${MIMIXBOX_IT_ROOT}"
+        printf '%s\n%s\n' \
+          "unix2dos: converting file $r/unix2dos/1.txt to DOS format..." \
+          "unix2dos: converting file $r/unix2dos/3.txt to DOS format..."
     }
 
-    error_result() { %text
-        #|unix2dos: skip /tmp/mimixbox/it/unix2dos: not regular file
+    error_result() {
+        r="${MIMIXBOX_IT_ROOT}"
+        printf '%s\n' \
+          "unix2dos: skip $r/unix2dos: not regular file"
     }
 
 

@@ -1,4 +1,4 @@
-export TEST_DIR=/tmp/mimixbox/it/unix2dos
+export TEST_DIR=${MIMIXBOX_IT_ROOT}/unix2dos
 export TEST_FILE1=${TEST_DIR}/1.txt
 export TEST_FILE2=${TEST_DIR}/2.txt
 export TEST_FILE3=${TEST_DIR}/3.txt

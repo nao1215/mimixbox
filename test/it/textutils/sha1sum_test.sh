@@ -1,4 +1,4 @@
-export TEST_DIR=/tmp/mimixbox/it/sha1sum
+export TEST_DIR=${MIMIXBOX_IT_ROOT}/sha1sum
 export TEST_FILE1=${TEST_DIR}/1.txt
 export TEST_FILE2=${TEST_DIR}/2.txt
 export TEST_FILE3=${TEST_DIR}/3.txt
@@ -10,9 +10,9 @@ Setup() {
     echo "DEMONION" > ${TEST_FILE2}
     echo "Dungeon Crusadearz" > ${TEST_FILE3}
 
-    echo "9dc2936d38932f9ffc6738cb677e4a8722116070  /tmp/mimixbox/it/sha1sum/1.txt" > ${CHECK_SUM_FILE}
-    echo "317e30648976d62fae4662fe4435e6568648e8a7  /tmp/mimixbox/it/sha1sum/2.txt" >> ${CHECK_SUM_FILE}
-    echo "d4e9619d949de0c0182a09757346ad22e80114b3  /tmp/mimixbox/it/sha1sum/3.txt" >> ${CHECK_SUM_FILE}
+    echo "9dc2936d38932f9ffc6738cb677e4a8722116070  ${MIMIXBOX_IT_ROOT}/sha1sum/1.txt" > ${CHECK_SUM_FILE}
+    echo "317e30648976d62fae4662fe4435e6568648e8a7  ${MIMIXBOX_IT_ROOT}/sha1sum/2.txt" >> ${CHECK_SUM_FILE}
+    echo "d4e9619d949de0c0182a09757346ad22e80114b3  ${MIMIXBOX_IT_ROOT}/sha1sum/3.txt" >> ${CHECK_SUM_FILE}
 }
 
 Cleanup() {

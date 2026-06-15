@@ -1,9 +1,9 @@
 Setup() {
-    export TEST_DIR=/tmp/mimixbox/it/script
+    export TEST_DIR=${MIMIXBOX_IT_ROOT}/script
     mkdir -p ${TEST_DIR}
 }
 
-CleanUp() { rm -rf /tmp/mimixbox/it/script; }
+CleanUp() { rm -rf ${MIMIXBOX_IT_ROOT}/script; }
 
 TestScriptRecords() {
     script -c 'printf recorded' -T ${TEST_DIR}/timing ${TEST_DIR}/out.txt >/dev/null 2>&1
