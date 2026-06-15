@@ -27,21 +27,34 @@ import (
 	ap_compat_cttyhack "github.com/nao1215/mimixbox/internal/applets/compat/cttyhack"
 	ap_compat_shellfront "github.com/nao1215/mimixbox/internal/applets/compat/shellfront"
 	ap_compat_unit "github.com/nao1215/mimixbox/internal/applets/compat/unit"
+	ap_console_tools_adjtimex "github.com/nao1215/mimixbox/internal/applets/console-tools/adjtimex"
 	ap_console_tools_ascii "github.com/nao1215/mimixbox/internal/applets/console-tools/ascii"
+	ap_console_tools_bbconfig "github.com/nao1215/mimixbox/internal/applets/console-tools/bbconfig"
 	ap_console_tools_beep "github.com/nao1215/mimixbox/internal/applets/console-tools/beep"
+	ap_console_tools_chat "github.com/nao1215/mimixbox/internal/applets/console-tools/chat"
 	ap_console_tools_chvt "github.com/nao1215/mimixbox/internal/applets/console-tools/chvt"
 	ap_console_tools_clear "github.com/nao1215/mimixbox/internal/applets/console-tools/clear"
+	ap_console_tools_conspy "github.com/nao1215/mimixbox/internal/applets/console-tools/conspy"
 	ap_console_tools_deallocvt "github.com/nao1215/mimixbox/internal/applets/console-tools/deallocvt"
+	ap_console_tools_dumpkmap "github.com/nao1215/mimixbox/internal/applets/console-tools/dumpkmap"
 	ap_console_tools_fgconsole "github.com/nao1215/mimixbox/internal/applets/console-tools/fgconsole"
 	ap_console_tools_inotifyd "github.com/nao1215/mimixbox/internal/applets/console-tools/inotifyd"
 	ap_console_tools_kbd_mode "github.com/nao1215/mimixbox/internal/applets/console-tools/kbd_mode"
+	ap_console_tools_loadfont "github.com/nao1215/mimixbox/internal/applets/console-tools/loadfont"
+	ap_console_tools_loadkmap "github.com/nao1215/mimixbox/internal/applets/console-tools/loadkmap"
+	ap_console_tools_microcom "github.com/nao1215/mimixbox/internal/applets/console-tools/microcom"
+	ap_console_tools_openvt "github.com/nao1215/mimixbox/internal/applets/console-tools/openvt"
 	ap_console_tools_pager "github.com/nao1215/mimixbox/internal/applets/console-tools/pager"
 	ap_console_tools_reset "github.com/nao1215/mimixbox/internal/applets/console-tools/reset"
 	ap_console_tools_resize "github.com/nao1215/mimixbox/internal/applets/console-tools/resize"
 	ap_console_tools_rfkill "github.com/nao1215/mimixbox/internal/applets/console-tools/rfkill"
+	ap_console_tools_rx "github.com/nao1215/mimixbox/internal/applets/console-tools/rx"
 	ap_console_tools_setconsole "github.com/nao1215/mimixbox/internal/applets/console-tools/setconsole"
+	ap_console_tools_setfont "github.com/nao1215/mimixbox/internal/applets/console-tools/setfont"
 	ap_console_tools_setkeycodes "github.com/nao1215/mimixbox/internal/applets/console-tools/setkeycodes"
 	ap_console_tools_setlogcons "github.com/nao1215/mimixbox/internal/applets/console-tools/setlogcons"
+	ap_console_tools_setserial "github.com/nao1215/mimixbox/internal/applets/console-tools/setserial"
+	ap_console_tools_showkey "github.com/nao1215/mimixbox/internal/applets/console-tools/showkey"
 	ap_console_tools_stty "github.com/nao1215/mimixbox/internal/applets/console-tools/stty"
 	ap_console_tools_ts "github.com/nao1215/mimixbox/internal/applets/console-tools/ts"
 	ap_console_tools_ttysize "github.com/nao1215/mimixbox/internal/applets/console-tools/ttysize"
@@ -350,7 +363,7 @@ import (
 // init populates the applet table. Each command is registered under its own
 // Name(), so the key can never drift from the command it dispatches to.
 func init() {
-	Applets = make(map[string]Applet, 395)
+	Applets = make(map[string]Applet, 408)
 	register(ap_archival_ar.New())
 	register(ap_archival_bunzip2.New())
 	register(ap_archival_bzip2comp.New())
@@ -387,22 +400,35 @@ func init() {
 	register(ap_compat_shellfront.NewHush())
 	register(ap_compat_shellfront.NewSh())
 	register(ap_compat_unit.New())
+	register(ap_console_tools_adjtimex.New())
 	register(ap_console_tools_ascii.New())
+	register(ap_console_tools_bbconfig.New())
 	register(ap_console_tools_beep.New())
+	register(ap_console_tools_chat.New())
 	register(ap_console_tools_chvt.New())
 	register(ap_console_tools_clear.New())
+	register(ap_console_tools_conspy.New())
 	register(ap_console_tools_deallocvt.New())
+	register(ap_console_tools_dumpkmap.New())
 	register(ap_console_tools_fgconsole.New())
 	register(ap_console_tools_inotifyd.New())
 	register(ap_console_tools_kbd_mode.New())
+	register(ap_console_tools_loadfont.New())
+	register(ap_console_tools_loadkmap.New())
+	register(ap_console_tools_microcom.New())
+	register(ap_console_tools_openvt.New())
 	register(ap_console_tools_pager.NewLess())
 	register(ap_console_tools_pager.NewMore())
 	register(ap_console_tools_reset.New())
 	register(ap_console_tools_resize.New())
 	register(ap_console_tools_rfkill.New())
+	register(ap_console_tools_rx.New())
 	register(ap_console_tools_setconsole.New())
+	register(ap_console_tools_setfont.New())
 	register(ap_console_tools_setkeycodes.New())
 	register(ap_console_tools_setlogcons.New())
+	register(ap_console_tools_setserial.New())
+	register(ap_console_tools_showkey.New())
 	register(ap_console_tools_stty.New())
 	register(ap_console_tools_ts.New())
 	register(ap_console_tools_ttysize.New())

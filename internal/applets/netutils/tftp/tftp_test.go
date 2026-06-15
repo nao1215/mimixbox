@@ -43,8 +43,11 @@ func TestPacketHelpers(t *testing.T) {
 }
 
 // startServer runs a tiny single-transfer TFTP server on loopback. mode "get"
-// serves content for an RRQ; mode "put" stores into *stored for a WRQ.
-func startServer(t *testing.T, mode string, content []byte, stored *[]byte) string {
+// serves content for an RRQ; mode "put" stores into *stored for a WRQ. The
+// returned channel is closed once the server goroutine has finished (and, for
+// "put", after *stored has been assigned), giving callers a happens-before edge
+// so they can read *stored without racing the goroutine.
+func startServer(t *testing.T, mode string, content []byte, stored *[]byte) (string, <-chan struct{}) {
 	t.Helper()
 	pc, err := net.ListenPacket("udp", "127.0.0.1:0")
 	if err != nil {
@@ -52,7 +55,9 @@ func startServer(t *testing.T, mode string, content []byte, stored *[]byte) stri
 	}
 	t.Cleanup(func() { _ = pc.Close() })
 
+	done := make(chan struct{})
 	go func() {
+		defer close(done)
 		buf := make([]byte, 4+blockSize)
 		n, client, err := pc.ReadFrom(buf)
 		if err != nil {
@@ -67,7 +72,7 @@ func startServer(t *testing.T, mode string, content []byte, stored *[]byte) stri
 		}
 		_ = n
 	}()
-	return pc.LocalAddr().String()
+	return pc.LocalAddr().String(), done
 }
 
 func serveGet(pc net.PacketConn, client net.Addr, content []byte) {
@@ -115,7 +120,7 @@ func servePut(t *testing.T, pc net.PacketConn, client net.Addr, stored *[]byte) 
 
 func TestGet(t *testing.T) {
 	content := bytes.Repeat([]byte("A"), 700) // spans two blocks
-	addr := startServer(t, "get", content, nil)
+	addr, _ := startServer(t, "get", content, nil)
 	host, port, _ := net.SplitHostPort(addr)
 
 	var written []byte
@@ -138,7 +143,7 @@ func TestGet(t *testing.T) {
 func TestPut(t *testing.T) {
 	content := bytes.Repeat([]byte("B"), 512) // exactly one full block then empty
 	var stored []byte
-	addr := startServer(t, "put", nil, &stored)
+	addr, done := startServer(t, "put", nil, &stored)
 	host, port, _ := net.SplitHostPort(addr)
 
 	origR := readLocal
@@ -149,6 +154,7 @@ func TestPut(t *testing.T) {
 	if err != nil {
 		t.Fatalf("Run error = %v", err)
 	}
+	<-done // wait for the server goroutine to finish writing *stored
 	if !bytes.Equal(stored, content) {
 		t.Errorf("server stored %d bytes, want %d", len(stored), len(content))
 	}

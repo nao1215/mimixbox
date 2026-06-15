@@ -19,7 +19,7 @@ MimixBox packs many Unix commands into a single binary, like BusyBox. Unlike Bus
 The list below is generated from the registered applets by `make command-list`, so it never drifts from the binary. You can also run `mimixbox --list` to print it on the terminal.
 
 <!-- COMMAND_LIST_START -->
-There are 395 commands. Run `mimixbox --list` to see them on the terminal.
+There are 408 commands. Run `mimixbox --list` to see them on the terminal.
 
 | Command | Description |
 |:--|:--|
@@ -29,6 +29,7 @@ There are 395 commands. Run `mimixbox --list` to see them on the terminal.
 | add-shell | Add shell name to /etc/shells |
 | addgroup | Add a group to /etc/group |
 | adduser | Create a user account |
+| adjtimex | Read or set kernel clock parameters |
 | ar | Create, modify and extract from archives |
 | arch | Print machine hardware name (same as uname -m) |
 | arp | Show the ARP/neighbour cache (read-only) |
@@ -41,6 +42,7 @@ There are 395 commands. Run `mimixbox --list` to see them on the terminal.
 | base64 | Base64 encode/decode from FILE(or STDIN) to STDOUT |
 | basename | Print basename (PATH without "/") from file path |
 | bash | Command interpreter (MimixBox mbsh compatibility front-end) |
+| bbconfig | Print the MimixBox build configuration |
 | bc | An arbitrary-precision calculator language |
 | beep | Sound the console speaker |
 | blkdiscard | Discard sectors on a block device |
@@ -53,6 +55,7 @@ There are 395 commands. Run `mimixbox --list` to see them on the terminal.
 | bzip2 | Compress or decompress files (.bz2) |
 | cal | Display a calendar |
 | cat | Concatenate files and print on the standard output |
+| chat | Run an expect/send conversation script |
 | chattr | Change ext2/ext4 file attributes |
 | chcon | Change the SELinux security context of files (privileged) |
 | chgrp | Change the group of each FILE to GROUP |
@@ -69,6 +72,7 @@ There are 395 commands. Run `mimixbox --list` to see them on the terminal.
 | cmp | Compare two files byte by byte |
 | comm | Compare two sorted files line by line |
 | compress | Compress files with LZW (.Z) |
+| conspy | Remotely view a virtual console |
 | cowsay | Print message with cow's ASCII art |
 | cowthink | Print message in a cow's thought bubble |
 | cp | Copy file(s) to Directory(s) |
@@ -95,6 +99,7 @@ There are 395 commands. Run `mimixbox --list` to see them on the terminal.
 | dpkg | Inspect and unpack local Debian .deb files |
 | dpkg-deb | Inspect and extract Debian .deb archives |
 | du | Estimate file space usage |
+| dumpkmap | Dump the console keymap in binary form |
 | echo | Display a line of text |
 | ed | A line-oriented text editor |
 | egrep | Search with extended regular expressions (grep -E) |
@@ -184,6 +189,8 @@ There are 395 commands. Run `mimixbox --list` to see them on the terminal.
 | linuxrc | Run an inittab's startup actions |
 | ln | Create hard or symbolic link |
 | load_policy | Load a new SELinux policy into the kernel (privileged) |
+| loadfont | Load a console font from stdin |
+| loadkmap | Load a binary console keymap from stdin |
 | log-collect | Gather system log files into one directory |
 | logger | Write a message to the system log |
 | login | Authenticate a user and start their shell |
@@ -211,6 +218,7 @@ There are 395 commands. Run `mimixbox --list` to see them on the terminal.
 | md5sum | Calculate or Check md5sum message digest |
 | mdev | Create /dev nodes from /sys (scan mode) |
 | mesg | Display or control write access to your terminal |
+| microcom | Minimal serial terminal program |
 | minips | Minimal process lister (PID, user, command) |
 | mkdir | Make directories |
 | mkdosfs | Create a FAT16 filesystem |
@@ -245,6 +253,7 @@ There are 395 commands. Run `mimixbox --list` to see them on the terminal.
 | nslookup | Query the DNS for a name or address |
 | nyancat | Animate the rainbow-trailing Nyan Cat |
 | od | Dump files in octal and other formats |
+| openvt | Start a program on a new virtual terminal |
 | passwd | Change a user's password |
 | paste | Merge lines of files |
 | patch | Apply a diff file to an original |
@@ -298,6 +307,7 @@ There are 395 commands. Run `mimixbox --list` to see them on the terminal.
 | runlevel | Print the previous and current runlevel |
 | runsv | Supervise a single service |
 | runsvdir | Supervise a directory of services |
+| rx | Receive a file with the XMODEM protocol |
 | script | Record a command's output to a typescript |
 | scriptreplay | Replay a typescript using its timing file |
 | sddf | Search & Delete Duplicated File |
@@ -311,10 +321,12 @@ There are 395 commands. Run `mimixbox --list` to see them on the terminal.
 | setconsole | Redirect console output to a device |
 | setenforce | Set the SELinux enforcing mode (privileged) |
 | setfiles | Set file SELinux contexts from a spec file (privileged) |
+| setfont | Load a console font from a file |
 | setkeycodes | Map scancodes to keycodes |
 | setlogcons | Send kernel messages to a VT |
 | setpriv | Run a program with different privilege settings |
 | setsebool | Set the state of an SELinux boolean (privileged) |
+| setserial | Get or set serial port configuration |
 | setsid | Run a program in a new session |
 | setuidgid | Run a program as a user's uid/gid |
 | sh | Command interpreter (MimixBox mbsh compatibility front-end) |
@@ -323,6 +335,7 @@ There are 395 commands. Run `mimixbox --list` to see them on the terminal.
 | sha384sum | Calculate or Check secure hash 384 algorithm |
 | sha3sum | Calculate or Check SHA-3 message digest |
 | sha512sum | Calculate or Check secure hash 512 algorithm |
+| showkey | Report the codes of keys pressed at the console |
 | shred | Overwrite a file to hide its contents |
 | shuf | Generate a random permutation of input lines |
 | sl | Cure your bad habit of mistyping |
