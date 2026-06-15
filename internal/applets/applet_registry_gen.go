@@ -111,19 +111,27 @@ import (
 	ap_loginutils_su "github.com/nao1215/mimixbox/internal/applets/loginutils/su"
 	ap_loginutils_sulogin "github.com/nao1215/mimixbox/internal/applets/loginutils/sulogin"
 	ap_loginutils_vlock "github.com/nao1215/mimixbox/internal/applets/loginutils/vlock"
+	ap_mailutils_makemime "github.com/nao1215/mimixbox/internal/applets/mailutils/makemime"
+	ap_mailutils_popmaildir "github.com/nao1215/mimixbox/internal/applets/mailutils/popmaildir"
+	ap_mailutils_reformime "github.com/nao1215/mimixbox/internal/applets/mailutils/reformime"
+	ap_mailutils_sendmail "github.com/nao1215/mimixbox/internal/applets/mailutils/sendmail"
 	ap_netutils_httpstatus "github.com/nao1215/mimixbox/internal/applets/netutils/httpstatus"
 	ap_netutils_nc "github.com/nao1215/mimixbox/internal/applets/netutils/nc"
 	ap_netutils_ping "github.com/nao1215/mimixbox/internal/applets/netutils/ping"
 	ap_netutils_whris "github.com/nao1215/mimixbox/internal/applets/netutils/whris"
 	ap_pmutils_halt "github.com/nao1215/mimixbox/internal/applets/pmutils/halt"
+	ap_printutils "github.com/nao1215/mimixbox/internal/applets/printutils"
 	ap_procps_fuser "github.com/nao1215/mimixbox/internal/applets/procps/fuser"
 	ap_procps_iostat "github.com/nao1215/mimixbox/internal/applets/procps/iostat"
 	ap_procps_killall5 "github.com/nao1215/mimixbox/internal/applets/procps/killall5"
 	ap_procps_klogd "github.com/nao1215/mimixbox/internal/applets/procps/klogd"
 	ap_procps_logger "github.com/nao1215/mimixbox/internal/applets/procps/logger"
 	ap_procps_logread "github.com/nao1215/mimixbox/internal/applets/procps/logread"
+	ap_procps_lsmod "github.com/nao1215/mimixbox/internal/applets/procps/lsmod"
 	ap_procps_lsof "github.com/nao1215/mimixbox/internal/applets/procps/lsof"
 	ap_procps_minips "github.com/nao1215/mimixbox/internal/applets/procps/minips"
+	ap_procps_modinfo "github.com/nao1215/mimixbox/internal/applets/procps/modinfo"
+	ap_procps_modutils "github.com/nao1215/mimixbox/internal/applets/procps/modutils"
 	ap_procps_mpstat "github.com/nao1215/mimixbox/internal/applets/procps/mpstat"
 	ap_procps_nmeter "github.com/nao1215/mimixbox/internal/applets/procps/nmeter"
 	ap_procps_pgrep "github.com/nao1215/mimixbox/internal/applets/procps/pgrep"
@@ -152,6 +160,7 @@ import (
 	ap_securityutils_pwcrack "github.com/nao1215/mimixbox/internal/applets/securityutils/pwcrack"
 	ap_securityutils_pwgen "github.com/nao1215/mimixbox/internal/applets/securityutils/pwgen"
 	ap_securityutils_pwscore "github.com/nao1215/mimixbox/internal/applets/securityutils/pwscore"
+	ap_securityutils_selinux "github.com/nao1215/mimixbox/internal/applets/securityutils/selinux"
 	ap_securityutils_unshadow "github.com/nao1215/mimixbox/internal/applets/securityutils/unshadow"
 	ap_securityutils_zippwcrack "github.com/nao1215/mimixbox/internal/applets/securityutils/zippwcrack"
 	ap_shellutils_arch "github.com/nao1215/mimixbox/internal/applets/shellutils/arch"
@@ -184,6 +193,7 @@ import (
 	ap_shellutils_install "github.com/nao1215/mimixbox/internal/applets/shellutils/install"
 	ap_shellutils_kill "github.com/nao1215/mimixbox/internal/applets/shellutils/kill"
 	ap_shellutils_killall "github.com/nao1215/mimixbox/internal/applets/shellutils/killall"
+	ap_shellutils_leadtime "github.com/nao1215/mimixbox/internal/applets/shellutils/leadtime"
 	ap_shellutils_logcollect "github.com/nao1215/mimixbox/internal/applets/shellutils/logcollect"
 	ap_shellutils_logname "github.com/nao1215/mimixbox/internal/applets/shellutils/logname"
 	ap_shellutils_mbsh "github.com/nao1215/mimixbox/internal/applets/shellutils/mbsh"
@@ -247,6 +257,7 @@ import (
 	ap_textutils_sha512sum "github.com/nao1215/mimixbox/internal/applets/textutils/sha512sum"
 	ap_textutils_shuf "github.com/nao1215/mimixbox/internal/applets/textutils/shuf"
 	ap_textutils_split "github.com/nao1215/mimixbox/internal/applets/textutils/split"
+	ap_textutils_sqluv "github.com/nao1215/mimixbox/internal/applets/textutils/sqluv"
 	ap_textutils_strings "github.com/nao1215/mimixbox/internal/applets/textutils/strings"
 	ap_textutils_sum "github.com/nao1215/mimixbox/internal/applets/textutils/sum"
 	ap_textutils_tac "github.com/nao1215/mimixbox/internal/applets/textutils/tac"
@@ -322,7 +333,7 @@ import (
 // init populates the applet table. Each command is registered under its own
 // Name(), so the key can never drift from the command it dispatches to.
 func init() {
-	Applets = make(map[string]Applet, 339)
+	Applets = make(map[string]Applet, 366)
 	register(ap_archival_ar.New())
 	register(ap_archival_bunzip2.New())
 	register(ap_archival_bzip2comp.New())
@@ -446,6 +457,10 @@ func init() {
 	register(ap_loginutils_su.New())
 	register(ap_loginutils_sulogin.New())
 	register(ap_loginutils_vlock.New())
+	register(ap_mailutils_makemime.New())
+	register(ap_mailutils_popmaildir.New())
+	register(ap_mailutils_reformime.New())
+	register(ap_mailutils_sendmail.New())
 	register(ap_netutils_httpstatus.New())
 	register(ap_netutils_nc.New())
 	register(ap_netutils_ping.New())
@@ -453,14 +468,23 @@ func init() {
 	register(ap_pmutils_halt.NewHalt())
 	register(ap_pmutils_halt.NewPoweroff())
 	register(ap_pmutils_halt.NewReboot())
+	register(ap_printutils.NewLpd())
+	register(ap_printutils.NewLpq())
+	register(ap_printutils.NewLpr())
 	register(ap_procps_fuser.New())
 	register(ap_procps_iostat.New())
 	register(ap_procps_killall5.New())
 	register(ap_procps_klogd.New())
 	register(ap_procps_logger.New())
 	register(ap_procps_logread.New())
+	register(ap_procps_lsmod.New())
 	register(ap_procps_lsof.New())
 	register(ap_procps_minips.New())
+	register(ap_procps_modinfo.New())
+	register(ap_procps_modutils.NewDepmod())
+	register(ap_procps_modutils.NewInsmod())
+	register(ap_procps_modutils.NewModprobe())
+	register(ap_procps_modutils.NewRmmod())
 	register(ap_procps_mpstat.New())
 	register(ap_procps_nmeter.New())
 	register(ap_procps_pgrep.NewPgrep())
@@ -490,6 +514,18 @@ func init() {
 	register(ap_securityutils_pwcrack.New())
 	register(ap_securityutils_pwgen.New())
 	register(ap_securityutils_pwscore.New())
+	register(ap_securityutils_selinux.NewChcon())
+	register(ap_securityutils_selinux.NewGetenforce())
+	register(ap_securityutils_selinux.NewGetsebool())
+	register(ap_securityutils_selinux.NewLoadPolicy())
+	register(ap_securityutils_selinux.NewMatchpathcon())
+	register(ap_securityutils_selinux.NewRestorecon())
+	register(ap_securityutils_selinux.NewRuncon())
+	register(ap_securityutils_selinux.NewSelinuxenabled())
+	register(ap_securityutils_selinux.NewSestatus())
+	register(ap_securityutils_selinux.NewSetenforce())
+	register(ap_securityutils_selinux.NewSetfiles())
+	register(ap_securityutils_selinux.NewSetsebool())
 	register(ap_securityutils_unshadow.New())
 	register(ap_securityutils_zippwcrack.New())
 	register(ap_shellutils_arch.New())
@@ -522,6 +558,7 @@ func init() {
 	register(ap_shellutils_install.New())
 	register(ap_shellutils_kill.New())
 	register(ap_shellutils_killall.New())
+	register(ap_shellutils_leadtime.New())
 	register(ap_shellutils_logcollect.New())
 	register(ap_shellutils_logname.New())
 	register(ap_shellutils_mbsh.New())
@@ -585,6 +622,7 @@ func init() {
 	register(ap_textutils_sha512sum.New())
 	register(ap_textutils_shuf.New())
 	register(ap_textutils_split.New())
+	register(ap_textutils_sqluv.New())
 	register(ap_textutils_strings.New())
 	register(ap_textutils_sum.New())
 	register(ap_textutils_tac.New())

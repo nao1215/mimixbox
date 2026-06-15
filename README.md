@@ -19,7 +19,7 @@ MimixBox packs many Unix commands into a single binary, like BusyBox. Unlike Bus
 The list below is generated from the registered applets by `make command-list`, so it never drifts from the binary. You can also run `mimixbox --list` to print it on the terminal.
 
 <!-- COMMAND_LIST_START -->
-There are 339 commands. Run `mimixbox --list` to see them on the terminal.
+There are 366 commands. Run `mimixbox --list` to see them on the terminal.
 
 | Command | Description |
 |:--|:--|
@@ -52,6 +52,7 @@ There are 339 commands. Run `mimixbox --list` to see them on the terminal.
 | cal | Display a calendar |
 | cat | Concatenate files and print on the standard output |
 | chattr | Change ext2/ext4 file attributes |
+| chcon | Change the SELinux security context of files (privileged) |
 | chgrp | Change the group of each FILE to GROUP |
 | chmod | Change file mode bits |
 | chown | Change the owner and/or group of each FILE to OWNER and/or GROUP |
@@ -82,6 +83,7 @@ There are 339 commands. Run `mimixbox --list` to see them on the terminal.
 | deallocvt | Deallocate a virtual terminal |
 | delgroup | Remove a group from /etc/group |
 | deluser | Remove a user account |
+| depmod | Build the module dependency list |
 | df | Report file system disk space usage |
 | diff | Compare files line by line |
 | dirname | Print only directory path |
@@ -124,7 +126,9 @@ There are 339 commands. Run `mimixbox --list` to see them on the terminal.
 | fstrim | Discard unused blocks on a filesystem |
 | fsync | Flush a file's data to storage with fsync(2) |
 | fuser | Identify processes using a file |
+| getenforce | Print the current SELinux enforcing mode |
 | getopt | Parse command options (enhanced, like util-linux getopt) |
+| getsebool | Show the state of SELinux booleans |
 | getty | Prompt for a username and run login |
 | ghrdc | GitHub Release Download Counter |
 | grep | Print lines that match patterns |
@@ -143,6 +147,7 @@ There are 339 commands. Run `mimixbox --list` to see them on the terminal.
 | id | Print User ID and Group ID |
 | init | Run an inittab's startup actions |
 | inotifyd | Run a handler on file inotify events |
+| insmod | Validate and (privileged) insert a kernel module |
 | install | Copy files and set attributes |
 | ionice | Get or set process I/O scheduling class and priority |
 | iostat | Report CPU and device I/O statistics |
@@ -155,6 +160,7 @@ There are 339 commands. Run `mimixbox --list` to see them on the terminal.
 | killall5 | Send a signal to all processes |
 | klogd | Forward kernel messages to the system log |
 | last | Show a listing of last logged-in users |
+| leadtime | Calculate GitHub PR lead time statistics |
 | less | Page through text one screen at a time |
 | lifegame | Life game (Conway's Game of Life) |
 | link | Create a hard link to a file |
@@ -162,15 +168,20 @@ There are 339 commands. Run `mimixbox --list` to see them on the terminal.
 | linux64 | Run a program with a 64-bit execution domain |
 | linuxrc | Run an inittab's startup actions |
 | ln | Create hard or symbolic link |
+| load_policy | Load a new SELinux policy into the kernel (privileged) |
 | log-collect | Gather system log files into one directory |
 | logger | Write a message to the system log |
 | login | Authenticate a user and start their shell |
 | logname | Print the name of the current user |
 | logread | Show the system log |
 | losetup | List active loop devices |
+| lpd | Drain the local print spool to an output directory |
+| lpq | Show the local print queue |
+| lpr | Queue files for printing into a local spool |
 | ls | List directory contents |
 | lsattr | List ext2/ext4 file attributes |
 | lsblk | List information about block devices |
+| lsmod | List loaded kernel modules |
 | lsof | List open files of processes |
 | lspci | List PCI devices |
 | lsusb | List USB devices |
@@ -178,7 +189,9 @@ There are 339 commands. Run `mimixbox --list` to see them on the terminal.
 | lzma | Compress or decompress files (lzma) |
 | lzop | Compress or decompress files (.lzo) |
 | lzopcat | Decompress lzop (.lzo) data to standard output |
+| makemime | Create a MIME-encoded message from files |
 | man | Display a manual page |
+| matchpathcon | Show the default file context for a path |
 | mbsh | Mimix Box Shell |
 | md5sum | Calculate or Check md5sum message digest |
 | mdev | Create /dev nodes from /sys (scan mode) |
@@ -196,6 +209,8 @@ There are 339 commands. Run `mimixbox --list` to see them on the terminal.
 | mkpasswd | Compute the crypt hash of a password |
 | mkswap | Set up a Linux swap area |
 | mktemp | Create a temporary file or directory |
+| modinfo | Show information about a kernel module |
+| modprobe | Resolve dependencies and (privileged) load a module |
 | more | Page through text one screen at a time |
 | mount | List the mounted filesystems |
 | mountpoint | See if a directory is a mountpoint |
@@ -222,6 +237,7 @@ There are 339 commands. Run `mimixbox --list` to see them on the terminal.
 | pivot_root | Change the root filesystem |
 | pkill | Signal processes by name |
 | pmap | Report the memory map of a process |
+| popmaildir | Move messages from a Maildir's new/ directory |
 | posixer | Report which POSIX utilities are installed |
 | poweroff | Power off the system |
 | powertop | Report the system power supplies |
@@ -240,19 +256,23 @@ There are 339 commands. Run `mimixbox --list` to see them on the terminal.
 | readprofile | Summarize the kernel profiling buffer |
 | realpath | Print the resolved absolute file name |
 | reboot | Reboot the system |
+| reformime | Parse a MIME message and list or extract its parts |
 | remove-shell | Remove shell name from /etc/shells |
 | renice | Alter the priority of running processes |
 | reset | Reset terminal |
 | resize | Print commands to set the terminal size |
+| restorecon | Restore default SELinux contexts on files (privileged) |
 | rev | Reverse the order of characters in every line |
 | rfkill | List or block radio transmitters |
 | rm | Remove file(s) or directory(s) |
 | rmdir | Remove directory |
+| rmmod | Validate and (privileged) remove a kernel module |
 | rpm | Query an RPM package file |
 | rpm2cpio | Extract the cpio payload from an RPM package |
 | rtcwake | Arm the RTC to wake the system |
 | run-init | Switch to the real root and run init |
 | run-parts | Run all executables in a directory |
+| runcon | Run a program in a different SELinux context (privileged) |
 | runlevel | Print the previous and current runlevel |
 | runsv | Supervise a single service |
 | runsvdir | Supervise a directory of services |
@@ -260,13 +280,19 @@ There are 339 commands. Run `mimixbox --list` to see them on the terminal.
 | scriptreplay | Replay a typescript using its timing file |
 | sddf | Search & Delete Duplicated File |
 | sed | Stream editor for filtering and transforming text |
+| selinuxenabled | Exit 0 if SELinux is enabled, 1 otherwise |
+| sendmail | Deliver a message to a local mbox file |
 | seq | Print a column of numbers |
 | serial | Rename the file to the name with a serial number |
+| sestatus | Show the SELinux status summary |
 | setarch | Run a program with a changed architecture personality |
 | setconsole | Redirect console output to a device |
+| setenforce | Set the SELinux enforcing mode (privileged) |
+| setfiles | Set file SELinux contexts from a spec file (privileged) |
 | setkeycodes | Map scancodes to keycodes |
 | setlogcons | Send kernel messages to a VT |
 | setpriv | Run a program with different privilege settings |
+| setsebool | Set the state of an SELinux boolean (privileged) |
 | setsid | Run a program in a new session |
 | setuidgid | Run a program as a user's uid/gid |
 | sh | Command interpreter (MimixBox mbsh compatibility front-end) |
@@ -284,6 +310,7 @@ There are 339 commands. Run `mimixbox --list` to see them on the terminal.
 | sort | Sort lines of text files |
 | speaker | Read text aloud using an installed TTS engine |
 | split | Split a file into pieces |
+| sqluv | SQL viewer & query runner for CSV/TSV/LTSV and SQLite |
 | start-stop-daemon | Start or stop a background program |
 | stat | Display file or file system status |
 | strings | Print printable character sequences in files |
