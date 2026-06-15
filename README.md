@@ -19,7 +19,7 @@ MimixBox packs many Unix commands into a single binary, like BusyBox. Unlike Bus
 The list below is generated from the registered applets by `make command-list`, so it never drifts from the binary. You can also run `mimixbox --list` to print it on the terminal.
 
 <!-- COMMAND_LIST_START -->
-There are 359 commands. Run `mimixbox --list` to see them on the terminal.
+There are 434 commands. Run `mimixbox --list` to see them on the terminal.
 
 | Command | Description |
 |:--|:--|
@@ -29,8 +29,11 @@ There are 359 commands. Run `mimixbox --list` to see them on the terminal.
 | add-shell | Add shell name to /etc/shells |
 | addgroup | Add a group to /etc/group |
 | adduser | Create a user account |
+| adjtimex | Read or set kernel clock parameters |
 | ar | Create, modify and extract from archives |
 | arch | Print machine hardware name (same as uname -m) |
+| arp | Show the ARP/neighbour cache (read-only) |
+| arping | Probe a host on the local network with ARP requests |
 | ascii | Print the ASCII code table |
 | ash | Command interpreter (MimixBox mbsh compatibility front-end) |
 | awk | Pattern scanning and processing language |
@@ -39,6 +42,7 @@ There are 359 commands. Run `mimixbox --list` to see them on the terminal.
 | base64 | Base64 encode/decode from FILE(or STDIN) to STDOUT |
 | basename | Print basename (PATH without "/") from file path |
 | bash | Command interpreter (MimixBox mbsh compatibility front-end) |
+| bbconfig | Print the MimixBox build configuration |
 | bc | An arbitrary-precision calculator language |
 | beep | Sound the console speaker |
 | blkdiscard | Discard sectors on a block device |
@@ -49,9 +53,12 @@ There are 359 commands. Run `mimixbox --list` to see them on the terminal.
 | bunzip2 | Decompress bzip2 (.bz2) files |
 | busybox | BusyBox-style multi-call front-end for MimixBox applets |
 | bzcat | Decompress bz2 data to standard output |
+| bzip2 | Compress or decompress files (.bz2) |
 | cal | Display a calendar |
 | cat | Concatenate files and print on the standard output |
+| chat | Run an expect/send conversation script |
 | chattr | Change ext2/ext4 file attributes |
+| chcon | Change the SELinux security context of files (privileged) |
 | chgrp | Change the group of each FILE to GROUP |
 | chmod | Change file mode bits |
 | chown | Change the owner and/or group of each FILE to OWNER and/or GROUP |
@@ -66,6 +73,7 @@ There are 359 commands. Run `mimixbox --list` to see them on the terminal.
 | cmp | Compare two files byte by byte |
 | comm | Compare two sorted files line by line |
 | compress | Compress files with LZW (.Z) |
+| conspy | Remotely view a virtual console |
 | cowsay | Print message with cow's ASCII art |
 | cowthink | Print message in a cow's thought bubble |
 | cp | Copy file(s) to Directory(s) |
@@ -82,14 +90,19 @@ There are 359 commands. Run `mimixbox --list` to see them on the terminal.
 | deallocvt | Deallocate a virtual terminal |
 | delgroup | Remove a group from /etc/group |
 | deluser | Remove a user account |
+| depmod | Build the module dependency list |
 | df | Report file system disk space usage |
 | dhcprelay | Relay DHCP requests between networks |
 | diff | Compare files line by line |
 | dirname | Print only directory path |
 | dmesg | Print or control the kernel ring buffer |
 | dnsd | Tiny authoritative DNS server for a hosts file |
+| dnsdomainname | Show the DNS domain name |
 | dos2unix | Change CRLF to LF |
+| dpkg | Inspect and unpack local Debian .deb files |
+| dpkg-deb | Inspect and extract Debian .deb archives |
 | du | Estimate file space usage |
+| dumpkmap | Dump the console keymap in binary form |
 | dumpleases | Display DHCP server leases |
 | echo | Display a line of text |
 | ed | A line-oriented text editor |
@@ -98,6 +111,7 @@ There are 359 commands. Run `mimixbox --list` to see them on the terminal.
 | env | Run a program in a modified environment / print the environment |
 | envdir | Run a program with env from a directory |
 | envuidgid | Run a program with $UID/$GID from a user |
+| ether-wake | Send a Wake-on-LAN magic packet to a MAC address |
 | expand | Convert TAB to N space (default:N=8) |
 | expr | Evaluate expressions |
 | factor | Print the prime factors of each NUMBER |
@@ -126,8 +140,12 @@ There are 359 commands. Run `mimixbox --list` to see them on the terminal.
 | fstrim | Discard unused blocks on a filesystem |
 | fsync | Flush a file's data to storage with fsync(2) |
 | ftpd | Minimal read-only FTP server (foreground) |
+| ftpget | Download a file from an FTP server |
+| ftpput | Upload a file to an FTP server |
 | fuser | Identify processes using a file |
+| getenforce | Print the current SELinux enforcing mode |
 | getopt | Parse command options (enhanced, like util-linux getopt) |
+| getsebool | Show the state of SELinux booleans |
 | getty | Prompt for a username and run login |
 | ghrdc | GitHub Release Download Counter |
 | grep | Print lines that match patterns |
@@ -145,6 +163,7 @@ There are 359 commands. Run `mimixbox --list` to see them on the terminal.
 | hush | Command interpreter (MimixBox mbsh compatibility front-end) |
 | hwclock | Read the hardware (RTC) clock |
 | id | Print User ID and Group ID |
+| ifconfig | Show network interface configuration (read-only) |
 | ifdown | Take a network interface down |
 | ifenslave | Attach/detach bonding slaves (capability-gated) |
 | ifplugd | Bring interfaces up/down on link change |
@@ -152,11 +171,20 @@ There are 359 commands. Run `mimixbox --list` to see them on the terminal.
 | inetd | Internet super-server (minimal) |
 | init | Run an inittab's startup actions |
 | inotifyd | Run a handler on file inotify events |
+| insmod | Validate and (privileged) insert a kernel module |
 | install | Copy files and set attributes |
 | ionice | Get or set process I/O scheduling class and priority |
 | iostat | Report CPU and device I/O statistics |
+| ip | Show and manage routing, devices, and tunnels (read-only show/list) |
+| ipaddr | Show protocol (IP) addresses on devices |
+| ipcalc | Calculate IP network parameters from an address |
 | ipcrm | Remove System V IPC objects by id |
 | ipcs | Show System V IPC facilities status |
+| iplink | Show network device link state |
+| ipneigh | Show the ARP/neighbour table |
+| iproute | Show the routing table |
+| iprule | Show routing policy rules |
+| iptunnel | Show/parse IP tunnels (inspect-only) |
 | ischroot | Detect if running in a chroot |
 | kbd_mode | Report or set the keyboard mode |
 | kill | Kill process or send signal to process |
@@ -164,6 +192,7 @@ There are 359 commands. Run `mimixbox --list` to see them on the terminal.
 | killall5 | Send a signal to all processes |
 | klogd | Forward kernel messages to the system log |
 | last | Show a listing of last logged-in users |
+| leadtime | Calculate GitHub PR lead time statistics |
 | less | Page through text one screen at a time |
 | lifegame | Life game (Conway's Game of Life) |
 | link | Create a hard link to a file |
@@ -171,25 +200,37 @@ There are 359 commands. Run `mimixbox --list` to see them on the terminal.
 | linux64 | Run a program with a 64-bit execution domain |
 | linuxrc | Run an inittab's startup actions |
 | ln | Create hard or symbolic link |
+| load_policy | Load a new SELinux policy into the kernel (privileged) |
+| loadfont | Load a console font from stdin |
+| loadkmap | Load a binary console keymap from stdin |
 | log-collect | Gather system log files into one directory |
 | logger | Write a message to the system log |
 | login | Authenticate a user and start their shell |
 | logname | Print the name of the current user |
 | logread | Show the system log |
 | losetup | List active loop devices |
+| lpd | Drain the local print spool to an output directory |
+| lpq | Show the local print queue |
+| lpr | Queue files for printing into a local spool |
 | ls | List directory contents |
 | lsattr | List ext2/ext4 file attributes |
 | lsblk | List information about block devices |
+| lsmod | List loaded kernel modules |
 | lsof | List open files of processes |
 | lspci | List PCI devices |
 | lsusb | List USB devices |
 | lzcat | Decompress lzma data to standard output |
 | lzma | Compress or decompress files (lzma) |
+| lzop | Compress or decompress files (.lzo) |
+| lzopcat | Decompress lzop (.lzo) data to standard output |
+| makemime | Create a MIME-encoded message from files |
 | man | Display a manual page |
+| matchpathcon | Show the default file context for a path |
 | mbsh | Mimix Box Shell |
 | md5sum | Calculate or Check md5sum message digest |
 | mdev | Create /dev nodes from /sys (scan mode) |
 | mesg | Display or control write access to your terminal |
+| microcom | Minimal serial terminal program |
 | minips | Minimal process lister (PID, user, command) |
 | mkdir | Make directories |
 | mkdosfs | Create a FAT16 filesystem |
@@ -203,13 +244,18 @@ There are 359 commands. Run `mimixbox --list` to see them on the terminal.
 | mkpasswd | Compute the crypt hash of a password |
 | mkswap | Set up a Linux swap area |
 | mktemp | Create a temporary file or directory |
+| modinfo | Show information about a kernel module |
+| modprobe | Resolve dependencies and (privileged) load a module |
 | more | Page through text one screen at a time |
 | mount | List the mounted filesystems |
 | mountpoint | See if a directory is a mountpoint |
 | mpstat | Report per-processor CPU statistics |
 | mv | Rename SOURCE to DESTINATION, or move SOURCE(s) to DIRECTORY |
+| nameif | Rename network interfaces by MAC (deferred) |
 | nbd-client | Attach a network block device (capability-gated) |
 | nc | Read and write data across network connections |
+| netcat | Read and write data across network connections (alias of nc) |
+| netstat | Show network connections and sockets (read-only) |
 | nice | Run a command with an adjusted niceness |
 | nl | Write each FILE to standard output with line numbers added |
 | nmeter | Print system statistics from a format string |
@@ -217,9 +263,11 @@ There are 359 commands. Run `mimixbox --list` to see them on the terminal.
 | nologin | Refuse a login and exit non-zero |
 | nproc | Print the number of processing units available |
 | nsenter | Run a program in another process's namespaces |
+| nslookup | Query the DNS for a name or address |
 | ntpd | NTP client/daemon (query implemented; clock set gated) |
 | nyancat | Animate the rainbow-trailing Nyan Cat |
 | od | Dump files in octal and other formats |
+| openvt | Start a program on a new virtual terminal |
 | passwd | Change a user's password |
 | paste | Merge lines of files |
 | patch | Apply a diff file to an original |
@@ -227,16 +275,19 @@ There are 359 commands. Run `mimixbox --list` to see them on the terminal.
 | pgrep | Find process IDs by name |
 | pidof | Find the process ID of a running program |
 | ping | Send ICMP ECHO_REQUEST to network hosts |
+| ping6 | Send ICMPv6 ECHO_REQUEST to a host |
 | pipe_progress | Copy stdin to stdout, printing progress dots to stderr |
 | pivot_root | Change the root filesystem |
 | pkill | Signal processes by name |
 | pmap | Report the memory map of a process |
+| popmaildir | Move messages from a Maildir's new/ directory |
 | posixer | Report which POSIX utilities are installed |
 | poweroff | Power off the system |
 | powertop | Report the system power supplies |
 | printenv | Print environment variable |
 | printf | Format and print data |
 | ps | Report a snapshot of the current processes |
+| pscan | Scan a range of TCP ports on a host |
 | pstree | Display the process tree |
 | pwcrack | Audit crypt(3) password hashes against a wordlist |
 | pwd | Print Working Directory |
@@ -249,33 +300,47 @@ There are 359 commands. Run `mimixbox --list` to see them on the terminal.
 | readprofile | Summarize the kernel profiling buffer |
 | realpath | Print the resolved absolute file name |
 | reboot | Reboot the system |
+| reformime | Parse a MIME message and list or extract its parts |
 | remove-shell | Remove shell name from /etc/shells |
 | renice | Alter the priority of running processes |
 | reset | Reset terminal |
 | resize | Print commands to set the terminal size |
+| restorecon | Restore default SELinux contexts on files (privileged) |
 | rev | Reverse the order of characters in every line |
 | rfkill | List or block radio transmitters |
 | rm | Remove file(s) or directory(s) |
 | rmdir | Remove directory |
+| rmmod | Validate and (privileged) remove a kernel module |
+| route | Show the IP routing table (read-only) |
 | rpm | Query an RPM package file |
 | rpm2cpio | Extract the cpio payload from an RPM package |
 | rtcwake | Arm the RTC to wake the system |
 | run-init | Switch to the real root and run init |
 | run-parts | Run all executables in a directory |
+| runcon | Run a program in a different SELinux context (privileged) |
 | runlevel | Print the previous and current runlevel |
 | runsv | Supervise a single service |
 | runsvdir | Supervise a directory of services |
+| rx | Receive a file with the XMODEM protocol |
 | script | Record a command's output to a typescript |
 | scriptreplay | Replay a typescript using its timing file |
 | sddf | Search & Delete Duplicated File |
 | sed | Stream editor for filtering and transforming text |
+| selinuxenabled | Exit 0 if SELinux is enabled, 1 otherwise |
+| sendmail | Deliver a message to a local mbox file |
 | seq | Print a column of numbers |
 | serial | Rename the file to the name with a serial number |
+| sestatus | Show the SELinux status summary |
 | setarch | Run a program with a changed architecture personality |
 | setconsole | Redirect console output to a device |
+| setenforce | Set the SELinux enforcing mode (privileged) |
+| setfiles | Set file SELinux contexts from a spec file (privileged) |
+| setfont | Load a console font from a file |
 | setkeycodes | Map scancodes to keycodes |
 | setlogcons | Send kernel messages to a VT |
 | setpriv | Run a program with different privilege settings |
+| setsebool | Set the state of an SELinux boolean (privileged) |
+| setserial | Get or set serial port configuration |
 | setsid | Run a program in a new session |
 | setuidgid | Run a program as a user's uid/gid |
 | sh | Command interpreter (MimixBox mbsh compatibility front-end) |
@@ -284,15 +349,18 @@ There are 359 commands. Run `mimixbox --list` to see them on the terminal.
 | sha384sum | Calculate or Check secure hash 384 algorithm |
 | sha3sum | Calculate or Check SHA-3 message digest |
 | sha512sum | Calculate or Check secure hash 512 algorithm |
+| showkey | Report the codes of keys pressed at the console |
 | shred | Overwrite a file to hide its contents |
 | shuf | Generate a random permutation of input lines |
 | sl | Cure your bad habit of mistyping |
+| slattach | Attach a serial line as a network interface (deferred) |
 | sleep | Pause for NUMBER seconds(minutes, hours, days) |
 | smemcap | Capture /proc memory data into a tar for smem |
 | softlimit | Run a program under resource limits |
 | sort | Sort lines of text files |
 | speaker | Read text aloud using an installed TTS engine |
 | split | Split a file into pieces |
+| sqluv | SQL viewer & query runner for CSV/TSV/LTSV and SQLite |
 | ssl_client | Open a TLS connection and pipe stdio |
 | ssl_server | Minimal TLS server (foreground) |
 | start-stop-daemon | Start or stop a background program |
@@ -316,16 +384,21 @@ There are 359 commands. Run `mimixbox --list` to see them on the terminal.
 | tail | Print the last NUMBER(default=10) lines |
 | tar | Archive files (create, list, extract) |
 | taskset | Set or get a process's CPU affinity |
+| tc | Show/parse traffic control configuration (inspect-only) |
 | tcpsvd | Accept TCP connections and run a program for each |
 | tee | Read from standard input and write to standard output and files |
+| telnet | Connect to a host over TCP (raw, line-oriented) |
 | telnetd | Minimal telnet server (foreground) |
 | test | Evaluate a conditional expression |
+| tftp | Transfer a file with a TFTP server (get/put) |
 | tftpd | Read-only TFTP server |
 | time | Run a command and report how long it took |
 | timeout | Run a command with a time limit |
 | top | Display system summary and top processes |
 | touch | Update the access and modification times of each FILE to the current time |
 | tr | Translate or delete characters |
+| traceroute | Trace the route packets take to a host (IPv4) |
+| traceroute6 | Trace the route packets take to a host (IPv6) |
 | tree | List directory contents in a tree-like format |
 | true | Do nothing. Return success(0) |
 | truncate | Shrink or extend the size of a file to a given size |
@@ -349,6 +422,7 @@ There are 359 commands. Run `mimixbox --list` to see them on the terminal.
 | unix2dos | Change LF to CRLF |
 | unlink | Remove a single file by calling the unlink function |
 | unlzma | Decompress lzma files |
+| unlzop | Decompress lzop (.lzo) files |
 | unshadow | Combine passwd and shadow files for password auditing |
 | unshare | Run a program with unshared namespaces |
 | unxz | Decompress xz files |
@@ -372,6 +446,7 @@ There are 359 commands. Run `mimixbox --list` to see them on the terminal.
 | which | Returns the file path which would be executed in the current environment |
 | who | Show who is logged on |
 | whoami | Print login user name |
+| whois | Query a WHOIS server for a domain or IP |
 | whris | Show management information for a domain's IP addresses |
 | xargs | Build and execute command lines from standard input |
 | xxd | Make a hex dump or do the reverse |

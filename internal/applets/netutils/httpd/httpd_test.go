@@ -26,7 +26,7 @@ func TestServesStaticFile(t *testing.T) {
 	ctx, cancel := context.WithCancel(context.Background())
 	defer cancel()
 
-	out := &bytes.Buffer{}
+	out := &syncBuffer{}
 	stdio := command.IO{In: strings.NewReader(""), Out: out, Err: &bytes.Buffer{}}
 
 	var wg sync.WaitGroup
@@ -67,8 +67,28 @@ func TestBackgroundModeFails(t *testing.T) {
 	}
 }
 
+// syncBuffer is a goroutine-safe bytes.Buffer. The server writes its address
+// line from its own goroutine while the test polls it via String(), so the
+// shared buffer must serialize those accesses to stay race-free.
+type syncBuffer struct {
+	mu  sync.Mutex
+	buf bytes.Buffer
+}
+
+func (b *syncBuffer) Write(p []byte) (int, error) {
+	b.mu.Lock()
+	defer b.mu.Unlock()
+	return b.buf.Write(p)
+}
+
+func (b *syncBuffer) String() string {
+	b.mu.Lock()
+	defer b.mu.Unlock()
+	return b.buf.String()
+}
+
 // waitForAddr polls out until the "serving ... on http://ADDR" line appears.
-func waitForAddr(t *testing.T, out *bytes.Buffer) string {
+func waitForAddr(t *testing.T, out *syncBuffer) string {
 	t.Helper()
 	deadline := time.Now().Add(3 * time.Second)
 	for time.Now().Before(deadline) {
