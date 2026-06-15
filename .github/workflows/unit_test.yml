@@ -9,13 +9,30 @@ on:
 jobs:
   unit-test:
     runs-on: ubuntu-latest
+    timeout-minutes: 15
     steps:
       - uses: actions/checkout@v6
 
       - uses: actions/setup-go@v6
         with:
-          go-version: "1"
-          check-latest: true
+          go-version-file: go.mod
 
       - name: UnitTest
         run: make ut
+
+  unit-test-race:
+    name: Unit test (race)
+    runs-on: ubuntu-latest
+    timeout-minutes: 20
+    steps:
+      - uses: actions/checkout@v6
+
+      - uses: actions/setup-go@v6
+        with:
+          go-version-file: go.mod
+
+      - name: Prepare test fixtures
+        run: make pre_ut
+
+      - name: Run tests with the race detector
+        run: go test -race ./...

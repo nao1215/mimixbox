@@ -19,7 +19,7 @@ MimixBox packs many Unix commands into a single binary, like BusyBox. Unlike Bus
 The list below is generated from the registered applets by `make command-list`, so it never drifts from the binary. You can also run `mimixbox --list` to print it on the terminal.
 
 <!-- COMMAND_LIST_START -->
-There are 450 commands. Run `mimixbox --list` to see them on the terminal.
+There are 451 commands. Run `mimixbox --list` to see them on the terminal.
 
 | Command | Description |
 |:--|:--|
@@ -66,6 +66,7 @@ There are 450 commands. Run `mimixbox --list` to see them on the terminal.
 | chpst | Run a program with a changed process state |
 | chroot | Run command or interactive shell with special root directory |
 | chrt | Get or set a process's real-time scheduling attributes |
+| chsh | Change a user's login shell |
 | chvt | Switch to a virtual terminal |
 | cksum | Print CRC checksum and byte count of each file |
 | clear | Clear terminal |
@@ -477,11 +478,11 @@ There are 450 commands. Run `mimixbox --list` to see them on the terminal.
 
 ## Install
 
-The [Release Page](https://github.com/nao1215/mimixbox/releases) distributes a `tar.gz` archive for each OS/CPU architecture, plus `.deb`, `.rpm`, and `.apk` packages. The archive is named `mimixbox_<version>_<os>_<arch>.tar.gz` and extracts into a directory containing the `mimixbox` binary and a self-contained `installer.sh`. For example, on Linux (amd64):
+MimixBox targets Linux only. The [Release Page](https://github.com/nao1215/mimixbox/releases) distributes a `tar.gz` archive for `linux/amd64` and `linux/arm64`, plus `.deb`, `.rpm`, and `.apk` packages for the same two architectures. The archive is named `mimixbox_<version>_linux_<arch>.tar.gz` and extracts into a directory containing the `mimixbox` binary, `LICENSE`, `README.md`, and a self-contained `installer.sh` (with its `libshell.sh` helper). For example, on Linux (amd64):
 
 ```shell
-$ tar xf mimixbox_0.36.0_linux_amd64.tar.gz
-$ cd mimixbox_0.36.0_linux_amd64
+$ tar xf mimixbox_0.39.0_linux_amd64.tar.gz
+$ cd mimixbox_0.39.0_linux_amd64
 $ sudo ./installer.sh
 ```
 
@@ -572,7 +573,7 @@ On a Debian-based distribution (e.g. Debian／Ubuntu／Kali Linux／Raspberry Pi
 ```shell
 $ sudo apt install build-essential curl git docker.io debootstrap libpam0g-dev
 $ go install github.com/google/go-licenses@latest
-$ curl -fsSL https://git.io/shellspec | sh -s -- --yes
+$ curl -fsSL https://github.com/shellspec/shellspec/raw/master/install.sh | sh -s -- --yes
 ```
 
 ### How to build
