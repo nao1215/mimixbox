@@ -7,10 +7,26 @@ import (
 	"io"
 	"os"
 	"os/exec"
+	"sync"
 
 	"github.com/nao1215/mimixbox/internal/applets/shellutils/mbsh/builtin"
 	"github.com/nao1215/mimixbox/internal/command"
 )
+
+// syncWriter serializes concurrent writes to an underlying writer. A pipeline
+// points every stage's stderr at one shared writer; when that writer is not an
+// *os.File, os/exec copies each stage's stderr on its own goroutine, so the
+// shared writer would otherwise be written from several goroutines at once.
+type syncWriter struct {
+	mu sync.Mutex
+	w  io.Writer
+}
+
+func (s *syncWriter) Write(p []byte) (int, error) {
+	s.mu.Lock()
+	defer s.mu.Unlock()
+	return s.w.Write(p)
+}
 
 // redirect is one I/O redirection on a simple command.
 type redirect struct {
@@ -127,6 +143,16 @@ func (sh *shell) execPipeline(ctx context.Context, stdio command.IO, pl pipeline
 		}
 	}()
 
+	// Every stage shares one stderr writer. If it is not an *os.File, os/exec
+	// copies each stage's stderr on a separate goroutine, so serialize writes
+	// to the shared writer to avoid a data race.
+	errw := stdio.Err
+	if n > 1 {
+		if _, isFile := stdio.Err.(*os.File); !isFile {
+			errw = &syncWriter{w: stdio.Err}
+		}
+	}
+
 	for i, sc := range pl.cmds {
 		if len(sc.args) == 0 {
 			_, _ = fmt.Fprintln(stdio.Err, "mbsh: missing command in pipeline")
@@ -141,7 +167,7 @@ func (sh *shell) execPipeline(ctx context.Context, stdio command.IO, pl pipeline
 		if len(sc.assigns) > 0 {
 			c.Env = append(os.Environ(), sc.assigns...)
 		}
-		c.Stderr = stdio.Err
+		c.Stderr = errw
 		if i == 0 {
 			c.Stdin = stdio.In
 		}

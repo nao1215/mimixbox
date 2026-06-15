@@ -14,6 +14,7 @@ on:
 jobs:
   docker:
     runs-on: ubuntu-latest
+    timeout-minutes: 20
     steps:
       - uses: actions/checkout@v6
 
@@ -24,3 +25,21 @@ jobs:
         run: |
           docker container run --rm mimixbox/ci:${{ github.sha }} mimixbox --version
           docker container run --rm mimixbox/ci:${{ github.sha }} mimixbox --list
+
+      - name: Smoke test real applets
+        run: |
+          set -euxo pipefail
+
+          # echo applet must print exactly what it is given.
+          out="$(docker container run --rm mimixbox/ci:${{ github.sha }} echo hello mimixbox)"
+          test "$out" = "hello mimixbox"
+
+          # cat applet must reproduce the contents of a file written by another
+          # applet, exercising a real read/write path inside the image.
+          out="$(docker container run --rm mimixbox/ci:${{ github.sha }} \
+            /bin/bash -c 'printf "line1\nline2\n" > /tmp/smoke.txt && cat /tmp/smoke.txt')"
+          test "$out" = "$(printf 'line1\nline2')"
+
+          # basename applet must strip the directory and suffix.
+          out="$(docker container run --rm mimixbox/ci:${{ github.sha }} basename /usr/local/bin/mimixbox)"
+          test "$out" = "mimixbox"

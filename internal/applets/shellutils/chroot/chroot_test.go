@@ -56,6 +56,21 @@ func TestMissingOperand(t *testing.T) {
 	}
 }
 
+// TestHelpDocumentsUserspec verifies --help advertises the identity model so
+// the documented limitations stay in sync with the implementation.
+func TestHelpDocumentsUserspec(t *testing.T) {
+	t.Parallel()
+	out, _, err := run(t, "--help")
+	if err != nil {
+		t.Fatalf("--help returned error: %v", err)
+	}
+	for _, want := range []string{"Usage: chroot", "--userspec", "--groups", "jail's"} {
+		if !strings.Contains(out, want) {
+			t.Errorf("--help output missing %q\n%s", want, out)
+		}
+	}
+}
+
 // TestNonRootFails verifies that, in the (non-root) test environment, running
 // chroot against a directory yields a failure error without panicking and
 // without writing to stdout. We do not require root.

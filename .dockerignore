@@ -1,0 +1,31 @@
+# Keep the Docker build context small and reproducible. The build only needs
+# the Go source tree, Makefile, and integration tests; everything below is
+# irrelevant to building/running mimixbox inside the image.
+.git
+.github
+.claude
+.gitignore
+.golangci.yml
+.octocov.yml
+.all-contributorsrc
+
+# Documentation and meta files.
+doc
+assets
+CHANGELOG.md
+CONTRIBUTING.md
+README.md
+SECURITY.md
+LICENSE
+
+# Build artifacts and local outputs.
+bin
+mimixbox
+*.out
+cover.out
+licenses
+
+# Editor/OS noise.
+.DS_Store
+.idea
+.vscode
