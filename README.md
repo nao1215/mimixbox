@@ -19,11 +19,7 @@ MimixBox packs many Unix commands into a single binary, like BusyBox. Unlike Bus
 The list below is generated from the registered applets by `make command-list`, so it never drifts from the binary. You can also run `mimixbox --list` to print it on the terminal.
 
 <!-- COMMAND_LIST_START -->
-<<<<<<< HEAD
-There are 358 commands. Run `mimixbox --list` to see them on the terminal.
-=======
-There are 335 commands. Run `mimixbox --list` to see them on the terminal.
->>>>>>> origin/main
+There are 360 commands. Run `mimixbox --list` to see them on the terminal.
 
 | Command | Description |
 |:--|:--|

@@ -330,11 +330,7 @@ import (
 // init populates the applet table. Each command is registered under its own
 // Name(), so the key can never drift from the command it dispatches to.
 func init() {
-<<<<<<< HEAD
-	Applets = make(map[string]Applet, 358)
-=======
-	Applets = make(map[string]Applet, 335)
->>>>>>> origin/main
+	Applets = make(map[string]Applet, 360)
 	register(ap_archival_ar.New())
 	register(ap_archival_bunzip2.New())
 	register(ap_archival_compress.New())
