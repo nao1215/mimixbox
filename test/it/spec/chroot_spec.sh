@@ -5,6 +5,11 @@ Describe 'chroot CLI contract'
         The status should be success
         The output should include 'Usage: chroot'
     End
+    It 'documents the --userspec identity option in --help'
+        When call ChrootHelp
+        The status should be success
+        The output should include '--userspec'
+    End
     It 'fails with a message when given no operand'
         When call ChrootNoArg
         The status should be failure
