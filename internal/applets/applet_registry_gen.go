@@ -115,9 +115,26 @@ import (
 	ap_mailutils_popmaildir "github.com/nao1215/mimixbox/internal/applets/mailutils/popmaildir"
 	ap_mailutils_reformime "github.com/nao1215/mimixbox/internal/applets/mailutils/reformime"
 	ap_mailutils_sendmail "github.com/nao1215/mimixbox/internal/applets/mailutils/sendmail"
+	ap_netutils_arp "github.com/nao1215/mimixbox/internal/applets/netutils/arp"
+	ap_netutils_dnsdomainname "github.com/nao1215/mimixbox/internal/applets/netutils/dnsdomainname"
+	ap_netutils_etherwake "github.com/nao1215/mimixbox/internal/applets/netutils/etherwake"
+	ap_netutils_ftp "github.com/nao1215/mimixbox/internal/applets/netutils/ftp"
 	ap_netutils_httpstatus "github.com/nao1215/mimixbox/internal/applets/netutils/httpstatus"
+	ap_netutils_ifconfig "github.com/nao1215/mimixbox/internal/applets/netutils/ifconfig"
+	ap_netutils_ipcalc "github.com/nao1215/mimixbox/internal/applets/netutils/ipcalc"
+	ap_netutils_ipcmd "github.com/nao1215/mimixbox/internal/applets/netutils/ipcmd"
+	ap_netutils_linkadmin "github.com/nao1215/mimixbox/internal/applets/netutils/linkadmin"
 	ap_netutils_nc "github.com/nao1215/mimixbox/internal/applets/netutils/nc"
+	ap_netutils_netcat "github.com/nao1215/mimixbox/internal/applets/netutils/netcat"
+	ap_netutils_netstat "github.com/nao1215/mimixbox/internal/applets/netutils/netstat"
+	ap_netutils_nslookup "github.com/nao1215/mimixbox/internal/applets/netutils/nslookup"
 	ap_netutils_ping "github.com/nao1215/mimixbox/internal/applets/netutils/ping"
+	ap_netutils_probe "github.com/nao1215/mimixbox/internal/applets/netutils/probe"
+	ap_netutils_pscan "github.com/nao1215/mimixbox/internal/applets/netutils/pscan"
+	ap_netutils_route "github.com/nao1215/mimixbox/internal/applets/netutils/route"
+	ap_netutils_telnet "github.com/nao1215/mimixbox/internal/applets/netutils/telnet"
+	ap_netutils_tftp "github.com/nao1215/mimixbox/internal/applets/netutils/tftp"
+	ap_netutils_whois "github.com/nao1215/mimixbox/internal/applets/netutils/whois"
 	ap_netutils_whris "github.com/nao1215/mimixbox/internal/applets/netutils/whris"
 	ap_pmutils_halt "github.com/nao1215/mimixbox/internal/applets/pmutils/halt"
 	ap_printutils "github.com/nao1215/mimixbox/internal/applets/printutils"
@@ -333,7 +350,7 @@ import (
 // init populates the applet table. Each command is registered under its own
 // Name(), so the key can never drift from the command it dispatches to.
 func init() {
-	Applets = make(map[string]Applet, 366)
+	Applets = make(map[string]Applet, 395)
 	register(ap_archival_ar.New())
 	register(ap_archival_bunzip2.New())
 	register(ap_archival_bzip2comp.New())
@@ -461,9 +478,38 @@ func init() {
 	register(ap_mailutils_popmaildir.New())
 	register(ap_mailutils_reformime.New())
 	register(ap_mailutils_sendmail.New())
+	register(ap_netutils_arp.New())
+	register(ap_netutils_dnsdomainname.New())
+	register(ap_netutils_etherwake.New())
+	register(ap_netutils_ftp.NewFtpget())
+	register(ap_netutils_ftp.NewFtpput())
 	register(ap_netutils_httpstatus.New())
+	register(ap_netutils_ifconfig.New())
+	register(ap_netutils_ipcalc.New())
+	register(ap_netutils_ipcmd.NewIP())
+	register(ap_netutils_ipcmd.NewIPAddr())
+	register(ap_netutils_ipcmd.NewIPLink())
+	register(ap_netutils_ipcmd.NewIPNeigh())
+	register(ap_netutils_ipcmd.NewIPRoute())
+	register(ap_netutils_ipcmd.NewIPRule())
+	register(ap_netutils_linkadmin.NewIPTunnel())
+	register(ap_netutils_linkadmin.NewNameif())
+	register(ap_netutils_linkadmin.NewSlattach())
+	register(ap_netutils_linkadmin.NewTC())
 	register(ap_netutils_nc.New())
+	register(ap_netutils_netcat.New())
+	register(ap_netutils_netstat.New())
+	register(ap_netutils_nslookup.New())
 	register(ap_netutils_ping.New())
+	register(ap_netutils_probe.NewArping())
+	register(ap_netutils_probe.NewPing6())
+	register(ap_netutils_probe.NewTraceroute())
+	register(ap_netutils_probe.NewTraceroute6())
+	register(ap_netutils_pscan.New())
+	register(ap_netutils_route.New())
+	register(ap_netutils_telnet.New())
+	register(ap_netutils_tftp.New())
+	register(ap_netutils_whois.New())
 	register(ap_netutils_whris.New())
 	register(ap_pmutils_halt.NewHalt())
 	register(ap_pmutils_halt.NewPoweroff())
