@@ -22,6 +22,9 @@ vendor/*
 # release directory
 release/*
 
+# GoReleaser output directory (`make release` / scripts/release.sh)
+dist/
+
 # Coverage file
 cover.out
 cover.html
