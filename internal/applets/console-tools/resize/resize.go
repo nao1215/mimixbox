@@ -25,9 +25,16 @@ func (c *Command) Name() string { return "resize" }
 // Synopsis returns the one-line description shown in the applet list.
 func (c *Command) Synopsis() string { return "Print commands to set the terminal size" }
 
-// winsize reports the current terminal size as (rows, cols). It is a package
-// var so a test can replace it with a deterministic fake instead of needing a
-// real controlling terminal.
+// winsize reports the current terminal size as (rows, cols).
+//
+// Issue #492 asked whether resize should keep probing the process file
+// descriptors directly or grow an abstraction around terminal discovery. We
+// keep the direct TIOCGWINSZ probe of the std fds on purpose: querying the
+// controlling terminal's geometry *is* the job of resize, the size cannot be
+// injected through command.IO (whose streams are plain io.Reader/io.Writer and
+// may not be terminals), and the seam below already makes the applet fully
+// unit-testable. winsize is a package var so a test can replace it with a
+// deterministic fake instead of needing a real controlling terminal.
 var winsize = func() (rows, cols uint16, err error) {
 	for _, fd := range []int{int(os.Stdout.Fd()), int(os.Stderr.Fd()), int(os.Stdin.Fd())} {
 		ws, werr := unix.IoctlGetWinsize(fd, unix.TIOCGWINSZ)
