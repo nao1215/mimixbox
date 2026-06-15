@@ -7,6 +7,72 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## [Unreleased]
 
+## [0.40.0] - 2026-06-15
+
+This release closes the eight follow-up issues from the 2026-06-15 whole-project
+review (roadmap #479). It is primarily a correctness, test-coverage, build, and
+documentation hardening pass on top of the 450-command tree shipped in 0.39.0,
+plus two applet completions. The applet count is now `451`: `chsh` is now a real,
+tested command (migrated to the `command.Command` / `pflag` framework) instead of
+the previous silent stub, so it is properly registered and counted.
+
+### Added
+
+- chsh (#473): a genuine, safe implementation. It rewrites the login shell
+  (field 7 of `/etc/passwd`) via an atomic temp-file + rename; `-s SHELL` sets
+  non-interactively, `-l` lists `/etc/shells`, and a bare invocation reads the
+  shell from stdin. Non-root callers may only select a shell listed in
+  `/etc/shells`; shells containing `:`, newlines, or control characters are
+  rejected to prevent passwd injection. Unknown user / bad shell / unwritable
+  database all fail with a non-zero status and stderr — no silent success.
+- chroot (#472): a minimal BusyBox/coreutils-compatible identity handoff via
+  `--userspec USER[:GROUP]` (plus `--groups`), resolved against the **jail's**
+  `/etc/passwd` and `/etc/group` after `chroot`, dropping privileges in
+  `setgroups` → `setgid` → `setuid` order. Unresolvable names, malformed specs,
+  and failed drops produce deterministic errors and a non-zero exit instead of a
+  silent host-identity fallback.
+- test (#477): dedicated ShellSpec contract specs for the remaining 174 shipped
+  commands under `test/it/spec/`, each asserting at least one real CLI contract
+  (`--help`/usage and, for safe compute applets, observed output on fixtures).
+  Privileged, networked, and destructive applets are exercised via `--help`
+  only.
+- test (#471): reusable integration helper scripts for commands whose fixtures
+  are non-trivial, plus a `test/it/README.md` documenting the normalized
+  temp-root / setup / cleanup conventions and the commands that are intentionally
+  spec-only.
+- ci (#474): a `go test -race` job, a generated-artifact freshness check, and a
+  hardened Docker smoke test.
+
+### Changed
+
+- ci/docker (#474): pinned the toolchain for reproducibility — Go is now taken
+  from `go.mod`, ShellSpec and GoReleaser are pinned, long-running workflows have
+  explicit `timeout-minutes`, the Docker base image is pinned, the unnecessary
+  `apt-get upgrade` was removed, and a `.dockerignore` was added.
+- build/release (#476): `.goreleaser.yml` is now the single authoritative release
+  contract; `scripts/release.sh` is a thin GoReleaser wrapper, so the local and
+  tagged release flows produce identical artifacts (including `libshell.sh` and
+  the full linux/darwin × amd64/arm64 matrix). `full-install` / `remove` operate
+  on the exact installed binary by absolute path, and license-generation failures
+  are no longer silently suppressed.
+- test (#478): the ShellSpec suite no longer assumes `/tmp/mimixbox` is a
+  writable directory. A single per-run temp root (`mktemp -d`, exported as
+  `MIMIXBOX_IT_ROOT` via `test/it/spec/spec_helper.sh`) replaces ~450 hard-coded
+  path literals across the suite, so `make it` is robust against pre-existing
+  `/tmp` state and concurrent runs.
+- docs (#475): refreshed README install/release claims to match the real
+  GoReleaser matrix, replaced the dead `git.io/shellspec` URL, aligned
+  `CONTRIBUTING.md` with the Go 1.25 toolchain and the generated applet registry,
+  fixed the 0.39.0 applet-count drift, and tightened `SECURITY.md`.
+
+### Fixed
+
+- mbsh: serialized the shared pipeline stderr writer so a multi-stage pipeline no
+  longer triggers a data race under `go test -race`.
+- chsh (#473): removed the stale `github.com/jessevdk/go-flags` dependency (chsh
+  was its last consumer) and the dead commented PAM helpers in
+  `internal/lib/shadow.go`.
+
 ## [0.39.0] - 2026-06-15
 
 This release grows the applet count to 450 by landing eight issues in parallel:
