@@ -190,6 +190,7 @@ import (
 	ap_shellutils_install "github.com/nao1215/mimixbox/internal/applets/shellutils/install"
 	ap_shellutils_kill "github.com/nao1215/mimixbox/internal/applets/shellutils/kill"
 	ap_shellutils_killall "github.com/nao1215/mimixbox/internal/applets/shellutils/killall"
+	ap_shellutils_leadtime "github.com/nao1215/mimixbox/internal/applets/shellutils/leadtime"
 	ap_shellutils_logcollect "github.com/nao1215/mimixbox/internal/applets/shellutils/logcollect"
 	ap_shellutils_logname "github.com/nao1215/mimixbox/internal/applets/shellutils/logname"
 	ap_shellutils_mbsh "github.com/nao1215/mimixbox/internal/applets/shellutils/mbsh"
@@ -253,6 +254,7 @@ import (
 	ap_textutils_sha512sum "github.com/nao1215/mimixbox/internal/applets/textutils/sha512sum"
 	ap_textutils_shuf "github.com/nao1215/mimixbox/internal/applets/textutils/shuf"
 	ap_textutils_split "github.com/nao1215/mimixbox/internal/applets/textutils/split"
+	ap_textutils_sqluv "github.com/nao1215/mimixbox/internal/applets/textutils/sqluv"
 	ap_textutils_strings "github.com/nao1215/mimixbox/internal/applets/textutils/strings"
 	ap_textutils_sum "github.com/nao1215/mimixbox/internal/applets/textutils/sum"
 	ap_textutils_tac "github.com/nao1215/mimixbox/internal/applets/textutils/tac"
@@ -328,7 +330,11 @@ import (
 // init populates the applet table. Each command is registered under its own
 // Name(), so the key can never drift from the command it dispatches to.
 func init() {
+<<<<<<< HEAD
 	Applets = make(map[string]Applet, 358)
+=======
+	Applets = make(map[string]Applet, 335)
+>>>>>>> origin/main
 	register(ap_archival_ar.New())
 	register(ap_archival_bunzip2.New())
 	register(ap_archival_compress.New())
@@ -547,6 +553,7 @@ func init() {
 	register(ap_shellutils_install.New())
 	register(ap_shellutils_kill.New())
 	register(ap_shellutils_killall.New())
+	register(ap_shellutils_leadtime.New())
 	register(ap_shellutils_logcollect.New())
 	register(ap_shellutils_logname.New())
 	register(ap_shellutils_mbsh.New())
@@ -610,6 +617,7 @@ func init() {
 	register(ap_textutils_sha512sum.New())
 	register(ap_textutils_shuf.New())
 	register(ap_textutils_split.New())
+	register(ap_textutils_sqluv.New())
 	register(ap_textutils_strings.New())
 	register(ap_textutils_sum.New())
 	register(ap_textutils_tac.New())
