@@ -1,0 +1,28 @@
+name: Generate
+
+on:
+  push:
+    branches: [main]
+  pull_request:
+    branches: [main]
+
+# Ensures the auto-generated applet registry and README command list stay in
+# sync with the source tree. A drift between `make generate` output and the
+# committed files fails this job so it cannot be merged silently.
+jobs:
+  generate:
+    name: generate-freshness
+    runs-on: ubuntu-latest
+    timeout-minutes: 10
+    steps:
+      - uses: actions/checkout@v6
+
+      - uses: actions/setup-go@v6
+        with:
+          go-version-file: go.mod
+
+      - name: Regenerate code and command list
+        run: make generate
+
+      - name: Verify generated artifacts are up to date
+        run: git diff --exit-code

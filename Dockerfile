@@ -1,6 +1,11 @@
-FROM golang AS builder
+# Pin the base image to a specific tag so builds are reproducible and not
+# affected by a silently moving `golang:latest`. Matches the toolchain declared
+# in go.mod (go 1.25.x).
+FROM golang:1.25-bookworm AS builder
 ENV ROOT=/go/app
 ENV IT_SHELL=/home/mimixbox/do_integration_test.sh
+# Pin ShellSpec to a tagged release for reproducible integration tests.
+ENV SHELLSPEC_VERSION=0.28.1
 WORKDIR ${ROOT}
 
 # 1) Setting root user password
@@ -9,11 +14,12 @@ WORKDIR ${ROOT}
 RUN echo 'root:password' | chpasswd
 RUN useradd mimixbox -m -s /bin/bash &&\
     echo 'mimixbox:password' |chpasswd
-RUN apt-get update && apt-get upgrade -y && \
-    apt-get -y install sudo file libpam0g-dev
+RUN apt-get update && \
+    apt-get -y install --no-install-recommends sudo file libpam0g-dev && \
+    rm -rf /var/lib/apt/lists/*
 
-# Install ShellSpec for the integration tests.
-RUN git clone https://github.com/shellspec/shellspec.git && \
+# Install ShellSpec (pinned tag) for the integration tests.
+RUN git clone --depth 1 --branch "${SHELLSPEC_VERSION}" https://github.com/shellspec/shellspec.git && \
     cd shellspec && make install
 
 # Build MimixBox from the local source tree (not a remote clone) so the image
