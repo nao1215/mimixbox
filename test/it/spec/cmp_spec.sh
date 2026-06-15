@@ -17,7 +17,7 @@ Describe 'cmp on differing files'
 
     It 'reports the first differing byte and line'
         When call TestCmpDiffer
-        The output should equal '/tmp/mimixbox/it/cmp/a.txt /tmp/mimixbox/it/cmp/diff.txt differ: byte 3, line 1'
+        The output should equal "${MIMIXBOX_IT_ROOT}/cmp/a.txt ${MIMIXBOX_IT_ROOT}/cmp/diff.txt differ: byte 3, line 1"
         The status should be failure
     End
 End

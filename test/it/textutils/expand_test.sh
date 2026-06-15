@@ -1,12 +1,12 @@
 Setup() {
-    export TEST_DIR=/tmp/mimixbox/it
-    export TEST_FILE=/tmp/mimixbox/it/expand.txt
+    export TEST_DIR=${MIMIXBOX_IT_ROOT}
+    export TEST_FILE=${MIMIXBOX_IT_ROOT}/expand.txt
     mkdir -p ${TEST_DIR}
     printf 'a\tb\n' > ${TEST_FILE}
 }
 
 CleanUp() {
-    export TEST_DIR=/tmp/mimixbox/it
+    export TEST_DIR=${MIMIXBOX_IT_ROOT}
     rm -rf ${TEST_DIR}
 }
 
@@ -19,7 +19,7 @@ TestExpandTabStop() {
 }
 
 TestExpandFile() {
-    export TEST_FILE=/tmp/mimixbox/it/expand.txt
+    export TEST_FILE=${MIMIXBOX_IT_ROOT}/expand.txt
     expand ${TEST_FILE}
 }
 

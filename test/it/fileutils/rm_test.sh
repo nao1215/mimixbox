@@ -1,4 +1,4 @@
-export TEST_DIR=/tmp/mimixbox/it/rm
+export TEST_DIR=${MIMIXBOX_IT_ROOT}/rm
 export DIR_IN_TEST_DIR=${TEST_DIR}/inner
 export TEST_FILE1=${TEST_DIR}/1.txt
 export TEST_FILE2=${TEST_DIR}/2.txt
@@ -65,7 +65,7 @@ TestRmDirWithoutRecursiveOptionStatus() {
 
 TestRmDirWithRecursiveOption() {
     rm -rf ${TEST_DIR}
-    ls /tmp/mimixbox/it
+    ls ${MIMIXBOX_IT_ROOT}
 }
 
 TestRmDirWithRecursiveOptionStatus() {

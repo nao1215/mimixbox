@@ -1,10 +1,10 @@
 Setup() {
-    export TEST_DIR=/tmp/mimixbox/it/mbsh
+    export TEST_DIR=${MIMIXBOX_IT_ROOT}/mbsh
     mkdir -p ${TEST_DIR}
 }
 
 CleanUp() {
-    rm -rf /tmp/mimixbox/it/mbsh
+    rm -rf ${MIMIXBOX_IT_ROOT}/mbsh
 }
 
 TestMbshEcho() {
@@ -20,7 +20,7 @@ TestMbshLastStatus() {
 }
 
 TestMbshCd() {
-    export TEST_DIR=/tmp/mimixbox/it/mbsh
+    export TEST_DIR=${MIMIXBOX_IT_ROOT}/mbsh
     printf 'cd %s\npwd\nexit\n' "${TEST_DIR}" | mbsh 2>/dev/null
 }
 

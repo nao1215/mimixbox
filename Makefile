@@ -64,6 +64,10 @@ e2e-setup: ## Build MimixBox and stage its applet symlinks in an isolated PATH d
 	"$(E2E_BIN_DIR)/$(APP)" --full-install "$(E2E_BIN_DIR)" >/dev/null
 
 test-e2e: e2e-setup ## Run the shellspec end-to-end tests against MimixBox applets in an isolated PATH
+	@set -e; \
+	MIMIXBOX_IT_ROOT=$$(mktemp -d "$${TMPDIR:-/tmp}/mimixbox.XXXXXX"); \
+	export MIMIXBOX_IT_ROOT; \
+	trap 'rm -rf "$$MIMIXBOX_IT_ROOT"' EXIT INT TERM; \
 	cd test/it && PATH="$(E2E_BIN_DIR):$$PATH" shellspec --shell /bin/bash
 
 lint: ## Run golangci-lint

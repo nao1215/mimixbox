@@ -82,7 +82,7 @@ Describe 'Remove three file. One of them does not exist'
     It 'remove two text file and print error.'
         When call TestRmThreeFileWithNoExistFile
         The output should equal "$(result)"
-        The error should equal "rm: can't remove /tmp/mimixbox/it/rm/no_exist_file.txt: No such file or directory exists"
+        The error should equal "rm: can't remove ${MIMIXBOX_IT_ROOT}/rm/no_exist_file.txt: No such file or directory exists"
     End
 End
 
@@ -93,7 +93,7 @@ Describe 'Check status after removing three file. One of them does not exist'
 
     It 'status failure'
         When call TestRmThreeFileWithNoExistFileStatus
-        The error should equal "rm: can't remove /tmp/mimixbox/it/rm/no_exist_file.txt: No such file or directory exists"
+        The error should equal "rm: can't remove ${MIMIXBOX_IT_ROOT}/rm/no_exist_file.txt: No such file or directory exists"
         The status should be failure
     End
 End
@@ -112,7 +112,7 @@ Describe 'Remove directory without recursive options'
 
     It 'can not remove directory'
         When call TestRmDirWithoutRecursiveOption
-        The error should equal "rm: can't remove /tmp/mimixbox/it/rm: It's directory"
+        The error should equal "rm: can't remove ${MIMIXBOX_IT_ROOT}/rm: It's directory"
         The output should equal "$(result)"
         The status should be success
     End
@@ -125,7 +125,7 @@ Describe 'Check status after removing directory without recursive option'
 
     It 'status failure'
         When call TestRmDirWithoutRecursiveOptionStatus
-        The error should equal "rm: can't remove /tmp/mimixbox/it/rm: It's directory"
+        The error should equal "rm: can't remove ${MIMIXBOX_IT_ROOT}/rm: It's directory"
         The status should be failure
     End
 End

@@ -1,7 +1,7 @@
 Describe 'run-parts'
     Include loginutils/run_parts_test.sh
 
-    setup() { TEST_DIR=/tmp/mimixbox/it/run_parts; mkdir -p "$TEST_DIR"; }
+    setup() { TEST_DIR=${MIMIXBOX_IT_ROOT}/run_parts; mkdir -p "$TEST_DIR"; }
     cleanup() { rm -rf "$TEST_DIR"; }
     BeforeEach 'setup'
     AfterEach 'cleanup'

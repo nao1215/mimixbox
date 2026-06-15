@@ -1,7 +1,7 @@
 Describe 'envdir'
     Include runit/envdir_test.sh
 
-    setup() { TEST_DIR=/tmp/mimixbox/it/envdir; mkdir -p "$TEST_DIR"; }
+    setup() { TEST_DIR=${MIMIXBOX_IT_ROOT}/envdir; mkdir -p "$TEST_DIR"; }
     cleanup() { rm -rf "$TEST_DIR"; }
     BeforeEach 'setup'
     AfterEach 'cleanup'

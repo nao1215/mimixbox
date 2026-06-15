@@ -1,7 +1,7 @@
 Describe 'smemcap'
     Include procps/smemcap_test.sh
 
-    setup() { TEST_DIR=/tmp/mimixbox/it/smemcap; mkdir -p "$TEST_DIR"; }
+    setup() { TEST_DIR=${MIMIXBOX_IT_ROOT}/smemcap; mkdir -p "$TEST_DIR"; }
     cleanup() { rm -rf "$TEST_DIR"; }
     BeforeEach 'setup'
     AfterEach 'cleanup'

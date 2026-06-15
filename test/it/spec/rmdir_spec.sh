@@ -17,7 +17,7 @@ Describe 'rmdir on a non-empty directory'
 
     It 'fails with directory not empty'
         When call TestRmdirNonEmpty
-        The error should equal "rmdir: failed to remove '/tmp/mimixbox/it/rmdir/full': Directory not empty"
+        The error should equal "rmdir: failed to remove '${MIMIXBOX_IT_ROOT}/rmdir/full': Directory not empty"
         The status should be failure
     End
 End

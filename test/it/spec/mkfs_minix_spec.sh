@@ -1,7 +1,7 @@
 Describe 'mkfs.minix'
     Include util-linux/mkfs_minix_test.sh
 
-    setup() { TEST_DIR=/tmp/mimixbox/it/mkfs_minix; mkdir -p "$TEST_DIR"; }
+    setup() { TEST_DIR=${MIMIXBOX_IT_ROOT}/mkfs_minix; mkdir -p "$TEST_DIR"; }
     cleanup() { rm -rf "$TEST_DIR"; }
     BeforeEach 'setup'
     AfterEach 'cleanup'

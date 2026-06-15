@@ -1,7 +1,7 @@
 Describe 'logread'
     Include procps/logread_test.sh
 
-    setup() { TEST_DIR=/tmp/mimixbox/it/logread; mkdir -p "$TEST_DIR"; }
+    setup() { TEST_DIR=${MIMIXBOX_IT_ROOT}/logread; mkdir -p "$TEST_DIR"; }
     cleanup() { rm -rf "$TEST_DIR"; }
     BeforeEach 'setup'
     AfterEach 'cleanup'

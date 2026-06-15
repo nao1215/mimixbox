@@ -5,7 +5,7 @@ Describe 'realpath resolves an existing file'
 
     It 'prints the absolute path'
         When call TestRealpathExisting
-        The output should equal '/tmp/mimixbox/it/realpath/file.txt'
+        The output should equal "${MIMIXBOX_IT_ROOT}/realpath/file.txt"
         The status should be success
     End
 End
@@ -15,7 +15,7 @@ Describe 'realpath -m on a missing path'
 
     It 'prints the cleaned absolute path'
         When call TestRealpathMissing
-        The output should equal '/tmp/mimixbox/it/realpath/does/not/exist'
+        The output should equal "${MIMIXBOX_IT_ROOT}/realpath/does/not/exist"
         The status should be success
     End
 End

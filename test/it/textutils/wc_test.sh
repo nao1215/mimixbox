@@ -1,8 +1,8 @@
 Setup() {
-    export TEST_DIR=/tmp/mimixbox/it
-    export TEST_FILE_GAMENAME=/tmp/mimixbox/it/game.txt
-    export TEST_FILE_METAL=/tmp/mimixbox/it/metal.txt
-    export EMPTY_FILE=/tmp/mimixbox/it/empty.txt
+    export TEST_DIR=${MIMIXBOX_IT_ROOT}
+    export TEST_FILE_GAMENAME=${MIMIXBOX_IT_ROOT}/game.txt
+    export TEST_FILE_METAL=${MIMIXBOX_IT_ROOT}/metal.txt
+    export EMPTY_FILE=${MIMIXBOX_IT_ROOT}/empty.txt
     export LANG=C
 
     mkdir -p ${TEST_DIR}
@@ -22,62 +22,62 @@ Setup() {
 }
 
 CleanUp() {
-    export TEST_FILE_GAMENAME=/tmp/mimixbox/it/game.txt
-    export TEST_FILE_METAL=/tmp/mimixbox/it/metal.txt
-    export EMPTY_FILE=/tmp/mimixbox/it/empty.txt
+    export TEST_FILE_GAMENAME=${MIMIXBOX_IT_ROOT}/game.txt
+    export TEST_FILE_METAL=${MIMIXBOX_IT_ROOT}/metal.txt
+    export EMPTY_FILE=${MIMIXBOX_IT_ROOT}/empty.txt
 
     rm  ${TEST_FILE_GAMENAME} ${EMPTY_FILE} ${TEST_FILE_METAL}
 }
 
 TestWcWithNoOption() {
-    export TEST_FILE_GAMENAME=/tmp/mimixbox/it/game.txt
+    export TEST_FILE_GAMENAME=${MIMIXBOX_IT_ROOT}/game.txt
     wc ${TEST_FILE_GAMENAME}
 }
 
 TestWcWithLinesOption() {
-    export TEST_FILE_GAMENAME=/tmp/mimixbox/it/game.txt
+    export TEST_FILE_GAMENAME=${MIMIXBOX_IT_ROOT}/game.txt
     wc  -l ${TEST_FILE_GAMENAME}
 }
 
 TestWcWithBytesOption() {
-    export TEST_FILE_GAMENAME=/tmp/mimixbox/it/game.txt
+    export TEST_FILE_GAMENAME=${MIMIXBOX_IT_ROOT}/game.txt
     wc  -c ${TEST_FILE_GAMENAME}
 }
 
 TestWcWithMaxLineLengthOption() {
-    export TEST_FILE_GAMENAME=/tmp/mimixbox/it/game.txt
+    export TEST_FILE_GAMENAME=${MIMIXBOX_IT_ROOT}/game.txt
     wc  -L ${TEST_FILE_GAMENAME}
 }
 
 TestWcReadingEmptyFile() {
-    export EMPTY_FILE=/tmp/mimixbox/it/empty.txt
+    export EMPTY_FILE=${MIMIXBOX_IT_ROOT}/empty.txt
     wc  ${EMPTY_FILE}
 }
 
 TestWcReadingThreeFile() {
-    export TEST_FILE_GAMENAME=/tmp/mimixbox/it/game.txt
-    export TEST_FILE_METAL=/tmp/mimixbox/it/metal.txt
-    export EMPTY_FILE=/tmp/mimixbox/it/empty.txt
+    export TEST_FILE_GAMENAME=${MIMIXBOX_IT_ROOT}/game.txt
+    export TEST_FILE_METAL=${MIMIXBOX_IT_ROOT}/metal.txt
+    export EMPTY_FILE=${MIMIXBOX_IT_ROOT}/empty.txt
     wc ${EMPTY_FILE} ${TEST_FILE_GAMENAME} ${TEST_FILE_METAL}
 }
 
 TestWcWithPipe() {
-    export TEST_FILE_GAMENAME=/tmp/mimixbox/it/game.txt
+    export TEST_FILE_GAMENAME=${MIMIXBOX_IT_ROOT}/game.txt
     echo ${TEST_FILE_GAMENAME} | wc
 }
 
 TestWcWithPipeAndArgument() {
-    export TEST_FILE_GAMENAME=/tmp/mimixbox/it/game.txt
+    export TEST_FILE_GAMENAME=${MIMIXBOX_IT_ROOT}/game.txt
     echo ${TEST_FILE_GAMENAME} | wc ${TEST_FILE_GAMENAME}
 }
 
 TestWcNotFile() {
-    export TEST_DIR=/tmp/mimixbox/it
+    export TEST_DIR=${MIMIXBOX_IT_ROOT}
     wc ${TEST_DIR}
 }
 
 TestWcDirectoryAndFileSameTime() {
-    export TEST_DIR=/tmp/mimixbox/it
+    export TEST_DIR=${MIMIXBOX_IT_ROOT}
     wc ${TEST_DIR} ${TEST_FILE_GAMENAME}
 }
 

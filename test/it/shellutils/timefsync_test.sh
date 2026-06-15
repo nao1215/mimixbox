@@ -1,10 +1,10 @@
 Setup() {
-    export TEST_DIR=/tmp/mimixbox/it/timefsync
+    export TEST_DIR=${MIMIXBOX_IT_ROOT}/timefsync
     mkdir -p ${TEST_DIR}
     printf 'data\n' > ${TEST_DIR}/f.txt
 }
 
-CleanUp() { rm -rf /tmp/mimixbox/it/timefsync; }
+CleanUp() { rm -rf ${MIMIXBOX_IT_ROOT}/timefsync; }
 
 # Use env to invoke the PATH "time" binary regardless of any shell keyword.
 TestTimeOutput() {

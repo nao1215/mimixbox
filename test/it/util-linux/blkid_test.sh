@@ -1,5 +1,5 @@
 Setup() {
-    export TEST_DIR=/tmp/mimixbox/it/blkid
+    export TEST_DIR=${MIMIXBOX_IT_ROOT}/blkid
     mkdir -p ${TEST_DIR}
     # Craft an image with the ext superblock magic (0xEF53 at offset 1080).
     dd if=/dev/zero of=${TEST_DIR}/ext.img bs=1024 count=2 2>/dev/null
@@ -8,7 +8,7 @@ Setup() {
     printf 'nothing here' > ${TEST_DIR}/blank.img
 }
 
-CleanUp() { rm -rf /tmp/mimixbox/it/blkid; }
+CleanUp() { rm -rf ${MIMIXBOX_IT_ROOT}/blkid; }
 
 TestBlkidExt() { blkid ${TEST_DIR}/ext.img; }
 TestBlkidXfs() { blkid ${TEST_DIR}/xfs.img; }

@@ -4,7 +4,7 @@ Describe 'Copy one file'
     AfterEach 'Cleanup'
     It 'copy one file.'
         When call TestCopyOneFile
-        The output should equal '/tmp/mimixbox/it/cp/cp.txt'
+        The output should equal "${MIMIXBOX_IT_ROOT}/cp/cp.txt"
     End
 End
 
@@ -14,7 +14,7 @@ Describe 'Check status after copying one file'
     AfterEach 'Cleanup'
     It 'status success'
         When call TestCopyOneFile
-        The output should equal '/tmp/mimixbox/it/cp/cp.txt'
+        The output should equal "${MIMIXBOX_IT_ROOT}/cp/cp.txt"
         The status should be success
     End
 End
@@ -65,7 +65,7 @@ Describe 'The reason why the copy failed is src and dest are the same'
     It 'can not copy directory'
         When call TestCopySrcAddDistAreSame
         The output should equal "$(result)"
-        The error should equal "cp: /tmp/mimixbox/it/cp and /tmp/mimixbox/it/cp is same."
+        The error should equal "cp: ${MIMIXBOX_IT_ROOT}/cp and ${MIMIXBOX_IT_ROOT}/cp is same."
     End
 End
 
@@ -76,7 +76,7 @@ Describe 'Check status after copying fail. Src and dest are the same'
 
     It 'can not copy directory'
         When call TestCopySrcAddDistAreSameStatus
-        The error should equal "cp: /tmp/mimixbox/it/cp and /tmp/mimixbox/it/cp is same."
+        The error should equal "cp: ${MIMIXBOX_IT_ROOT}/cp and ${MIMIXBOX_IT_ROOT}/cp is same."
         The status should be failure
     End
 End
@@ -117,7 +117,7 @@ Describe 'Copy directory without recursive option'
     It 'can not copy directory'
         When call TestCopyDirctoryWithoutRecursiveOption
         The output should equal ""
-        The error should equal "cp: --recursive is not specified: omitting directory: /tmp/mimixbox/it/cp"
+        The error should equal "cp: --recursive is not specified: omitting directory: ${MIMIXBOX_IT_ROOT}/cp"
     End
 End
 
@@ -128,7 +128,7 @@ Describe 'Check status after copy directory without recursive option'
 
     It 'status failure'
         When call TestCopyDirctoryWithoutRecursiveOptionStatus
-        The error should equal "cp: --recursive is not specified: omitting directory: /tmp/mimixbox/it/cp"
+        The error should equal "cp: --recursive is not specified: omitting directory: ${MIMIXBOX_IT_ROOT}/cp"
         The status should be failure
     End
 End

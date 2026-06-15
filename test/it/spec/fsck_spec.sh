@@ -1,7 +1,7 @@
 Describe 'fsck'
     Include util-linux/fsck_test.sh
 
-    setup() { TEST_DIR=/tmp/mimixbox/it/fsck; mkdir -p "$TEST_DIR"; }
+    setup() { TEST_DIR=${MIMIXBOX_IT_ROOT}/fsck; mkdir -p "$TEST_DIR"; }
     cleanup() { rm -rf "$TEST_DIR"; }
     BeforeEach 'setup'
     AfterEach 'cleanup'

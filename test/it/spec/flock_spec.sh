@@ -1,7 +1,7 @@
 Describe 'flock'
     Include util-linux/flock_test.sh
 
-    setup() { TEST_DIR=/tmp/mimixbox/it/flock; mkdir -p "$TEST_DIR"; }
+    setup() { TEST_DIR=${MIMIXBOX_IT_ROOT}/flock; mkdir -p "$TEST_DIR"; }
     cleanup() { rm -rf "$TEST_DIR"; }
     BeforeEach 'setup'
     AfterEach 'cleanup'

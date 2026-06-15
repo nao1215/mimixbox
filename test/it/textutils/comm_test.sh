@@ -1,12 +1,12 @@
 Setup() {
-    export TEST_DIR=/tmp/mimixbox/it
+    export TEST_DIR=${MIMIXBOX_IT_ROOT}
     mkdir -p ${TEST_DIR}
     printf 'apple\nbanana\n' > ${TEST_DIR}/comm_a.txt
     printf 'banana\ncherry\n' > ${TEST_DIR}/comm_b.txt
 }
 CleanUp() {
-    rm -rf /tmp/mimixbox/it
+    rm -rf ${MIMIXBOX_IT_ROOT}
 }
 TestCommBoth() {
-    comm -1 -2 /tmp/mimixbox/it/comm_a.txt /tmp/mimixbox/it/comm_b.txt
+    comm -1 -2 ${MIMIXBOX_IT_ROOT}/comm_a.txt ${MIMIXBOX_IT_ROOT}/comm_b.txt
 }

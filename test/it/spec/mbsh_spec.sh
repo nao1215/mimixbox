@@ -67,7 +67,7 @@ Describe 'mbsh cd'
 
     It 'changes directory with cd'
         When call TestMbshCd
-        The output should include '/tmp/mimixbox/it/mbsh'
+        The output should include "${MIMIXBOX_IT_ROOT}/mbsh"
         The status should be success
     End
 End

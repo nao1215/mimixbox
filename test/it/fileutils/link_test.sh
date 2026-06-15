@@ -1,10 +1,10 @@
 Setup() {
-    export TEST_DIR=/tmp/mimixbox/it
+    export TEST_DIR=${MIMIXBOX_IT_ROOT}
     mkdir -p ${TEST_DIR}
     printf 'data' > ${TEST_DIR}/link_src
 }
-CleanUp() { rm -rf /tmp/mimixbox/it; }
+CleanUp() { rm -rf ${MIMIXBOX_IT_ROOT}; }
 TestLink() {
-    link /tmp/mimixbox/it/link_src /tmp/mimixbox/it/link_dst
-    cat /tmp/mimixbox/it/link_dst
+    link ${MIMIXBOX_IT_ROOT}/link_src ${MIMIXBOX_IT_ROOT}/link_dst
+    cat ${MIMIXBOX_IT_ROOT}/link_dst
 }

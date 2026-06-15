@@ -39,9 +39,9 @@ End
 Describe 'cat from pipe data'
     Include textutils/cat_test.sh
 
-    It 'show /tmp/mimixbox/it/cat.txt'
+    It 'show the per-run cat.txt path'
         When call TestCatFromPipeData
-        The output should equal "/tmp/mimixbox/it/cat.txt"
+        The output should equal "${MIMIXBOX_IT_ROOT}/cat.txt"
         The status should be success
     End
 End

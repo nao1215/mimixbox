@@ -1,4 +1,4 @@
-export TEST_DIR=/tmp/mimixbox/it/mkfifo
+export TEST_DIR=${MIMIXBOX_IT_ROOT}/mkfifo
 export TEST_FILE1=${TEST_DIR}/1
 export TEST_FILE2=${TEST_DIR}/2
 export TEST_FILE3=${TEST_DIR}/3

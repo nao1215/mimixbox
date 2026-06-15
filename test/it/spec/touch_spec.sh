@@ -4,7 +4,7 @@ Describe 'Touch one file.'
     AfterEach 'Cleanup'
     It 'make touch.txt'
         When call TestTouchOneFile
-        The output should equal '/tmp/mimixbox/it/touch/touch.txt'
+        The output should equal "${MIMIXBOX_IT_ROOT}/touch/touch.txt"
     End
 End
 
@@ -23,10 +23,12 @@ Describe 'Touch three file.'
     BeforeEach 'Setup'
     AfterEach 'Cleanup'
 
-    result() { %text
-        #|/tmp/mimixbox/it/touch/1.txt
-        #|/tmp/mimixbox/it/touch/2.txt
-        #|/tmp/mimixbox/it/touch/3.txt
+    result() {
+        r="${MIMIXBOX_IT_ROOT}"
+        printf '%s\n%s\n%s\n' \
+          "$r/touch/1.txt" \
+          "$r/touch/2.txt" \
+          "$r/touch/3.txt"
     }
 
     It 'make 1.txt 2.txt 3.txt'
@@ -51,9 +53,11 @@ Describe 'Touch three file and not make one file'
     BeforeEach 'Setup'
     AfterEach 'Cleanup'
 
-    result() { %text
-        #|/tmp/mimixbox/it/touch/1.txt
-        #|/tmp/mimixbox/it/touch/3.txt
+    result() {
+        r="${MIMIXBOX_IT_ROOT}"
+        printf '%s\n%s\n' \
+          "$r/touch/1.txt" \
+          "$r/touch/3.txt"
     }
 
     It 'make 1.txt 2.txt 3.txt'

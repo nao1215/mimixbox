@@ -4,7 +4,7 @@ Describe 'Get sha256sum of one file'
     AfterEach 'Cleanup'
     It 'says 5f2864b5833190b07b0b95228682ff5ec43a13a2a3f31514c57d5c92aa3fb2e7'
         When call TestMd5sumOneFile
-        The output should equal '5f2864b5833190b07b0b95228682ff5ec43a13a2a3f31514c57d5c92aa3fb2e7  /tmp/mimixbox/it/sha256sum/1.txt'
+        The output should equal "5f2864b5833190b07b0b95228682ff5ec43a13a2a3f31514c57d5c92aa3fb2e7  ${MIMIXBOX_IT_ROOT}/sha256sum/1.txt"
         The status should be success
     End
 End
@@ -15,7 +15,7 @@ Describe 'Can not get sha256sum of one directory'
     AfterEach 'Cleanup'
     It 'says "It is directory"'
         When call TestMd5sumOneDirectory
-        The error should equal 'sha256sum: /tmp/mimixbox/it/sha256sum: It is directory'
+        The error should equal "sha256sum: ${MIMIXBOX_IT_ROOT}/sha256sum: It is directory"
         The status should be failure
     End
 End
@@ -36,10 +36,12 @@ Describe 'Get sha256sum of three files'
     BeforeEach 'Setup'
     AfterEach 'Cleanup'
 
-    result() { %text
-        #|5f2864b5833190b07b0b95228682ff5ec43a13a2a3f31514c57d5c92aa3fb2e7  /tmp/mimixbox/it/sha256sum/1.txt
-        #|833d8136112b60552a0f83165a2ebffeac4b0c0249480d651ea58b9073ec925b  /tmp/mimixbox/it/sha256sum/2.txt
-        #|8e774f75a5a23c83e6f7d5e92863a2615e0335e06aec18d9c3ec1c5315d1a777  /tmp/mimixbox/it/sha256sum/3.txt
+    result() {
+        r="${MIMIXBOX_IT_ROOT}"
+        printf '%s\n%s\n%s\n' \
+          "5f2864b5833190b07b0b95228682ff5ec43a13a2a3f31514c57d5c92aa3fb2e7  $r/sha256sum/1.txt" \
+          "833d8136112b60552a0f83165a2ebffeac4b0c0249480d651ea58b9073ec925b  $r/sha256sum/2.txt" \
+          "8e774f75a5a23c83e6f7d5e92863a2615e0335e06aec18d9c3ec1c5315d1a777  $r/sha256sum/3.txt"
     }
 
     It 'show checksum of three file'
@@ -54,10 +56,12 @@ Describe 'Check sha256sum with --check option'
     BeforeEach 'Setup'
     AfterEach 'Cleanup'
 
-    result() { %text
-        #|/tmp/mimixbox/it/sha256sum/1.txt: OK
-        #|/tmp/mimixbox/it/sha256sum/2.txt: OK
-        #|/tmp/mimixbox/it/sha256sum/3.txt: OK
+    result() {
+        r="${MIMIXBOX_IT_ROOT}"
+        printf '%s\n%s\n%s\n' \
+          "$r/sha256sum/1.txt: OK" \
+          "$r/sha256sum/2.txt: OK" \
+          "$r/sha256sum/3.txt: OK"
     }
 
     It 'show all files "OK"'
@@ -86,7 +90,7 @@ Describe 'Get sha256sum for pipe data and file at same time'
 
     It 'only show checksum of file.'
         When call TestMd5sumFileAndDataFromPipeAtSameTime
-        The output should equal "5f2864b5833190b07b0b95228682ff5ec43a13a2a3f31514c57d5c92aa3fb2e7  /tmp/mimixbox/it/sha256sum/1.txt"
+        The output should equal "5f2864b5833190b07b0b95228682ff5ec43a13a2a3f31514c57d5c92aa3fb2e7  ${MIMIXBOX_IT_ROOT}/sha256sum/1.txt"
         The status should be success
     End
 End
