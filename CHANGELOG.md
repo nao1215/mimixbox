@@ -7,8 +7,61 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## [Unreleased]
 
+## [0.39.0] - 2026-06-15
+
+This release grows the applet count to 449 by landing eight issues in parallel:
+six BusyBox roadmap batches and two migrations of archived `nao1215` projects.
+The batches add their first slices — the prioritized low-risk / high-value
+commands are fully implemented and tested, while privileged or kernel-facing
+commands are registered as argument-validating, capability-gated applets that
+fail deterministically with documented errors (no silent no-ops). The applet
+registry is regenerated from the package tree, so every new command appears in
+`mimixbox --list` and the README command table.
+
 ### Added
 
+- archival (#244): `bzip2` and the `lzop` / `lzopcat` / `unlzop` family with real
+  round-trip compression (`-c`/`-d`/`-k`/`-f`/`-t`), plus `dpkg-deb` and `dpkg`
+  for read-only local `.deb` inspection (`-c`/`-f`/`-e`/`-I`) and path-safe
+  extraction (`-x`/`-X`); package-database operations are rejected with a
+  documented error.
+- networking client (#246, 28 commands): `ipcalc`; `netcat` (a front over `nc`);
+  the shared read-only `ip` / `ipaddr` / `iplink` / `iproute` / `ipneigh` /
+  `iprule` family; `ifconfig` / `route` / `netstat` / `arp` inspection;
+  `nslookup` / `whois` / `dnsdomainname` over injectable backends; and
+  loopback-tested `telnet` / `tftp` / `ftpget` / `ftpput` / `pscan` /
+  `ether-wake`. `traceroute*` / `ping6` / `arping` / `tc` / `iptunnel` /
+  `nameif` / `slattach` parse and validate, then report capability errors.
+- networking daemons (#247, 26 commands): foreground loopback `httpd`,
+  `tcpsvd` / `udpsvd`, `inetd`, `fakeidentd`, `dnsd`, `tftpd`, `telnetd`,
+  `ftpd`; `dumpleases`; transport-injected `udhcpc` / `udhcpc6` / `udhcpd` /
+  `ntpd`; loopback-TLS `ssl_client` / `ssl_server`; and config-driven `ifup` /
+  `ifdown`. `brctl` / `ifenslave` / `tunctl` / `vconfig` / `zcip` / `nbd-client` /
+  `dhcprelay` / `ifplugd` validate and serialize their plans behind documented
+  capability gates.
+- console-tools (#252, 13 commands): `bbconfig`, `chat`, and `setserial`, plus
+  parse/validate-complete `showkey`, `dumpkmap` / `loadkmap`, `loadfont` /
+  `setfont`, `adjtimex`, `microcom`, `rx`, `conspy`, and `openvt`; keymap and
+  font binary formats are decoded in a shared, fully unit-tested package.
+- embedded (#253, 16 commands): `getfattr` / `setfattr` (real xattr round-trip),
+  `lsscsi`, `makedevs`, `volname`, and `readahead`, plus backend-interfaced
+  `devmem`, `i2cdetect` / `i2cget` / `i2cset` / `i2cdump`, `partprobe`,
+  `raidautorun`, `resume`, `seedrng`, and `watchdog`. Every hardware touchpoint
+  is behind an injectable interface so tests need no real device.
+- compat (#254, 25 commands): module `lsmod` / `modinfo` / `depmod` (plus gated
+  `insmod` / `rmmod` / `modprobe`); SELinux `getenforce` / `selinuxenabled` /
+  `sestatus` / `getsebool` / `matchpathcon` (plus gated `setenforce` / `chcon` /
+  `runcon` / `restorecon` / `setfiles` / `load_policy` / `setsebool`); mail
+  `makemime` / `reformime` / `sendmail` / `popmaildir`; and print `lpr` / `lpq` /
+  `lpd` over a temporary spool directory.
+- shellutils: `leadtime` (#256), migrated from the archived `nao1215/leadtime`,
+  computes GitHub Pull Request lead-time statistics
+  (`leadtime stat --owner=OWNER --repo=REPO`: total, max/min/sum/average/median,
+  with per-PR detail under `--all`). It supports text, `--json`, and `--markdown`
+  output; `--exclude-bot` / `--exclude-pr` / `--exclude-user` filters;
+  `--base-url` for GitHub Enterprise and local test servers; and
+  `LT_GITHUB_ACCESS_TOKEN` with a `GITHUB_TOKEN` fallback. Read-only REST access
+  only.
 - textutils: `sqluv` (#255), a script-friendly SQL viewer and query runner over
   local CSV/TSV/LTSV files and SQLite3 databases, migrated from the archived
   `nao1215/sqluv` project. The headless path
@@ -22,6 +75,15 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
   directory), and a minimal TUI viewer is started when no `--execute` is given.
   HTTPS, S3, and remote RDBMS DSNs are not migrated yet and fail with
   deterministic, documented errors.
+
+### Fixed
+
+- test: stabilized the new loopback networking tests — drain the client before
+  closing the `netcat` echo server to avoid an RST, synchronize the `tftp` put
+  test on server completion, and guard the `httpd` test's shared output buffer
+  for `-race` — and switched the `dpkg` end-to-end specs to a committed `.deb`
+  fixture under `test/it/testdata/`, since the isolated E2E `PATH` resolves
+  `tar`/`ar` to the MimixBox applets.
 
 ## [0.38.0] - 2026-06-11
 
