@@ -19,7 +19,7 @@ MimixBox packs many Unix commands into a single binary, like BusyBox. Unlike Bus
 The list below is generated from the registered applets by `make command-list`, so it never drifts from the binary. You can also run `mimixbox --list` to print it on the terminal.
 
 <!-- COMMAND_LIST_START -->
-There are 450 commands. Run `mimixbox --list` to see them on the terminal.
+There are 451 commands. Run `mimixbox --list` to see them on the terminal.
 
 | Command | Description |
 |:--|:--|
@@ -66,6 +66,7 @@ There are 450 commands. Run `mimixbox --list` to see them on the terminal.
 | chpst | Run a program with a changed process state |
 | chroot | Run command or interactive shell with special root directory |
 | chrt | Get or set a process's real-time scheduling attributes |
+| chsh | Change a user's login shell |
 | chvt | Switch to a virtual terminal |
 | cksum | Print CRC checksum and byte count of each file |
 | clear | Clear terminal |
