@@ -139,8 +139,15 @@ Describe 'Copy directory to Root'
     AfterEach 'Cleanup'
 
     It 'can not copy directory because do not have the authority'
+        # A privileged caller (root in many CI containers) really can create /cp,
+        # which would both pass spuriously and pollute the host root, so skip.
+        Skip if 'running as root can write to /' CpRunningAsRoot
         When call TestCopyDirectoryAtRoot
-        The error should equal "cp: mkdir /cp: permission denied"
+        # The exact errno string for "can't create /cp" is environment dependent:
+        # a normal host reports "permission denied", while a read-only-root
+        # sandbox reports "read-only file system". Assert the failure class
+        # (cp could not mkdir /cp) instead of one brittle errno spelling.
+        The error should match pattern "cp: mkdir /cp: *"
         The status should be failure
     End
 End

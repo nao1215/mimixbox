@@ -71,3 +71,10 @@ TestCopyDirctoryWithoutRecursiveOptionStatus() {
 TestCopyDirectoryAtRoot() {
     cp -r ${TEST_DIR} /
 }
+
+# CpRunningAsRoot is a Skip-predicate: it succeeds (status 0) when the suite is
+# running as root, in which case writing to / is allowed and the
+# "cannot copy to root" contract no longer holds.
+CpRunningAsRoot() {
+    [ "$(id -u)" = "0" ]
+}
