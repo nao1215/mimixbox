@@ -1,5 +1,25 @@
 Setup() { export TEST_DIR=${MIMIXBOX_IT_ROOT}; mkdir -p ${TEST_DIR}; }
 CleanUp() { rm -rf ${MIMIXBOX_IT_ROOT}; }
+
+# NcSocketsForbidden is a Skip-predicate: it succeeds (status 0) when the host
+# refuses to open the loopback listen socket the test needs. It briefly starts a
+# listener and inspects its stderr for a capability error (e.g. "operation not
+# permitted" / "permission denied"). It deliberately returns failure (sockets
+# are usable) on any ambiguous result so a real nc regression is never masked.
+NcSocketsForbidden() {
+    probe_dir=${MIMIXBOX_IT_ROOT:-${TMPDIR:-/tmp}}
+    mkdir -p "$probe_dir" 2>/dev/null
+    probe_err="$probe_dir/nc_probe.err"
+    : > "$probe_err"
+
+    (nc -l -p 18639 >/dev/null 2>"$probe_err") &
+    lpid=$!
+    sleep 0.3
+    kill "$lpid" 2>/dev/null
+    wait "$lpid" 2>/dev/null
+
+    grep -qiE 'operation not permitted|permission denied|not permitted|socket:' "$probe_err"
+}
 TestNcLoopback() {
     recv=${MIMIXBOX_IT_ROOT}/nc_recv.txt
     : > "$recv"
