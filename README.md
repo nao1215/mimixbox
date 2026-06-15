@@ -19,7 +19,7 @@ MimixBox packs many Unix commands into a single binary, like BusyBox. Unlike Bus
 The list below is generated from the registered applets by `make command-list`, so it never drifts from the binary. You can also run `mimixbox --list` to print it on the terminal.
 
 <!-- COMMAND_LIST_START -->
-There are 360 commands. Run `mimixbox --list` to see them on the terminal.
+There are 366 commands. Run `mimixbox --list` to see them on the terminal.
 
 | Command | Description |
 |:--|:--|
@@ -48,6 +48,7 @@ There are 360 commands. Run `mimixbox --list` to see them on the terminal.
 | bunzip2 | Decompress bzip2 (.bz2) files |
 | busybox | BusyBox-style multi-call front-end for MimixBox applets |
 | bzcat | Decompress bz2 data to standard output |
+| bzip2 | Compress or decompress files (.bz2) |
 | cal | Display a calendar |
 | cat | Concatenate files and print on the standard output |
 | chattr | Change ext2/ext4 file attributes |
@@ -88,6 +89,8 @@ There are 360 commands. Run `mimixbox --list` to see them on the terminal.
 | dirname | Print only directory path |
 | dmesg | Print or control the kernel ring buffer |
 | dos2unix | Change CRLF to LF |
+| dpkg | Inspect and unpack local Debian .deb files |
+| dpkg-deb | Inspect and extract Debian .deb archives |
 | du | Estimate file space usage |
 | echo | Display a line of text |
 | ed | A line-oriented text editor |
@@ -184,6 +187,8 @@ There are 360 commands. Run `mimixbox --list` to see them on the terminal.
 | lsusb | List USB devices |
 | lzcat | Decompress lzma data to standard output |
 | lzma | Compress or decompress files (lzma) |
+| lzop | Compress or decompress files (.lzo) |
+| lzopcat | Decompress lzop (.lzo) data to standard output |
 | makemime | Create a MIME-encoded message from files |
 | man | Display a manual page |
 | matchpathcon | Show the default file context for a path |
@@ -352,6 +357,7 @@ There are 360 commands. Run `mimixbox --list` to see them on the terminal.
 | unix2dos | Change LF to CRLF |
 | unlink | Remove a single file by calling the unlink function |
 | unlzma | Decompress lzma files |
+| unlzop | Decompress lzop (.lzo) files |
 | unshadow | Combine passwd and shadow files for password auditing |
 | unshare | Run a program with unshared namespaces |
 | unxz | Decompress xz files |

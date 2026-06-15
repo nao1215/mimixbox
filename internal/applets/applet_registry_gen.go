@@ -7,10 +7,13 @@ package applets
 import (
 	ap_archival_ar "github.com/nao1215/mimixbox/internal/applets/archival/ar"
 	ap_archival_bunzip2 "github.com/nao1215/mimixbox/internal/applets/archival/bunzip2"
+	ap_archival_bzip2comp "github.com/nao1215/mimixbox/internal/applets/archival/bzip2comp"
 	ap_archival_compress "github.com/nao1215/mimixbox/internal/applets/archival/compress"
 	ap_archival_cpio "github.com/nao1215/mimixbox/internal/applets/archival/cpio"
+	ap_archival_debpkg "github.com/nao1215/mimixbox/internal/applets/archival/debpkg"
 	ap_archival_gunzip "github.com/nao1215/mimixbox/internal/applets/archival/gunzip"
 	ap_archival_gzip "github.com/nao1215/mimixbox/internal/applets/archival/gzip"
+	ap_archival_lzopcomp "github.com/nao1215/mimixbox/internal/applets/archival/lzopcomp"
 	ap_archival_pipeprogress "github.com/nao1215/mimixbox/internal/applets/archival/pipeprogress"
 	ap_archival_rpm "github.com/nao1215/mimixbox/internal/applets/archival/rpm"
 	ap_archival_rpm2cpio "github.com/nao1215/mimixbox/internal/applets/archival/rpm2cpio"
@@ -330,13 +333,19 @@ import (
 // init populates the applet table. Each command is registered under its own
 // Name(), so the key can never drift from the command it dispatches to.
 func init() {
-	Applets = make(map[string]Applet, 360)
+	Applets = make(map[string]Applet, 366)
 	register(ap_archival_ar.New())
 	register(ap_archival_bunzip2.New())
+	register(ap_archival_bzip2comp.New())
 	register(ap_archival_compress.New())
 	register(ap_archival_cpio.New())
+	register(ap_archival_debpkg.NewDpkg())
+	register(ap_archival_debpkg.NewDpkgDeb())
 	register(ap_archival_gunzip.New())
 	register(ap_archival_gzip.New())
+	register(ap_archival_lzopcomp.NewLzop())
+	register(ap_archival_lzopcomp.NewLzopcat())
+	register(ap_archival_lzopcomp.NewUnlzop())
 	register(ap_archival_pipeprogress.New())
 	register(ap_archival_rpm.New())
 	register(ap_archival_rpm2cpio.New())
