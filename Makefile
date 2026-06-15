@@ -23,6 +23,7 @@ clean: ## Clean project
 	-rm cover.*
 	-rm -rf /tmp/mimixbox/ut/*
 	-rm -rf release
+	-rm -rf dist
 	-rm -rf licenses
 	-rm -rf $(E2E_BIN_DIR)
 
@@ -34,11 +35,20 @@ install: ## Install mimixbox (with symbolic links) on your system
 	$(INSTALLER)
 
 full-install: ## Install mimixbox and create symbolic links for every applet
+	# Intentionally does NOT depend on the "build" target: the installer is
+	# frequently invoked under sudo (e.g. the Dockerfile runs
+	# "make build && sudo make full-install"), and a sudo-stripped PATH may not
+	# expose the Go toolchain. Run "make build" first; the installer also has a
+	# Git-checkout build fallback when the binary is absent.
 	-$(INSTALLER)
-	mimixbox --full-install /usr/local/bin
+	# Operate on the exact binary just installed by the installer (not a PATH
+	# lookup of whatever "mimixbox" the host happens to provide), so the applet
+	# symlinks are guaranteed to target the freshly built binary.
+	/usr/local/bin/$(APP) --full-install /usr/local/bin
 
 remove: ## Remove mimixbox-symbolic link
-	mimixbox --remove /usr/local/bin
+	# Use the installed binary by absolute path rather than a PATH lookup.
+	/usr/local/bin/$(APP) --remove /usr/local/bin
 
 test: pre_ut  ## Run unit tests with coverage (writes cover.out / cover.html)
 	@go test -cover ./... -coverpkg=./... -coverprofile=cover.out; status=$$?; \
@@ -77,7 +87,16 @@ release: ## Make release files.
 	$(RELEASE)
 
 licenses: ## Get licenses for dependent libraries
-	-@go-licenses save ./cmd/mimixbox --force --save_path "licenses/"
+	# Generate dependency-license output. If go-licenses is installed, a failure
+	# is fatal so broken release artifacts (missing/partial licenses) are caught.
+	# If the tool is absent, warn and continue so developers without it can still
+	# build; release builds run go-licenses in CI/GoReleaser where it is present.
+	@if command -v go-licenses >/dev/null 2>&1; then \
+		go-licenses save ./cmd/mimixbox --force --save_path "licenses/"; \
+	else \
+		echo "WARNING: go-licenses not found; skipping dependency-license generation."; \
+		echo "         Install it with: go install github.com/google/go-licenses@latest"; \
+	fi
 
 pre_ut:
 	@echo "Make files for test at test directory."
