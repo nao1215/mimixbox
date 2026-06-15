@@ -29,32 +29,10 @@ func IsRootUser() bool {
 	return os.Geteuid() == 0 && os.Getuid() == 0
 }
 
-/* TODO: See chsh command.
-func HasPamModule() bool {
-	return IsFile("/etc/pam.conf")
-}
-
-func AuthByPasswordWithPam(userName string) error {
-	// Stopping logging is not security measures.
-	// There is a problem that the log during authentication cannot be stopped,
-	// and the log is temporarily disabled in the workaround.
-	// log.SetOutput(ioutil.Discard)
-
-	fmt.Fprintf(os.Stdout, "Enter password: ")
-	passwd, err := terminal.ReadPassword(syscall.Stdin)
-	if err != nil {
-		return err
-	}
-	fmt.Fprintln(os.Stdout, "")
-
-	reader := bytes.NewReader(passwd)
-	key, err := crypto.NewKeyFromReader(reader)
-	if err != nil {
-		return err
-	}
-	defer key.Wipe()
-
-	err = pam.IsUserLoginToken(userName, key, true)
-	return err
-}
-*/
+// Authentication model: MimixBox does not link against PAM. Applets that
+// modify the user databases (for example chsh and chpasswd) authorize the
+// caller through filesystem permissions on /etc/passwd and /etc/shadow rather
+// than by prompting for a password. On a typical Linux host that means such
+// operations require privilege (root or the file owner); on platforms without
+// these databases the applets fail explicitly. The previously commented-out
+// PAM helper was removed because that path was never implemented.
