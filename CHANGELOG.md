@@ -7,6 +7,22 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## [Unreleased]
 
+### Added
+
+- textutils: `sqluv` (#255), a script-friendly SQL viewer and query runner over
+  local CSV/TSV/LTSV files and SQLite3 databases, migrated from the archived
+  `nao1215/sqluv` project. The headless path
+  (`sqluv --execute 'SELECT ...' SOURCE --output=table|csv|tsv|json`) is fully
+  implemented and CI-tested: it loads each source into an in-memory SQLite
+  database (one table per delimited file, plus the tables of any SQLite source),
+  runs the SQL once, and prints the result. Transparently compressed inputs
+  (`.gz`, `.bz2`, `.xz`, `.zst`) are supported. Database access is read-only by
+  default (`--read-only`), query history is written to a configurable file
+  (`--history-file`, defaulting to a temp path so it never touches the real home
+  directory), and a minimal TUI viewer is started when no `--execute` is given.
+  HTTPS, S3, and remote RDBMS DSNs are not migrated yet and fail with
+  deterministic, documented errors.
+
 ## [0.38.0] - 2026-06-11
 
 This release grows the applet count to 297 by completing three more BusyBox
