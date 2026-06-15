@@ -10,52 +10,35 @@ TestUnlzopRoundTrip() {
     printf 'roundtrip-unlzop\n' | lzop | unlzop -c
 }
 
-# build_deb DIR creates a minimal hello.deb in DIR using mimixbox applets and
-# prints its path.
-build_deb() {
-    d="$1"
-    mkdir -p "$d/work/usr/bin"
-    printf '#!/bin/sh\necho hi\n' > "$d/work/usr/bin/hello"
-    mkdir -p "$d/ctrl"
-    printf 'Package: hello\nVersion: 1.0\nArchitecture: all\nDescription: test\n' > "$d/ctrl/control"
-
-    ( cd "$d/ctrl" && tar czf "$d/control.tar.gz" control )
-    ( cd "$d/work" && tar czf "$d/data.tar.gz" usr )
-    printf '2.0\n' > "$d/debian-binary"
-    ( cd "$d" && ar rc hello.deb debian-binary control.tar.gz data.tar.gz )
-    printf '%s/hello.deb\n' "$d"
+# Fixture: test/it/testdata/hello.deb (a minimal Debian package, format 2.0),
+# package "hello" version 1.0 containing /usr/bin/hello. It is a committed
+# binary fixture rather than built at runtime, because under the E2E PATH
+# `tar`/`ar` resolve to the MimixBox applets and cannot assemble a .deb with the
+# dashless flag bundles GNU tooling accepts.
+deb_fixture() {
+    echo "$(cd "$(dirname "${BASH_SOURCE[0]}")/.." && pwd)/testdata/hello.deb"
 }
 
 TestDpkgDebContents() {
-    d=$(mktemp -d)
-    deb=$(build_deb "$d")
-    dpkg-deb -c "$deb" | grep -q 'usr/bin/hello' && printf 'has-hello\n'
-    rm -rf "$d"
+    dpkg-deb -c "$(deb_fixture)" | grep -q 'usr/bin/hello' && printf 'has-hello\n'
 }
 
 TestDpkgDebField() {
-    d=$(mktemp -d)
-    deb=$(build_deb "$d")
-    dpkg-deb -f "$deb" Package
-    rm -rf "$d"
+    dpkg-deb -f "$(deb_fixture)" Package
 }
 
 TestDpkgExtract() {
     d=$(mktemp -d)
-    deb=$(build_deb "$d")
     out="$d/out"
-    dpkg -x "$deb" "$out"
+    dpkg -x "$(deb_fixture)" "$out"
     test -f "$out/usr/bin/hello" && printf 'extracted\n'
     rm -rf "$d"
 }
 
 TestDpkgUnsupported() {
-    d=$(mktemp -d)
-    deb=$(build_deb "$d")
-    if dpkg -i "$deb" 2>/dev/null; then
+    if dpkg -i "$(deb_fixture)" 2>/dev/null; then
         printf 'unexpected-success\n'
     else
         printf 'rejected\n'
     fi
-    rm -rf "$d"
 }
