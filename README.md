@@ -152,6 +152,7 @@ There are 334 commands. Run `mimixbox --list` to see them on the terminal.
 | killall5 | Send a signal to all processes |
 | klogd | Forward kernel messages to the system log |
 | last | Show a listing of last logged-in users |
+| leadtime | Calculate GitHub PR lead time statistics |
 | less | Page through text one screen at a time |
 | lifegame | Life game (Conway's Game of Life) |
 | link | Create a hard link to a file |
