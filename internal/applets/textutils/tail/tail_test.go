@@ -49,6 +49,37 @@ func TestRunStdin(t *testing.T) {
 	}
 }
 
+// TestRunZeroTerminated checks that -z/--zero-terminated treats NUL as the
+// record delimiter, counts NUL-delimited records for -n, and preserves any
+// newlines embedded within a record.
+func TestRunZeroTerminated(t *testing.T) {
+	t.Parallel()
+	tests := []struct {
+		name  string
+		stdin string
+		args  []string
+		want  string
+	}{
+		{"z last record", "a\nb\x00c\nd\x00", []string{"-z", "-n", "1"}, "c\nd\x00"},
+		{"z long flag", "a\nb\x00c\nd\x00", []string{"--zero-terminated", "-n", "1"}, "c\nd\x00"},
+		{"z two records", "a\nb\x00c\nd\x00", []string{"-z", "-n", "2"}, "a\nb\x00c\nd\x00"},
+		{"z bytes unaffected", "a\nb\x00c\nd\x00", []string{"-z", "-c", "3"}, "\nd\x00"},
+	}
+	for _, tt := range tests {
+		tt := tt
+		t.Run(tt.name, func(t *testing.T) {
+			t.Parallel()
+			out, _, err := run(t, tt.stdin, tt.args...)
+			if err != nil {
+				t.Fatalf("Run error = %v", err)
+			}
+			if out != tt.want {
+				t.Errorf("out = %q, want %q", out, tt.want)
+			}
+		})
+	}
+}
+
 func TestRunMultipleFilesHaveHeaders(t *testing.T) {
 	t.Parallel()
 	dir := t.TempDir()

@@ -26,11 +26,12 @@ func (c *Command) Name() string { return "cat" }
 func (c *Command) Synopsis() string { return "Concatenate files and print on the standard output" }
 
 type options struct {
-	number         bool
-	numberNonBlank bool
-	squeeze        bool
-	showEnds       bool
-	showTabs       bool
+	number          bool
+	numberNonBlank  bool
+	squeeze         bool
+	showEnds        bool
+	showTabs        bool
+	showNonprinting bool
 }
 
 // Run executes cat.
@@ -51,18 +52,22 @@ func (c *Command) Run(_ context.Context, stdio command.IO, args []string) error 
 	squeeze := fs.BoolP("squeeze-blank", "s", false, "suppress repeated empty output lines")
 	showEnds := fs.BoolP("show-ends", "E", false, "display $ at end of each line")
 	showTabs := fs.BoolP("show-tabs", "T", false, "display TAB characters as ^I")
+	showNonprinting := fs.BoolP("show-nonprinting", "v", false, "use ^ and M- notation, except for LFD and TAB")
+	showAll := fs.BoolP("show-all", "A", false, "equivalent to -vET")
 
 	proceed, err := fs.Parse(stdio, args)
 	if err != nil || !proceed {
 		return err
 	}
 
+	// -A is equivalent to -vET (show-nonprinting + show-ends + show-tabs).
 	opts := options{
-		number:         *number,
-		numberNonBlank: *numberNonBlank,
-		squeeze:        *squeeze,
-		showEnds:       *showEnds,
-		showTabs:       *showTabs,
+		number:          *number,
+		numberNonBlank:  *numberNonBlank,
+		squeeze:         *squeeze,
+		showEnds:        *showEnds || *showAll,
+		showTabs:        *showTabs || *showAll,
+		showNonprinting: *showNonprinting || *showAll,
 	}
 
 	files := fs.Args()
@@ -94,9 +99,9 @@ func (c *Command) Run(_ context.Context, stdio command.IO, args []string) error 
 
 	src := io.Reader(io.MultiReader(readers...))
 
-	// Apply -s/-T/-E as a streaming filter before numbering, so the line counter
-	// still sees the squeezed lines (matching the previous behavior).
-	if opts.squeeze || opts.showTabs || opts.showEnds {
+	// Apply -s/-T/-E/-v as a streaming filter before numbering, so the line
+	// counter still sees the squeezed lines (matching the previous behavior).
+	if opts.squeeze || opts.showTabs || opts.showEnds || opts.showNonprinting {
 		raw := src // capture before reassigning src, or the goroutine would read the pipe itself
 		pr, pw := io.Pipe()
 		go func() { _ = pw.CloseWithError(renderStream(pw, raw, opts)) }()
@@ -130,6 +135,12 @@ func renderStream(w io.Writer, r io.Reader, opts options) error {
 				prevBlank = blank
 			}
 			if emit {
+				// -v renders non-printing bytes with caret/M- notation. It
+				// deliberately leaves TAB untouched (only -T converts TAB to
+				// ^I) and never touches the trailing newline.
+				if opts.showNonprinting {
+					body = showNonprinting(body)
+				}
 				if opts.showTabs {
 					body = strings.ReplaceAll(body, "\t", "^I")
 				}
@@ -148,6 +159,49 @@ func renderStream(w io.Writer, r io.Reader, opts options) error {
 			return err
 		}
 	}
+}
+
+// showNonprinting renders non-printing bytes the way GNU cat -v does:
+//
+//   - Control characters 0x00-0x1F (except TAB 0x09 and LF 0x0A, which GNU cat
+//     leaves alone for -v) become caret notation: ^@ ... ^_ (^X = 0x40+byte).
+//   - DEL (0x7F) becomes ^?.
+//   - Bytes 0x80-0xFF get the M- prefix, followed by the caret/printable form
+//     of the low 7 bits: 0x80-0x9F -> M-^@ ... M-^_, 0xA0-0xFE -> M-<char>,
+//     0xFF -> M-^?.
+//
+// TAB and LF are intentionally passed through untouched; only -T converts TAB.
+// Input is processed byte by byte (not rune by rune), matching GNU semantics.
+func showNonprinting(s string) string {
+	var b strings.Builder
+	b.Grow(len(s))
+	for i := 0; i < len(s); i++ {
+		c := s[i]
+		switch {
+		case c == '\t' || c == '\n':
+			b.WriteByte(c)
+		case c < 0x20: // other C0 control chars
+			b.WriteByte('^')
+			b.WriteByte(c + 0x40)
+		case c < 0x7f: // printable ASCII
+			b.WriteByte(c)
+		case c == 0x7f: // DEL
+			b.WriteString("^?")
+		default: // c >= 0x80: meta (high-bit) byte
+			b.WriteString("M-")
+			m := c & 0x7f
+			switch {
+			case m < 0x20:
+				b.WriteByte('^')
+				b.WriteByte(m + 0x40)
+			case m == 0x7f:
+				b.WriteString("^?")
+			default:
+				b.WriteByte(m)
+			}
+		}
+	}
+	return b.String()
 }
 
 // writeStream writes src to w, numbering lines when -n/-b is set (streaming via
