@@ -54,6 +54,7 @@ func (c *Command) Run(_ context.Context, stdio command.IO, args []string) error 
 			{Command: "lsblk", Explain: "List the block devices."},
 			{Command: "lsblk -a", Explain: "Include empty devices."},
 		},
+		ExitStatus: "0  the block devices were listed successfully.\n1  the block device information could not be read.",
 	})
 	all := fs.BoolP("all", "a", false, "also list empty devices")
 

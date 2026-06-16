@@ -113,3 +113,15 @@ func TestHumanSize(t *testing.T) {
 		}
 	}
 }
+
+func TestHelpExitStatus(t *testing.T) {
+	t.Parallel()
+	out := &bytes.Buffer{}
+	io := command.IO{In: strings.NewReader(""), Out: out, Err: &bytes.Buffer{}}
+	if err := New().Run(context.Background(), io, []string{"--help"}); err != nil {
+		t.Fatalf("--help Run error = %v", err)
+	}
+	if !strings.Contains(out.String(), "Exit status:") {
+		t.Errorf("--help missing exit status section = %q", out.String())
+	}
+}

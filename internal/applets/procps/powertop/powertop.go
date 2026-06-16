@@ -40,6 +40,7 @@ func (c *Command) Run(_ context.Context, stdio command.IO, args []string) error 
 		Notes: []string{
 			"The interactive power analysis and tunables of real powertop are not implemented.",
 		},
+		ExitStatus: "0  success.\n1  an error occurred (e.g. /sys/class/power_supply could not be read or an argument was invalid).",
 	})
 	proceed, err := fs.Parse(stdio, args)
 	if err != nil || !proceed {

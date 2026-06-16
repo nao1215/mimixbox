@@ -77,4 +77,7 @@ func TestHelp(t *testing.T) {
 	if !strings.Contains(out.String(), "Usage: bash") {
 		t.Errorf("--help out = %q", out.String())
 	}
+	if !strings.Contains(out.String(), "Exit status:") {
+		t.Errorf("--help out missing exit status section = %q", out.String())
+	}
 }

@@ -47,6 +47,7 @@ func (c *Command) Run(_ context.Context, stdio command.IO, args []string) error 
 		Examples: []command.Example{
 			{Command: "users", Explain: "List the currently logged-in users."},
 		},
+		ExitStatus: "0  success.\n1  an error occurred.",
 		Notes: []string{
 			"Reads the Linux utmp format; a login appears once per session.",
 		},

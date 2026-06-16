@@ -47,6 +47,7 @@ func (c *Command) Run(_ context.Context, stdio command.IO, args []string) error 
 		Examples: []command.Example{
 			{Command: "lsusb", Explain: "List the USB devices."},
 		},
+		ExitStatus: "0  the USB devices were listed successfully.\n1  the USB device information could not be read.",
 	})
 	proceed, err := fs.Parse(stdio, args)
 	if err != nil || !proceed {

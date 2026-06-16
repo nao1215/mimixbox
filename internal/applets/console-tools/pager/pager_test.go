@@ -70,3 +70,23 @@ func TestIsTerminalFalseForBuffer(t *testing.T) {
 		t.Errorf("a bytes.Buffer must not be reported as a terminal")
 	}
 }
+
+func TestHelpExitStatus(t *testing.T) {
+	t.Parallel()
+	for _, tc := range []struct {
+		name string
+		cmd  *Command
+	}{
+		{"more", NewMore()},
+		{"less", NewLess()},
+	} {
+		out := &bytes.Buffer{}
+		io := command.IO{In: strings.NewReader(""), Out: out, Err: &bytes.Buffer{}}
+		if err := tc.cmd.Run(context.Background(), io, []string{"--help"}); err != nil {
+			t.Fatalf("%s --help err = %v", tc.name, err)
+		}
+		if !strings.Contains(out.String(), "Exit status:") {
+			t.Errorf("%s --help missing Exit status section = %q", tc.name, out.String())
+		}
+	}
+}

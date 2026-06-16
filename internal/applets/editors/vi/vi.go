@@ -45,6 +45,7 @@ func (c *Command) Run(_ context.Context, stdio command.IO, args []string) error 
 			"Edits: i a A o O insert, x delete char, dd delete line, yy/p/P yank & paste, u undo (counts apply, e.g. 2x, 3dd).",
 			"Search: /pattern and ?pattern, then n / N for the next/previous match. Ex commands: :w :q :q! :wq and ZZ.",
 		},
+		ExitStatus: "0  the file was edited and written without error.\n1  an error occurred.",
 	})
 	proceed, err := fs.Parse(stdio, args)
 	if err != nil || !proceed {

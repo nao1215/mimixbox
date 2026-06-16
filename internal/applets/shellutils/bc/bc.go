@@ -52,6 +52,7 @@ func (c *Command) Run(_ context.Context, stdio command.IO, args []string) error 
 			{Command: "echo '2 + 3 * 4' | bc", Explain: "Print 14."},
 			{Command: "echo 'scale=2; 7/3' | bc", Explain: "Print 2.33."},
 		},
+		ExitStatus: "0  success.\n1  a syntax error in the expression, or a file could not be read.",
 		Notes: []string{
 			"Supported: + - * / % ^, parentheses, unary minus, variables, and the scale precision variable.",
 		},

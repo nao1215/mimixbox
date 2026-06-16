@@ -71,4 +71,12 @@ func TestHelp(t *testing.T) {
 	if !strings.Contains(out, "Usage: hexdump") {
 		t.Errorf("--help = %q", out)
 	}
+	if !strings.Contains(out, "Exit status:") {
+		t.Errorf("--help missing exit status section = %q", out)
+	}
+	// hd shares the parameterized command; its help also documents exit status.
+	hdOut, _ := run(t, NewHd(), "", "--help")
+	if !strings.Contains(hdOut, "Exit status:") {
+		t.Errorf("hd --help missing exit status section = %q", hdOut)
+	}
 }

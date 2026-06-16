@@ -43,6 +43,7 @@ func (c *Command) Run(_ context.Context, stdio command.IO, args []string) error 
 			{Command: c.Name() + " file.txt", Explain: "Page through file.txt."},
 			{Command: "ls -l | " + c.Name(), Explain: "Page command output on a terminal, or pass it through in a pipe."},
 		},
+		ExitStatus: "0  success.\n1  an error occurred.",
 		Notes: []string{
 			"Paging keys: Enter advances one screen, a line starting with q quits. Input is line-buffered, so keys take effect on Enter; raw-mode single-key paging and backward scrolling are not implemented.",
 		},

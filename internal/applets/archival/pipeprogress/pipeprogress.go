@@ -35,6 +35,7 @@ func (c *Command) Run(_ context.Context, stdio command.IO, args []string) error 
 		Examples: []command.Example{
 			{Command: "tar c dir | pipe_progress | ssh host 'cat > backup.tar'", Explain: "Show progress while streaming."},
 		},
+		ExitStatus: "0  success.\n1  an error occurred.",
 	})
 	proceed, err := fs.Parse(stdio, args)
 	if err != nil || !proceed {

@@ -42,6 +42,7 @@ func (c *Command) Run(_ context.Context, stdio command.IO, args []string) error 
 			{Command: "ipcs", Explain: "Show all IPC objects."},
 			{Command: "ipcs -m", Explain: "Show only shared memory segments."},
 		},
+		ExitStatus: "0  the IPC status was reported successfully.\n1  an error occurred.",
 	})
 	queues := fs.BoolP("queues", "q", false, "message queues")
 	shmem := fs.BoolP("shmems", "m", false, "shared memory segments")

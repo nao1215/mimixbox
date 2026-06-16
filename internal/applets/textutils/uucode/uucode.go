@@ -54,6 +54,7 @@ func runUuencode(stdio command.IO, args []string) error {
 			{Command: "uuencode data.bin data.bin > data.uue", Explain: "Encode data.bin."},
 			{Command: "uuencode -m img.png img.png", Explain: "Encode using base64."},
 		},
+		ExitStatus: "0  success.\n1  an error occurred.",
 	})
 	useBase64 := fs.BoolP("base64", "m", false, "use base64 encoding")
 	proceed, err := fs.Parse(stdio, args)
@@ -150,6 +151,7 @@ func runUudecode(stdio command.IO, args []string) error {
 			{Command: "uudecode data.uue", Explain: "Recreate the encoded file."},
 			{Command: "uudecode -o - data.uue", Explain: "Write the decoded bytes to standard output."},
 		},
+		ExitStatus: "0  success.\n1  an error occurred.",
 	})
 	output := fs.StringP("output-file", "o", "", "write to OUTPUT (- for standard output)")
 	proceed, err := fs.Parse(stdio, args)

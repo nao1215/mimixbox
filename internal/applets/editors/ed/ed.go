@@ -49,6 +49,7 @@ func (c *Command) Run(_ context.Context, stdio command.IO, args []string) error 
 			{Command: "printf '1,$p\\nq\\n' | ed file.txt", Explain: "Print the whole file."},
 			{Command: "printf '2a\\nnew line\\n.\\nw\\nq\\n' | ed file.txt", Explain: "Insert a line after line 2 and save."},
 		},
+		ExitStatus: "0  the file was edited and written without error.\n1  an error occurred.",
 	})
 	proceed, err := fs.Parse(stdio, args)
 	if err != nil || !proceed {
