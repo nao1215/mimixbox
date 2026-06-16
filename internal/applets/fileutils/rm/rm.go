@@ -7,7 +7,9 @@ import (
 	"context"
 	"fmt"
 	"os"
+	"path/filepath"
 	"strings"
+	"syscall"
 
 	"github.com/nao1215/mimixbox/internal/command"
 )
@@ -25,11 +27,13 @@ func (c *Command) Name() string { return "rm" }
 func (c *Command) Synopsis() string { return "Remove file(s) or directory(s)" }
 
 type options struct {
-	recursive   bool
-	force       bool
-	verbose     bool
-	dir         bool
-	interactive bool
+	recursive     bool
+	force         bool
+	verbose       bool
+	dir           bool
+	interactive   bool
+	preserveRoot  bool // refuse to recurse on "/" (GNU default ON)
+	oneFileSystem bool // skip subdirectories on a different filesystem
 }
 
 // Run executes rm.
@@ -54,6 +58,10 @@ func (c *Command) Run(_ context.Context, stdio command.IO, args []string) error 
 	verbose := fs.BoolP("verbose", "v", false, "explain what is being done")
 	dir := fs.BoolP("dir", "d", false, "remove empty directories")
 	interactive := fs.BoolP("interactive", "i", false, "prompt before every removal")
+	// --preserve-root is the GNU default: refuse to recursively operate on "/".
+	preserveRoot := fs.Bool("preserve-root", true, "do not remove '/' recursively (default)")
+	noPreserveRoot := fs.Bool("no-preserve-root", false, "do not treat '/' specially")
+	oneFileSystem := fs.Bool("one-file-system", false, "when removing a hierarchy recursively, skip any directory that is on a file system different from that of the corresponding command line argument")
 
 	proceed, err := fs.Parse(stdio, args)
 	if err != nil || !proceed {
@@ -61,11 +69,13 @@ func (c *Command) Run(_ context.Context, stdio command.IO, args []string) error 
 	}
 
 	opts := options{
-		recursive:   *recursive || *recursiveUpper,
-		force:       *force,
-		verbose:     *verbose,
-		dir:         *dir,
-		interactive: *interactive,
+		recursive:     *recursive || *recursiveUpper,
+		force:         *force,
+		verbose:       *verbose,
+		dir:           *dir,
+		interactive:   *interactive,
+		preserveRoot:  *preserveRoot && !*noPreserveRoot,
+		oneFileSystem: *oneFileSystem,
 	}
 
 	paths := fs.Args()
@@ -112,12 +122,28 @@ func remove(stdio command.IO, in *bufio.Reader, path string, opts options) error
 				return fmt.Errorf("can't remove %s: It's directory", path)
 			}
 		}
+		// --preserve-root: refuse to recursively operate on "/".
+		if opts.recursive && opts.preserveRoot && isRootPath(path) {
+			_, _ = fmt.Fprintf(stdio.Err, "rm: it is dangerous to operate recursively on '/'\n")
+			_, _ = fmt.Fprintf(stdio.Err, "rm: use --no-preserve-root to override this failsafe\n")
+			return command.SilentFailure()
+		}
 		if !confirm(stdio, in, path, opts) {
 			return nil
 		}
 		if opts.recursive {
-			if err := os.RemoveAll(path); err != nil {
-				return err
+			if opts.oneFileSystem {
+				dev, derr := deviceOf(path)
+				if derr != nil {
+					return derr
+				}
+				if err := removeTree(path, dev); err != nil {
+					return err
+				}
+			} else {
+				if err := os.RemoveAll(path); err != nil {
+					return err
+				}
 			}
 		} else {
 			if err := os.Remove(path); err != nil {
@@ -160,4 +186,82 @@ func report(stdio command.IO, path string, opts options) {
 	if opts.verbose {
 		_, _ = fmt.Fprintf(stdio.Out, "removed '%s'\n", path)
 	}
+}
+
+// isRootPath reports whether path resolves to the filesystem root "/". It
+// cleans the operand (so ".", trailing slashes and "/../" are handled) and,
+// when possible, also resolves it to an absolute path so that operands such as
+// "/." or symlinks pointing at "/" are caught by --preserve-root.
+func isRootPath(path string) bool {
+	if filepath.Clean(path) == "/" {
+		return true
+	}
+	abs, err := filepath.Abs(path)
+	if err != nil {
+		return false
+	}
+	return filepath.Clean(abs) == "/"
+}
+
+// deviceOf returns the filesystem device id (st_dev) for path. It is used by
+// --one-file-system to detect when recursion would cross a mount point.
+func deviceOf(path string) (uint64, error) {
+	info, err := os.Lstat(path)
+	if err != nil {
+		return 0, err
+	}
+	st, ok := info.Sys().(*syscall.Stat_t)
+	if !ok {
+		return 0, fmt.Errorf("cannot determine device of %s", path)
+	}
+	return uint64(st.Dev), nil
+}
+
+// removeTree recursively removes path, but with --one-file-system it skips any
+// subdirectory that lives on a different filesystem than dev (the device of the
+// top-level argument). Skipped directories are left in place, which means the
+// parent directory cannot be removed either; that mirrors GNU rm's behaviour.
+func removeTree(path string, dev uint64) error {
+	info, err := os.Lstat(path)
+	if err != nil {
+		if os.IsNotExist(err) {
+			return nil
+		}
+		return err
+	}
+
+	if !info.IsDir() {
+		return os.Remove(path)
+	}
+
+	// A directory on a different device than the top argument is skipped.
+	if d, derr := deviceOf(path); derr == nil && d != dev {
+		return nil
+	}
+
+	entries, err := os.ReadDir(path)
+	if err != nil {
+		return err
+	}
+
+	skipped := false
+	for _, entry := range entries {
+		child := filepath.Join(path, entry.Name())
+		if entry.IsDir() {
+			if d, derr := deviceOf(child); derr == nil && d != dev {
+				// Different filesystem: leave it (and thus its parent) in place.
+				skipped = true
+				continue
+			}
+		}
+		if err := removeTree(child, dev); err != nil {
+			return err
+		}
+	}
+
+	if skipped {
+		// Cannot remove the directory while a foreign mount remains beneath it.
+		return nil
+	}
+	return os.Remove(path)
 }
