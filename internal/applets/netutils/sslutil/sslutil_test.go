@@ -9,8 +9,11 @@ import (
 	"crypto/tls"
 	"crypto/x509"
 	"crypto/x509/pkix"
+	"encoding/pem"
 	"math/big"
 	"net"
+	"os"
+	"path/filepath"
 	"strings"
 	"sync"
 	"testing"
@@ -83,6 +86,51 @@ func TestClientRequiresServer(t *testing.T) {
 	stdio := command.IO{In: bytes.NewReader(nil), Out: &bytes.Buffer{}, Err: &bytes.Buffer{}}
 	if err := NewSSLClient().Run(context.Background(), stdio, nil); err == nil {
 		t.Error("ssl_client should fail without -s")
+	}
+}
+
+// TestClientConfig checks the shared client tls.Config helper honors the
+// insecure (-k) flag and otherwise verifies certificates by default.
+func TestClientConfig(t *testing.T) {
+	t.Parallel()
+	if got := ClientConfig(true); !got.InsecureSkipVerify {
+		t.Error("ClientConfig(true) should skip verification")
+	}
+	if got := ClientConfig(false); got.InsecureSkipVerify {
+		t.Error("ClientConfig(false) should verify certificates")
+	}
+}
+
+// TestServerConfig checks the shared server setup loads a PEM cert/key into a
+// usable tls.Config and reports an error for a missing/invalid pair.
+func TestServerConfig(t *testing.T) {
+	t.Parallel()
+	cert := selfSigned(t)
+	keyDER, err := x509.MarshalPKCS8PrivateKey(cert.PrivateKey)
+	if err != nil {
+		t.Fatal(err)
+	}
+	dir := t.TempDir()
+	certPath := filepath.Join(dir, "cert.pem")
+	keyPath := filepath.Join(dir, "key.pem")
+	certPEM := pem.EncodeToMemory(&pem.Block{Type: "CERTIFICATE", Bytes: cert.Certificate[0]})
+	keyPEM := pem.EncodeToMemory(&pem.Block{Type: "PRIVATE KEY", Bytes: keyDER})
+	if err := os.WriteFile(certPath, certPEM, 0o600); err != nil {
+		t.Fatal(err)
+	}
+	if err := os.WriteFile(keyPath, keyPEM, 0o600); err != nil {
+		t.Fatal(err)
+	}
+
+	cfg, err := ServerConfig(certPath, keyPath)
+	if err != nil {
+		t.Fatalf("ServerConfig error: %v", err)
+	}
+	if len(cfg.Certificates) != 1 {
+		t.Errorf("ServerConfig loaded %d certificates, want 1", len(cfg.Certificates))
+	}
+	if _, err := ServerConfig(filepath.Join(dir, "missing.pem"), keyPath); err == nil {
+		t.Error("ServerConfig should fail on a missing certificate")
 	}
 }
 
