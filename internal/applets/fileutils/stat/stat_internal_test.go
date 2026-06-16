@@ -51,7 +51,7 @@ func TestUnwrap(t *testing.T) {
 	}
 }
 
-// TestUnescape covers the backslash escapes honoured inside a -c format.
+// TestUnescape covers the backslash escapes honored inside a -c format.
 func TestUnescape(t *testing.T) {
 	t.Parallel()
 	if got := unescape(`a\nb\tc\\d`); got != "a\nb\tc\\d" {
