@@ -6,7 +6,7 @@ import (
 
 // TestDelimiterEscapes covers each backslash escape understood by -d, plus the
 // "default" branch for an unknown escape and the multi-character separator
-// cycle. Behaviour matches GNU paste.
+// cycle. Behavior matches GNU paste.
 func TestDelimiterEscapes(t *testing.T) {
 	t.Parallel()
 	tests := []struct {
@@ -37,7 +37,7 @@ func TestDelimiterEscapes(t *testing.T) {
 			want:  "ab\n",
 		},
 		{
-			// An unrecognised escape (\q) falls through to the literal character.
+			// An unrecognized escape (\q) falls through to the literal character.
 			name:  "unknown escape is literal",
 			delim: `\q`,
 			stdin: "a\nb\n",

@@ -5,7 +5,7 @@ import (
 	"testing"
 )
 
-// TestParseReplyWithOptions checks that parseReply honours the IHL field when
+// TestParseReplyWithOptions checks that parseReply honors the IHL field when
 // the IPv4 header carries options (ihl > 5), locating the ICMP message at the
 // correct offset.
 func TestParseReplyWithOptions(t *testing.T) {
