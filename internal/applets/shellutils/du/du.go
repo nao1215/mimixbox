@@ -7,6 +7,7 @@ import (
 	"fmt"
 	"io"
 	"io/fs"
+	"path"
 	"path/filepath"
 	"sort"
 	"strconv"
@@ -33,11 +34,15 @@ func (c *Command) Name() string { return "du" }
 func (c *Command) Synopsis() string { return "Estimate file space usage" }
 
 type options struct {
-	summarize bool // -s: print only a total for each operand
-	all       bool // -a: write a line for every file, not just directories
-	human     bool // -h: print sizes in human-readable form (1K, 234M, 2G)
-	bytes     bool // -b: print the apparent size in bytes
-	total     bool // -c: print a grand total
+	summarize     bool     // -s: print only a total for each operand
+	all           bool     // -a: write a line for every file, not just directories
+	human         bool     // -h: print sizes in human-readable form (1K, 234M, 2G)
+	bytes         bool     // -b: print the apparent size in bytes
+	total         bool     // -c: print a grand total
+	apparentSize  bool     // --apparent-size: report exact apparent byte sizes, not block counts
+	oneFileSystem bool     // -x/--one-file-system: do not cross filesystem boundaries
+	maxDepth      int      // --max-depth=N: print totals only for dirs at depth <= N (-1 = unlimited)
+	exclude       []string // --exclude=PATTERN: skip entries whose base name matches the glob
 }
 
 // entry is one accumulated path/size pair produced by the size walk.
@@ -45,7 +50,12 @@ type entry struct {
 	path  string // path as it should be printed
 	bytes int64  // apparent size in bytes of the subtree rooted at path
 	isDir bool   // whether path is a directory
+	depth int    // depth relative to the operand root (root = 0)
 }
+
+// NOTE: by default du reports the apparent total rounded up to whole 1K
+// blocks (legacy MimixBox behaviour). --apparent-size (and -b) report the
+// exact byte total instead. The walk only needs the apparent byte size.
 
 // Run executes du.
 func (c *Command) Run(_ context.Context, stdio command.IO, args []string) error {
@@ -56,6 +66,8 @@ func (c *Command) Run(_ context.Context, stdio command.IO, args []string) error 
 			{Command: "du", Explain: "Show usage of the current directory tree."},
 			{Command: "du -sh /var/log", Explain: "Show a single human-readable total for /var/log."},
 			{Command: "du -a dir", Explain: "Show usage for every file, not just directories."},
+			{Command: "du --max-depth=1 dir", Explain: "Show totals for dir and its immediate subdirectories only."},
+			{Command: "du --exclude='*.tmp' dir", Explain: "Skip entries whose base name matches the glob."},
 		},
 		ExitStatus: "0  success.\n1  an error occurred (e.g. a file could not be read).",
 	})
@@ -65,6 +77,10 @@ func (c *Command) Run(_ context.Context, stdio command.IO, args []string) error 
 	bytesFlag := fs.BoolP("bytes", "b", false, "equivalent to apparent size in bytes")
 	total := fs.BoolP("total", "c", false, "produce a grand total")
 	fs.BoolP("block-size-1k", "k", true, "like --block-size=1K (the default)")
+	apparentSize := fs.Bool("apparent-size", false, "print apparent (exact byte) sizes, rather than 1K block counts")
+	oneFileSystem := fs.BoolP("one-file-system", "x", false, "skip directories on different file systems")
+	maxDepth := fs.Int("max-depth", -1, "print the total for a directory only if it is N or fewer levels below the argument")
+	exclude := fs.StringArray("exclude", nil, "exclude files that match PATTERN (glob on the base name)")
 
 	proceed, err := fs.Parse(stdio, args)
 	if err != nil || !proceed {
@@ -72,11 +88,15 @@ func (c *Command) Run(_ context.Context, stdio command.IO, args []string) error 
 	}
 
 	opts := options{
-		summarize: *summarize,
-		all:       *all,
-		human:     *human,
-		bytes:     *bytesFlag,
-		total:     *total,
+		summarize:     *summarize,
+		all:           *all,
+		human:         *human,
+		bytes:         *bytesFlag,
+		total:         *total,
+		apparentSize:  *apparentSize,
+		oneFileSystem: *oneFileSystem,
+		maxDepth:      *maxDepth,
+		exclude:       *exclude,
 	}
 
 	operands := fs.Args()
@@ -95,7 +115,7 @@ func run(stdio command.IO, operands []string, opts options) error {
 	var firstErr error
 
 	for _, operand := range operands {
-		entries, err := walk(operand)
+		entries, err := walk(operand, opts)
 		if err != nil {
 			_, _ = fmt.Fprintf(stdio.Err, "du: %s\n", command.FileError(operand, err))
 			if firstErr == nil {
@@ -120,25 +140,63 @@ func run(stdio command.IO, operands []string, opts options) error {
 	return firstErr
 }
 
-// walk computes the apparent size of every file and directory under root and
-// returns the accumulated entries in post-order (children before their parent,
-// the root last). It is a pure function of the filesystem: it does not touch
-// stdout, so it can be unit-tested directly.
-func walk(root string) ([]entry, error) {
+// walk computes the size of every file and directory under root and returns the
+// accumulated entries in post-order (children before their parent, the root
+// last). It is a pure function of the filesystem: it does not touch stdout, so
+// it can be unit-tested directly.
+//
+// The options influence the traversal: --one-file-system prunes subdirectories
+// on a different device than root, and --exclude skips matching entries
+// entirely (their sizes are not counted toward any ancestor).
+func walk(root string, opts options) ([]entry, error) {
 	type acc struct {
 		bytes int64
 		isDir bool
+		depth int
 	}
 	sizes := map[string]*acc{}
-	var order []string // directory paths in the order they were entered
+	var order []string // paths in the order they were entered
 
-	walkErr := filepath.WalkDir(root, func(path string, d fs.DirEntry, err error) error {
+	// rootDepth is the separator count of the operand root, so a child's depth
+	// relative to the operand is depth(path) - rootDepth.
+	rootDepth := depth(root)
+
+	// rootDev is the device id of the operand root, used only when
+	// --one-file-system is requested.
+	var rootDev uint64
+	if opts.oneFileSystem {
+		dev, derr := deviceOf(root)
+		if derr != nil {
+			return nil, derr
+		}
+		rootDev = dev
+	}
+
+	walkErr := filepath.WalkDir(root, func(p string, d fs.DirEntry, err error) error {
 		if err != nil {
 			return err
 		}
+
+		// --exclude: skip any entry whose base name matches a pattern. The root
+		// itself is never excluded (GNU du applies the filter to descendants).
+		if p != root && excluded(p, opts.exclude) {
+			if d.IsDir() {
+				return filepath.SkipDir
+			}
+			return nil
+		}
+
+		// --one-file-system: prune subdirectories on a different device than the
+		// operand root. The root directory is always counted.
+		if opts.oneFileSystem && d.IsDir() && p != root {
+			if dev, derr := deviceOf(p); derr == nil && dev != rootDev {
+				return filepath.SkipDir
+			}
+		}
+
 		if d.IsDir() {
-			sizes[path] = &acc{bytes: 0, isDir: true}
-			order = append(order, path)
+			sizes[p] = &acc{isDir: true, depth: depth(p) - rootDepth}
+			order = append(order, p)
 			return nil
 		}
 		info, ierr := d.Info()
@@ -151,7 +209,7 @@ func walk(root string) ([]entry, error) {
 		// only when the block count is printed.
 		size := info.Size()
 		// Add this file's size to every ancestor directory up to root.
-		for dir := filepath.Dir(path); ; dir = filepath.Dir(dir) {
+		for dir := filepath.Dir(p); ; dir = filepath.Dir(dir) {
 			if a, ok := sizes[dir]; ok {
 				a.bytes += size
 			}
@@ -159,8 +217,8 @@ func walk(root string) ([]entry, error) {
 				break
 			}
 		}
-		sizes[path] = &acc{bytes: size, isDir: false}
-		order = append(order, path)
+		sizes[p] = &acc{bytes: size, isDir: false, depth: depth(p) - rootDepth}
+		order = append(order, p)
 		return nil
 	})
 	if walkErr != nil {
@@ -175,7 +233,7 @@ func walk(root string) ([]entry, error) {
 	entries := make([]entry, 0, len(order))
 	for _, p := range order {
 		a := sizes[p]
-		entries = append(entries, entry{path: p, bytes: a.bytes, isDir: a.isDir})
+		entries = append(entries, entry{path: p, bytes: a.bytes, isDir: a.isDir, depth: a.depth})
 	}
 	return entries, nil
 }
@@ -190,14 +248,20 @@ func report(entries []entry, opts options) []entry {
 		// Only the root (always last) is printed.
 		return entries[len(entries)-1:]
 	}
-	if opts.all {
-		return entries
-	}
 	root := entries[len(entries)-1]
 	out := make([]entry, 0, len(entries))
 	for _, e := range entries {
-		// Print every directory, and always print the operand itself even
-		// when it is a single regular file (GNU du behaves this way).
+		// --max-depth: omit entries deeper than N levels below the operand,
+		// but always keep the operand root itself.
+		if opts.maxDepth >= 0 && e.depth > opts.maxDepth && e.path != root.path {
+			continue
+		}
+		if opts.all {
+			out = append(out, e)
+			continue
+		}
+		// Default: print every directory, and always print the operand itself
+		// even when it is a single regular file (GNU du behaves this way).
 		if e.isDir || e.path == root.path {
 			out = append(out, e)
 		}
@@ -210,11 +274,12 @@ func writeLine(w io.Writer, e entry, opts options) {
 	_, _ = fmt.Fprintf(w, "%s\t%s\n", formatSize(e.bytes, opts), e.path)
 }
 
-// formatSize renders a byte count according to the active output mode: bytes
-// (-b), human-readable (-h), or the default 1024-byte block count.
+// formatSize renders a byte count according to the active output mode. -b and
+// --apparent-size print the exact apparent byte count; -h prints a
+// human-readable value; the default prints a count of 1024-byte blocks.
 func formatSize(bytes int64, opts options) string {
 	switch {
-	case opts.bytes:
+	case opts.bytes || opts.apparentSize:
 		return strconv.FormatInt(bytes, 10)
 	case opts.human:
 		return humanReadable(bytes)
@@ -223,8 +288,22 @@ func formatSize(bytes int64, opts options) string {
 	}
 }
 
-// blocks converts an apparent byte count to a count of 1024-byte blocks,
-// rounding up (so any nonzero file occupies at least one block).
+// excluded reports whether the base name of p matches any of the glob patterns.
+func excluded(p string, patterns []string) bool {
+	if len(patterns) == 0 {
+		return false
+	}
+	base := filepath.Base(p)
+	for _, pat := range patterns {
+		if ok, err := path.Match(pat, base); err == nil && ok {
+			return true
+		}
+	}
+	return false
+}
+
+// blocks converts a byte count to a count of 1024-byte blocks, rounding up (so
+// any nonzero file occupies at least one block).
 func blocks(bytes int64) int64 {
 	if bytes <= 0 {
 		return 0

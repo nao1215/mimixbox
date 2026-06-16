@@ -4,6 +4,7 @@ import (
 	"bytes"
 	"context"
 	"os/exec"
+	"path/filepath"
 	"strings"
 	"testing"
 
@@ -138,6 +139,131 @@ func TestRunCommandNotFound(t *testing.T) {
 	}
 	if !strings.Contains(errOut, "env: 'no_such_command_xyz': No such file or directory") {
 		t.Errorf("stderr = %q, want not-found message", errOut)
+	}
+}
+
+// TestRunChdir confirms --chdir makes the launched command run in DIR: pwd
+// (via the shell's built-in) reports the requested directory.
+func TestRunChdir(t *testing.T) {
+	sh, err := exec.LookPath("sh")
+	if err != nil {
+		t.Skipf("sh not found: %v", err)
+	}
+	dir := t.TempDir()
+	// Resolve symlinks so the comparison survives /tmp -> /private/tmp etc.
+	want, err := filepath.EvalSymlinks(dir)
+	if err != nil {
+		t.Fatalf("EvalSymlinks(%q) = %v", dir, err)
+	}
+	out, _, runErr := run(t, "", "--chdir="+dir, sh, "-c", "pwd -P")
+	if runErr != nil {
+		t.Fatalf("Run error = %v", runErr)
+	}
+	if got := strings.TrimSpace(out); got != want {
+		t.Errorf("pwd = %q, want %q", got, want)
+	}
+}
+
+// TestRunChdirShortFlag exercises the -C spelling with a separate argument.
+func TestRunChdirShortFlag(t *testing.T) {
+	sh, err := exec.LookPath("sh")
+	if err != nil {
+		t.Skipf("sh not found: %v", err)
+	}
+	dir := t.TempDir()
+	want, err := filepath.EvalSymlinks(dir)
+	if err != nil {
+		t.Fatalf("EvalSymlinks(%q) = %v", dir, err)
+	}
+	out, _, runErr := run(t, "", "-C", dir, sh, "-c", "pwd -P")
+	if runErr != nil {
+		t.Fatalf("Run error = %v", runErr)
+	}
+	if got := strings.TrimSpace(out); got != want {
+		t.Errorf("pwd = %q, want %q", got, want)
+	}
+}
+
+// TestRunChdirNonexistent confirms a directory that cannot be used is a fatal
+// error (exit 125, GNU env's failure status) and the command is not run.
+func TestRunChdirNonexistent(t *testing.T) {
+	missing := filepath.Join(t.TempDir(), "does-not-exist")
+	_, errOut, runErr := run(t, "", "--chdir="+missing, "true")
+	exitErr, ok := runErr.(*command.ExitError)
+	if !ok {
+		t.Fatalf("error = %v (%T), want *command.ExitError", runErr, runErr)
+	}
+	if exitErr.Code != 125 {
+		t.Errorf("exit code = %d, want 125", exitErr.Code)
+	}
+	if !strings.Contains(errOut, "cannot change directory") {
+		t.Errorf("stderr = %q, want a chdir failure", errOut)
+	}
+}
+
+// TestRunSplitStringExpandsArgv shows a single -S string is split into several
+// argv entries: the command is the first token and the rest are its arguments.
+func TestRunSplitStringExpandsArgv(t *testing.T) {
+	printf, err := exec.LookPath("printf")
+	if err != nil {
+		t.Skipf("printf not found: %v", err)
+	}
+	// "-S" carries the command and two of its arguments in one string.
+	out, _, runErr := run(t, "", "-S", printf+" %s-%s a b")
+	if runErr != nil {
+		t.Fatalf("Run error = %v", runErr)
+	}
+	if out != "a-b" {
+		t.Errorf("out = %q, want %q", out, "a-b")
+	}
+}
+
+// TestRunSplitStringEscapes verifies the \_ (space) escape keeps a word
+// together so it reaches the command as a single argument.
+func TestRunSplitStringEscapes(t *testing.T) {
+	sh, err := exec.LookPath("sh")
+	if err != nil {
+		t.Skipf("sh not found: %v", err)
+	}
+	// The \_ produces a literal space inside the final argument, which the
+	// shell receives as $0 of "printf %s \"$0\"".
+	out, _, runErr := run(t, "", "--split-string="+sh+` -c printf\_%s\_"$0" one\_word`)
+	if runErr != nil {
+		t.Fatalf("Run error = %v", runErr)
+	}
+	if out != "one word" {
+		t.Errorf("out = %q, want %q", out, "one word")
+	}
+}
+
+// TestRunIgnoreSignalRejectsBadName confirms --ignore-signal validates names
+// and fails (without running a command) on an unknown one.
+func TestRunIgnoreSignalRejectsBadName(t *testing.T) {
+	_, errOut, runErr := run(t, "", "--ignore-signal=BOGUS", "true")
+	exitErr, ok := runErr.(*command.ExitError)
+	if !ok {
+		t.Fatalf("error = %v (%T), want *command.ExitError", runErr, runErr)
+	}
+	if exitErr.Code != 125 {
+		t.Errorf("exit code = %d, want 125", exitErr.Code)
+	}
+	if !strings.Contains(errOut, "invalid signal") {
+		t.Errorf("stderr = %q, want an invalid-signal message", errOut)
+	}
+}
+
+// TestRunIgnoreSignalValidNames accepts good names and still runs the command.
+func TestRunIgnoreSignalValidNames(t *testing.T) {
+	echo, err := exec.LookPath("echo")
+	if err != nil {
+		t.Skipf("echo not found: %v", err)
+	}
+	out, _, runErr := run(t, "", "--ignore-signal=INT,TERM", echo, "ok")
+	if runErr != nil {
+		t.Fatalf("Run error = %v", runErr)
+	}
+	if out != "ok\n" {
+		t.Errorf("out = %q, want %q", out, "ok\n")
 	}
 }
 

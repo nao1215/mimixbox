@@ -284,6 +284,359 @@ func TestRunNoOperandDefaultsToCwd(t *testing.T) {
 	}
 }
 
+// ---- GNU issue #754 additions ----
+
+func TestParseSize(t *testing.T) {
+	t.Parallel()
+	tests := []struct {
+		in   string
+		want int64
+		ok   bool
+	}{
+		{"1024", 1024, true},
+		{"K", 1024, true},
+		{"1K", 1024, true},
+		{"1M", 1024 * 1024, true},
+		{"1G", 1024 * 1024 * 1024, true},
+		{"512", 512, true},
+		{"1MB", 1000 * 1000, true},
+		{"", 0, false},
+		{"0", 0, false},
+		{"1Z", 0, false},
+	}
+	for _, tt := range tests {
+		got, err := df.ParseSize(tt.in)
+		if tt.ok && (err != nil || got != tt.want) {
+			t.Errorf("ParseSize(%q) = %d, %v; want %d", tt.in, got, err, tt.want)
+		}
+		if !tt.ok && err == nil {
+			t.Errorf("ParseSize(%q) expected error", tt.in)
+		}
+	}
+}
+
+func TestScaleSizeBlockSize(t *testing.T) {
+	t.Parallel()
+	// 1 MiB with a 1M block-size = 1 block.
+	if got := df.ScaleSize(1024*1024, false, 1024*1024); got != "1" {
+		t.Errorf("ScaleSize(1M, bs=1M) = %q, want 1", got)
+	}
+	// 1 MiB in default 1K blocks = 1024.
+	if got := df.ScaleSize(1024*1024, false, 0); got != "1024" {
+		t.Errorf("ScaleSize(1M, bs=0) = %q, want 1024", got)
+	}
+	// Rounds up partial blocks.
+	if got := df.ScaleSize(1, false, 1024); got != "1" {
+		t.Errorf("ScaleSize(1, bs=1K) = %q, want 1", got)
+	}
+	// Human-readable ignores block-size.
+	if got := df.ScaleSize(1024*1024, true, 1024); got != "1.0M" {
+		t.Errorf("ScaleSize(1M, human) = %q, want 1.0M", got)
+	}
+}
+
+func TestParseOutput(t *testing.T) {
+	t.Parallel()
+	cols, err := df.ParseOutput("source,fstype,size,used,avail,pcent,target")
+	if err != nil {
+		t.Fatalf("ParseOutput error: %v", err)
+	}
+	want := []string{"source", "fstype", "size", "used", "avail", "pcent", "target"}
+	if len(cols) != len(want) {
+		t.Fatalf("cols = %v, want %v", cols, want)
+	}
+	for i := range want {
+		if cols[i] != want[i] {
+			t.Errorf("col %d = %q, want %q", i, cols[i], want[i])
+		}
+	}
+	// Order is preserved (reversed).
+	rev, _ := df.ParseOutput("target,pcent,size")
+	if rev[0] != "target" || rev[2] != "size" {
+		t.Errorf("ParseOutput did not preserve order: %v", rev)
+	}
+	// Unknown field is an error.
+	if _, err := df.ParseOutput("bogus"); err == nil {
+		t.Error("ParseOutput(bogus) expected error")
+	}
+}
+
+func TestFilterByType(t *testing.T) {
+	t.Parallel()
+	entries := []df.FsEntry{
+		df.NewFsEntry("/dev/sda1", "ext4", "/", df.StatfsResult{Bsize: 1024, Blocks: 10}),
+		df.NewFsEntry("tmpfs", "tmpfs", "/run", df.StatfsResult{Bsize: 1024, Blocks: 5}),
+		df.NewFsEntry("/dev/sdb1", "ext4", "/home", df.StatfsResult{Bsize: 1024, Blocks: 20}),
+	}
+	got := df.FilterByType(entries, []string{"ext4"})
+	want := []string{"/", "/home"}
+	if len(got) != len(want) {
+		t.Fatalf("filtered targets = %v, want %v", got, want)
+	}
+	for i := range want {
+		if got[i] != want[i] {
+			t.Errorf("target %d = %q, want %q", i, got[i], want[i])
+		}
+	}
+	// Empty filter keeps everything.
+	if all := df.FilterByType(entries, nil); len(all) != 3 {
+		t.Errorf("no filter kept %d, want 3", len(all))
+	}
+	// Repeatable filter matching multiple types.
+	if both := df.FilterByType(entries, []string{"ext4", "tmpfs"}); len(both) != 3 {
+		t.Errorf("ext4+tmpfs kept %d, want 3", len(both))
+	}
+}
+
+func TestUnescapeMount(t *testing.T) {
+	t.Parallel()
+	if got := df.UnescapeMount(`/mnt/my\040disk`); got != "/mnt/my disk" {
+		t.Errorf("UnescapeMount = %q, want %q", got, "/mnt/my disk")
+	}
+	if got := df.UnescapeMount("/plain/path"); got != "/plain/path" {
+		t.Errorf("UnescapeMount = %q, want %q", got, "/plain/path")
+	}
+}
+
+func TestFsTypeName(t *testing.T) {
+	t.Parallel()
+	if got := df.FsTypeName(0xef53); got != "ext" {
+		t.Errorf("FsTypeName(ext magic) = %q, want ext", got)
+	}
+	if got := df.FsTypeName(0x12345); got != "0x12345" {
+		t.Errorf("FsTypeName(unknown) = %q, want hex fallback", got)
+	}
+}
+
+// withFakes installs deterministic statfs+mount fakes and returns a restore.
+func withFakes(t *testing.T, mounts []df.MountEntry, stats map[string]df.StatfsResult) func() {
+	t.Helper()
+	r1 := df.SetReadMounts(func() ([]df.MountEntry, error) { return mounts, nil })
+	r2 := df.SetStatfs(func(path string) (df.StatfsResult, error) {
+		if s, ok := stats[path]; ok {
+			return s, nil
+		}
+		return df.StatfsResult{Bsize: 1024, Blocks: 10, Bavail: 5}, nil
+	})
+	return func() { r2(); r1() }
+}
+
+func TestRunOutputColumnSelection(t *testing.T) {
+	mounts := []df.MountEntry{
+		df.NewMountEntry("/dev/sda1", "/", "ext4"),
+		df.NewMountEntry("tmpfs", "/run", "tmpfs"),
+	}
+	stats := map[string]df.StatfsResult{
+		"/":    {Bsize: 1024, Blocks: 1000, Bfree: 250, Bavail: 250},
+		"/run": {Bsize: 1024, Blocks: 100, Bfree: 100, Bavail: 100},
+	}
+	defer withFakes(t, mounts, stats)()
+
+	out, errOut, err := run(t, "--output=source,fstype,size,used,avail,pcent,target")
+	if err != nil {
+		t.Fatalf("Run error: %v (stderr=%q)", err, errOut)
+	}
+	lines := strings.Split(strings.TrimRight(out, "\n"), "\n")
+	header := strings.Fields(lines[0])
+	wantHeader := []string{"Filesystem", "Type", "Size", "Used", "Avail", "Use%", "Mounted", "on"}
+	// "Mounted on" splits into two fields; compare the meaningful prefix.
+	for i, h := range []string{"Filesystem", "Type", "Size", "Used", "Avail", "Use%"} {
+		if header[i] != h {
+			t.Errorf("header[%d] = %q, want %q (header=%q)", i, header[i], h, lines[0])
+		}
+	}
+	_ = wantHeader
+	// Find the / row.
+	var rootFields []string
+	for _, l := range lines[1:] {
+		f := strings.Fields(l)
+		if len(f) > 0 && f[0] == "/dev/sda1" {
+			rootFields = f
+		}
+	}
+	if rootFields == nil {
+		t.Fatalf("no /dev/sda1 row in:\n%s", out)
+	}
+	// source=/dev/sda1 fstype=ext4 ... target=/
+	if rootFields[1] != "ext4" {
+		t.Errorf("fstype = %q, want ext4", rootFields[1])
+	}
+	if rootFields[len(rootFields)-1] != "/" {
+		t.Errorf("target = %q, want /", rootFields[len(rootFields)-1])
+	}
+}
+
+func TestRunOutputColumnOrder(t *testing.T) {
+	mounts := []df.MountEntry{df.NewMountEntry("/dev/sda1", "/", "ext4")}
+	stats := map[string]df.StatfsResult{"/": {Bsize: 1024, Blocks: 1000, Bavail: 500}}
+	defer withFakes(t, mounts, stats)()
+
+	out, _, err := run(t, "--output=target,fstype,source")
+	if err != nil {
+		t.Fatalf("Run error: %v", err)
+	}
+	lines := strings.Split(strings.TrimRight(out, "\n"), "\n")
+	header := strings.Fields(lines[0])
+	if header[0] != "Mounted" || header[2] != "Type" || header[3] != "Filesystem" {
+		t.Errorf("reordered header = %q", lines[0])
+	}
+	row := strings.Fields(lines[1])
+	if row[0] != "/" || row[1] != "ext4" || row[2] != "/dev/sda1" {
+		t.Errorf("reordered row = %q", lines[1])
+	}
+}
+
+func TestRunTypeFilter(t *testing.T) {
+	mounts := []df.MountEntry{
+		df.NewMountEntry("/dev/sda1", "/", "ext4"),
+		df.NewMountEntry("tmpfs", "/run", "tmpfs"),
+		df.NewMountEntry("/dev/sdb1", "/home", "ext4"),
+	}
+	stats := map[string]df.StatfsResult{
+		"/":     {Bsize: 1024, Blocks: 1000, Bavail: 500},
+		"/run":  {Bsize: 1024, Blocks: 100, Bavail: 100},
+		"/home": {Bsize: 1024, Blocks: 2000, Bavail: 1000},
+	}
+	defer withFakes(t, mounts, stats)()
+
+	out, _, err := run(t, "-t", "ext4")
+	if err != nil {
+		t.Fatalf("Run error: %v", err)
+	}
+	if strings.Contains(out, "tmpfs") || strings.Contains(out, "/run") {
+		t.Errorf("tmpfs should be filtered out:\n%s", out)
+	}
+	if !strings.Contains(out, "/dev/sda1") || !strings.Contains(out, "/dev/sdb1") {
+		t.Errorf("ext4 rows missing:\n%s", out)
+	}
+}
+
+func TestRunTotalRow(t *testing.T) {
+	mounts := []df.MountEntry{
+		df.NewMountEntry("/dev/sda1", "/", "ext4"),
+		df.NewMountEntry("/dev/sdb1", "/home", "ext4"),
+	}
+	stats := map[string]df.StatfsResult{
+		// total=1000K used=(1000-500)=500K avail=500K
+		"/": {Bsize: 1024, Blocks: 1000, Bfree: 500, Bavail: 500},
+		// total=2000K used=(2000-1000)=1000K avail=1000K
+		"/home": {Bsize: 1024, Blocks: 2000, Bfree: 1000, Bavail: 1000},
+	}
+	defer withFakes(t, mounts, stats)()
+
+	out, _, err := run(t, "--total")
+	if err != nil {
+		t.Fatalf("Run error: %v", err)
+	}
+	lines := strings.Split(strings.TrimRight(out, "\n"), "\n")
+	last := strings.Fields(lines[len(lines)-1])
+	if last[0] != "total" {
+		t.Fatalf("last row = %q, want a total row", lines[len(lines)-1])
+	}
+	// total 1K-blocks = 1000+2000 = 3000; used = 500+1000 = 1500; avail = 1500.
+	if last[1] != "3000" || last[2] != "1500" || last[3] != "1500" {
+		t.Errorf("total row = %v, want size=3000 used=1500 avail=1500", last)
+	}
+}
+
+func TestRunTotalRowWithOutput(t *testing.T) {
+	mounts := []df.MountEntry{
+		df.NewMountEntry("/dev/sda1", "/", "ext4"),
+		df.NewMountEntry("/dev/sdb1", "/home", "ext4"),
+	}
+	stats := map[string]df.StatfsResult{
+		"/":     {Bsize: 1024, Blocks: 1000, Bfree: 500, Bavail: 500},
+		"/home": {Bsize: 1024, Blocks: 2000, Bfree: 1000, Bavail: 1000},
+	}
+	defer withFakes(t, mounts, stats)()
+
+	out, _, err := run(t, "--total", "--output=source,size,used,avail,target")
+	if err != nil {
+		t.Fatalf("Run error: %v", err)
+	}
+	lines := strings.Split(strings.TrimRight(out, "\n"), "\n")
+	last := strings.Fields(lines[len(lines)-1])
+	if last[0] != "total" {
+		t.Fatalf("output total row = %q", lines[len(lines)-1])
+	}
+	if last[1] != "3000" || last[2] != "1500" || last[3] != "1500" {
+		t.Errorf("output total row = %v, want 3000/1500/1500", last)
+	}
+}
+
+func TestRunBlockSizeScaling(t *testing.T) {
+	mounts := []df.MountEntry{df.NewMountEntry("/dev/sda1", "/", "ext4")}
+	stats := map[string]df.StatfsResult{
+		// total = 4 MiB, avail = 0.
+		"/": {Bsize: 1024, Blocks: 4096, Bavail: 0},
+	}
+	defer withFakes(t, mounts, stats)()
+
+	out, _, err := run(t, "--block-size=1M", "--output=size,target")
+	if err != nil {
+		t.Fatalf("Run error: %v", err)
+	}
+	lines := strings.Split(strings.TrimRight(out, "\n"), "\n")
+	row := strings.Fields(lines[1])
+	// 4 MiB / 1M = 4.
+	if row[0] != "4" {
+		t.Errorf("block-size scaled size = %q, want 4 (row=%q)", row[0], lines[1])
+	}
+}
+
+func TestRunAllInclusion(t *testing.T) {
+	mounts := []df.MountEntry{
+		df.NewMountEntry("/dev/sda1", "/", "ext4"),
+		df.NewMountEntry("proc", "/proc", "proc"), // zero-size pseudo fs
+	}
+	stats := map[string]df.StatfsResult{
+		"/":     {Bsize: 1024, Blocks: 1000, Bavail: 500},
+		"/proc": {Bsize: 1024, Blocks: 0, Bavail: 0}, // hidden unless --all
+	}
+	defer withFakes(t, mounts, stats)()
+
+	// Without --all: /proc is hidden.
+	out, _, err := run(t, "--output=source,target")
+	if err != nil {
+		t.Fatalf("Run error: %v", err)
+	}
+	if strings.Contains(out, "/proc") {
+		t.Errorf("/proc should be hidden without --all:\n%s", out)
+	}
+
+	// With --all: /proc is shown.
+	outAll, _, err := run(t, "--all", "--output=source,target")
+	if err != nil {
+		t.Fatalf("Run -a error: %v", err)
+	}
+	if !strings.Contains(outAll, "/proc") {
+		t.Errorf("/proc should appear with --all:\n%s", outAll)
+	}
+}
+
+func TestRunDefaultBehaviorUnchanged(t *testing.T) {
+	// No GNU flags, no operands: must stay cwd-only classic layout.
+	restore := df.SetStatfs(func(path string) (df.StatfsResult, error) {
+		if path != "." {
+			t.Errorf("expected default operand %q, got %q", ".", path)
+		}
+		return df.StatfsResult{Bsize: 1024, Blocks: 10, Bavail: 5}, nil
+	})
+	defer restore()
+
+	out, _, err := run(t)
+	if err != nil {
+		t.Fatalf("Run() error: %v", err)
+	}
+	lines := strings.Split(strings.TrimRight(out, "\n"), "\n")
+	if len(lines) != 2 {
+		t.Fatalf("default df should print header + 1 row, got %d lines:\n%s", len(lines), out)
+	}
+	if !strings.HasPrefix(lines[0], "Filesystem") || !strings.Contains(lines[0], "1K-blocks") {
+		t.Errorf("default header changed: %q", lines[0])
+	}
+}
+
 func TestRunHelp(t *testing.T) {
 	t.Parallel()
 	out, _, err := run(t, "--help")

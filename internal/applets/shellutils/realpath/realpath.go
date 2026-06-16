@@ -6,6 +6,7 @@ import (
 	"context"
 	"fmt"
 	"path/filepath"
+	"strings"
 
 	"github.com/nao1215/mimixbox/internal/command"
 )
@@ -41,6 +42,10 @@ func (c *Command) Run(_ context.Context, stdio command.IO, args []string) error 
 	noSymlinks := fs.BoolP("no-symlinks", "s", false, "don't expand symlinks")
 	zero := fs.BoolP("zero", "z", false, "end each output line with NUL, not newline")
 	quiet := fs.BoolP("quiet", "q", false, "suppress most error messages")
+	relativeTo := fs.String("relative-to", "", "print the resolved path relative to DIR")
+	relativeBase := fs.String("relative-base", "", "print absolute paths unless they are below DIR")
+	logical := fs.BoolP("logical", "L", false, "resolve '..' components lexically, do not expand symlinks")
+	physical := fs.BoolP("physical", "P", false, "resolve all symlinks (the default)")
 
 	proceed, err := fs.Parse(stdio, args)
 	if err != nil || !proceed {
@@ -58,9 +63,33 @@ func (c *Command) Run(_ context.Context, stdio command.IO, args []string) error 
 		end = 0
 	}
 
+	// -L (logical) resolves '..' lexically without expanding symlinks, the same
+	// shape as -s here; -P (physical) is the default full resolution.
+	lexical := *noSymlinks || *logical
+	_ = physical
+
+	// --relative-base without --relative-to implies --relative-to=BASE (GNU).
+	relTo, relBase := *relativeTo, *relativeBase
+	if relBase != "" && relTo == "" {
+		relTo = relBase
+	}
+	var canonRelTo, canonRelBase string
+	if relTo != "" {
+		if canonRelTo, err = resolve(relTo, *missing, lexical); err != nil {
+			_, _ = fmt.Fprintf(stdio.Err, "realpath: %s\n", command.FileError(relTo, err))
+			return command.SilentFailure()
+		}
+	}
+	if relBase != "" {
+		if canonRelBase, err = resolve(relBase, *missing, lexical); err != nil {
+			_, _ = fmt.Fprintf(stdio.Err, "realpath: %s\n", command.FileError(relBase, err))
+			return command.SilentFailure()
+		}
+	}
+
 	var failed bool
 	for _, name := range names {
-		resolved, rerr := resolve(name, *missing, *noSymlinks)
+		resolved, rerr := resolve(name, *missing, lexical)
 		if rerr != nil {
 			if !*quiet {
 				_, _ = fmt.Fprintf(stdio.Err, "realpath: %s\n", command.FileError(name, rerr))
@@ -68,6 +97,7 @@ func (c *Command) Run(_ context.Context, stdio command.IO, args []string) error 
 			failed = true
 			continue
 		}
+		resolved = applyRelative(resolved, relTo, canonRelTo, relBase, canonRelBase)
 		_, _ = fmt.Fprintf(stdio.Out, "%s%c", resolved, end)
 	}
 
@@ -79,6 +109,28 @@ func (c *Command) Run(_ context.Context, stdio command.IO, args []string) error 
 		return command.SilentFailure()
 	}
 	return nil
+}
+
+// applyRelative renders resolved relative to canonRelTo when --relative-to is in
+// effect, but only when --relative-base is unset or resolved lies below
+// canonRelBase; otherwise the absolute resolved path is returned (GNU semantics).
+func applyRelative(resolved, relTo, canonRelTo, relBase, canonRelBase string) string {
+	if relTo == "" {
+		return resolved
+	}
+	if relBase != "" && !under(resolved, canonRelBase) {
+		return resolved
+	}
+	rel, err := filepath.Rel(canonRelTo, resolved)
+	if err != nil {
+		return resolved
+	}
+	return rel
+}
+
+// under reports whether path is canonRelBase itself or lies beneath it.
+func under(path, base string) bool {
+	return path == base || strings.HasPrefix(path, base+string(filepath.Separator))
 }
 
 // resolve canonicalizes name to an absolute path. With noSymlinks it only

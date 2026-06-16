@@ -225,6 +225,70 @@ func TestInvalidSleepIntervalRejected(t *testing.T) {
 	}
 }
 
+// TestInvalidPidRejected covers --pid validation: a non-positive PID is an
+// error, matching GNU tail's "invalid PID" diagnostic.
+func TestInvalidPidRejected(t *testing.T) {
+	t.Parallel()
+	for _, arg := range []string{"--pid=0", "--pid=-3"} {
+		_, _, err := run(t, "", "-f", "-s", "0.05", arg, "/dev/null")
+		if err == nil {
+			t.Fatalf("%s: expected error", arg)
+		}
+		if !strings.Contains(err.Error(), "invalid PID") {
+			t.Errorf("%s: err = %v, want invalid PID", arg, err)
+		}
+	}
+}
+
+// TestPidWithoutFollowWarns confirms --pid without a follow flag emits the GNU
+// "PID ignored" warning and otherwise behaves like a plain tail.
+func TestPidWithoutFollowWarns(t *testing.T) {
+	t.Parallel()
+	out, errOut, err := run(t, "a\nb\nc\n", "--pid=123", "-n", "1")
+	if err != nil {
+		t.Fatalf("Run error = %v", err)
+	}
+	if out != "c\n" {
+		t.Errorf("out = %q, want %q", out, "c\n")
+	}
+	if !strings.Contains(errOut, "PID ignored") {
+		t.Errorf("stderr = %q, want PID ignored warning", errOut)
+	}
+}
+
+// TestFollowDescriptorDoesNotReopen verifies the -f / --follow=descriptor
+// default: tail keeps reading the original descriptor across a rotation and does
+// not switch to the recreated path, unlike --follow=name.
+func TestFollowDescriptorDoesNotReopen(t *testing.T) {
+	dir := t.TempDir()
+	path := filepath.Join(dir, "rotating.txt")
+	if err := os.WriteFile(path, []byte("first\n"), 0o600); err != nil {
+		t.Fatal(err)
+	}
+
+	ctx, cancel := context.WithCancel(context.Background())
+	out, done := runFollowBackground(ctx, "--follow=descriptor", "-s", "0.05", path)
+
+	time.Sleep(150 * time.Millisecond)
+	// Rotate the original away and recreate the path with new content. A
+	// descriptor follower keeps the old fd and must not pick up "second".
+	if err := os.Rename(path, path+".1"); err != nil {
+		t.Fatal(err)
+	}
+	if err := os.WriteFile(path, []byte("second\n"), 0o600); err != nil {
+		t.Fatal(err)
+	}
+	time.Sleep(300 * time.Millisecond)
+	cancel()
+	if err := <-done; err != nil {
+		t.Fatalf("Run error = %v", err)
+	}
+
+	if got := out.String(); strings.Contains(got, "second\n") {
+		t.Errorf("descriptor follow should not show recreated content, got %q", got)
+	}
+}
+
 func TestInvalidFollowModeRejected(t *testing.T) {
 	t.Parallel()
 	dir := t.TempDir()

@@ -36,14 +36,19 @@ func (c *Command) Synopsis() string { return "Sort lines of text files" }
 
 // options holds the parsed flags that drive the comparison and post-processing.
 type options struct {
-	reverse      bool
-	numeric      bool
-	unique       bool
-	ignoreCase   bool
-	ignoreBlanks bool
-	key          int    // 1-based start field for -k; 0 means whole line
-	separator    string // -t separator; empty means runs of blanks
-	hasSeparator bool
+	reverse        bool
+	numeric        bool
+	generalNumeric bool
+	humanNumeric   bool
+	versionSort    bool
+	unique         bool
+	ignoreCase     bool
+	ignoreBlanks   bool
+	stable         bool   // -s: disable the last-resort full-line comparison
+	zeroTerminated bool   // -z: NUL line delimiter for input and output
+	key            int    // 1-based start field for -k; 0 means whole line
+	separator      string // -t separator; empty means runs of blanks
+	hasSeparator   bool
 }
 
 // Run executes sort.
@@ -60,13 +65,23 @@ func (c *Command) Run(_ context.Context, stdio command.IO, args []string) error 
 	})
 	reverse := fs.BoolP("reverse", "r", false, "reverse the result of comparisons")
 	numeric := fs.BoolP("numeric-sort", "n", false, "compare according to string numerical value")
+	generalNumeric := fs.BoolP("general-numeric-sort", "g", false, "compare according to general numerical value")
+	humanNumeric := fs.BoolP("human-numeric-sort", "h", false, "compare human readable numbers (e.g., 2K 1G)")
+	versionSort := fs.BoolP("version-sort", "V", false, "natural sort of (version) numbers within text")
 	unique := fs.BoolP("unique", "u", false, "output only the first of an equal run")
 	ignoreCase := fs.BoolP("ignore-case", "f", false, "fold lower case to upper case characters")
 	ignoreBlanks := fs.BoolP("ignore-leading-blanks", "b", false, "ignore leading blanks")
+	stable := fs.BoolP("stable", "s", false, "stabilize sort by disabling last-resort comparison")
+	zeroTerminated := fs.BoolP("zero-terminated", "z", false, "line delimiter is NUL, not newline")
+	merge := fs.BoolP("merge", "m", false, "merge already sorted files; do not sort")
 	key := fs.StringP("key", "k", "", "sort via a key; KEYDEF gives location")
 	separator := fs.StringP("field-separator", "t", "", "use SEP instead of non-blank to blank transition")
 	check := fs.BoolP("check", "c", false, "check for sorted input; do not sort")
 	output := fs.StringP("output", "o", "", "write result to FILE instead of standard output")
+	// --parallel and --temporary-directory are accepted for GNU compatibility
+	// but have no effect on this single-threaded, in-memory implementation.
+	_ = fs.IntP("parallel", "", 0, "change the number of sorts run concurrently to N")
+	_ = fs.StringP("temporary-directory", "T", "", "use DIR for temporaries, not $TMPDIR or /tmp")
 
 	proceed, err := fs.Parse(stdio, args)
 	if err != nil || !proceed {
@@ -74,13 +89,18 @@ func (c *Command) Run(_ context.Context, stdio command.IO, args []string) error 
 	}
 
 	opts := options{
-		reverse:      *reverse,
-		numeric:      *numeric,
-		unique:       *unique,
-		ignoreCase:   *ignoreCase,
-		ignoreBlanks: *ignoreBlanks,
-		separator:    *separator,
-		hasSeparator: *separator != "",
+		reverse:        *reverse,
+		numeric:        *numeric,
+		generalNumeric: *generalNumeric,
+		humanNumeric:   *humanNumeric,
+		versionSort:    *versionSort,
+		unique:         *unique,
+		ignoreCase:     *ignoreCase,
+		ignoreBlanks:   *ignoreBlanks,
+		stable:         *stable,
+		zeroTerminated: *zeroTerminated,
+		separator:      *separator,
+		hasSeparator:   *separator != "",
 	}
 	if *key != "" {
 		k, perr := parseKey(*key)
@@ -90,7 +110,7 @@ func (c *Command) Run(_ context.Context, stdio command.IO, args []string) error 
 		opts.key = k
 	}
 
-	lines, readErr := read(stdio, fs.Args())
+	lines, readErr := read(stdio, fs.Args(), opts.zeroTerminated)
 	if readErr != nil {
 		return readErr
 	}
@@ -99,8 +119,12 @@ func (c *Command) Run(_ context.Context, stdio command.IO, args []string) error 
 		return checkSorted(stdio, lines, opts)
 	}
 
+	// --merge assumes its inputs are already sorted; merging through the same
+	// comparator yields the correct result, so sorting the concatenation is an
+	// acceptable equivalent here.
+	_ = *merge
 	sorted := Sort(lines, opts)
-	return writeLines(stdio, *output, sorted)
+	return writeLines(stdio, *output, sorted, opts.zeroTerminated)
 }
 
 // parseKey parses a -k KEYDEF of the simple form "N" (a single field number,
@@ -131,7 +155,7 @@ func parseKey(def string) (int, error) {
 // read reads every operand (defaulting to standard input when there are none)
 // and returns the combined lines, splitting on '\n'. A trailing newline does not
 // produce an empty final line.
-func read(stdio command.IO, files []string) ([]string, error) {
+func read(stdio command.IO, files []string, zeroTerminated bool) ([]string, error) {
 	if len(files) == 0 {
 		files = []string{"-"}
 	}
@@ -149,17 +173,22 @@ func read(stdio command.IO, files []string) ([]string, error) {
 			return nil, command.SilentFailure()
 		}
 	}
-	return splitLines(b.String()), nil
+	return splitLines(b.String(), zeroTerminated), nil
 }
 
-// splitLines splits text into lines on '\n', dropping a single trailing newline
-// so that "a\nb\n" yields two lines rather than three.
-func splitLines(text string) []string {
+// splitLines splits text into records on the delimiter ('\n' by default, or NUL
+// when zeroTerminated), dropping a single trailing delimiter so that "a\nb\n"
+// yields two lines rather than three.
+func splitLines(text string, zeroTerminated bool) []string {
 	if text == "" {
 		return nil
 	}
-	text = strings.TrimSuffix(text, "\n")
-	return strings.Split(text, "\n")
+	delim := "\n"
+	if zeroTerminated {
+		delim = "\x00"
+	}
+	text = strings.TrimSuffix(text, delim)
+	return strings.Split(text, delim)
 }
 
 // Sort returns the lines sorted according to opts. It is pure: it does not touch
@@ -170,6 +199,12 @@ func Sort(lines []string, opts options) []string {
 
 	sort.SliceStable(out, func(i, j int) bool {
 		c := compare(out[i], out[j], opts)
+		// GNU sort applies a last-resort full-line comparison when the keys are
+		// equal, unless --stable (-s) is given. With --stable the original
+		// input order is preserved for equal keys (SliceStable handles that).
+		if c == 0 && !opts.stable {
+			c = strings.Compare(out[i], out[j])
+		}
 		if opts.reverse {
 			return c > 0
 		}
@@ -188,19 +223,29 @@ func compare(a, b string, opts options) int {
 	ka := key(a, opts)
 	kb := key(b, opts)
 
-	if opts.numeric {
-		na := leadingNumber(ka)
-		nb := leadingNumber(kb)
-		switch {
-		case na < nb:
-			return -1
-		case na > nb:
-			return 1
-		default:
-			return 0
-		}
+	switch {
+	case opts.versionSort:
+		return versionCompare(ka, kb)
+	case opts.humanNumeric:
+		return numericCompare(humanNumber(ka), humanNumber(kb))
+	case opts.generalNumeric:
+		return numericCompare(generalNumber(ka), generalNumber(kb))
+	case opts.numeric:
+		return numericCompare(leadingNumber(ka), leadingNumber(kb))
 	}
 	return strings.Compare(ka, kb)
+}
+
+// numericCompare returns the three-way comparison of two floating-point keys.
+func numericCompare(a, b float64) int {
+	switch {
+	case a < b:
+		return -1
+	case a > b:
+		return 1
+	default:
+		return 0
+	}
 }
 
 // key extracts the comparison key from a line: the selected field (when -k is
@@ -263,6 +308,120 @@ func leadingNumber(s string) float64 {
 	return n
 }
 
+// generalNumber parses the leading floating-point value of s for -g, accepting
+// any prefix that strconv.ParseFloat understands (including exponents). A string
+// with no number parses as 0, matching GNU sort -g.
+func generalNumber(s string) float64 {
+	s = strings.TrimLeft(s, " \t")
+	end := 0
+	for end < len(s) {
+		ch := s[end]
+		if (ch >= '0' && ch <= '9') || ch == '+' || ch == '-' || ch == '.' || ch == 'e' || ch == 'E' {
+			end++
+			continue
+		}
+		break
+	}
+	for end > 0 {
+		if n, err := strconv.ParseFloat(s[:end], 64); err == nil {
+			return n
+		}
+		end--
+	}
+	return 0
+}
+
+// humanNumber parses a leading number with an optional SI/IEC suffix for -h,
+// returning its magnitude in bytes so that "2K" < "1M" < "1G". A string with no
+// number parses as 0.
+func humanNumber(s string) float64 {
+	s = strings.TrimLeft(s, " \t")
+	end := 0
+	for end < len(s) {
+		ch := s[end]
+		if (ch >= '0' && ch <= '9') || ch == '+' || ch == '-' || ch == '.' {
+			end++
+			continue
+		}
+		break
+	}
+	if end == 0 {
+		return 0
+	}
+	n, err := strconv.ParseFloat(s[:end], 64)
+	if err != nil {
+		return 0
+	}
+	if end >= len(s) {
+		return n
+	}
+	switch s[end] {
+	case 'K', 'k':
+		return n * 1024
+	case 'M', 'm':
+		return n * 1024 * 1024
+	case 'G', 'g':
+		return n * 1024 * 1024 * 1024
+	case 'T', 't':
+		return n * 1024 * 1024 * 1024 * 1024
+	case 'P', 'p':
+		return n * 1024 * 1024 * 1024 * 1024 * 1024
+	case 'E', 'e':
+		return n * 1024 * 1024 * 1024 * 1024 * 1024 * 1024
+	default:
+		return n
+	}
+}
+
+// versionCompare orders two strings the way "sort -V" does: it walks both
+// strings together, comparing runs of digits as integers (so 2 < 10) and runs
+// of non-digits lexically (so "1.2" < "1.10").
+func versionCompare(a, b string) int {
+	i, j := 0, 0
+	for i < len(a) && j < len(b) {
+		da := a[i] >= '0' && a[i] <= '9'
+		db := b[j] >= '0' && b[j] <= '9'
+		if da && db {
+			// Compare two numeric runs by value, skipping leading zeros.
+			si, sj := i, j
+			for i < len(a) && a[i] >= '0' && a[i] <= '9' {
+				i++
+			}
+			for j < len(b) && b[j] >= '0' && b[j] <= '9' {
+				j++
+			}
+			na := strings.TrimLeft(a[si:i], "0")
+			nb := strings.TrimLeft(b[sj:j], "0")
+			if len(na) != len(nb) {
+				if len(na) < len(nb) {
+					return -1
+				}
+				return 1
+			}
+			if c := strings.Compare(na, nb); c != 0 {
+				return c
+			}
+			continue
+		}
+		if a[i] != b[j] {
+			if a[i] < b[j] {
+				return -1
+			}
+			return 1
+		}
+		i++
+		j++
+	}
+	switch {
+	case i < len(a):
+		return 1
+	case j < len(b):
+		return -1
+	default:
+		return 0
+	}
+}
+
 // uniq drops lines whose comparison key equals that of the preceding line. The
 // slice is assumed to already be sorted, so equal keys are adjacent.
 func uniq(lines []string, opts options) []string {
@@ -297,7 +456,7 @@ func checkSorted(stdio command.IO, lines []string, opts options) error {
 
 // writeLines writes the sorted lines (each terminated by '\n') to the -o file,
 // or to standard output when output is empty.
-func writeLines(stdio command.IO, output string, lines []string) error {
+func writeLines(stdio command.IO, output string, lines []string, zeroTerminated bool) error {
 	w := stdio.Out
 	if output != "" {
 		f, err := create(output)
@@ -308,10 +467,14 @@ func writeLines(stdio command.IO, output string, lines []string) error {
 		defer func() { _ = f.Close() }()
 		w = f
 	}
+	delim := byte('\n')
+	if zeroTerminated {
+		delim = 0
+	}
 	var b strings.Builder
 	for _, l := range lines {
 		b.WriteString(l)
-		b.WriteByte('\n')
+		b.WriteByte(delim)
 	}
 	if _, err := io.WriteString(w, b.String()); err != nil {
 		return command.Failure(err)

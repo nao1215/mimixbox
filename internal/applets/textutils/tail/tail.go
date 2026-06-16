@@ -35,6 +35,7 @@ func (c *Command) Run(ctx context.Context, stdio command.IO, args []string) erro
 			{Command: "tail -f app.log", Explain: "Follow the file and print new lines as they arrive."},
 			{Command: "tail -F app.log", Explain: "Follow by name and retry if the file is rotated."},
 			{Command: "tail -z -n 1 app.log", Explain: "Treat NUL as the line delimiter and print the last record."},
+			{Command: "tail -f --pid=1234 app.log", Explain: "Follow until process 1234 terminates, then exit."},
 		},
 		ExitStatus: "0  success.\n1  a file could not be opened (without --retry).",
 	})
@@ -48,6 +49,7 @@ func (c *Command) Run(ctx context.Context, stdio command.IO, args []string) erro
 	followName := fs.BoolP("follow-name", "F", false, "same as --follow=name --retry")
 	retry := fs.Bool("retry", false, "keep trying to open a file even if it is inaccessible")
 	sleepInterval := fs.Float64P("sleep-interval", "s", 1.0, "seconds to wait between iterations when following")
+	pid := fs.Int("pid", 0, "with -f, terminate after process ID, PID dies")
 
 	proceed, err := fs.Parse(stdio, args)
 	if err != nil || !proceed {
@@ -60,10 +62,16 @@ func (c *Command) Run(ctx context.Context, stdio command.IO, args []string) erro
 	if fs.Changed("follow") && *followMode != "name" && *followMode != "descriptor" {
 		return command.Failuref("invalid argument %q for '--follow'; valid arguments are 'name', 'descriptor'", *followMode)
 	}
+	if fs.Changed("pid") && *pid <= 0 {
+		return command.Failuref("invalid PID: %d", *pid)
+	}
 
 	following := fs.Changed("follow") || *followName
 	reopen := *followName || *followMode == "name"
 	retryOpen := *retry || *followName
+	if fs.Changed("pid") && !following {
+		_, _ = fmt.Fprintln(stdio.Err, "tail: warning: PID ignored; --pid=PID is useful only when following")
+	}
 
 	files := fs.Args()
 	if len(files) == 0 {
@@ -104,7 +112,7 @@ func (c *Command) Run(ctx context.Context, stdio command.IO, args []string) erro
 		paths := followablePaths(files)
 		targets := newFollowTargets(paths, retryOpen)
 		defer closeAll(targets)
-		follow(ctx, stdio, targets, *sleepInterval, reopen, showHeader)
+		follow(ctx, stdio, targets, *sleepInterval, reopen, showHeader, *pid)
 	}
 	return firstErr
 }

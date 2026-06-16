@@ -4,6 +4,7 @@ import (
 	"bytes"
 	"context"
 	"os"
+	"os/exec"
 	"path/filepath"
 	"strings"
 	"testing"
@@ -331,6 +332,284 @@ func TestRunCopyDestUnwritable(t *testing.T) {
 	}
 	if !strings.Contains(errOut, "install:") {
 		t.Errorf("stderr = %q, want install: prefix", errOut)
+	}
+}
+
+// TestRunBackupSimple verifies --backup=simple moves the existing destination
+// aside to dest<suffix> before overwriting.
+func TestRunBackupSimple(t *testing.T) {
+	t.Parallel()
+	dir := t.TempDir()
+	src := filepath.Join(dir, "src")
+	dst := filepath.Join(dir, "dst")
+	writeFile(t, src, "new")
+	writeFile(t, dst, "old")
+
+	if _, errOut, err := run(t, "--backup=simple", src, dst); err != nil {
+		t.Fatalf("Run error = %v (stderr=%q)", err, errOut)
+	}
+	if got, _ := os.ReadFile(dst); string(got) != "new" {
+		t.Errorf("dst = %q, want %q", got, "new")
+	}
+	if got, err := os.ReadFile(dst + "~"); err != nil || string(got) != "old" {
+		t.Errorf("backup dst~ = %q err=%v, want %q", got, err, "old")
+	}
+}
+
+// TestRunBackupSuffix verifies --suffix overrides the simple-backup suffix.
+func TestRunBackupSuffix(t *testing.T) {
+	t.Parallel()
+	dir := t.TempDir()
+	src := filepath.Join(dir, "src")
+	dst := filepath.Join(dir, "dst")
+	writeFile(t, src, "new")
+	writeFile(t, dst, "old")
+
+	if _, errOut, err := run(t, "--backup=simple", "-S", ".bak", src, dst); err != nil {
+		t.Fatalf("Run error = %v (stderr=%q)", err, errOut)
+	}
+	if got, err := os.ReadFile(dst + ".bak"); err != nil || string(got) != "old" {
+		t.Errorf("backup dst.bak = %q err=%v, want %q", got, err, "old")
+	}
+}
+
+// TestRunBackupNumbered verifies numbered backups produce dest.~N~ names that
+// increment when prior numbered backups exist.
+func TestRunBackupNumbered(t *testing.T) {
+	t.Parallel()
+	dir := t.TempDir()
+	src := filepath.Join(dir, "src")
+	dst := filepath.Join(dir, "dst")
+	writeFile(t, src, "v1")
+	writeFile(t, dst, "orig")
+
+	if _, errOut, err := run(t, "--backup=numbered", src, dst); err != nil {
+		t.Fatalf("Run #1 error = %v (stderr=%q)", err, errOut)
+	}
+	if got, err := os.ReadFile(dst + ".~1~"); err != nil || string(got) != "orig" {
+		t.Errorf("backup dst.~1~ = %q err=%v, want %q", got, err, "orig")
+	}
+
+	// Install again; the now-present dst ("v1") should move to dst.~2~.
+	writeFile(t, src, "v2")
+	if _, errOut, err := run(t, "--backup=numbered", src, dst); err != nil {
+		t.Fatalf("Run #2 error = %v (stderr=%q)", err, errOut)
+	}
+	if got, err := os.ReadFile(dst + ".~2~"); err != nil || string(got) != "v1" {
+		t.Errorf("backup dst.~2~ = %q err=%v, want %q", got, err, "v1")
+	}
+}
+
+// TestRunBackupExisting verifies existing-mode picks numbered when a numbered
+// backup already exists, otherwise simple.
+func TestRunBackupExisting(t *testing.T) {
+	t.Parallel()
+	dir := t.TempDir()
+	src := filepath.Join(dir, "src")
+	dst := filepath.Join(dir, "dst")
+	writeFile(t, src, "new")
+	writeFile(t, dst, "old")
+
+	// No numbered backups exist yet -> existing falls back to simple (dst~).
+	if _, errOut, err := run(t, "--backup=existing", src, dst); err != nil {
+		t.Fatalf("Run simple-fallback error = %v (stderr=%q)", err, errOut)
+	}
+	if got, err := os.ReadFile(dst + "~"); err != nil || string(got) != "old" {
+		t.Errorf("backup dst~ = %q err=%v, want %q", got, err, "old")
+	}
+
+	// Now create a numbered backup so existing chooses numbered.
+	writeFile(t, dst+".~1~", "n1")
+	writeFile(t, dst, "current")
+	writeFile(t, src, "newer")
+	if _, errOut, err := run(t, "--backup=existing", src, dst); err != nil {
+		t.Fatalf("Run numbered error = %v (stderr=%q)", err, errOut)
+	}
+	if got, err := os.ReadFile(dst + ".~2~"); err != nil || string(got) != "current" {
+		t.Errorf("backup dst.~2~ = %q err=%v, want %q", got, err, "current")
+	}
+}
+
+// TestRunBackupBareDefault verifies bare --backup defaults to existing-style
+// (no numbered backups -> simple suffix).
+func TestRunBackupBareDefault(t *testing.T) {
+	t.Parallel()
+	dir := t.TempDir()
+	src := filepath.Join(dir, "src")
+	dst := filepath.Join(dir, "dst")
+	writeFile(t, src, "new")
+	writeFile(t, dst, "old")
+
+	if _, errOut, err := run(t, "--backup", src, dst); err != nil {
+		t.Fatalf("Run error = %v (stderr=%q)", err, errOut)
+	}
+	if got, err := os.ReadFile(dst + "~"); err != nil || string(got) != "old" {
+		t.Errorf("backup dst~ = %q err=%v, want %q", got, err, "old")
+	}
+}
+
+// TestRunBackupNoneNoBackup verifies CONTROL none makes no backup and simply
+// overwrites the destination.
+func TestRunBackupNoneNoBackup(t *testing.T) {
+	t.Parallel()
+	dir := t.TempDir()
+	src := filepath.Join(dir, "src")
+	dst := filepath.Join(dir, "dst")
+	writeFile(t, src, "new")
+	writeFile(t, dst, "old")
+
+	if _, _, err := run(t, "--backup=none", src, dst); err != nil {
+		t.Fatalf("Run error = %v", err)
+	}
+	if _, err := os.Stat(dst + "~"); err == nil {
+		t.Error("unexpected backup file created with --backup=none")
+	}
+	if got, _ := os.ReadFile(dst); string(got) != "new" {
+		t.Errorf("dst = %q, want %q", got, "new")
+	}
+}
+
+// TestRunBackupInvalidControl verifies an unknown CONTROL word is rejected.
+func TestRunBackupInvalidControl(t *testing.T) {
+	t.Parallel()
+	dir := t.TempDir()
+	src := filepath.Join(dir, "src")
+	dst := filepath.Join(dir, "dst")
+	writeFile(t, src, "x")
+
+	_, errOut, err := run(t, "--backup=bogus", src, dst)
+	if err == nil {
+		t.Fatal("expected error for invalid --backup control")
+	}
+	if !strings.Contains(errOut, "invalid argument") {
+		t.Errorf("stderr = %q, want invalid argument", errOut)
+	}
+}
+
+// TestRunSuffixEnv verifies $SIMPLE_BACKUP_SUFFIX supplies the simple suffix
+// when --suffix is not given.
+func TestRunSuffixEnv(t *testing.T) {
+	// Not parallel: mutates process environment.
+	dir := t.TempDir()
+	src := filepath.Join(dir, "src")
+	dst := filepath.Join(dir, "dst")
+	writeFile(t, src, "new")
+	writeFile(t, dst, "old")
+
+	t.Setenv("SIMPLE_BACKUP_SUFFIX", ".orig")
+	if _, errOut, err := run(t, "--backup=simple", src, dst); err != nil {
+		t.Fatalf("Run error = %v (stderr=%q)", err, errOut)
+	}
+	if got, err := os.ReadFile(dst + ".orig"); err != nil || string(got) != "old" {
+		t.Errorf("backup dst.orig = %q err=%v, want %q", got, err, "old")
+	}
+}
+
+// TestRunOwnerGroupParseAndInstall verifies that -o/-g parse and the file is
+// still installed. As a non-root user the chown errors with EPERM, in which
+// case install must report it and fail (matching GNU). When run as root the
+// chown to the current owner succeeds. Either way the destination is written.
+func TestRunOwnerGroupParseAndInstall(t *testing.T) {
+	t.Parallel()
+	dir := t.TempDir()
+	src := filepath.Join(dir, "src")
+	dst := filepath.Join(dir, "dst")
+	writeFile(t, src, "payload")
+
+	// Target uid/gid 0 (root): a non-root user cannot chown to it, so the flag
+	// parses, the file installs, but chown fails with EPERM (GNU behavior). As
+	// root, chowning to 0:0 succeeds.
+	_, errOut, runErr := run(t, "-o", "0", "-g", "0", src, dst)
+
+	// The copy happens before chown, so the file is installed regardless.
+	if got, rerr := os.ReadFile(dst); rerr != nil || string(got) != "payload" {
+		t.Errorf("dst = %q err=%v, want %q", got, rerr, "payload")
+	}
+
+	if os.Geteuid() == 0 {
+		// Root: chown to 0:0 succeeds.
+		if runErr != nil {
+			t.Errorf("Run as root error = %v (stderr=%q)", runErr, errOut)
+		}
+	} else {
+		// Non-root: chown to uid 0 fails with EPERM; GNU behavior is to report
+		// and exit nonzero.
+		if runErr == nil {
+			t.Error("expected non-root chown to fail")
+		}
+		if !strings.Contains(errOut, "ownership") {
+			t.Errorf("stderr = %q, want ownership error", errOut)
+		}
+	}
+}
+
+// TestRunOwnerInvalid verifies an unknown owner name is rejected with a
+// recognizable message, and the chown is attempted (file already installed).
+func TestRunOwnerInvalid(t *testing.T) {
+	t.Parallel()
+	dir := t.TempDir()
+	src := filepath.Join(dir, "src")
+	dst := filepath.Join(dir, "dst")
+	writeFile(t, src, "x")
+
+	_, errOut, err := run(t, "-o", "no-such-user-xyz", src, dst)
+	if err == nil {
+		t.Fatal("expected error for invalid owner")
+	}
+	if !strings.Contains(errOut, "invalid user") {
+		t.Errorf("stderr = %q, want invalid user", errOut)
+	}
+}
+
+// TestRunGroupInvalid verifies an unknown group name is rejected.
+func TestRunGroupInvalid(t *testing.T) {
+	t.Parallel()
+	dir := t.TempDir()
+	src := filepath.Join(dir, "src")
+	dst := filepath.Join(dir, "dst")
+	writeFile(t, src, "x")
+
+	_, errOut, err := run(t, "-g", "no-such-group-xyz", src, dst)
+	if err == nil {
+		t.Fatal("expected error for invalid group")
+	}
+	if !strings.Contains(errOut, "invalid group") {
+		t.Errorf("stderr = %q, want invalid group", errOut)
+	}
+}
+
+// TestRunStrip verifies --strip parses and behaves GNU-ishly: when the system
+// strip is available the installed file is stripped without error; when it is
+// absent install reports an error. The file is installed before strip runs.
+func TestRunStrip(t *testing.T) {
+	t.Parallel()
+	dir := t.TempDir()
+	src := filepath.Join(dir, "src")
+	dst := filepath.Join(dir, "dst")
+	writeFile(t, src, "not-really-a-binary")
+
+	_, errOut, err := run(t, "-s", src, dst)
+
+	// File is copied before strip is attempted.
+	if _, statErr := os.Stat(dst); statErr != nil {
+		t.Fatalf("expected dst installed before strip: %v", statErr)
+	}
+
+	if _, lookErr := exec.LookPath("strip"); lookErr != nil {
+		// strip unavailable: GNU-ish behavior is to error out.
+		if err == nil {
+			t.Error("expected error when strip is unavailable")
+		}
+		if !strings.Contains(errOut, "strip") {
+			t.Errorf("stderr = %q, want strip mention", errOut)
+		}
+		return
+	}
+	// strip available: stripping a non-object file typically errors. Either
+	// outcome is acceptable; assert the flag was attempted by checking that on
+	// failure the message names strip.
+	if err != nil && !strings.Contains(errOut, "strip") {
+		t.Errorf("stderr = %q, want strip mention on failure", errOut)
 	}
 }
 
