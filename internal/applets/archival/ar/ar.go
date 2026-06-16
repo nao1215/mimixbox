@@ -41,7 +41,7 @@ func (c *Command) Run(_ context.Context, stdio command.IO, args []string) error 
 		Description: "Create, list and extract members of a Unix \"common\" (System V/GNU) ar\n" +
 			"archive. The first operand is a key letter: r replaces or creates the\n" +
 			"archive from the named files, t lists its members, and x extracts them.\n" +
-			"Append v to the key for verbose output.",
+			"Append v to r or x for verbose output.",
 		Examples: []command.Example{
 			{Command: "ar rv libfoo.a foo.o bar.o", Explain: "create libfoo.a from the object files"},
 			{Command: "ar t libfoo.a", Explain: "list the members of libfoo.a"},
