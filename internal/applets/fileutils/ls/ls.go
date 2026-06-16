@@ -16,6 +16,7 @@ import (
 	"sort"
 	"strconv"
 	"strings"
+	"sync"
 	"syscall"
 	"time"
 
@@ -817,10 +818,18 @@ func timeString(t time.Time) string {
 	return t.Format("Jan _2 15:04")
 }
 
-var userCache = map[uint32]string{}
-var groupCache = map[uint32]string{}
+// userCache and groupCache memoize uid/gid name lookups. They are package
+// globals shared across every ls invocation, so a mutex guards them against
+// concurrent access (multiple ls runs in one process, e.g. parallel tests).
+var (
+	idCacheMu  sync.Mutex
+	userCache  = map[uint32]string{}
+	groupCache = map[uint32]string{}
+)
 
 func lookupUser(uid uint32) string {
+	idCacheMu.Lock()
+	defer idCacheMu.Unlock()
 	if name, ok := userCache[uid]; ok {
 		return name
 	}
@@ -833,6 +842,8 @@ func lookupUser(uid uint32) string {
 }
 
 func lookupGroup(gid uint32) string {
+	idCacheMu.Lock()
+	defer idCacheMu.Unlock()
 	if name, ok := groupCache[gid]; ok {
 		return name
 	}
