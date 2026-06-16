@@ -141,3 +141,61 @@ func TestHelpSections(t *testing.T) {
 		}
 	}
 }
+
+// TestRelativeTo covers --relative-to (GitHub issue #757).
+func TestRelativeTo(t *testing.T) {
+	t.Parallel()
+	dir := t.TempDir()
+	if err := os.MkdirAll(filepath.Join(dir, "a", "b"), 0o755); err != nil {
+		t.Fatal(err)
+	}
+	out, _, err := run(t, "--relative-to", filepath.Join(dir, "a"), filepath.Join(dir, "a", "b"))
+	if err != nil {
+		t.Fatalf("err = %v", err)
+	}
+	if strings.TrimSpace(out) != "b" {
+		t.Errorf("--relative-to = %q, want %q", strings.TrimSpace(out), "b")
+	}
+}
+
+// TestRelativeBase covers --relative-base: paths outside the base stay absolute.
+func TestRelativeBase(t *testing.T) {
+	t.Parallel()
+	dir := t.TempDir()
+	if err := os.MkdirAll(filepath.Join(dir, "base", "x"), 0o755); err != nil {
+		t.Fatal(err)
+	}
+	if err := os.MkdirAll(filepath.Join(dir, "other"), 0o755); err != nil {
+		t.Fatal(err)
+	}
+	base := filepath.Join(dir, "base")
+	// Under base -> relative.
+	out, _, err := run(t, "--relative-base", base, filepath.Join(base, "x"))
+	if err != nil {
+		t.Fatalf("err = %v", err)
+	}
+	if strings.TrimSpace(out) != "x" {
+		t.Errorf("under base = %q, want %q", strings.TrimSpace(out), "x")
+	}
+	// Outside base -> absolute.
+	resolvedOther, _ := filepath.EvalSymlinks(filepath.Join(dir, "other"))
+	out, _, err = run(t, "--relative-base", base, filepath.Join(dir, "other"))
+	if err != nil {
+		t.Fatalf("err = %v", err)
+	}
+	if strings.TrimSpace(out) != resolvedOther {
+		t.Errorf("outside base = %q, want absolute %q", strings.TrimSpace(out), resolvedOther)
+	}
+}
+
+// TestLogical covers -L (lexical resolution, no symlink expansion).
+func TestLogical(t *testing.T) {
+	t.Parallel()
+	out, _, err := run(t, "-L", "-m", "/tmp/../etc/./hosts")
+	if err != nil {
+		t.Fatalf("err = %v", err)
+	}
+	if strings.TrimSpace(out) != "/etc/hosts" {
+		t.Errorf("-L = %q, want /etc/hosts", strings.TrimSpace(out))
+	}
+}

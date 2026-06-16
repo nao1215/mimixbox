@@ -2,10 +2,15 @@ package tail
 
 import (
 	"bytes"
+	"context"
+	"errors"
 	"os"
 	"path/filepath"
 	"strings"
+	"sync/atomic"
+	"syscall"
 	"testing"
+	"time"
 
 	"github.com/nao1215/mimixbox/internal/command"
 )
@@ -219,4 +224,95 @@ func TestSynopsis(t *testing.T) {
 	if New().Synopsis() == "" {
 		t.Error("Synopsis() = empty")
 	}
+}
+
+// TestPidAliveSignalZero checks the default pidAlive implementation against real
+// PIDs: the current process is alive, and a never-allocated PID reports gone via
+// ESRCH. This is the real syscall.Kill(pid, 0) path.
+func TestPidAliveSignalZero(t *testing.T) {
+	t.Parallel()
+	if !pidAlive(os.Getpid()) {
+		t.Error("pidAlive(self) = false, want true")
+	}
+	// PIDs are bounded; this value is far above any live process and reliably
+	// returns ESRCH. Guard so the test is meaningful only when it is truly gone.
+	dead := 1 << 30
+	if err := syscall.Kill(dead, 0); errors.Is(err, syscall.ESRCH) {
+		if pidAlive(dead) {
+			t.Errorf("pidAlive(%d) = true, want false", dead)
+		}
+	}
+}
+
+// TestFollowExitsWhenPidGone injects a fake alive-check so the follow loop's PID
+// termination path is exercised deterministically and fast: the process is
+// reported alive for the first few polls, then gone, and follow must return.
+func TestFollowExitsWhenPidGone(t *testing.T) {
+	dir := t.TempDir()
+	path := filepath.Join(dir, "f.txt")
+	if err := os.WriteFile(path, []byte("x\n"), 0o600); err != nil {
+		t.Fatal(err)
+	}
+	targets := newFollowTargets([]string{path}, false)
+	defer closeAll(targets)
+
+	var polls int32
+	orig := pidAlive
+	t.Cleanup(func() { pidAlive = orig })
+	pidAlive = func(int) bool { return atomic.AddInt32(&polls, 1) < 2 }
+
+	io, _, _ := newIO("")
+	done := make(chan struct{})
+	go func() {
+		follow(context.Background(), io, targets, 0.02, false, false, 4321)
+		close(done)
+	}()
+	select {
+	case <-done:
+	case <-time.After(2 * time.Second):
+		t.Fatal("follow did not exit after the watched PID went away")
+	}
+	if atomic.LoadInt32(&polls) < 2 {
+		t.Errorf("pidAlive called %d times, want >= 2", polls)
+	}
+}
+
+// TestFollowWithoutPidKeepsRunning confirms a zero PID disables the watch: the
+// loop keeps running until the context is canceled.
+func TestFollowWithoutPidKeepsRunning(t *testing.T) {
+	dir := t.TempDir()
+	path := filepath.Join(dir, "f.txt")
+	if err := os.WriteFile(path, []byte("x\n"), 0o600); err != nil {
+		t.Fatal(err)
+	}
+	targets := newFollowTargets([]string{path}, false)
+	defer closeAll(targets)
+
+	orig := pidAlive
+	t.Cleanup(func() { pidAlive = orig })
+	var called int32
+	pidAlive = func(int) bool { atomic.AddInt32(&called, 1); return false }
+
+	ctx, cancel := context.WithCancel(context.Background())
+	done := make(chan struct{})
+	go func() {
+		follow(ctx, io2nil(), targets, 0.02, false, false, 0)
+		close(done)
+	}()
+	time.Sleep(100 * time.Millisecond)
+	select {
+	case <-done:
+		t.Fatal("follow exited before cancel with pid == 0")
+	default:
+	}
+	cancel()
+	<-done
+	if atomic.LoadInt32(&called) != 0 {
+		t.Errorf("pidAlive called %d times with pid == 0, want 0", called)
+	}
+}
+
+func io2nil() command.IO {
+	io, _, _ := newIO("")
+	return io
 }

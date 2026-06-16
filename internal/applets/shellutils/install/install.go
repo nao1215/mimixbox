@@ -9,6 +9,8 @@ import (
 	"fmt"
 	"io"
 	"os"
+	"os/exec"
+	"os/user"
 	"path/filepath"
 	"strconv"
 
@@ -27,6 +29,22 @@ func (c *Command) Name() string { return "install" }
 // Synopsis returns the one-line description shown in the applet list.
 func (c *Command) Synopsis() string { return "Copy files and set attributes" }
 
+// backupMode selects how --backup names the backup of an overwritten
+// destination, mirroring GNU install/cp CONTROL semantics.
+type backupMode int
+
+const (
+	// backupNone makes no backup (CONTROL none/off, or --backup absent).
+	backupNone backupMode = iota
+	// backupSimple appends the simple suffix (CONTROL simple/never), e.g. file~.
+	backupSimple
+	// backupNumbered makes numbered backups (CONTROL numbered/t), e.g. file.~1~.
+	backupNumbered
+	// backupExisting makes numbered backups if any already exist, else simple
+	// (CONTROL existing/nil).
+	backupExisting
+)
+
 // options holds the parsed command-line switches.
 type options struct {
 	directory bool   // -d: create directories instead of copying
@@ -34,8 +52,13 @@ type options struct {
 	noTarget  bool   // -T: treat DEST as a normal file, never a directory
 	target    string // -t: directory into which every SOURCE is copied
 	mode      os.FileMode
-	preserve  bool // -p: preserve modification/access times
-	verbose   bool // -v: print what is being done
+	preserve  bool   // -p: preserve modification/access times
+	verbose   bool   // -v: print what is being done
+	owner     string // -o: owner name or uid to set via chown
+	group     string // -g: group name or gid to set via chown
+	strip     bool   // -s: run the system strip on the installed file
+	backup    backupMode
+	suffix    string // simple-backup suffix (default "~")
 }
 
 // Run executes install.
@@ -50,6 +73,11 @@ func (c *Command) Run(_ context.Context, stdio command.IO, args []string) error 
 			{Command: "install -t /usr/local/bin prog", Explain: "Copy prog into the /usr/local/bin directory."},
 		},
 		ExitStatus: "0  all files or directories were installed.\n1  an operand was invalid or an install failed.",
+		Notes: []string{
+			"--owner/-o and --group/-g set ownership via chown after install; as a non-root user this fails and install exits nonzero, matching GNU.",
+			"--strip/-s runs the system strip program on the installed file; if strip is not found, install reports an error and fails, matching GNU.",
+			"--backup CONTROL is one of none/off, numbered/t, existing/nil, simple/never; the simple suffix defaults to '~' or $SIMPLE_BACKUP_SUFFIX and can be overridden with --suffix/-S.",
+		},
 	})
 	directory := fs.BoolP("directory", "d", false, "treat all arguments as directory names; create them")
 	createDir := fs.BoolP("create-leading", "D", false, "create all leading components of DEST, then copy SOURCE")
@@ -58,6 +86,14 @@ func (c *Command) Run(_ context.Context, stdio command.IO, args []string) error 
 	modeStr := fs.StringP("mode", "m", "755", "set permission mode (as in chmod), instead of rwxr-xr-x")
 	preserve := fs.BoolP("preserve-timestamps", "p", false, "apply access/modification times of SOURCE files to DEST")
 	verbose := fs.BoolP("verbose", "v", false, "print the name of each created file or directory")
+	owner := fs.StringP("owner", "o", "", "set ownership (super-user only)")
+	group := fs.StringP("group", "g", "", "set group ownership, instead of process' current group")
+	strip := fs.BoolP("strip", "s", false, "strip symbol tables from installed binaries")
+	// --backup takes an optional CONTROL word; with no value (bare --backup)
+	// the default is "existing". pflag's NoOptDefVal makes "--backup" alone valid.
+	backup := fs.String("backup", "", "make a backup of each existing destination file (CONTROL: none, numbered, existing, simple)")
+	fs.Lookup("backup").NoOptDefVal = "existing"
+	suffix := fs.StringP("suffix", "S", "", "override the usual backup suffix")
 
 	proceed, err := fs.Parse(stdio, args)
 	if err != nil || !proceed {
@@ -70,6 +106,12 @@ func (c *Command) Run(_ context.Context, stdio command.IO, args []string) error 
 		return command.SilentFailure()
 	}
 
+	backupMode, err := resolveBackup(*backup)
+	if err != nil {
+		_, _ = fmt.Fprintf(stdio.Err, "install: %v\n", err)
+		return command.SilentFailure()
+	}
+
 	opts := options{
 		directory: *directory,
 		createDir: *createDir,
@@ -78,6 +120,11 @@ func (c *Command) Run(_ context.Context, stdio command.IO, args []string) error 
 		mode:      mode,
 		preserve:  *preserve,
 		verbose:   *verbose,
+		owner:     *owner,
+		group:     *group,
+		strip:     *strip,
+		backup:    backupMode,
+		suffix:    resolveSuffix(*suffix),
 	}
 
 	operands := fs.Args()
@@ -192,6 +239,11 @@ func (c *Command) installOne(stdio command.IO, src, dest string, opts options) e
 		return fmt.Errorf("omitting directory '%s'", src)
 	}
 
+	// Move any existing destination aside before overwriting it.
+	if err := makeBackup(dest, opts); err != nil {
+		return fmt.Errorf("cannot backup %s: %w", dest, err)
+	}
+
 	if err := copyFile(src, dest); err != nil {
 		return fmt.Errorf("cannot install %s: %w", src, err)
 	}
@@ -203,10 +255,174 @@ func (c *Command) installOne(stdio command.IO, src, dest string, opts options) e
 			return fmt.Errorf("cannot set times of %s: %w", dest, err)
 		}
 	}
+	// -o/-g: set ownership via chown. As a non-root user this typically fails
+	// with EPERM; like GNU install, report the failure and propagate it.
+	if opts.owner != "" || opts.group != "" {
+		if err := setOwnership(dest, opts); err != nil {
+			return err
+		}
+	}
+	// -s: run the system strip on the installed file. GNU install errors out
+	// when strip is unavailable; we mirror that.
+	if opts.strip {
+		if err := stripFile(dest); err != nil {
+			return err
+		}
+	}
 	if opts.verbose {
 		_, _ = fmt.Fprintf(stdio.Out, "'%s' -> '%s'\n", src, dest)
 	}
 	return nil
+}
+
+// setOwnership resolves the -o owner and -g group operands to a uid/gid and
+// applies them with chown. A value left empty maps to -1 (leave unchanged).
+func setOwnership(dest string, opts options) error {
+	uid := -1
+	gid := -1
+	if opts.owner != "" {
+		v, ok := lookupUID(opts.owner)
+		if !ok {
+			return fmt.Errorf("invalid user '%s'", opts.owner)
+		}
+		uid = v
+	}
+	if opts.group != "" {
+		v, ok := lookupGID(opts.group)
+		if !ok {
+			return fmt.Errorf("invalid group '%s'", opts.group)
+		}
+		gid = v
+	}
+	if err := os.Chown(dest, uid, gid); err != nil {
+		return fmt.Errorf("cannot change ownership of %s: %w", dest, err)
+	}
+	return nil
+}
+
+// lookupUID resolves a user name or numeric uid to its integer uid.
+func lookupUID(owner string) (int, bool) {
+	if u, err := user.Lookup(owner); err == nil {
+		if uid, err := strconv.Atoi(u.Uid); err == nil {
+			return uid, true
+		}
+	}
+	if uid, err := strconv.Atoi(owner); err == nil {
+		return uid, true
+	}
+	return 0, false
+}
+
+// lookupGID resolves a group name or numeric gid to its integer gid.
+func lookupGID(group string) (int, bool) {
+	if g, err := user.LookupGroup(group); err == nil {
+		if gid, err := strconv.Atoi(g.Gid); err == nil {
+			return gid, true
+		}
+	}
+	if gid, err := strconv.Atoi(group); err == nil {
+		return gid, true
+	}
+	return 0, false
+}
+
+// stripFile runs the system "strip" on dest. Like GNU install, an unavailable
+// strip program is an error rather than a silent skip.
+func stripFile(dest string) error {
+	prog, err := exec.LookPath("strip")
+	if err != nil {
+		return fmt.Errorf("strip program not found")
+	}
+	cmd := exec.Command(prog, dest) //nolint:gosec // operating on a user-named file
+	if out, err := cmd.CombinedOutput(); err != nil {
+		if len(out) > 0 {
+			return fmt.Errorf("strip %s: %s", dest, string(out))
+		}
+		return fmt.Errorf("strip %s: %w", dest, err)
+	}
+	return nil
+}
+
+// resolveBackup maps a --backup CONTROL word to a backupMode. An empty string
+// means --backup was not given (no backup).
+func resolveBackup(control string) (backupMode, error) {
+	switch control {
+	case "":
+		return backupNone, nil
+	case "none", "off":
+		return backupNone, nil
+	case "numbered", "t":
+		return backupNumbered, nil
+	case "existing", "nil":
+		return backupExisting, nil
+	case "simple", "never":
+		return backupSimple, nil
+	default:
+		return backupNone, fmt.Errorf("invalid argument '%s' for '--backup'", control)
+	}
+}
+
+// resolveSuffix returns the simple-backup suffix: the explicit --suffix value,
+// then $SIMPLE_BACKUP_SUFFIX, then the default "~".
+func resolveSuffix(suffix string) string {
+	if suffix != "" {
+		return suffix
+	}
+	if env := os.Getenv("SIMPLE_BACKUP_SUFFIX"); env != "" {
+		return env
+	}
+	return "~"
+}
+
+// makeBackup moves an existing target aside before it is overwritten, following
+// the selected backup scheme. It is a no-op when --backup was not requested or
+// the target does not exist.
+func makeBackup(target string, opts options) error {
+	if opts.backup == backupNone {
+		return nil
+	}
+	if _, err := os.Lstat(target); err != nil {
+		return nil // nothing to back up
+	}
+
+	mode := opts.backup
+	if mode == backupExisting {
+		// Numbered if any numbered backup already exists, else simple.
+		if numberedBackupsExist(target) {
+			mode = backupNumbered
+		} else {
+			mode = backupSimple
+		}
+	}
+
+	var backupPath string
+	switch mode {
+	case backupNumbered:
+		backupPath = nextNumberedBackup(target)
+	default: // backupSimple
+		backupPath = target + opts.suffix
+	}
+	return os.Rename(target, backupPath)
+}
+
+// numberedBackupsExist reports whether any file named "<target>.~N~" exists.
+func numberedBackupsExist(target string) bool {
+	for n := 1; ; n++ {
+		p := fmt.Sprintf("%s.~%d~", target, n)
+		if _, err := os.Lstat(p); err != nil {
+			return n > 1
+		}
+	}
+}
+
+// nextNumberedBackup returns the first unused "<target>.~N~" name.
+func nextNumberedBackup(target string) string {
+	for n := 1; ; n++ {
+		p := target + ".~" + strconv.Itoa(n) + "~"
+		if _, err := os.Lstat(p); err != nil {
+			return p
+		}
+	}
 }
 
 // copyFile copies the contents of src to dest, truncating dest if it exists.

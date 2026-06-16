@@ -43,3 +43,54 @@ func SetStatfs(fake func(path string) (StatfsResult, error)) (restore func()) {
 	statfs = fake
 	return func() { statfs = orig }
 }
+
+// MountEntry mirrors the unexported mountEntry for use in tests.
+type MountEntry = mountEntry
+
+// NewMountEntry builds a mountEntry from its parts.
+func NewMountEntry(source, target, fstype string) MountEntry {
+	return mountEntry{source: source, target: target, fstype: fstype}
+}
+
+// SetReadMounts replaces the package readMounts func (the injectable mount
+// source seam) and returns a restore func.
+func SetReadMounts(fake func() ([]MountEntry, error)) (restore func()) {
+	orig := readMounts
+	readMounts = fake
+	return func() { readMounts = orig }
+}
+
+// FsEntry mirrors the unexported fsEntry for use in tests.
+type FsEntry = fsEntry
+
+// NewFsEntry builds an fsEntry for the helpers under test.
+func NewFsEntry(source, fstype, target string, s StatfsResult) FsEntry {
+	return fsEntry{source: source, fstype: fstype, target: target, stat: s}
+}
+
+// ParseOutput exposes parseOutput.
+func ParseOutput(spec string) ([]string, error) { return parseOutput(spec) }
+
+// ParseSize exposes parseSize.
+func ParseSize(spec string) (int64, error) { return parseSize(spec) }
+
+// ScaleSize exposes scaleSize.
+func ScaleSize(bytes uint64, human bool, blockSize int64) string {
+	return scaleSize(bytes, human, blockSize)
+}
+
+// FilterByType exposes filterByType (returns the target fields for assertions).
+func FilterByType(entries []FsEntry, types []string) []string {
+	out := filterByType(entries, types)
+	targets := make([]string, len(out))
+	for i, e := range out {
+		targets[i] = e.target
+	}
+	return targets
+}
+
+// UnescapeMount exposes unescapeMount.
+func UnescapeMount(s string) string { return unescapeMount(s) }
+
+// FsTypeName exposes fsTypeName.
+func FsTypeName(magic int64) string { return fsTypeName(magic) }

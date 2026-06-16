@@ -2,13 +2,28 @@ package tail
 
 import (
 	"context"
+	"errors"
 	"fmt"
 	"io"
 	"os"
+	"syscall"
 	"time"
 
 	"github.com/nao1215/mimixbox/internal/command"
 )
+
+// pidAlive reports whether the process with the given PID is still alive. It is
+// a package variable so tests can swap in a deterministic implementation
+// instead of relying on a real process. Sending signal 0 performs no delivery
+// but still runs the kernel's permission and existence checks: ESRCH means the
+// process is gone, while EPERM means it exists but is owned by another user.
+var pidAlive = func(pid int) bool {
+	err := syscall.Kill(pid, 0)
+	if err == nil {
+		return true
+	}
+	return !errors.Is(err, syscall.ESRCH)
+}
 
 // followTarget tracks the state of a single file that tail is following: the
 // open descriptor, how many bytes have already been emitted, and the file
@@ -63,8 +78,10 @@ func closeAll(targets []followTarget) {
 // follow polls the targets every interval, emitting newly appended data, until
 // the context is canceled. reopen enables -F semantics (re-open a file that is
 // rotated or recreated); showHeader prints "==> FILE <==" banners when output
-// switches between files.
-func follow(ctx context.Context, stdio command.IO, targets []followTarget, interval float64, reopen, showHeader bool) {
+// switches between files. When pid is non-zero (--pid=PID), following stops once
+// that process terminates: tail performs one final poll so data the process
+// wrote just before exiting is not lost, mirroring GNU tail.
+func follow(ctx context.Context, stdio command.IO, targets []followTarget, interval float64, reopen, showHeader bool, pid int) {
 	if len(targets) == 0 {
 		return
 	}
@@ -78,6 +95,9 @@ func follow(ctx context.Context, stdio command.IO, targets []followTarget, inter
 		case <-ticker.C:
 			for i := range targets {
 				targets[i].poll(stdio, reopen, showHeader, &last)
+			}
+			if pid != 0 && !pidAlive(pid) {
+				return
 			}
 		}
 	}
