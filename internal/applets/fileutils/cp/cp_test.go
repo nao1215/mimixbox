@@ -7,6 +7,7 @@ import (
 	"path/filepath"
 	"strings"
 	"testing"
+	"time"
 
 	"github.com/nao1215/mimixbox/internal/applets/fileutils/cp"
 	"github.com/nao1215/mimixbox/internal/command"
@@ -713,6 +714,423 @@ func TestRunNoDereferencePreservesLinkInTree(t *testing.T) {
 	}
 	if fi.Mode()&os.ModeSymlink == 0 {
 		t.Errorf("cp -d should preserve the symlink within the copied tree")
+	}
+}
+
+// --- #727: --target-directory (-t) and --no-target-directory (-T) ----------
+
+// TestRunTargetDirectory proves "cp -t DST a b" copies both sources into DST,
+// equivalent to "cp a b DST".
+func TestRunTargetDirectory(t *testing.T) {
+	t.Parallel()
+	dir := t.TempDir()
+	a := filepath.Join(dir, "a.txt")
+	b := filepath.Join(dir, "b.txt")
+	dst := filepath.Join(dir, "out")
+	if err := os.WriteFile(a, []byte("A\n"), 0o644); err != nil {
+		t.Fatal(err)
+	}
+	if err := os.WriteFile(b, []byte("B\n"), 0o644); err != nil {
+		t.Fatal(err)
+	}
+	if err := os.Mkdir(dst, 0o755); err != nil {
+		t.Fatal(err)
+	}
+	if _, stderr, err := run(t, "-t", dst, a, b); err != nil {
+		t.Fatalf("cp -t error = %v (%s)", err, stderr)
+	}
+	if got, _ := os.ReadFile(filepath.Join(dst, "a.txt")); string(got) != "A\n" {
+		t.Errorf("a.txt = %q, want A", got)
+	}
+	if got, _ := os.ReadFile(filepath.Join(dst, "b.txt")); string(got) != "B\n" {
+		t.Errorf("b.txt = %q, want B", got)
+	}
+}
+
+// TestRunTargetDirectoryLong covers the --target-directory=DIR spelling.
+func TestRunTargetDirectoryLong(t *testing.T) {
+	t.Parallel()
+	dir := t.TempDir()
+	a := filepath.Join(dir, "a.txt")
+	dst := filepath.Join(dir, "out")
+	if err := os.WriteFile(a, []byte("A\n"), 0o644); err != nil {
+		t.Fatal(err)
+	}
+	if err := os.Mkdir(dst, 0o755); err != nil {
+		t.Fatal(err)
+	}
+	if _, stderr, err := run(t, "--target-directory="+dst, a); err != nil {
+		t.Fatalf("cp --target-directory error = %v (%s)", err, stderr)
+	}
+	if got, _ := os.ReadFile(filepath.Join(dst, "a.txt")); string(got) != "A\n" {
+		t.Errorf("a.txt = %q, want A", got)
+	}
+}
+
+// TestRunNoTargetDirectoryRejectsDir proves -T refuses to overwrite an existing
+// directory with a non-directory source.
+func TestRunNoTargetDirectoryRejectsDir(t *testing.T) {
+	t.Parallel()
+	dir := t.TempDir()
+	a := filepath.Join(dir, "a.txt")
+	b := filepath.Join(dir, "b") // a directory named like a destination
+	if err := os.WriteFile(a, []byte("A\n"), 0o644); err != nil {
+		t.Fatal(err)
+	}
+	if err := os.Mkdir(b, 0o755); err != nil {
+		t.Fatal(err)
+	}
+	_, stderr, err := run(t, "-T", a, b)
+	if err == nil {
+		t.Fatal("expected error: cp -T must not copy onto a directory")
+	}
+	if !strings.Contains(stderr, "cannot overwrite directory") {
+		t.Errorf("stderr = %q, want 'cannot overwrite directory'", stderr)
+	}
+}
+
+// TestRunNoTargetDirectoryCopiesOntoName proves -T copies a onto b as a plain
+// file (b is not a directory), rather than into b/a.txt.
+func TestRunNoTargetDirectoryCopiesOntoName(t *testing.T) {
+	t.Parallel()
+	dir := t.TempDir()
+	a := filepath.Join(dir, "a.txt")
+	b := filepath.Join(dir, "b") // does not exist yet
+	if err := os.WriteFile(a, []byte("A\n"), 0o644); err != nil {
+		t.Fatal(err)
+	}
+	if _, stderr, err := run(t, "-T", a, b); err != nil {
+		t.Fatalf("cp -T error = %v (%s)", err, stderr)
+	}
+	if got, _ := os.ReadFile(b); string(got) != "A\n" {
+		t.Errorf("b = %q, want A (should be a plain file copy)", got)
+	}
+	fi, err := os.Stat(b)
+	if err != nil {
+		t.Fatal(err)
+	}
+	if fi.IsDir() {
+		t.Errorf("-T destination should be a file, got a directory")
+	}
+}
+
+// --- #728: --parents -------------------------------------------------------
+
+// TestRunParentsRecreatesPrefix proves --parents recreates the source's full
+// path prefix under the destination directory.
+func TestRunParentsRecreatesPrefix(t *testing.T) {
+	t.Parallel()
+	dir := t.TempDir()
+	// Work with relative paths so the recreated prefix is predictable.
+	wd, err := os.Getwd()
+	if err != nil {
+		t.Fatal(err)
+	}
+	t.Cleanup(func() { _ = os.Chdir(wd) })
+	if err := os.Chdir(dir); err != nil {
+		t.Fatal(err)
+	}
+
+	if err := os.MkdirAll(filepath.Join("src", "a"), 0o755); err != nil {
+		t.Fatal(err)
+	}
+	if err := os.WriteFile(filepath.Join("src", "a", "b.txt"), []byte("deep\n"), 0o644); err != nil {
+		t.Fatal(err)
+	}
+	if err := os.Mkdir("dst", 0o755); err != nil {
+		t.Fatal(err)
+	}
+
+	if _, stderr, err := run(t, "--parents", filepath.Join("src", "a", "b.txt"), "dst"); err != nil {
+		t.Fatalf("cp --parents error = %v (%s)", err, stderr)
+	}
+	got, err := os.ReadFile(filepath.Join("dst", "src", "a", "b.txt"))
+	if err != nil {
+		t.Fatalf("read dst/src/a/b.txt: %v", err)
+	}
+	if string(got) != "deep\n" {
+		t.Errorf("content = %q, want deep", got)
+	}
+}
+
+// TestRunParentsRequiresDir proves --parents needs an existing destination dir.
+func TestRunParentsRequiresDir(t *testing.T) {
+	t.Parallel()
+	dir := t.TempDir()
+	src := filepath.Join(dir, "a.txt")
+	if err := os.WriteFile(src, []byte("x\n"), 0o644); err != nil {
+		t.Fatal(err)
+	}
+	_, stderr, err := run(t, "--parents", src, filepath.Join(dir, "nodir"))
+	if err == nil {
+		t.Fatal("expected error: --parents requires a directory destination")
+	}
+	if !strings.Contains(stderr, "is not a directory") {
+		t.Errorf("stderr = %q, want 'is not a directory'", stderr)
+	}
+}
+
+// --- #729: --update (-u) ---------------------------------------------------
+
+// TestRunUpdateSkipsWhenDestNewer proves -u does not copy when the destination
+// is newer than the source.
+func TestRunUpdateSkipsWhenDestNewer(t *testing.T) {
+	t.Parallel()
+	dir := t.TempDir()
+	src := filepath.Join(dir, "src.txt")
+	dst := filepath.Join(dir, "dst.txt")
+	if err := os.WriteFile(src, []byte("new\n"), 0o644); err != nil {
+		t.Fatal(err)
+	}
+	if err := os.WriteFile(dst, []byte("old-but-newer\n"), 0o644); err != nil {
+		t.Fatal(err)
+	}
+	// Make the source older than the destination.
+	old := time.Now().Add(-1 * time.Hour)
+	newer := time.Now()
+	if err := os.Chtimes(src, old, old); err != nil {
+		t.Fatal(err)
+	}
+	if err := os.Chtimes(dst, newer, newer); err != nil {
+		t.Fatal(err)
+	}
+	if _, stderr, err := run(t, "-u", src, dst); err != nil {
+		t.Fatalf("cp -u error = %v (%s)", err, stderr)
+	}
+	if got, _ := os.ReadFile(dst); string(got) != "old-but-newer\n" {
+		t.Errorf("dst = %q, want unchanged (src is older)", got)
+	}
+}
+
+// TestRunUpdateCopiesWhenSrcNewer proves -u copies when the source is newer.
+func TestRunUpdateCopiesWhenSrcNewer(t *testing.T) {
+	t.Parallel()
+	dir := t.TempDir()
+	src := filepath.Join(dir, "src.txt")
+	dst := filepath.Join(dir, "dst.txt")
+	if err := os.WriteFile(src, []byte("new\n"), 0o644); err != nil {
+		t.Fatal(err)
+	}
+	if err := os.WriteFile(dst, []byte("old\n"), 0o644); err != nil {
+		t.Fatal(err)
+	}
+	old := time.Now().Add(-1 * time.Hour)
+	newer := time.Now()
+	if err := os.Chtimes(dst, old, old); err != nil {
+		t.Fatal(err)
+	}
+	if err := os.Chtimes(src, newer, newer); err != nil {
+		t.Fatal(err)
+	}
+	if _, stderr, err := run(t, "-u", src, dst); err != nil {
+		t.Fatalf("cp -u error = %v (%s)", err, stderr)
+	}
+	if got, _ := os.ReadFile(dst); string(got) != "new\n" {
+		t.Errorf("dst = %q, want new (src is newer)", got)
+	}
+}
+
+// TestRunUpdateCopiesWhenDestMissing proves -u copies when the dest is absent.
+func TestRunUpdateCopiesWhenDestMissing(t *testing.T) {
+	t.Parallel()
+	dir := t.TempDir()
+	src := filepath.Join(dir, "src.txt")
+	dst := filepath.Join(dir, "dst.txt")
+	if err := os.WriteFile(src, []byte("fresh\n"), 0o644); err != nil {
+		t.Fatal(err)
+	}
+	if _, stderr, err := run(t, "-u", src, dst); err != nil {
+		t.Fatalf("cp -u error = %v (%s)", err, stderr)
+	}
+	if got, _ := os.ReadFile(dst); string(got) != "fresh\n" {
+		t.Errorf("dst = %q, want fresh", got)
+	}
+}
+
+// --- #729: --backup and --suffix -------------------------------------------
+
+// TestRunBackupSimple proves --backup=simple makes a "file~" backup before the
+// overwrite.
+func TestRunBackupSimple(t *testing.T) {
+	t.Parallel()
+	dir := t.TempDir()
+	src := filepath.Join(dir, "src.txt")
+	dst := filepath.Join(dir, "dst.txt")
+	if err := os.WriteFile(src, []byte("new\n"), 0o644); err != nil {
+		t.Fatal(err)
+	}
+	if err := os.WriteFile(dst, []byte("old\n"), 0o644); err != nil {
+		t.Fatal(err)
+	}
+	if _, stderr, err := run(t, "--backup=simple", src, dst); err != nil {
+		t.Fatalf("cp --backup=simple error = %v (%s)", err, stderr)
+	}
+	if got, _ := os.ReadFile(dst); string(got) != "new\n" {
+		t.Errorf("dst = %q, want new", got)
+	}
+	if got, _ := os.ReadFile(dst + "~"); string(got) != "old\n" {
+		t.Errorf("backup dst~ = %q, want old", got)
+	}
+}
+
+// TestRunBackupNumbered proves --backup=numbered makes "file.~1~" then ".~2~".
+func TestRunBackupNumbered(t *testing.T) {
+	t.Parallel()
+	dir := t.TempDir()
+	src := filepath.Join(dir, "src.txt")
+	dst := filepath.Join(dir, "dst.txt")
+	if err := os.WriteFile(src, []byte("v2\n"), 0o644); err != nil {
+		t.Fatal(err)
+	}
+	if err := os.WriteFile(dst, []byte("v1\n"), 0o644); err != nil {
+		t.Fatal(err)
+	}
+	if _, stderr, err := run(t, "--backup=numbered", src, dst); err != nil {
+		t.Fatalf("cp --backup=numbered error = %v (%s)", err, stderr)
+	}
+	if got, _ := os.ReadFile(dst + ".~1~"); string(got) != "v1\n" {
+		t.Errorf("dst.~1~ = %q, want v1", got)
+	}
+	// A second overwrite must produce .~2~ and not clobber .~1~.
+	if err := os.WriteFile(src, []byte("v3\n"), 0o644); err != nil {
+		t.Fatal(err)
+	}
+	if _, stderr, err := run(t, "--backup=numbered", src, dst); err != nil {
+		t.Fatalf("second cp --backup=numbered error = %v (%s)", err, stderr)
+	}
+	if got, _ := os.ReadFile(dst + ".~1~"); string(got) != "v1\n" {
+		t.Errorf("dst.~1~ = %q, want v1 (must not be clobbered)", got)
+	}
+	if got, _ := os.ReadFile(dst + ".~2~"); string(got) != "v2\n" {
+		t.Errorf("dst.~2~ = %q, want v2", got)
+	}
+}
+
+// TestRunBackupExistingUsesNumberedWhenPresent proves --backup=existing makes a
+// numbered backup when numbered backups already exist, else a simple one.
+func TestRunBackupExistingUsesNumberedWhenPresent(t *testing.T) {
+	t.Parallel()
+	dir := t.TempDir()
+	src := filepath.Join(dir, "src.txt")
+	dst := filepath.Join(dir, "dst.txt")
+	if err := os.WriteFile(src, []byte("new\n"), 0o644); err != nil {
+		t.Fatal(err)
+	}
+	if err := os.WriteFile(dst, []byte("cur\n"), 0o644); err != nil {
+		t.Fatal(err)
+	}
+	// A pre-existing numbered backup steers "existing" toward numbered.
+	if err := os.WriteFile(dst+".~1~", []byte("old1\n"), 0o644); err != nil {
+		t.Fatal(err)
+	}
+	if _, stderr, err := run(t, "--backup=existing", src, dst); err != nil {
+		t.Fatalf("cp --backup=existing error = %v (%s)", err, stderr)
+	}
+	if got, _ := os.ReadFile(dst + ".~2~"); string(got) != "cur\n" {
+		t.Errorf("dst.~2~ = %q, want cur (numbered backup expected)", got)
+	}
+}
+
+// TestRunBackupExistingUsesSimpleWhenNoneExist proves --backup=existing falls
+// back to a simple backup when no numbered backups exist.
+func TestRunBackupExistingUsesSimpleWhenNoneExist(t *testing.T) {
+	t.Parallel()
+	dir := t.TempDir()
+	src := filepath.Join(dir, "src.txt")
+	dst := filepath.Join(dir, "dst.txt")
+	if err := os.WriteFile(src, []byte("new\n"), 0o644); err != nil {
+		t.Fatal(err)
+	}
+	if err := os.WriteFile(dst, []byte("cur\n"), 0o644); err != nil {
+		t.Fatal(err)
+	}
+	if _, stderr, err := run(t, "--backup=existing", src, dst); err != nil {
+		t.Fatalf("cp --backup=existing error = %v (%s)", err, stderr)
+	}
+	if got, _ := os.ReadFile(dst + "~"); string(got) != "cur\n" {
+		t.Errorf("dst~ = %q, want cur (simple backup expected)", got)
+	}
+}
+
+// TestRunBackupBareDefaultsToExisting proves bare --backup behaves as existing.
+func TestRunBackupBareDefaultsToExisting(t *testing.T) {
+	t.Parallel()
+	dir := t.TempDir()
+	src := filepath.Join(dir, "src.txt")
+	dst := filepath.Join(dir, "dst.txt")
+	if err := os.WriteFile(src, []byte("new\n"), 0o644); err != nil {
+		t.Fatal(err)
+	}
+	if err := os.WriteFile(dst, []byte("cur\n"), 0o644); err != nil {
+		t.Fatal(err)
+	}
+	if _, stderr, err := run(t, "--backup", src, dst); err != nil {
+		t.Fatalf("cp --backup error = %v (%s)", err, stderr)
+	}
+	// No numbered backups exist, so bare --backup (= existing) makes a simple one.
+	if got, _ := os.ReadFile(dst + "~"); string(got) != "cur\n" {
+		t.Errorf("dst~ = %q, want cur", got)
+	}
+}
+
+// TestRunBackupCustomSuffix proves --suffix overrides the simple-backup suffix.
+func TestRunBackupCustomSuffix(t *testing.T) {
+	t.Parallel()
+	dir := t.TempDir()
+	src := filepath.Join(dir, "src.txt")
+	dst := filepath.Join(dir, "dst.txt")
+	if err := os.WriteFile(src, []byte("new\n"), 0o644); err != nil {
+		t.Fatal(err)
+	}
+	if err := os.WriteFile(dst, []byte("old\n"), 0o644); err != nil {
+		t.Fatal(err)
+	}
+	if _, stderr, err := run(t, "--backup=simple", "--suffix=.bak", src, dst); err != nil {
+		t.Fatalf("cp --suffix error = %v (%s)", err, stderr)
+	}
+	if got, _ := os.ReadFile(dst + ".bak"); string(got) != "old\n" {
+		t.Errorf("dst.bak = %q, want old", got)
+	}
+}
+
+// TestRunBackupNoneMakesNoBackup proves --backup=none overwrites without a copy.
+func TestRunBackupNoneMakesNoBackup(t *testing.T) {
+	t.Parallel()
+	dir := t.TempDir()
+	src := filepath.Join(dir, "src.txt")
+	dst := filepath.Join(dir, "dst.txt")
+	if err := os.WriteFile(src, []byte("new\n"), 0o644); err != nil {
+		t.Fatal(err)
+	}
+	if err := os.WriteFile(dst, []byte("old\n"), 0o644); err != nil {
+		t.Fatal(err)
+	}
+	if _, stderr, err := run(t, "--backup=none", src, dst); err != nil {
+		t.Fatalf("cp --backup=none error = %v (%s)", err, stderr)
+	}
+	if _, err := os.Stat(dst + "~"); !os.IsNotExist(err) {
+		t.Errorf("--backup=none must not create dst~, stat err = %v", err)
+	}
+}
+
+// TestRunBackupInvalidControl proves an unknown CONTROL word is rejected.
+func TestRunBackupInvalidControl(t *testing.T) {
+	t.Parallel()
+	dir := t.TempDir()
+	src := filepath.Join(dir, "src.txt")
+	dst := filepath.Join(dir, "dst.txt")
+	if err := os.WriteFile(src, []byte("x\n"), 0o644); err != nil {
+		t.Fatal(err)
+	}
+	if err := os.WriteFile(dst, []byte("y\n"), 0o644); err != nil {
+		t.Fatal(err)
+	}
+	_, stderr, err := run(t, "--backup=bogus", src, dst)
+	if err == nil {
+		t.Fatal("expected error for invalid --backup CONTROL")
+	}
+	if !strings.Contains(stderr, "invalid argument") {
+		t.Errorf("stderr = %q, want 'invalid argument'", stderr)
 	}
 }
 

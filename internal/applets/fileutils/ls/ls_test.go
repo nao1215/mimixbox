@@ -136,11 +136,11 @@ func TestSizeString(t *testing.T) {
 	t.Parallel()
 	cases := map[int64]string{0: "0", 512: "512", 1024: "1.0K", 1048576: "1.0M"}
 	for in, want := range cases {
-		if got := sizeString(in, true); got != want {
+		if got := sizeString(in, true, 0); got != want {
 			t.Errorf("sizeString(%d) = %q, want %q", in, got, want)
 		}
 	}
-	if got := sizeString(2048, false); got != "2048" {
+	if got := sizeString(2048, false, 0); got != "2048" {
 		t.Errorf("sizeString plain = %q", got)
 	}
 }

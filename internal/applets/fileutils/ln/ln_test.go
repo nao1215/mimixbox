@@ -248,6 +248,122 @@ func TestHardLinkMissingTargetReportsReason(t *testing.T) {
 	}
 }
 
+// TestRelativeSymlink checks that -s -r stores the target relative to the
+// link's own directory rather than as the literal (absolute) operand.
+func TestRelativeSymlink(t *testing.T) {
+	t.Parallel()
+	dir := t.TempDir()
+	// target lives in dir/a/target.txt, link in dir/b/link.txt, so the relative
+	// target from the link's directory is "../a/target.txt".
+	aDir := filepath.Join(dir, "a")
+	bDir := filepath.Join(dir, "b")
+	if err := os.MkdirAll(aDir, 0o755); err != nil {
+		t.Fatal(err)
+	}
+	if err := os.MkdirAll(bDir, 0o755); err != nil {
+		t.Fatal(err)
+	}
+	target := filepath.Join(aDir, "target.txt")
+	link := filepath.Join(bDir, "link.txt")
+	writeTarget(t, target, "rel\n")
+
+	_, errOut, err := run(t, "-s", "-r", target, link)
+	if err != nil {
+		t.Fatalf("Run error = %v (stderr=%q)", err, errOut)
+	}
+	got, lerr := os.Readlink(link)
+	if lerr != nil {
+		t.Fatalf("symlink not created: %v", lerr)
+	}
+	want := filepath.Join("..", "a", "target.txt")
+	if got != want {
+		t.Errorf("symlink target = %q, want relative %q", got, want)
+	}
+	// The relative symlink must still resolve to the original content.
+	content, rerr := os.ReadFile(link)
+	if rerr != nil {
+		t.Fatalf("relative symlink does not resolve: %v", rerr)
+	}
+	if string(content) != "rel\n" {
+		t.Errorf("resolved content = %q, want %q", content, "rel\n")
+	}
+}
+
+// TestTargetDirectory checks that -t DIR links each operand into DIR using the
+// operand's base name (destination-first form).
+func TestTargetDirectory(t *testing.T) {
+	t.Parallel()
+	dir := t.TempDir()
+	a := filepath.Join(dir, "a.txt")
+	b := filepath.Join(dir, "b.txt")
+	writeTarget(t, a, "A\n")
+	writeTarget(t, b, "B\n")
+	destDir := filepath.Join(dir, "dest")
+	if err := os.Mkdir(destDir, 0o755); err != nil {
+		t.Fatal(err)
+	}
+
+	_, errOut, err := run(t, "-s", "-t", destDir, a, b)
+	if err != nil {
+		t.Fatalf("Run error = %v (stderr=%q)", err, errOut)
+	}
+	for _, name := range []string{"a.txt", "b.txt"} {
+		if _, lerr := os.Lstat(filepath.Join(destDir, name)); lerr != nil {
+			t.Errorf("link %s missing in target dir: %v", name, lerr)
+		}
+	}
+}
+
+// TestNoTargetDirectoryUsesFileDest checks that -T treats the destination as a
+// normal file even when a directory of the same name would otherwise be used.
+func TestNoTargetDirectoryUsesFileDest(t *testing.T) {
+	t.Parallel()
+	dir := t.TempDir()
+	target := filepath.Join(dir, "target.txt")
+	writeTarget(t, target, "T\n")
+	// A directory named "link" exists; without -T, ln would place the link
+	// inside it. With -T the link itself must be created (and fail because the
+	// directory already occupies the path).
+	linkDir := filepath.Join(dir, "link")
+	if err := os.Mkdir(linkDir, 0o755); err != nil {
+		t.Fatal(err)
+	}
+
+	_, _, err := run(t, "-s", "-T", target, linkDir)
+	if err == nil {
+		t.Fatal("expected error: -T must not descend into an existing directory")
+	}
+	// The directory must remain a directory (no link created inside it).
+	info, serr := os.Lstat(linkDir)
+	if serr != nil || !info.IsDir() {
+		t.Errorf("link path is no longer the original directory: info=%v err=%v", info, serr)
+	}
+	if _, lerr := os.Lstat(filepath.Join(linkDir, "target.txt")); lerr == nil {
+		t.Error("-T must not create a link inside the directory")
+	}
+}
+
+// TestNoTargetDirectoryRejectsExtraOperand checks -T rejects more than two
+// operands.
+func TestNoTargetDirectoryRejectsExtraOperand(t *testing.T) {
+	t.Parallel()
+	dir := t.TempDir()
+	a := filepath.Join(dir, "a.txt")
+	b := filepath.Join(dir, "b.txt")
+	writeTarget(t, a, "A\n")
+	destDir := filepath.Join(dir, "dest")
+	if err := os.Mkdir(destDir, 0o755); err != nil {
+		t.Fatal(err)
+	}
+	_, errOut, err := run(t, "-s", "-T", a, b, destDir)
+	if err == nil {
+		t.Fatal("expected error for extra operand with -T")
+	}
+	if !strings.Contains(errOut, "extra operand") {
+		t.Errorf("stderr = %q, want extra-operand message", errOut)
+	}
+}
+
 func TestSingleOperandLinksInCwd(t *testing.T) {
 	dir := t.TempDir()
 	// The target lives in a subdirectory so the link, created in cwd with the
