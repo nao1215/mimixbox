@@ -84,3 +84,15 @@ func TestApplySettings(t *testing.T) {
 		t.Errorf("an invalid setting should fail")
 	}
 }
+
+// TestVersion verifies stty honors --version (GitHub issue #785 contract).
+func TestVersion(t *testing.T) {
+	out := &bytes.Buffer{}
+	io := command.IO{In: strings.NewReader(""), Out: out, Err: &bytes.Buffer{}}
+	if err := New().Run(context.Background(), io, []string{"--version"}); err != nil {
+		t.Fatalf("--version err = %v", err)
+	}
+	if !strings.Contains(out.String(), "stty (mimixbox)") {
+		t.Errorf("--version = %q, want version banner", out.String())
+	}
+}
