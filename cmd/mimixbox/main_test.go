@@ -111,6 +111,51 @@ func TestRunSymlinkDispatch(t *testing.T) {
 	}
 }
 
+func TestRunRenamedBinaryKeepsTopLevelOptions(t *testing.T) {
+	// The binary is renamed/copied/wrapped under a name that is not "mimixbox"
+	// and is not a known applet. Top-level options must keep working instead of
+	// being treated as an unknown applet (issue #949).
+	cases := []struct {
+		name string
+		argv []string
+		want string // substring expected on stdout
+	}{
+		{"version", []string{"/opt/pkg/mimixbox-review", "--version"}, "mimixbox"},
+		{"help", []string{"/opt/pkg/mimixbox-review", "--help"}, "Usage: mimixbox"},
+		{"list", []string{"./mimixbox-review", "--list"}, "cat"},
+	}
+	for _, tc := range cases {
+		t.Run(tc.name, func(t *testing.T) {
+			io, out, errBuf := newIO()
+			if code := run(tc.argv, io); code != command.ExitSuccess {
+				t.Fatalf("exit = %d, want 0 (stderr=%q)", code, errBuf.String())
+			}
+			if !strings.Contains(out.String(), tc.want) {
+				t.Errorf("stdout = %q, want substring %q", out.String(), tc.want)
+			}
+		})
+	}
+}
+
+func TestRunRenamedBinaryDispatchesAppletByName(t *testing.T) {
+	// A renamed binary must still dispatch applets given as the first argument,
+	// e.g. "mimixbox-review cat file.txt" runs cat.
+	var gotName string
+	var gotArgs []string
+	orig := runApplet
+	runApplet = func(name string, args []string, _ command.IO) int {
+		gotName, gotArgs = name, args
+		return 0
+	}
+	t.Cleanup(func() { runApplet = orig })
+
+	io, _, _ := newIO()
+	run([]string{"/opt/pkg/mimixbox-review", "cat", "file.txt"}, io)
+	if gotName != "cat" || strings.Join(gotArgs, ",") != "file.txt" {
+		t.Errorf("renamed-binary applet dispatch = %q %v", gotName, gotArgs)
+	}
+}
+
 func TestRunAppletFlagsReachApplet(t *testing.T) {
 	// "mimixbox cp -f a b": -f must be passed to cp, not parsed as
 	// --full-install.

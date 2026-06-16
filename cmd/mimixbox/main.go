@@ -53,8 +53,13 @@ func main() {
 func run(argv []string, stdio command.IO) int {
 	invoked := path.Base(argv[0])
 
-	// Symlink invocation: the binary was called as an applet name.
-	if invoked != cmdName {
+	// Symlink invocation: the binary was called through a name that matches a
+	// known applet (e.g. a "cat" symlink). The basename alone is not enough —
+	// the binary may simply have been renamed, copied, or wrapped under another
+	// name (mimixbox-review, mimixbox.bin, ...). In that case it is still the
+	// MimixBox driver, so fall through to normal option/applet parsing instead
+	// of treating the binary name as an unknown applet (issue #949).
+	if invoked != cmdName && applets.HasApplet(invoked) {
 		return runApplet(invoked, argv[1:], stdio)
 	}
 
