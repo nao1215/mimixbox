@@ -142,6 +142,11 @@ func TestRunHelpAndVersion(t *testing.T) {
 	if !strings.Contains(out, "Usage: date") {
 		t.Errorf("--help out = %q", out)
 	}
+	for _, want := range []string{"Examples:", "Exit status:"} {
+		if !strings.Contains(out, want) {
+			t.Errorf("--help output missing %q:\n%s", want, out)
+		}
+	}
 
 	out, _, err = run(t, "--version")
 	if err != nil {

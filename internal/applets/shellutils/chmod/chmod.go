@@ -37,7 +37,16 @@ type options struct {
 
 // Run executes chmod.
 func (c *Command) Run(_ context.Context, stdio command.IO, args []string) error {
-	fs := command.NewFlagSet(c.Name(), "[OPTION]... MODE FILE...", stdio.Err)
+	fs := command.NewFlagSet(c.Name(), "[OPTION]... MODE FILE...", stdio.Err).WithHelp(command.Help{
+		Description: "Change the file mode bits of each FILE to MODE. MODE is either an octal number (e.g. 755) " +
+			"or a comma-separated list of symbolic clauses (e.g. u+x,go-w).",
+		Examples: []command.Example{
+			{Command: "chmod 644 file.txt", Explain: "Set read/write for the owner and read-only for others."},
+			{Command: "chmod u+x script.sh", Explain: "Add execute permission for the owner."},
+			{Command: "chmod -R go-w /srv/www", Explain: "Recursively remove write permission for group and others."},
+		},
+		ExitStatus: "0  all files were changed successfully.\n1  one or more files could not be changed.",
+	})
 	recursive := fs.BoolP("recursive", "R", false, "change files and directories recursively")
 	verbose := fs.BoolP("verbose", "v", false, "output a diagnostic for every file processed")
 	changes := fs.BoolP("changes", "c", false, "like verbose but report only when a change is made")

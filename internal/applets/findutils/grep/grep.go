@@ -45,7 +45,16 @@ type options struct {
 
 // Run executes grep.
 func (c *Command) Run(_ context.Context, stdio command.IO, args []string) error {
-	fs := command.NewFlagSet(c.Name(), "[OPTION]... PATTERN [FILE]...", stdio.Err)
+	fs := command.NewFlagSet(c.Name(), "[OPTION]... PATTERN [FILE]...", stdio.Err).WithHelp(command.Help{
+		Description: "Search each FILE (or standard input when no FILE is given) for lines matching PATTERN and print " +
+			"them. PATTERN is a Go (RE2) regular expression by default; -F treats it as a fixed string.",
+		Examples: []command.Example{
+			{Command: "grep -rn TODO .", Explain: "Recursively search the current directory and print matching lines with line numbers."},
+			{Command: "grep -i error log.txt", Explain: "Print lines containing \"error\", ignoring case."},
+			{Command: "grep -c -v ^# config.ini", Explain: "Count the lines that are not comments."},
+		},
+		ExitStatus: "0  a line matched.\n1  no lines matched.\n2  an error occurred.",
+	})
 	patterns := fs.StringArrayP("regexp", "e", nil, "use PATTERN for matching (may be repeated)")
 	ignoreCase := fs.BoolP("ignore-case", "i", false, "ignore case distinctions")
 	invert := fs.BoolP("invert-match", "v", false, "select non-matching lines")

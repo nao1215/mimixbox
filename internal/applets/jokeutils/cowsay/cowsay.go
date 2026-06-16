@@ -40,7 +40,15 @@ func (c *Command) Synopsis() string { return "Print message with cow's ASCII art
 
 // Run executes cowsay.
 func (c *Command) Run(_ context.Context, stdio command.IO, args []string) error {
-	fs := command.NewFlagSet(c.Name(), "[OPTION]... [MESSAGE]", stdio.Err)
+	fs := command.NewFlagSet(c.Name(), "[OPTION]... [MESSAGE]", stdio.Err).WithHelp(command.Help{
+		Description: "Print MESSAGE inside a speech bubble above a cow drawn in ASCII art. The message is taken " +
+			"from the operands, or from standard input when no operands are given.",
+		Examples: []command.Example{
+			{Command: "cowsay Hello, world", Explain: "Print \"Hello, world\" in the cow's speech bubble."},
+			{Command: "echo Moo | cowsay", Explain: "Read the message from standard input."},
+		},
+		ExitStatus: "0  success.\n1  the message could not be read or written.",
+	})
 	proceed, err := fs.Parse(stdio, args)
 	if !proceed {
 		return err

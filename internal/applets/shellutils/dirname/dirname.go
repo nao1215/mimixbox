@@ -24,7 +24,16 @@ func (c *Command) Synopsis() string { return "Print only directory path" }
 
 // Run executes dirname.
 func (c *Command) Run(_ context.Context, stdio command.IO, args []string) error {
-	fs := command.NewFlagSet(c.Name(), "[OPTION]... NAME...", stdio.Err)
+	fs := command.NewFlagSet(c.Name(), "[OPTION]... NAME...", stdio.Err).WithHelp(command.Help{
+		Description: "Print each NAME with its last non-slash component and any trailing slashes removed; " +
+			"if NAME contains no slashes, print \".\" (meaning the current directory).",
+		Examples: []command.Example{
+			{Command: "dirname /usr/bin/sort", Explain: "Print \"/usr/bin\"."},
+			{Command: "dirname stdio.h", Explain: "Print \".\"."},
+			{Command: "dirname /usr/lib /tmp/x", Explain: "Print the directory of each operand on its own line."},
+		},
+		ExitStatus: "0  success.\n1  an error occurred (e.g. no operand was given).",
+	})
 	zero := fs.BoolP("zero", "z", false, "end each output line with NUL, not newline")
 
 	proceed, err := fs.Parse(stdio, args)

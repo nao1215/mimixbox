@@ -43,7 +43,15 @@ var fortunes = []string{
 
 // Run executes fortune.
 func (c *Command) Run(_ context.Context, stdio command.IO, args []string) error {
-	fs := command.NewFlagSet(c.Name(), "[OPTION]...", stdio.Err)
+	fs := command.NewFlagSet(c.Name(), "[OPTION]...", stdio.Err).WithHelp(command.Help{
+		Description: "Print a random adage drawn from a built-in collection. With -s, restrict the selection to " +
+			"short adages only.",
+		Examples: []command.Example{
+			{Command: "fortune", Explain: "Print a random adage from the collection."},
+			{Command: "fortune -s", Explain: "Print a random short adage."},
+		},
+		ExitStatus: "0  an adage was printed.\n1  no adage was available or it could not be written.",
+	})
 	short := fs.BoolP("short", "s", false, "only print short fortunes")
 
 	proceed, err := fs.Parse(stdio, args)

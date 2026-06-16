@@ -34,7 +34,16 @@ type options struct {
 
 // Run executes compress.
 func (c *Command) Run(_ context.Context, stdio command.IO, args []string) error {
-	fs := command.NewFlagSet(c.Name(), "[OPTION]... [FILE]...", stdio.Err)
+	fs := command.NewFlagSet(c.Name(), "[OPTION]... [FILE]...", stdio.Err).WithHelp(command.Help{
+		Description: "Compress each FILE in place with the classic Unix LZW algorithm, replacing it with FILE.Z. " +
+			"With -c write to standard output and keep the input. With no FILE (or FILE '-') read standard input.",
+		Examples: []command.Example{
+			{Command: "compress file.txt", Explain: "Replace file.txt with the compressed file.txt.Z."},
+			{Command: "compress -k file.txt", Explain: "Create file.txt.Z but keep the original file.txt."},
+			{Command: "compress -c file.txt > file.Z", Explain: "Write the compressed data to standard output."},
+		},
+		ExitStatus: "0  all files were compressed successfully.\n1  one or more files could not be compressed.",
+	})
 	stdout := fs.BoolP("stdout", "c", false, "write on standard output, keep original files unchanged")
 	keep := fs.BoolP("keep", "k", false, "keep (don't delete) input files")
 	force := fs.BoolP("force", "f", false, "force overwrite of output file")

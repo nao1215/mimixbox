@@ -151,4 +151,9 @@ func TestHelp(t *testing.T) {
 	if !strings.Contains(out, "Usage: cpio") {
 		t.Errorf("help = %q", out)
 	}
+	for _, want := range []string{"Examples:", "Exit status:"} {
+		if !strings.Contains(out, want) {
+			t.Errorf("--help output missing %q:\n%s", want, out)
+		}
+	}
 }

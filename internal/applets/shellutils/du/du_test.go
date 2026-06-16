@@ -223,6 +223,11 @@ func TestHelpAndVersion(t *testing.T) {
 	if !strings.Contains(out, "Usage: du") {
 		t.Errorf("--help out = %q", out)
 	}
+	for _, want := range []string{"Examples:", "Exit status:"} {
+		if !strings.Contains(out, want) {
+			t.Errorf("--help output missing %q:\n%s", want, out)
+		}
+	}
 
 	out, _, err = runDu(t, "--version")
 	if err != nil {

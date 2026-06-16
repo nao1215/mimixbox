@@ -141,7 +141,16 @@ type GitHubReleaseData struct {
 
 // Run executes ghrdc.
 func (c *Command) Run(ctx context.Context, stdio command.IO, args []string) error {
-	fs := command.NewFlagSet(c.Name(), "[OPTION]... USER/REPOSITORY", stdio.Err)
+	fs := command.NewFlagSet(c.Name(), "[OPTION]... USER/REPOSITORY", stdio.Err).WithHelp(command.Help{
+		Description: "Query the GitHub releases API for USER/REPOSITORY and print the number of downloads per release, " +
+			"counted separately for binary assets and source-code archives. By default only the latest release is shown.",
+		Examples: []command.Example{
+			{Command: "ghrdc nao1215/mimixbox", Explain: "Show download counts for the latest release."},
+			{Command: "ghrdc -a nao1215/mimixbox", Explain: "Show download counts for every release."},
+			{Command: "ghrdc -t nao1215/mimixbox", Explain: "Show the total download counts across all releases."},
+		},
+		ExitStatus: "0  the report was printed successfully.\n1  the operand was invalid or release data could not be retrieved.",
+	})
 	all := fs.BoolP("all", "a", false, "Show total number of downloads per release")
 	total := fs.BoolP("total", "t", false, "Show total number of downloads for all releases")
 

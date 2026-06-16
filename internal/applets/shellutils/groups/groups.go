@@ -26,7 +26,16 @@ func (c *Command) Synopsis() string { return "Print the groups to which USERNAME
 
 // Run executes groups.
 func (c *Command) Run(_ context.Context, stdio command.IO, args []string) error {
-	fs := command.NewFlagSet(c.Name(), "[USERNAME]...", stdio.Err)
+	fs := command.NewFlagSet(c.Name(), "[USERNAME]...", stdio.Err).WithHelp(command.Help{
+		Description: "Print the names of the groups each USERNAME belongs to. With no operand, print the groups of " +
+			"the current user.",
+		Examples: []command.Example{
+			{Command: "groups", Explain: "Print the groups the current user belongs to."},
+			{Command: "groups root", Explain: "Print the groups the root user belongs to."},
+			{Command: "groups alice bob", Explain: "Print the groups for several users, one per line."},
+		},
+		ExitStatus: "0  all named users were found.\n1  a named user could not be found.",
+	})
 
 	proceed, err := fs.Parse(stdio, args)
 	if err != nil || !proceed {

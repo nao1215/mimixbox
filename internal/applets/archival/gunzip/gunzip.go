@@ -34,7 +34,16 @@ type options struct {
 
 // Run executes gunzip.
 func (c *Command) Run(_ context.Context, stdio command.IO, args []string) error {
-	fs := command.NewFlagSet(c.Name(), "[OPTION]... [FILE]...", stdio.Err)
+	fs := command.NewFlagSet(c.Name(), "[OPTION]... [FILE]...", stdio.Err).WithHelp(command.Help{
+		Description: "Decompress each gzip (.gz) FILE, replacing FILE.gz with FILE. With no FILE, or with -, read " +
+			"standard input and write the decompressed data to standard output.",
+		Examples: []command.Example{
+			{Command: "gunzip archive.gz", Explain: "Decompress archive.gz to archive and remove the .gz file."},
+			{Command: "gunzip -c archive.gz", Explain: "Write the decompressed data to standard output."},
+			{Command: "gunzip -k archive.gz", Explain: "Decompress but keep the original .gz file."},
+		},
+		ExitStatus: "0  all files were decompressed successfully.\n1  a file was missing, had a bad stream, or could not be written.",
+	})
 	keep := fs.BoolP("keep", "k", false, "keep (don't delete) input files")
 	stdout := fs.BoolP("stdout", "c", false, "write on standard output, keep original files unchanged")
 	force := fs.BoolP("force", "f", false, "force overwrite of output file")

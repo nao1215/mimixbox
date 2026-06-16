@@ -32,7 +32,16 @@ type options struct {
 
 // Run executes expand.
 func (c *Command) Run(_ context.Context, stdio command.IO, args []string) error {
-	fs := command.NewFlagSet(c.Name(), "[OPTION]... [FILE]...", stdio.Err)
+	fs := command.NewFlagSet(c.Name(), "[OPTION]... [FILE]...", stdio.Err).WithHelp(command.Help{
+		Description: "Convert tabs in each FILE to spaces, writing to standard output. " +
+			"With no FILE, or when FILE is -, read standard input.",
+		Examples: []command.Example{
+			{Command: "expand file.txt", Explain: "Convert tabs to spaces using 8-column tab stops."},
+			{Command: "expand -t 4 file.txt", Explain: "Use 4-column tab stops instead of 8."},
+			{Command: "expand -i file.txt", Explain: "Convert only the leading tabs on each line."},
+		},
+		ExitStatus: "0  success.\n1  an error occurred (e.g. an input file could not be read).",
+	})
 	tabs := fs.IntP("tabs", "t", 8, "have tabs N characters apart, not 8")
 	initial := fs.BoolP("initial", "i", false, "do not convert tabs after non blanks")
 

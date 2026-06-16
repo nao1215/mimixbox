@@ -24,7 +24,18 @@ func (c *Command) Synopsis() string { return "Print basename (PATH without \"/\"
 
 // Run executes basename.
 func (c *Command) Run(_ context.Context, stdio command.IO, args []string) error {
-	fs := command.NewFlagSet(c.Name(), "NAME [SUFFIX] | OPTION... NAME...", stdio.Err)
+	fs := command.NewFlagSet(c.Name(), "NAME [SUFFIX] | OPTION... NAME...", stdio.Err).WithHelp(command.Help{
+		Description: "Print NAME with any leading directory components removed. If SUFFIX is\n" +
+			"given and matches the trailing part of the result, it is removed too.\n" +
+			"With -a or -s each operand is treated as a NAME so several can be\n" +
+			"processed at once.",
+		Examples: []command.Example{
+			{Command: "basename /usr/bin/sort", Explain: "print \"sort\""},
+			{Command: "basename include/stdio.h .h", Explain: "print \"stdio\""},
+			{Command: "basename -a /a/x /b/y", Explain: "print each basename on its own line"},
+		},
+		ExitStatus: "0  success.\n1  no operand was given, or too many operands were given.",
+	})
 	multiple := fs.BoolP("multiple", "a", false, "support multiple arguments and treat each as a NAME")
 	suffix := fs.StringP("suffix", "s", "", "remove a trailing SUFFIX; implies -a")
 	zero := fs.BoolP("zero", "z", false, "end each output line with NUL, not newline")

@@ -22,7 +22,15 @@ func (c *Command) Synopsis() string { return "Do nothing. Return failure(1)" }
 // Run always fails with exit status 1. Like GNU false it ignores its operands,
 // except that a leading --help or --version is honored and exits successfully.
 func (c *Command) Run(_ context.Context, stdio command.IO, args []string) error {
-	if command.HandleHelpVersion(stdio, c.Name(), "[IGNORED]...", args) {
+	if command.HandleHelpVersionWith(stdio, c.Name(), "[IGNORED]...", command.Help{
+		Description: "Do nothing and exit with a failure status. All operands are ignored; false exists " +
+			"so that shell scripts have a command that always fails.",
+		Examples: []command.Example{
+			{Command: "false || echo failed", Explain: "Print failed, because false always fails."},
+			{Command: "if false; then echo yes; fi", Explain: "Run nothing, because the condition is false."},
+		},
+		ExitStatus: "1  always.",
+	}, args) {
 		return nil
 	}
 	return &command.ExitError{Code: command.ExitFailure}

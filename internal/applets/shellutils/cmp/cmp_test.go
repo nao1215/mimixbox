@@ -174,3 +174,17 @@ func systemCmp(t *testing.T, a, b string) (string, bool) {
 	_ = c.Run() // exit 1 on differ is expected; ignore.
 	return out.String(), true
 }
+
+// TestHelpSections verifies that --help renders both the Examples and the
+// Exit status sections supplied through WithHelp.
+func TestHelpSections(t *testing.T) {
+	out, _, code := run(t, "--help")
+	if code != 0 {
+		t.Fatalf("--help exit code = %d, want 0", code)
+	}
+	for _, want := range []string{"Examples:", "Exit status:"} {
+		if !strings.Contains(out, want) {
+			t.Errorf("--help missing %q section:\n%s", want, out)
+		}
+	}
+}

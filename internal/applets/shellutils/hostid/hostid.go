@@ -33,7 +33,14 @@ func (c *Command) Synopsis() string {
 
 // Run executes hostid.
 func (c *Command) Run(_ context.Context, stdio command.IO, args []string) error {
-	fs := command.NewFlagSet(c.Name(), "[OPTION]", stdio.Err)
+	fs := command.NewFlagSet(c.Name(), "[OPTION]", stdio.Err).WithHelp(command.Help{
+		Description: "Print the numeric identifier of the current host as a zero-padded 8-digit hexadecimal number, " +
+			"matching GNU coreutils' hostid.",
+		Examples: []command.Example{
+			{Command: "hostid", Explain: "Print the host identifier, for example 007f0101."},
+		},
+		ExitStatus: "0  the host identifier was printed successfully.",
+	})
 
 	proceed, err := fs.Parse(stdio, args)
 	if err != nil || !proceed {

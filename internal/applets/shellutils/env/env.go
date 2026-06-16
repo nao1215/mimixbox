@@ -29,7 +29,16 @@ func (c *Command) Synopsis() string {
 
 // Run executes env.
 func (c *Command) Run(ctx context.Context, stdio command.IO, args []string) error {
-	fs := command.NewFlagSet(c.Name(), "[OPTION]... [NAME=VALUE]... [COMMAND [ARG]...]", stdio.Err)
+	fs := command.NewFlagSet(c.Name(), "[OPTION]... [NAME=VALUE]... [COMMAND [ARG]...]", stdio.Err).WithHelp(command.Help{
+		Description: "Set each NAME=VALUE in the environment and run COMMAND with the resulting environment. " +
+			"With no COMMAND, print the resulting environment instead.",
+		Examples: []command.Example{
+			{Command: "env", Explain: "Print the current environment, one variable per line."},
+			{Command: "env FOO=bar printenv FOO", Explain: "Run printenv with FOO set to bar."},
+			{Command: "env -i sh -c 'echo $PATH'", Explain: "Run a command with an empty environment."},
+		},
+		ExitStatus: "0    success.\n127  COMMAND could not be started (e.g. not found).\nN    otherwise, the exit status of COMMAND.",
+	})
 	// Options stop at the first operand so that flags meant for COMMAND (such as
 	// "sh -c") are passed through untouched instead of parsed by env.
 	fs.SetInterspersed(false)

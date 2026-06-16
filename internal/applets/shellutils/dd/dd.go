@@ -89,6 +89,18 @@ type result struct {
 
 // Run executes dd.
 func (c *Command) Run(_ context.Context, stdio command.IO, args []string) error {
+	if command.HandleHelpVersionWith(stdio, c.Name(), "[OPERAND]...", command.Help{
+		Description: "Copy a file, converting and formatting according to the operands. Operands use " +
+			"the GNU dd OPERAND=VALUE syntax: if=FILE, of=FILE, bs=BYTES, count=N, skip=N, seek=N, " +
+			"and conv=CONVS. With no if=/of= it copies standard input to standard output.",
+		Examples: []command.Example{
+			{Command: "dd if=/dev/zero of=out bs=1M count=10", Explain: "Write 10 MiB of zeros to 'out'."},
+			{Command: "dd if=disk.img bs=512 skip=1", Explain: "Copy disk.img to stdout, skipping the first 512-byte block."},
+		},
+		ExitStatus: "0  the copy completed successfully.\n1  an operand was invalid or an I/O error occurred.",
+	}, args) {
+		return nil
+	}
 	opts, err := parseArgs(args)
 	if err != nil {
 		_, _ = fmt.Fprintf(stdio.Err, "dd: %v\n", err)

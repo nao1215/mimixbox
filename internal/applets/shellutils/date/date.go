@@ -31,7 +31,17 @@ func (c *Command) Synopsis() string { return "Print or set the system date and t
 
 // Run executes date.
 func (c *Command) Run(_ context.Context, stdio command.IO, args []string) error {
-	fs := command.NewFlagSet(c.Name(), "[OPTION]... [+FORMAT]", stdio.Err)
+	fs := command.NewFlagSet(c.Name(), "[OPTION]... [+FORMAT]", stdio.Err).WithHelp(command.Help{
+		Description: "Print the current date and time, optionally formatted with a +FORMAT operand " +
+			"using strftime-style conversion specifiers. Setting the system clock is not supported.",
+		Examples: []command.Example{
+			{Command: "date", Explain: "Print the current date and time in the default format."},
+			{Command: "date -u", Explain: "Print the current date and time in UTC."},
+			{Command: "date +%Y-%m-%d", Explain: "Print the current date as YYYY-MM-DD."},
+			{Command: "date -R", Explain: "Print the date and time in RFC 5322 format."},
+		},
+		ExitStatus: "0  success.\n1  an error occurred (e.g. an invalid date or format).",
+	})
 	utc := fs.BoolP("utc", "u", false, "print Coordinated Universal Time (UTC)")
 	dateStr := fs.StringP("date", "d", "", "display time described by STRING, not 'now'")
 	rfcEmail := fs.BoolP("rfc-email", "R", false, "output date and time in RFC 5322 format")

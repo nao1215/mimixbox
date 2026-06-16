@@ -26,7 +26,16 @@ func (c *Command) Synopsis() string { return "Simple optimal text formatter" }
 
 // Run executes fmt.
 func (c *Command) Run(_ context.Context, stdio command.IO, args []string) error {
-	fs := command.NewFlagSet(c.Name(), "[OPTION]... [FILE]...", stdio.Err)
+	fs := command.NewFlagSet(c.Name(), "[OPTION]... [FILE]...", stdio.Err).WithHelp(command.Help{
+		Description: "Reflow the paragraphs of each FILE (or standard input when no FILE is given), packing words " +
+			"into lines no wider than the target width. Blank lines separate paragraphs and are preserved.",
+		Examples: []command.Example{
+			{Command: "fmt notes.txt", Explain: "Reflow notes.txt to the default width of 75 columns."},
+			{Command: "fmt -w 60 notes.txt", Explain: "Reflow notes.txt so each line fits within 60 columns."},
+			{Command: "fmt -", Explain: "Reflow text read from standard input."},
+		},
+		ExitStatus: "0  all input was reflowed successfully.\n1  a file could not be read.",
+	})
 	width := fs.IntP("width", "w", 75, "maximum line width")
 
 	proceed, err := fs.Parse(stdio, args)

@@ -38,6 +38,19 @@ func (e *syntaxError) Error() string { return e.msg }
 // whether the result is null/zero (status 1) or not (status 0). A malformed
 // expression prints "expr: <message>" to stderr and exits with status 2.
 func (c *Command) Run(_ context.Context, stdio command.IO, args []string) error {
+	if command.HandleHelpVersionWith(stdio, c.Name(), "EXPRESSION", command.Help{
+		Description: "Evaluate EXPRESSION and write the result to standard output. Supports arithmetic " +
+			"(+, -, *, /, %), comparisons (=, !=, <, <=, >, >=), the string operators : (match), " +
+			"length, substr, index, and grouping with parentheses.",
+		Examples: []command.Example{
+			{Command: "expr 6 + 7", Explain: "Print 13."},
+			{Command: `expr length "hello"`, Explain: "Print 5."},
+		},
+		ExitStatus: "0  the result is neither null nor zero.\n1  the result is null or zero.\n" +
+			"2  the expression is malformed.\n3  an internal or write error occurred.",
+	}, args) {
+		return nil
+	}
 	result, err := eval(args)
 	if err != nil {
 		var se *syntaxError

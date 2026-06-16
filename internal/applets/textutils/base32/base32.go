@@ -28,7 +28,17 @@ func (c *Command) Synopsis() string {
 
 // Run executes base32.
 func (c *Command) Run(_ context.Context, stdio command.IO, args []string) error {
-	fs := command.NewFlagSet(c.Name(), "[OPTION]... [FILE]", stdio.Err)
+	fs := command.NewFlagSet(c.Name(), "[OPTION]... [FILE]", stdio.Err).WithHelp(command.Help{
+		Description: "Base32 encode or decode FILE, or standard input when no FILE (or \"-\") is\n" +
+			"given, and write the result to standard output. By default the data is\n" +
+			"encoded; use -d to decode instead.",
+		Examples: []command.Example{
+			{Command: "base32 file.bin", Explain: "encode file.bin to base32"},
+			{Command: "base32 -d file.b32", Explain: "decode base32 back to bytes"},
+			{Command: "echo hello | base32", Explain: "encode standard input"},
+		},
+		ExitStatus: "0  success.\n1  the input file could not be read, or the data was not valid base32 while decoding.",
+	})
 	decode := fs.BoolP("decode", "d", false, "decode data")
 	ignoreGarbage := fs.BoolP("ignore-garbage", "i", false, "when decoding, ignore non-alphabet characters")
 	wrap := fs.IntP("wrap", "w", 76, "wrap encoded lines after COLS character (default 76).\nUse 0 to disable line wrapping")

@@ -82,7 +82,16 @@ type options struct {
 
 // Run executes fakemovie.
 func (c *Command) Run(_ context.Context, stdio command.IO, args []string) error {
-	fs := command.NewFlagSet(c.Name(), "[OPTION]... IMAGE_FILE...", stdio.Err)
+	fs := command.NewFlagSet(c.Name(), "[OPTION]... IMAGE_FILE...", stdio.Err).WithHelp(command.Help{
+		Description: "Draw a fake video playback button onto each IMAGE_FILE so the result looks like a " +
+			"movie thumbnail, writing a new image alongside the original.",
+		Examples: []command.Example{
+			{Command: "fakemovie photo.png", Explain: "Write photo_fake.png with a play button drawn on it."},
+			{Command: "fakemovie -o out.png photo.png", Explain: "Write the result to out.png."},
+			{Command: "fakemovie -p photo.png", Explain: "Use a p-hub style button instead of the default."},
+		},
+		ExitStatus: "0  success.\n1  an error occurred (e.g. the image could not be read or written).",
+	})
 	output := fs.StringP("output", "o", "", "output file name (default: add the suffix \"_fake\" to the original name)")
 	phub := fs.BoolP("phub", "p", false, "put a p-hub style button (default: a twitter-like button)")
 	radius := fs.IntP("radius", "r", 0, "radius of the button (default: auto calculate)")

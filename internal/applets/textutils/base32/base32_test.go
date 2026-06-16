@@ -112,3 +112,17 @@ func TestNameSynopsis(t *testing.T) {
 		t.Error("Synopsis() is empty")
 	}
 }
+
+func TestHelpSections(t *testing.T) {
+	t.Parallel()
+	out, _, err := run(t, "", "--help")
+	if err != nil {
+		t.Fatalf("--help error = %v", err)
+	}
+	if !strings.Contains(out, "Examples:") {
+		t.Errorf("--help missing Examples: %q", out)
+	}
+	if !strings.Contains(out, "Exit status:") {
+		t.Errorf("--help missing Exit status: %q", out)
+	}
+}

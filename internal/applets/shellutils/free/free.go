@@ -33,7 +33,16 @@ var meminfoSource = func() (io.Reader, error) {
 
 // Run executes free.
 func (c *Command) Run(_ context.Context, stdio command.IO, args []string) error {
-	fs := command.NewFlagSet(c.Name(), "[OPTION]...", stdio.Err)
+	fs := command.NewFlagSet(c.Name(), "[OPTION]...", stdio.Err).WithHelp(command.Help{
+		Description: "Display the total, used, and free physical and swap memory in the system, reading the figures " +
+			"from /proc/meminfo. By default the amounts are shown in kibibytes.",
+		Examples: []command.Example{
+			{Command: "free", Explain: "Show memory usage in kibibytes."},
+			{Command: "free -m", Explain: "Show memory usage in mebibytes."},
+			{Command: "free -h", Explain: "Show memory usage with human-readable binary suffixes."},
+		},
+		ExitStatus: "0  the report was printed successfully.\n1  memory information could not be read.",
+	})
 	bytesUnit := fs.BoolP("bytes", "b", false, "show output in bytes")
 	kibi := fs.BoolP("kibi", "k", false, "show output in kibibytes (default)")
 	mebi := fs.BoolP("mebi", "m", false, "show output in mebibytes")

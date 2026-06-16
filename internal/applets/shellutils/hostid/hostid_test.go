@@ -33,3 +33,13 @@ func TestRun(t *testing.T) {
 		t.Errorf("hostid output = %q, want one line of 8 hex digits", out)
 	}
 }
+
+func TestHelpSections(t *testing.T) {
+	out, _, err := run(t, "--help")
+	if err != nil {
+		t.Fatalf("--help error = %v", err)
+	}
+	if !strings.Contains(out, "Examples:") || !strings.Contains(out, "Exit status:") {
+		t.Errorf("--help missing structured sections:\n%s", out)
+	}
+}

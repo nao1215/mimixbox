@@ -41,7 +41,15 @@ func (c *Command) Synopsis() string { return "Print message in a cow's thought b
 
 // Run executes cowthink.
 func (c *Command) Run(_ context.Context, stdio command.IO, args []string) error {
-	fs := command.NewFlagSet(c.Name(), "[OPTION]... [MESSAGE]", stdio.Err)
+	fs := command.NewFlagSet(c.Name(), "[OPTION]... [MESSAGE]", stdio.Err).WithHelp(command.Help{
+		Description: "Print MESSAGE inside a thought bubble above a cow drawn in ASCII art. The message is taken " +
+			"from the operands, or from standard input when no operands are given.",
+		Examples: []command.Example{
+			{Command: "cowthink Hmm, maybe", Explain: "Print \"Hmm, maybe\" in the cow's thought bubble."},
+			{Command: "echo Moo | cowthink", Explain: "Read the message from standard input."},
+		},
+		ExitStatus: "0  success.\n1  the message could not be read or written.",
+	})
 	proceed, err := fs.Parse(stdio, args)
 	if err != nil || !proceed {
 		return err
