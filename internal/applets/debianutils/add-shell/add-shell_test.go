@@ -2,12 +2,15 @@ package addShell_test
 
 import (
 	"bufio"
+	"bytes"
+	"context"
 	"os"
 	"path/filepath"
 	"strings"
 	"testing"
 
 	addShell "github.com/nao1215/mimixbox/internal/applets/debianutils/add-shell"
+	"github.com/nao1215/mimixbox/internal/command"
 )
 
 func TestNew(t *testing.T) {
@@ -73,5 +76,20 @@ func TestAddShellsExistingIsNoOp(t *testing.T) {
 	want := []string{"/bin/sh", "/bin/bash"}
 	if strings.Join(got, ",") != strings.Join(want, ",") {
 		t.Errorf("lines = %v, want %v (existing shell should be a no-op)", got, want)
+	}
+}
+
+func TestHelpSections(t *testing.T) {
+	t.Parallel()
+	out := &bytes.Buffer{}
+	io := command.IO{In: strings.NewReader(""), Out: out, Err: &bytes.Buffer{}}
+	if err := addShell.New().Run(context.Background(), io, []string{"--help"}); err != nil {
+		t.Fatalf("--help error = %v", err)
+	}
+	if !strings.Contains(out.String(), "Examples:") {
+		t.Errorf("--help missing Examples: %q", out.String())
+	}
+	if !strings.Contains(out.String(), "Exit status:") {
+		t.Errorf("--help missing Exit status: %q", out.String())
 	}
 }

@@ -32,7 +32,17 @@ type status struct {
 
 // Run executes http-status-code.
 func (c *Command) Run(_ context.Context, stdio command.IO, args []string) error {
-	fs := command.NewFlagSet(c.Name(), "(search CODE... | list)", stdio.Err)
+	fs := command.NewFlagSet(c.Name(), "(search CODE... | list)", stdio.Err).WithHelp(command.Help{
+		Description: "Explain HTTP status codes and their defining references. The list " +
+			"subcommand prints every known code, while search CODE... prints the meaning " +
+			"and reference for each requested code.",
+		Examples: []command.Example{
+			{Command: "http-status-code list", Explain: "List every known status code."},
+			{Command: "http-status-code search 404", Explain: "Explain the 404 status code."},
+			{Command: "http-status-code search 200 301 500", Explain: "Explain several codes at once."},
+		},
+		ExitStatus: "0  every requested code was explained.\n1  a code was invalid, unknown, or no subcommand was given.",
+	})
 	fs.SetInterspersed(false)
 
 	proceed, err := fs.Parse(stdio, args)

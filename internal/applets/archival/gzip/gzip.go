@@ -38,7 +38,16 @@ type options struct {
 
 // Run executes gzip.
 func (c *Command) Run(_ context.Context, stdio command.IO, args []string) error {
-	fs := command.NewFlagSet(c.Name(), "[OPTION]... [FILE]...", stdio.Err)
+	fs := command.NewFlagSet(c.Name(), "[OPTION]... [FILE]...", stdio.Err).WithHelp(command.Help{
+		Description: "Compress each FILE in place using DEFLATE, replacing FILE with FILE.gz. With -d, decompress " +
+			"FILE.gz back to FILE. With no FILE, or with -, read standard input and write to standard output.",
+		Examples: []command.Example{
+			{Command: "gzip notes.txt", Explain: "Compress notes.txt to notes.txt.gz and remove the original."},
+			{Command: "gzip -d notes.txt.gz", Explain: "Decompress notes.txt.gz back to notes.txt."},
+			{Command: "gzip -c notes.txt", Explain: "Write the compressed data to standard output, keeping the original."},
+		},
+		ExitStatus: "0  all files were processed successfully.\n1  a file was missing, had a bad stream, or could not be written.",
+	})
 	decompress := fs.BoolP("decompress", "d", false, "decompress")
 	keep := fs.BoolP("keep", "k", false, "keep (don't delete) input files")
 	stdout := fs.BoolP("stdout", "c", false, "write on standard output, keep original files unchanged")

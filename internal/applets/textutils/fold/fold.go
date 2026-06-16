@@ -26,7 +26,16 @@ func (c *Command) Synopsis() string { return "Wrap each input line to fit in spe
 
 // Run executes fold.
 func (c *Command) Run(_ context.Context, stdio command.IO, args []string) error {
-	fs := command.NewFlagSet(c.Name(), "[OPTION]... [FILE]...", stdio.Err)
+	fs := command.NewFlagSet(c.Name(), "[OPTION]... [FILE]...", stdio.Err).WithHelp(command.Help{
+		Description: "Wrap each input line from FILE (or standard input when no FILE is given) to fit within WIDTH " +
+			"columns, writing the result to standard output. With -s, break lines at spaces where possible.",
+		Examples: []command.Example{
+			{Command: "fold notes.txt", Explain: "Wrap each line of notes.txt to 80 columns."},
+			{Command: "fold -w 40 notes.txt", Explain: "Wrap each line to 40 columns."},
+			{Command: "fold -s -w 40 notes.txt", Explain: "Wrap to 40 columns, breaking at spaces so words stay intact."},
+		},
+		ExitStatus: "0  all input was wrapped successfully.\n1  a file could not be read.",
+	})
 	width := fs.IntP("width", "w", 80, "use WIDTH columns instead of 80")
 	spaces := fs.BoolP("spaces", "s", false, "break at spaces")
 

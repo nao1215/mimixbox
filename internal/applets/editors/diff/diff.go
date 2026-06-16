@@ -31,7 +31,16 @@ func (c *Command) Synopsis() string { return "Compare files line by line" }
 
 // Run executes diff.
 func (c *Command) Run(_ context.Context, stdio command.IO, args []string) error {
-	fs := command.NewFlagSet(c.Name(), "[OPTION]... FILE1 FILE2", stdio.Err)
+	fs := command.NewFlagSet(c.Name(), "[OPTION]... FILE1 FILE2", stdio.Err).WithHelp(command.Help{
+		Description: "Compare FILE1 and FILE2 line by line and report how to change the first into " +
+			"the second. The classic \"normal\" format is produced by default and unified output with -u.",
+		Examples: []command.Example{
+			{Command: "diff old.txt new.txt", Explain: "Show the differences in the normal diff format."},
+			{Command: "diff -u old.txt new.txt", Explain: "Show the differences in unified format."},
+			{Command: "diff -q a.txt b.txt", Explain: "Report only whether the files differ."},
+		},
+		ExitStatus: "0  inputs are identical.\n1  they differ.\n2  an error occurred.",
+	})
 	unified := fs.BoolP("unified", "u", false, "output NUM (default 3) lines of unified context")
 	brief := fs.BoolP("brief", "q", false, "report only when files differ")
 	ignoreCase := fs.BoolP("ignore-case", "i", false, "ignore case differences in file contents")

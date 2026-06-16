@@ -32,3 +32,20 @@ func TestFgrepIsFixedString(t *testing.T) {
 		t.Errorf("fgrep = %q, want only the literal a.b line", got)
 	}
 }
+
+// TestHelpSections asserts egrep/fgrep --help render alias-named structured help.
+func TestHelpSections(t *testing.T) {
+	t.Parallel()
+	for _, c := range []*Command{NewEgrep(), NewFgrep()} {
+		out := &bytes.Buffer{}
+		io := command.IO{In: strings.NewReader(""), Out: out, Err: &bytes.Buffer{}}
+		if err := c.Run(context.Background(), io, []string{"--help"}); err != nil {
+			t.Fatalf("%s --help err = %v", c.Name(), err)
+		}
+		for _, want := range []string{"Usage: " + c.Name(), "Examples:", "Exit status:"} {
+			if !strings.Contains(out.String(), want) {
+				t.Errorf("%s --help missing %q: %q", c.Name(), want, out.String())
+			}
+		}
+	}
+}

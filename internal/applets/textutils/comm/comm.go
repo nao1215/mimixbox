@@ -25,7 +25,16 @@ func (c *Command) Synopsis() string { return "Compare two sorted files line by l
 
 // Run executes comm.
 func (c *Command) Run(_ context.Context, stdio command.IO, args []string) error {
-	fs := command.NewFlagSet(c.Name(), "[OPTION]... FILE1 FILE2", stdio.Err)
+	fs := command.NewFlagSet(c.Name(), "[OPTION]... FILE1 FILE2", stdio.Err).WithHelp(command.Help{
+		Description: "Compare two sorted files line by line and print three columns: lines unique to FILE1, lines " +
+			"unique to FILE2, and lines common to both. Use -1, -2, or -3 to suppress the corresponding column.",
+		Examples: []command.Example{
+			{Command: "comm a.txt b.txt", Explain: "Show lines unique to each file and lines common to both."},
+			{Command: "comm -12 a.txt b.txt", Explain: "Print only the lines common to both files."},
+			{Command: "comm -3 a.txt b.txt", Explain: "Print only the lines that are unique to one file."},
+		},
+		ExitStatus: "0  success.\n1  a file could not be read or written.",
+	})
 	no1 := fs.BoolP("suppress-col1", "1", false, "suppress column 1 (lines unique to FILE1)")
 	no2 := fs.BoolP("suppress-col2", "2", false, "suppress column 2 (lines unique to FILE2)")
 	no3 := fs.BoolP("suppress-col3", "3", false, "suppress column 3 (lines that appear in both files)")

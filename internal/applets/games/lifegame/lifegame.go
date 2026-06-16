@@ -134,7 +134,15 @@ func (b *Board) Randomize(r *rand.Rand) {
 
 // Run executes lifegame.
 func (c *Command) Run(ctx context.Context, stdio command.IO, args []string) error {
-	fs := command.NewFlagSet(c.Name(), "[OPTION]", stdio.Err)
+	fs := command.NewFlagSet(c.Name(), "[OPTION]", stdio.Err).WithHelp(command.Help{
+		Description: "Animate Conway's Game of Life on the terminal, starting from a random " +
+			"pattern that fills the screen. Press Esc, Ctrl-C, or Ctrl-D to quit. When no " +
+			"terminal is available, the command exits without animating.",
+		Examples: []command.Example{
+			{Command: "lifegame", Explain: "Run the Game of Life animation in the terminal."},
+		},
+		ExitStatus: "0  the animation ran and was quit normally, or no terminal was available.",
+	})
 
 	proceed, err := fs.Parse(stdio, args)
 	if err != nil || !proceed {

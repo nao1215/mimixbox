@@ -25,7 +25,18 @@ func (c *Command) Synopsis() string { return "Print User ID and Group ID" }
 
 // Run executes id.
 func (c *Command) Run(_ context.Context, stdio command.IO, args []string) error {
-	fs := command.NewFlagSet(c.Name(), "[OPTION]... [USER]", stdio.Err)
+	fs := command.NewFlagSet(c.Name(), "[OPTION]... [USER]", stdio.Err).WithHelp(command.Help{
+		Description: "Print user and group information for the current user, or for USER when " +
+			"one is given. With no options, print the real and effective user ID, group ID, " +
+			"and the list of supplementary groups.",
+		Examples: []command.Example{
+			{Command: "id", Explain: "Print all ID information for the current user."},
+			{Command: "id -u", Explain: "Print only the effective user ID."},
+			{Command: "id -un", Explain: "Print only the effective user name."},
+			{Command: "id root", Explain: "Print ID information for the user root."},
+		},
+		ExitStatus: "0  the requested information was printed.\n1  an option was misused or the user could not be resolved.",
+	})
 	userOnly := fs.BoolP("user", "u", false, "print only the effective user ID")
 	groupOnly := fs.BoolP("group", "g", false, "print only the effective group ID")
 	allGroups := fs.BoolP("groups", "G", false, "print all group IDs")

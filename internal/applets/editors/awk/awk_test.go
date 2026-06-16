@@ -248,4 +248,10 @@ func TestHelp(t *testing.T) {
 	if !strings.Contains(out, "Usage: awk") {
 		t.Errorf("help = %q", out)
 	}
+	if !strings.Contains(out, "Examples:") {
+		t.Errorf("help missing Examples: %q", out)
+	}
+	if !strings.Contains(out, "Exit status:") {
+		t.Errorf("help missing Exit status: %q", out)
+	}
 }

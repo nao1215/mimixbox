@@ -119,3 +119,17 @@ func TestChgrpMissingOperand(t *testing.T) {
 		t.Errorf("stderr = %q, want missing operand error", errOut)
 	}
 }
+
+// TestHelpSections verifies that --help renders both the Examples and the
+// Exit status sections supplied through WithHelp.
+func TestHelpSections(t *testing.T) {
+	out, _, err := run(t, "--help")
+	if err != nil {
+		t.Fatalf("--help err = %v", err)
+	}
+	for _, want := range []string{"Examples:", "Exit status:"} {
+		if !strings.Contains(out, want) {
+			t.Errorf("--help missing %q section:\n%s", want, out)
+		}
+	}
+}

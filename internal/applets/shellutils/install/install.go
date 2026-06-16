@@ -40,7 +40,17 @@ type options struct {
 
 // Run executes install.
 func (c *Command) Run(_ context.Context, stdio command.IO, args []string) error {
-	fs := command.NewFlagSet(c.Name(), "[OPTION]... [-T] SOURCE DEST", stdio.Err)
+	fs := command.NewFlagSet(c.Name(), "[OPTION]... [-T] SOURCE DEST", stdio.Err).WithHelp(command.Help{
+		Description: "Copy SOURCE to DEST, or several SOURCEs to an existing DIRECTORY, while " +
+			"setting permission modes. With -d, create the named directories instead of " +
+			"copying files.",
+		Examples: []command.Example{
+			{Command: "install -m 644 file /etc/file", Explain: "Copy file to /etc/file with mode 644."},
+			{Command: "install -d /opt/app/bin", Explain: "Create the directory /opt/app/bin."},
+			{Command: "install -t /usr/local/bin prog", Explain: "Copy prog into the /usr/local/bin directory."},
+		},
+		ExitStatus: "0  all files or directories were installed.\n1  an operand was invalid or an install failed.",
+	})
 	directory := fs.BoolP("directory", "d", false, "treat all arguments as directory names; create them")
 	createDir := fs.BoolP("create-leading", "D", false, "create all leading components of DEST, then copy SOURCE")
 	noTarget := fs.BoolP("no-target-directory", "T", false, "treat DEST as a normal file")

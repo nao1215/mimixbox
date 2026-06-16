@@ -33,7 +33,15 @@ type options struct {
 
 // Run executes chgrp.
 func (c *Command) Run(_ context.Context, stdio command.IO, args []string) error {
-	fs := command.NewFlagSet(c.Name(), "[OPTION]... GROUP FILE...", stdio.Err)
+	fs := command.NewFlagSet(c.Name(), "[OPTION]... GROUP FILE...", stdio.Err).WithHelp(command.Help{
+		Description: "Change the group ownership of each FILE to GROUP. GROUP may be a group name or a numeric group ID.",
+		Examples: []command.Example{
+			{Command: "chgrp staff report.txt", Explain: "Change the group of report.txt to staff."},
+			{Command: "chgrp -R wheel /srv/www", Explain: "Recursively change the group of /srv/www and its contents."},
+			{Command: "chgrp -v 1000 file", Explain: "Change the group to GID 1000, reporting the change."},
+		},
+		ExitStatus: "0  all files were changed successfully.\n1  one or more files could not be changed.",
+	})
 	recursive := fs.BoolP("recursive", "R", false, "operate on files and directories recursively")
 	verbose := fs.BoolP("verbose", "v", false, "output a diagnostic for every file processed")
 

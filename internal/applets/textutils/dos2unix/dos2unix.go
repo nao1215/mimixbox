@@ -29,7 +29,14 @@ func (c *Command) Synopsis() string { return "Change CRLF to LF" }
 // stderr and makes the command exit non-zero; the remaining files are still
 // converted.
 func (c *Command) Run(_ context.Context, stdio command.IO, args []string) error {
-	fs := command.NewFlagSet(c.Name(), "[OPTION]... FILE...", stdio.Err)
+	fs := command.NewFlagSet(c.Name(), "[OPTION]... FILE...", stdio.Err).WithHelp(command.Help{
+		Description: "Convert CRLF (DOS) line endings to LF (Unix), editing each named FILE in place.",
+		Examples: []command.Example{
+			{Command: "dos2unix file.txt", Explain: "Convert file.txt to Unix line endings in place."},
+			{Command: "dos2unix a.txt b.txt", Explain: "Convert several files in place."},
+		},
+		ExitStatus: "0  success.\n1  an error occurred (e.g. a file was missing or could not be written).",
+	})
 
 	proceed, err := fs.Parse(stdio, args)
 	if err != nil || !proceed {

@@ -24,7 +24,14 @@ func (c *Command) Synopsis() string { return "Create a hard link to a file" }
 
 // Run executes link.
 func (c *Command) Run(_ context.Context, stdio command.IO, args []string) error {
-	fs := command.NewFlagSet(c.Name(), "FILE1 FILE2", stdio.Err)
+	fs := command.NewFlagSet(c.Name(), "FILE1 FILE2", stdio.Err).WithHelp(command.Help{
+		Description: "Create a hard link named FILE2 to the existing file FILE1 by calling the " +
+			"link system call directly, with none of the options of the ln command.",
+		Examples: []command.Example{
+			{Command: "link file.txt hardlink.txt", Explain: "Create a hard link hardlink.txt to file.txt."},
+		},
+		ExitStatus: "0  the link was created.\n1  the link could not be created or the operands were wrong.",
+	})
 
 	proceed, err := fs.Parse(stdio, args)
 	if err != nil || !proceed {

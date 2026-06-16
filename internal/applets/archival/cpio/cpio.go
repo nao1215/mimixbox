@@ -43,7 +43,16 @@ type options struct {
 
 // Run executes cpio.
 func (c *Command) Run(_ context.Context, stdio command.IO, args []string) error {
-	fs := command.NewFlagSet(c.Name(), "{-o|-i|-t} [-v] [-H newc]", stdio.Err)
+	fs := command.NewFlagSet(c.Name(), "{-o|-i|-t} [-v] [-H newc]", stdio.Err).WithHelp(command.Help{
+		Description: "Copy files to and from a cpio archive in the portable \"new ASCII\" (newc) format. " +
+			"Exactly one of -o (copy-out), -i (copy-in), or -t (list, with -i) selects the operation.",
+		Examples: []command.Example{
+			{Command: "ls | cpio -o > archive.cpio", Explain: "Create an archive from the names read on stdin."},
+			{Command: "cpio -i < archive.cpio", Explain: "Extract every file from the archive read on stdin."},
+			{Command: "cpio -it < archive.cpio", Explain: "List the contents of the archive."},
+		},
+		ExitStatus: "0  success.\n1  an error occurred (e.g. the archive could not be read or written).",
+	})
 	create := fs.BoolP("create", "o", false, "copy-out: read file names from stdin, write archive to stdout")
 	extract := fs.BoolP("extract", "i", false, "copy-in: read archive from stdin and extract")
 	list := fs.BoolP("list", "t", false, "list the contents of the archive (with -i)")

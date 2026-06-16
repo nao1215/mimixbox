@@ -34,7 +34,17 @@ type options struct {
 
 // Run executes bunzip2.
 func (c *Command) Run(_ context.Context, stdio command.IO, args []string) error {
-	fs := command.NewFlagSet(c.Name(), "[OPTION]... [FILE]...", stdio.Err)
+	fs := command.NewFlagSet(c.Name(), "[OPTION]... [FILE]...", stdio.Err).WithHelp(command.Help{
+		Description: "Decompress each bzip2 (.bz2) FILE, or standard input when no FILE (or\n" +
+			"\"-\") is given. A decompressed file replaces its .bz2 original unless -k is\n" +
+			"given to keep it, or -c is given to write to standard output instead.",
+		Examples: []command.Example{
+			{Command: "bunzip2 archive.tar.bz2", Explain: "decompress to archive.tar and remove the .bz2"},
+			{Command: "bunzip2 -k data.bz2", Explain: "decompress but keep the original"},
+			{Command: "bunzip2 -c data.bz2", Explain: "write the decompressed data to standard output"},
+		},
+		ExitStatus: "0  success.\n1  a file lacked a known suffix, could not be read, or the output already exists without -f.",
+	})
 	keep := fs.BoolP("keep", "k", false, "keep (don't delete) input files")
 	stdout := fs.BoolP("stdout", "c", false, "write on standard output, keep original files unchanged")
 	force := fs.BoolP("force", "f", false, "force overwrite of output file")

@@ -92,3 +92,18 @@ func TestNameSynopsis(t *testing.T) {
 		t.Error("Synopsis() is empty")
 	}
 }
+
+// TestHelpSections verifies that --help renders both the Examples and the
+// Exit status sections supplied through WithHelp.
+func TestHelpSections(t *testing.T) {
+	out := &bytes.Buffer{}
+	io := command.IO{In: strings.NewReader(""), Out: out, Err: &bytes.Buffer{}}
+	if err := New().Run(context.Background(), io, []string{"--help"}); err != nil {
+		t.Fatalf("--help err = %v", err)
+	}
+	for _, want := range []string{"Examples:", "Exit status:"} {
+		if !strings.Contains(out.String(), want) {
+			t.Errorf("--help missing %q section:\n%s", want, out.String())
+		}
+	}
+}

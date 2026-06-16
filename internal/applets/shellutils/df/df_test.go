@@ -241,4 +241,9 @@ func TestRunHelp(t *testing.T) {
 	if !strings.Contains(out, "Usage: df") {
 		t.Errorf("help output missing usage, got %q", out)
 	}
+	for _, want := range []string{"Examples:", "Exit status:"} {
+		if !strings.Contains(out, want) {
+			t.Errorf("--help output missing %q:\n%s", want, out)
+		}
+	}
 }
