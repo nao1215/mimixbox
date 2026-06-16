@@ -261,6 +261,16 @@ func TestHelp(t *testing.T) {
 	if !strings.Contains(out, "Usage: find") {
 		t.Errorf("help = %q", out)
 	}
+	// GNU-style help must carry an Options: block listing --help and --version,
+	// while still documenting the supported subset tokens.
+	for _, want := range []string{
+		"Options:", "--help", "--version",
+		"-name", "-type", "-print0", "-maxdepth", "-mindepth",
+	} {
+		if !strings.Contains(out, want) {
+			t.Errorf("help missing %q:\n%s", want, out)
+		}
+	}
 }
 
 // TestVersion verifies that --version prints the version line, not usage text

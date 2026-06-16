@@ -47,6 +47,90 @@ func TestByBytes(t *testing.T) {
 	checkFile(t, prefix+"ac", "g")
 }
 
+func TestNumericSuffixes(t *testing.T) {
+	t.Parallel()
+	dir := t.TempDir()
+	prefix := filepath.Join(dir, "part-")
+	_, _, err := run(t, "1\n2\n3\n4\n5\n", "-l", "2", "-d", "-", prefix)
+	if err != nil {
+		t.Fatalf("Run error = %v", err)
+	}
+	checkFile(t, prefix+"00", "1\n2\n")
+	checkFile(t, prefix+"01", "3\n4\n")
+	checkFile(t, prefix+"02", "5\n")
+}
+
+func TestNumericSuffixesFrom(t *testing.T) {
+	t.Parallel()
+	dir := t.TempDir()
+	prefix := filepath.Join(dir, "p-")
+	_, _, err := run(t, "1\n2\n3\n", "-l", "1", "--numeric-suffixes=5", "-", prefix)
+	if err != nil {
+		t.Fatalf("Run error = %v", err)
+	}
+	checkFile(t, prefix+"05", "1\n")
+	checkFile(t, prefix+"06", "2\n")
+	checkFile(t, prefix+"07", "3\n")
+}
+
+func TestAdditionalSuffix(t *testing.T) {
+	t.Parallel()
+	dir := t.TempDir()
+	prefix := filepath.Join(dir, "part-")
+	_, _, err := run(t, "1\n2\n3\n", "-l", "2", "--additional-suffix=.txt", "-", prefix)
+	if err != nil {
+		t.Fatalf("Run error = %v", err)
+	}
+	checkFile(t, prefix+"aa.txt", "1\n2\n")
+	checkFile(t, prefix+"ab.txt", "3\n")
+}
+
+func TestSuffixLength(t *testing.T) {
+	t.Parallel()
+	dir := t.TempDir()
+	prefix := filepath.Join(dir, "part-")
+	_, _, err := run(t, "1\n2\n", "-l", "1", "-a", "3", "-", prefix)
+	if err != nil {
+		t.Fatalf("Run error = %v", err)
+	}
+	checkFile(t, prefix+"aaa", "1\n")
+	checkFile(t, prefix+"aab", "2\n")
+}
+
+func TestNumericSuffixLengthCombined(t *testing.T) {
+	t.Parallel()
+	dir := t.TempDir()
+	prefix := filepath.Join(dir, "part-")
+	_, _, err := run(t, "1\n2\n", "-l", "1", "-d", "-a", "3", "--additional-suffix=.bin", "-", prefix)
+	if err != nil {
+		t.Fatalf("Run error = %v", err)
+	}
+	checkFile(t, prefix+"000.bin", "1\n")
+	checkFile(t, prefix+"001.bin", "2\n")
+}
+
+func TestInvalidSuffixLength(t *testing.T) {
+	t.Parallel()
+	_, errOut, err := run(t, "x\n", "-a", "0")
+	if err == nil {
+		t.Fatal("expected error")
+	}
+	if !strings.Contains(errOut, "invalid suffix length") {
+		t.Errorf("stderr = %q", errOut)
+	}
+}
+
+func TestInvalidNumericStart(t *testing.T) {
+	t.Parallel()
+	_, errOut, err := run(t, "x\n", "--numeric-suffixes=abc")
+	if err == nil {
+		t.Fatal("expected error")
+	}
+	if !strings.Contains(errOut, "invalid start value") {
+		t.Errorf("stderr = %q", errOut)
+	}
+}
+
 func TestInvalidLines(t *testing.T) {
 	t.Parallel()
 	_, errOut, err := run(t, "x\n", "-l", "0")

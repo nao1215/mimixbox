@@ -27,6 +27,24 @@ Describe 'find'
         The status should be success
     End
 
+    It 'lists an Options block with --help and --version in --help'
+        When call TestFindHelp
+        The output should include 'Options:'
+        The output should include '--help'
+        The output should include '--version'
+        The status should be success
+    End
+
+    It 'documents the supported subset tokens in --help'
+        When call TestFindHelp
+        The output should include '-name'
+        The output should include '-type'
+        The output should include '-print0'
+        The output should include '-maxdepth'
+        The output should include '-mindepth'
+        The status should be success
+    End
+
     It 'prints the version line for --version'
         When call TestFindVersion
         The output should include 'find (mimixbox)'

@@ -241,6 +241,9 @@ func printUsage(w interface{ Write([]byte) (int, error) }) {
 	_, _ = w.Write([]byte("Usage: find [PATH]... [EXPRESSION]\n\n" +
 		"Search each PATH (default: the current directory) recursively and act on the\n" +
 		"entries that match EXPRESSION. With no expression, every entry is printed.\n\n" +
+		"Options:\n" +
+		"  --help     display this help and exit\n" +
+		"  --version  output version information and exit\n\n" +
 		"Tests: -name, -iname, -path, -type [f|d|l|p|s], -empty\n" +
 		"Depth: -maxdepth N, -mindepth N\n" +
 		"Actions: -print (default), -print0\n\n" +

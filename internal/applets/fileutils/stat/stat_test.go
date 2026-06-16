@@ -95,11 +95,12 @@ func TestDefaultLayout(t *testing.T) {
 func TestUnknownSpecifierPassThrough(t *testing.T) {
 	t.Parallel()
 	p := tmpFile(t, "x")
-	out, _, err := run(t, "-c", "%Z", p)
+	// %q is not a directive stat implements, so it is emitted verbatim.
+	out, _, err := run(t, "-c", "%q", p)
 	if err != nil {
 		t.Fatalf("Run error = %v", err)
 	}
-	if out != "%Z\n" {
+	if out != "%q\n" {
 		t.Errorf("out = %q", out)
 	}
 }
@@ -197,6 +198,90 @@ func TestNameSynopsis(t *testing.T) {
 	}
 	if c.Synopsis() == "" {
 		t.Error("Synopsis() is empty")
+	}
+}
+
+func TestPrintfNoTrailingNewlineAndEscapes(t *testing.T) {
+	t.Parallel()
+	p := tmpFile(t, "hello")
+	// --printf interprets backslash escapes and adds no trailing newline.
+	out, _, err := run(t, "--printf", `%n=%s\n`, p)
+	if err != nil {
+		t.Fatalf("Run error = %v", err)
+	}
+	if out != p+"=5\n" {
+		t.Errorf("out = %q, want %q", out, p+"=5\n")
+	}
+}
+
+func TestPrintfNoNewlineWhenNoEscape(t *testing.T) {
+	t.Parallel()
+	p := tmpFile(t, "ab")
+	// Without an explicit \n, --printf emits nothing extra.
+	out, _, err := run(t, "--printf", "%s", p)
+	if err != nil {
+		t.Fatalf("Run error = %v", err)
+	}
+	if out != "2" {
+		t.Errorf("out = %q, want %q", out, "2")
+	}
+}
+
+func TestPrintfDirectives(t *testing.T) {
+	t.Parallel()
+	p := tmpFile(t, "abc")
+	// %a octal perms, %i inode, %Y mtime epoch. All numeric/non-empty.
+	out, _, err := run(t, "--printf", "%a|%i|%Y|%b|%B", p)
+	if err != nil {
+		t.Fatalf("Run error = %v", err)
+	}
+	fields := strings.Split(out, "|")
+	if len(fields) != 5 {
+		t.Fatalf("got %d fields: %q", len(fields), out)
+	}
+	if fields[0] != "644" {
+		t.Errorf("%%a = %q, want 644", fields[0])
+	}
+	for i, f := range fields {
+		if f == "" {
+			t.Errorf("field %d empty in %q", i, out)
+		}
+	}
+}
+
+func TestFormatAddsTrailingNewline(t *testing.T) {
+	t.Parallel()
+	p := tmpFile(t, "xy")
+	// -c/--format honors backslash escapes too, plus a trailing newline.
+	out, _, err := run(t, "--format", `%s`, p)
+	if err != nil {
+		t.Fatalf("Run error = %v", err)
+	}
+	if out != "2\n" {
+		t.Errorf("out = %q, want %q", out, "2\n")
+	}
+}
+
+func TestTerseLine(t *testing.T) {
+	t.Parallel()
+	p := tmpFile(t, "hello")
+	out, _, err := run(t, "--terse", p)
+	if err != nil {
+		t.Fatalf("Run error = %v", err)
+	}
+	if !strings.HasSuffix(out, "\n") {
+		t.Errorf("terse output should end with newline: %q", out)
+	}
+	fields := strings.Fields(strings.TrimRight(out, "\n"))
+	// name size blocks rawmode uid gid dev inode nlink major minor atime mtime ctime blksize = 15 fields.
+	if len(fields) != 15 {
+		t.Fatalf("terse line has %d fields, want 15: %q", len(fields), out)
+	}
+	if fields[0] != p {
+		t.Errorf("terse name = %q, want %q", fields[0], p)
+	}
+	if fields[1] != "5" {
+		t.Errorf("terse size = %q, want 5", fields[1])
 	}
 }
 
