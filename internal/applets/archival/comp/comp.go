@@ -2,7 +2,7 @@
 // single-stream archival applets (gzip/gunzip, bzip2/bunzip2, xz/lzma/...,
 // lzop/..., compress/uncompress). They all follow the same file-handling model:
 // read standard input to standard output when given no FILE (or "-"); otherwise
-// process each FILE in place, adding or stripping a suffix, honouring -c (write
+// process each FILE in place, adding or stripping a suffix, honoring -c (write
 // to stdout, keep input), -k (keep input), -f (overwrite output) and, for the
 // codecs that support it, -t (test integrity). This package factors that model
 // out so each applet only supplies its codec and a small Config describing the
@@ -57,7 +57,7 @@ type Config struct {
 	OutputName func(name string, decompress bool) (string, error)
 
 	// RemoveOutputOnError, when true, deletes a partially written output file if
-	// the transform fails, so a failed run leaves no truncated artefact behind.
+	// the transform fails, so a failed run leaves no truncated artifact behind.
 	RemoveOutputOnError bool
 
 	// ExistsErr formats the error returned when the output already exists and
@@ -81,7 +81,7 @@ func (cfg *Config) existsErr(out string) error {
 // Run is the shared entry point. files is fs.Args(); with none (or a single
 // "-") it streams standard input to standard output, otherwise it processes
 // each file. It prints failures on stderr and returns a silent failure that
-// only sets the exit code, matching the per-applet behaviour it replaces.
+// only sets the exit code, matching the per-applet behavior it replaces.
 func (cfg *Config) Run(stdio command.IO, opts Options, files []string) error {
 	if len(files) == 0 || (len(files) == 1 && files[0] == "-") {
 		return cfg.runStream(stdio, opts)

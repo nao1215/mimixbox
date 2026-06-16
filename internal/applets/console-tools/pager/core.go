@@ -13,7 +13,7 @@ import (
 
 // core is the shared paging engine behind the more and less front-ends. It owns
 // input handling, terminal detection, scrolling, rendering and key input; the
-// only front-end-specific behaviour is carried in cfg.
+// only front-end-specific behavior is carried in cfg.
 type core struct {
 	cfg config
 }
