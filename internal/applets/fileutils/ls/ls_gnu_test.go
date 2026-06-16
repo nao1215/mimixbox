@@ -157,49 +157,64 @@ func TestParseSort(t *testing.T) {
 	}
 }
 
+// entriesFor builds entry values (with cached metadata) for the named files in
+// dir, mirroring how the listing pipeline populates them.
+func entriesFor(dir string, names ...string) []entry {
+	es := make([]entry, 0, len(names))
+	for _, n := range names {
+		es = append(es, newEntry(dir, n))
+	}
+	return es
+}
+
+func entryNames(es []entry) []string {
+	names := make([]string, len(es))
+	for i, e := range es {
+		names[i] = e.name
+	}
+	return names
+}
+
 func TestSortSize(t *testing.T) {
 	t.Parallel()
 	dir := gnuFixture(t)
-	names := []string{"small.txt", "big.txt", "a.log"}
-	c := New()
-	c.sortNames(names, dir, options{sortBy: sortSize})
-	if names[0] != "big.txt" {
-		t.Errorf("size sort should put big.txt first: %v", names)
+	es := entriesFor(dir, "small.txt", "big.txt", "a.log")
+	sortEntries(es, options{sortBy: sortSize})
+	if es[0].name != "big.txt" {
+		t.Errorf("size sort should put big.txt first: %v", entryNames(es))
 	}
 }
 
 func TestSortTime(t *testing.T) {
 	t.Parallel()
 	dir := gnuFixture(t)
-	names := []string{"small.txt", "big.txt"}
-	c := New()
-	c.sortNames(names, dir, options{sortBy: sortTime, timeBy: timeMtime})
+	es := entriesFor(dir, "small.txt", "big.txt")
+	sortEntries(es, options{sortBy: sortTime, timeBy: timeMtime})
 	// big.txt is more recent, so it sorts first.
-	if names[0] != "big.txt" {
-		t.Errorf("time sort newest-first wrong: %v", names)
+	if es[0].name != "big.txt" {
+		t.Errorf("time sort newest-first wrong: %v", entryNames(es))
 	}
 }
 
 func TestSortVersion(t *testing.T) {
 	t.Parallel()
-	names := []string{"file10", "file2", "file1"}
-	c := New()
-	c.sortNames(names, "", options{sortBy: sortVersion})
+	es := entriesFor("", "file10", "file2", "file1")
+	sortEntries(es, options{sortBy: sortVersion})
 	want := []string{"file1", "file2", "file10"}
+	got := entryNames(es)
 	for i := range want {
-		if names[i] != want[i] {
-			t.Fatalf("version sort = %v, want %v", names, want)
+		if got[i] != want[i] {
+			t.Fatalf("version sort = %v, want %v", got, want)
 		}
 	}
 }
 
 func TestSortExtension(t *testing.T) {
 	t.Parallel()
-	names := []string{"b.txt", "a.log", "c.txt"}
-	c := New()
-	c.sortNames(names, "", options{sortBy: sortExtension})
-	if names[0] != "a.log" {
-		t.Errorf(".log should sort before .txt: %v", names)
+	es := entriesFor("", "b.txt", "a.log", "c.txt")
+	sortEntries(es, options{sortBy: sortExtension})
+	if es[0].name != "a.log" {
+		t.Errorf(".log should sort before .txt: %v", entryNames(es))
 	}
 }
 
@@ -277,7 +292,7 @@ func TestInode(t *testing.T) {
 	dir := gnuFixture(t)
 	out, _ := run(t, "-i", "--ignore=*", dir, filepath.Join(dir, "small.txt"))
 	// -i prints inode before the name; ensure the line starts with a number.
-	got := inodeOf(dir, "small.txt")
+	got := newEntry(dir, "small.txt").inode()
 	if got == 0 {
 		t.Skip("inode not available on this platform")
 	}
