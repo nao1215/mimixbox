@@ -38,6 +38,7 @@ func (c *Command) Run(_ context.Context, stdio command.IO, args []string) error 
 		Examples: []command.Example{
 			{Command: "lspci", Explain: "List the PCI devices."},
 		},
+		ExitStatus: "0  the PCI devices were listed successfully.\n1  the PCI device information could not be read.",
 	})
 	_ = fs.BoolP("numeric", "n", false, "show numeric IDs (always on in this implementation)")
 

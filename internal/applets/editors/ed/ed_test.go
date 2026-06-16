@@ -29,6 +29,18 @@ func edit(t *testing.T, content, script string) (string, string) {
 	return out.String(), string(data)
 }
 
+func TestHelpExitStatus(t *testing.T) {
+	t.Parallel()
+	out := &bytes.Buffer{}
+	io := command.IO{In: strings.NewReader(""), Out: out, Err: &bytes.Buffer{}}
+	if err := New().Run(context.Background(), io, []string{"--help"}); err != nil {
+		t.Fatalf("Run error = %v", err)
+	}
+	if !strings.Contains(out.String(), "Exit status:") {
+		t.Errorf("help missing exit status section = %q", out.String())
+	}
+}
+
 func TestLoadAndPrint(t *testing.T) {
 	t.Parallel()
 	out, _ := edit(t, "one\ntwo\nthree\n", "1,$p\nq\n")

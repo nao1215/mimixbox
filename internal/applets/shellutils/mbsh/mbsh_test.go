@@ -230,6 +230,9 @@ func TestHelp(t *testing.T) {
 	if strings.Contains(out.String(), "mbsh:") {
 		t.Errorf("--help should not print a prompt: %q", out.String())
 	}
+	if !strings.Contains(out.String(), "Exit status:") {
+		t.Errorf("--help out missing exit status section = %q", out.String())
+	}
 }
 
 func requireCmd(t *testing.T, name string) {

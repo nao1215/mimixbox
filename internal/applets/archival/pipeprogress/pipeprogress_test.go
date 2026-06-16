@@ -36,4 +36,7 @@ func TestHelp(t *testing.T) {
 	if !strings.Contains(out.String(), "Usage: pipe_progress") {
 		t.Errorf("--help = %q", out.String())
 	}
+	if !strings.Contains(out.String(), "Exit status:") {
+		t.Errorf("--help missing Exit status section = %q", out.String())
+	}
 }

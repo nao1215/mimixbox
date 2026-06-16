@@ -52,6 +52,7 @@ func (c *Command) Run(_ context.Context, stdio command.IO, args []string) error 
 			{Command: "dc -e '6 3 / p'", Explain: "Print 2."},
 			{Command: "dc -e '2k 7 3 / p'", Explain: "Print 2.33 (two-digit precision)."},
 		},
+		ExitStatus: "0  success.\n1  a syntax error in the expression, or a file could not be read.",
 		Notes: []string{
 			"Commands: + - * / % ^ (arithmetic); p n f (print); c d r (stack); sX lX (registers); k K (precision); q (quit).",
 		},

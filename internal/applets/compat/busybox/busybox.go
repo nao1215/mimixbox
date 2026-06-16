@@ -52,6 +52,7 @@ func (c *Command) flagSet(stdio command.IO) *command.FlagSet {
 			{Command: "busybox --list", Explain: "List all applets."},
 			{Command: "busybox cat file.txt", Explain: "Run the cat applet."},
 		},
+		ExitStatus: "0  success.\n1  the requested applet failed or was not found.",
 	})
 }
 
