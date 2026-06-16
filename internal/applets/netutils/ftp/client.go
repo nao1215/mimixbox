@@ -4,6 +4,11 @@
 // differ only in transfer direction. The client is exercised against a loopback
 // fixture FTP server in tests, so no external network is needed. Active mode and
 // TLS are intentionally not implemented.
+//
+// This file holds the shared transport/session layer (control-connection setup,
+// login, mode selection, and the PASV data-channel transfers) used by both the
+// ftpget and ftpput CLI surfaces. Each CLI lives in its own file (ftpget.go,
+// ftpput.go) and differs only in transfer direction.
 package ftp
 
 import (
@@ -34,12 +39,6 @@ type Command struct {
 	dir  direction
 }
 
-// NewFtpget returns the ftpget applet (RETR / download).
-func NewFtpget() *Command { return &Command{name: "ftpget", dir: dirGet} }
-
-// NewFtpput returns the ftpput applet (STOR / upload).
-func NewFtpput() *Command { return &Command{name: "ftpput", dir: dirPut} }
-
 // Name returns the command name.
 func (c *Command) Name() string { return c.name }
 
@@ -57,7 +56,9 @@ var (
 	writeLocal = os.WriteFile
 )
 
-// Run executes ftpget/ftpput.
+// Run parses the shared CLI surface and drives a transfer in the applet's
+// direction. ftpget and ftpput share this entry point and the transport below;
+// only the verb wording and the get/put branch differ.
 func (c *Command) Run(_ context.Context, stdio command.IO, args []string) error {
 	verb := "Download"
 	if c.dir == dirPut {

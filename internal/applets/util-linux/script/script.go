@@ -1,28 +1,23 @@
 // Package script implements the script and scriptreplay applets: record a
 // command's output (with a timing file) to a typescript, and replay it with the
 // original pacing.
+//
+// The transcript and timing serialization shared by both entrypoints (the
+// recorder, the "delay bytes" timing format, and the replay parsing) lives in
+// transcript.go; this file keeps the script (recorder) and scriptreplay
+// (replayer) command entrypoints.
 package script
 
 import (
-	"bufio"
-	"bytes"
 	"context"
 	"fmt"
-	"io"
 	"os"
 	"os/exec"
 	"strconv"
 	"strings"
-	"time"
 
 	"github.com/nao1215/mimixbox/internal/command"
 )
-
-// clock is indirected so recorded timing is deterministic under test.
-var clock = time.Now
-
-// sleep is indirected so replay does not actually wait under test.
-var sleep = time.Sleep
 
 // Command is the script or scriptreplay applet.
 type Command struct{ replay bool }
@@ -55,33 +50,6 @@ func (c *Command) Run(ctx context.Context, stdio command.IO, args []string) erro
 		return c.runReplay(ctx, stdio, args)
 	}
 	return c.runScript(ctx, stdio, args)
-}
-
-type entry struct {
-	delay float64
-	bytes int
-}
-
-// recorder tees writes into a buffer while recording per-write timing.
-type recorder struct {
-	buf    bytes.Buffer
-	timing []entry
-	last   time.Time
-	mirror io.Writer
-}
-
-func (r *recorder) Write(p []byte) (int, error) {
-	t := clock()
-	delay := 0.0
-	if !r.last.IsZero() {
-		delay = t.Sub(r.last).Seconds()
-	}
-	r.last = t
-	r.timing = append(r.timing, entry{delay: delay, bytes: len(p)})
-	if r.mirror != nil {
-		_, _ = r.mirror.Write(p)
-	}
-	return r.buf.Write(p)
 }
 
 // runScript records a command session.
@@ -134,11 +102,7 @@ func (c *Command) runScript(ctx context.Context, stdio command.IO, args []string
 	}
 
 	if *timingFile != "" {
-		var tb strings.Builder
-		for _, e := range rec.timing {
-			fmt.Fprintf(&tb, "%.6f %d\n", e.delay, e.bytes)
-		}
-		if err := os.WriteFile(*timingFile, []byte(tb.String()), 0o644); err != nil { //nolint:gosec // user-named file
+		if err := os.WriteFile(*timingFile, []byte(formatTiming(rec.timing)), 0o644); err != nil { //nolint:gosec // user-named file
 			_, _ = fmt.Fprintf(stdio.Err, "script: %v\n", err)
 			return command.SilentFailure()
 		}
@@ -187,45 +151,6 @@ func (c *Command) runReplay(_ context.Context, stdio command.IO, args []string) 
 		return command.SilentFailure()
 	}
 
-	// Skip the "Script started" header line; the timing covers the bytes after it.
-	body := data
-	if i := bytes.IndexByte(data, '\n'); i >= 0 {
-		body = data[i+1:]
-	}
-
-	pos := 0
-	for _, e := range timing {
-		sleep(time.Duration(e.delay * float64(time.Second)))
-		end := pos + e.bytes
-		if end > len(body) {
-			end = len(body)
-		}
-		if pos < end {
-			_, _ = stdio.Out.Write(body[pos:end])
-		}
-		pos = end
-	}
+	replay(stdio.Out, transcriptBody(data), timing)
 	return nil
-}
-
-// readTiming parses a "delay bytes" timing file.
-func readTiming(path string) ([]entry, error) {
-	f, err := os.Open(path) //nolint:gosec // user-named file
-	if err != nil {
-		return nil, err
-	}
-	defer func() { _ = f.Close() }()
-
-	var out []entry
-	sc := bufio.NewScanner(f)
-	for sc.Scan() {
-		fields := strings.Fields(sc.Text())
-		if len(fields) != 2 {
-			continue
-		}
-		delay, _ := strconv.ParseFloat(fields[0], 64)
-		n, _ := strconv.Atoi(fields[1])
-		out = append(out, entry{delay: delay, bytes: n})
-	}
-	return out, sc.Err()
 }

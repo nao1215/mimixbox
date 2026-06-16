@@ -6,6 +6,10 @@
 // is injectable so tests can capture the planned commands instead of touching
 // the host. Actually bringing a kernel interface up or down (the ip/ifconfig
 // state change) is capability-gated and reported with a documented error.
+//
+// backend.go holds the shared interface-state backend (config parsing, hook
+// planning/running, and the production shell runner); ifup.go, ifdown.go, and
+// ifplugd.go hold the per-command entrypoints.
 package ifupdown
 
 import (
@@ -22,13 +26,13 @@ import (
 
 // Iface is one parsed "iface" stanza from an interfaces file.
 type Iface struct {
-	Name    string
-	Family  string // inet, inet6, ...
-	Method  string // dhcp, static, manual, loopback, ...
-	Options map[string]string
-	PreUp   []string
-	Up      []string
-	Down    []string
+	Name     string
+	Family   string // inet, inet6, ...
+	Method   string // dhcp, static, manual, loopback, ...
+	Options  map[string]string
+	PreUp    []string
+	Up       []string
+	Down     []string
 	PostDown []string
 }
 
@@ -123,15 +127,6 @@ type Command struct {
 	name string
 }
 
-// NewIfup returns an ifup command.
-func NewIfup() *Command { return &Command{name: "ifup"} }
-
-// NewIfdown returns an ifdown command.
-func NewIfdown() *Command { return &Command{name: "ifdown"} }
-
-// NewIfplugd returns an ifplugd command.
-func NewIfplugd() *Command { return &Command{name: "ifplugd"} }
-
 // Name returns the command name.
 func (c *Command) Name() string { return c.name }
 
@@ -155,6 +150,9 @@ func (c *Command) Run(ctx context.Context, stdio command.IO, args []string) erro
 	return c.runIfupdown(ctx, stdio, args)
 }
 
+// runIfupdown is the shared ifup/ifdown entrypoint: it parses the interfaces
+// file, plans the hook commands for the requested interface, then either prints
+// the plan (-n) or runs the hooks and reports the capability-gated state change.
 func (c *Command) runIfupdown(ctx context.Context, stdio command.IO, args []string) error {
 	bringUp := c.name == "ifup"
 	fs := command.NewFlagSet(c.name, "[-i FILE] [-n] IFACE", stdio.Err).WithHelp(command.Help{
@@ -215,30 +213,6 @@ func (c *Command) runIfupdown(ctx context.Context, stdio command.IO, args []stri
 	return command.Failuref(
 		"%s: ran hooks for %q, but bringing the interface %s requires privileged network configuration "+
 			"not available in this environment (capability-gated backend)", c.name, name, verb(bringUp))
-}
-
-func runIfplugd(stdio command.IO, args []string) error {
-	fs := command.NewFlagSet("ifplugd", "-i IFACE", stdio.Err).WithHelp(command.Help{
-		Description: "Monitor an interface's link state and run ifup/ifdown when the cable is plugged or " +
-			"unplugged. Link-state monitoring relies on privileged netlink/ioctl access that is not " +
-			"available in this environment; this slice validates its arguments and reports a documented " +
-			"capability error instead of silently doing nothing.",
-		Examples: []command.Example{
-			{Command: "ifplugd -i eth0", Explain: "Plan link monitoring of eth0 (capability-gated)."},
-		},
-		ExitStatus: "0  never in this environment.\n1  always: validated request then a documented backend error.",
-	})
-	iface := fs.StringP("iface", "i", "", "interface to monitor")
-	proceed, err := fs.Parse(stdio, args)
-	if err != nil || !proceed {
-		return err
-	}
-	if *iface == "" {
-		return command.Failuref("an interface is required (-i)")
-	}
-	return command.Failuref(
-		"ifplugd: link-state monitoring of %q requires privileged netlink access not available in this "+
-			"environment (capability-gated backend)", *iface)
 }
 
 // shellHook returns the production HookRunner: it executes the hook command
