@@ -158,3 +158,158 @@ func TestHelpSections(t *testing.T) {
 		t.Errorf("--help missing structured sections:\n%s", out)
 	}
 }
+
+func TestNameSynopsis(t *testing.T) {
+	t.Parallel()
+	c := gzipCmd.New()
+	if c.Name() != "gzip" {
+		t.Errorf("Name() = %q, want %q", c.Name(), "gzip")
+	}
+	if c.Synopsis() == "" {
+		t.Error("Synopsis() is empty")
+	}
+}
+
+// TestKeepFlagRetainsOriginal verifies -k leaves the source file in place after
+// compression instead of removing it.
+func TestKeepFlagRetainsOriginal(t *testing.T) {
+	t.Parallel()
+	dir := t.TempDir()
+	name := filepath.Join(dir, "data.txt")
+	if err := os.WriteFile(name, []byte("keep me\n"), 0o600); err != nil {
+		t.Fatal(err)
+	}
+	if _, errOut, err := run(t, "", "-k", name); err != nil {
+		t.Fatalf("compress error = %v, stderr = %q", err, errOut)
+	}
+	if _, err := os.Stat(name); err != nil {
+		t.Errorf("original should be kept with -k: %v", err)
+	}
+	if _, err := os.Stat(name + ".gz"); err != nil {
+		t.Errorf("compressed file missing: %v", err)
+	}
+}
+
+// TestRefuseOverwriteWithoutForce checks that gzip refuses to clobber an
+// existing FILE.gz unless -f is given, and that -f overrides the refusal.
+func TestRefuseOverwriteWithoutForce(t *testing.T) {
+	t.Parallel()
+	dir := t.TempDir()
+	name := filepath.Join(dir, "data.txt")
+	if err := os.WriteFile(name, []byte("payload\n"), 0o600); err != nil {
+		t.Fatal(err)
+	}
+	// Pre-existing output blocks compression without -f.
+	if err := os.WriteFile(name+".gz", []byte("old"), 0o600); err != nil {
+		t.Fatal(err)
+	}
+
+	_, errOut, err := run(t, "", "-k", name)
+	if err == nil {
+		t.Fatal("expected error when output exists without -f")
+	}
+	if !strings.Contains(errOut, "already exists") {
+		t.Errorf("stderr = %q, want already-exists message", errOut)
+	}
+
+	// With -f the existing output is overwritten and the command succeeds.
+	if _, errOut, err := run(t, "", "-k", "-f", name); err != nil {
+		t.Fatalf("force error = %v, stderr = %q", err, errOut)
+	}
+}
+
+// TestDecompressUnknownSuffix checks that decompressing a file without the .gz
+// suffix is rejected.
+func TestDecompressUnknownSuffix(t *testing.T) {
+	t.Parallel()
+	dir := t.TempDir()
+	name := filepath.Join(dir, "plain.txt")
+	if err := os.WriteFile(name, []byte("data"), 0o600); err != nil {
+		t.Fatal(err)
+	}
+	_, errOut, err := run(t, "", "-d", name)
+	if err == nil {
+		t.Fatal("expected error for unknown suffix")
+	}
+	if !strings.Contains(errOut, "unknown suffix") {
+		t.Errorf("stderr = %q, want unknown-suffix message", errOut)
+	}
+}
+
+// TestProcessFilesContinuesAfterError verifies a missing file does not stop
+// processing of the remaining valid operands, while still setting failure.
+func TestProcessFilesContinuesAfterError(t *testing.T) {
+	t.Parallel()
+	dir := t.TempDir()
+	good := filepath.Join(dir, "good.txt")
+	if err := os.WriteFile(good, []byte("ok\n"), 0o600); err != nil {
+		t.Fatal(err)
+	}
+	_, errOut, err := run(t, "", "-k", filepath.Join(dir, "missing.txt"), good)
+	if err == nil {
+		t.Fatal("expected failure because one file is missing")
+	}
+	if !strings.Contains(errOut, "missing.txt") {
+		t.Errorf("stderr = %q, want missing file message", errOut)
+	}
+	// The good file was still compressed despite the earlier error.
+	if _, statErr := os.Stat(good + ".gz"); statErr != nil {
+		t.Errorf("good file was not compressed: %v", statErr)
+	}
+}
+
+// TestDashAmongFilesStreamsStdio exercises the "-" branch inside processFiles
+// (rather than the single-operand fast path) by pairing "-" with a real file.
+func TestDashAmongFilesStreamsStdio(t *testing.T) {
+	t.Parallel()
+	dir := t.TempDir()
+	name := filepath.Join(dir, "data.txt")
+	if err := os.WriteFile(name, []byte("body\n"), 0o600); err != nil {
+		t.Fatal(err)
+	}
+	out, errOut, err := run(t, "abc\n", "-k", name, "-")
+	if err != nil {
+		t.Fatalf("Run error = %v, stderr = %q", err, errOut)
+	}
+	// stdin was compressed to stdout for the "-" operand.
+	gr, gzErr := gzip.NewReader(bytes.NewReader([]byte(out)))
+	if gzErr != nil {
+		t.Errorf("stdout for '-' is not gzip: %v", gzErr)
+	} else {
+		if _, rerr := io.ReadAll(gr); rerr != nil {
+			t.Errorf("stdout for '-' failed while reading gzip stream: %v", rerr)
+		}
+		if cerr := gr.Close(); cerr != nil {
+			t.Errorf("stdout for '-' close error: %v", cerr)
+		}
+	}
+	// The named file was compressed on disk.
+	if _, statErr := os.Stat(name + ".gz"); statErr != nil {
+		t.Errorf("named file not compressed: %v", statErr)
+	}
+}
+
+// TestDashStreamsStdio verifies that a "-" operand streams stdin to stdout
+// rather than touching the filesystem.
+func TestDashStreamsStdio(t *testing.T) {
+	t.Parallel()
+	out, _, err := run(t, "hello stream\n", "-")
+	if err != nil {
+		t.Fatalf("Run error = %v", err)
+	}
+	// Round-trip the compressed stdout to confirm it decompresses correctly.
+	gr, err := gzip.NewReader(bytes.NewReader([]byte(out)))
+	if err != nil {
+		t.Fatalf("output is not gzip: %v", err)
+	}
+	got, rerr := io.ReadAll(gr)
+	if rerr != nil {
+		t.Fatalf("failed to read gzip stream: %v", rerr)
+	}
+	if cerr := gr.Close(); cerr != nil {
+		t.Fatalf("gzip close error: %v", cerr)
+	}
+	if string(got) != "hello stream\n" {
+		t.Errorf("decompressed = %q, want %q", got, "hello stream\n")
+	}
+}

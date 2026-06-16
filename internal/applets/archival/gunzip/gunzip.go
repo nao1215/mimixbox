@@ -110,6 +110,7 @@ func (c *Command) processFile(stdio command.IO, name string, opts options) error
 	}
 	if err := decompressStream(in, w); err != nil {
 		_ = w.Close()
+		_ = os.Remove(out) // don't leave a partial/empty output file behind on failure
 		return err
 	}
 	if err := w.Close(); err != nil {

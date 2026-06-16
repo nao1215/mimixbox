@@ -235,6 +235,72 @@ func TestHelp(t *testing.T) {
 	}
 }
 
+func TestNameSynopsis(t *testing.T) {
+	c := mbsh.New()
+	if c.Name() != "mbsh" {
+		t.Errorf("Name() = %q, want %q", c.Name(), "mbsh")
+	}
+	if c.Synopsis() == "" {
+		t.Error("Synopsis() is empty")
+	}
+}
+
+// TestTokenizeErrorReported drives execInput's tokenize-error branch with an
+// unterminated quote, which must report on stderr and continue the loop.
+func TestTokenizeErrorReported(t *testing.T) {
+	out, errOut, err := run(t, "echo 'unterminated\necho recovered\nexit\n")
+	if err != nil {
+		t.Fatalf("Run error = %v", err)
+	}
+	if !strings.Contains(errOut, "mbsh:") {
+		t.Errorf("stderr = %q, want a tokenize error", errOut)
+	}
+	// The shell kept running after the bad line.
+	if !strings.Contains(out, "recovered") {
+		t.Errorf("stdout = %q, want it to contain 'recovered'", out)
+	}
+}
+
+// TestSyntaxErrorReported drives execInput's parse-error branch with a pipeline
+// that has no command after the pipe operator.
+func TestSyntaxErrorReported(t *testing.T) {
+	out, errOut, err := run(t, "echo hi |\necho recovered\nexit\n")
+	if err != nil {
+		t.Fatalf("Run error = %v", err)
+	}
+	if !strings.Contains(errOut, "mbsh:") {
+		t.Errorf("stderr = %q, want a syntax error", errOut)
+	}
+	if !strings.Contains(out, "recovered") {
+		t.Errorf("stdout = %q, want recovery after syntax error", out)
+	}
+}
+
+// TestStatusTwoAfterSyntaxError verifies that a shell-level syntax error sets
+// $? to 2, observable on the following line.
+func TestStatusTwoAfterSyntaxError(t *testing.T) {
+	requireCmd(t, "echo")
+	out, _, err := run(t, "echo hi |\necho $?\nexit\n")
+	if err != nil {
+		t.Fatalf("Run error = %v", err)
+	}
+	// $? is echoed on its own command line, but the interactive prompt is written
+	// to the same stream, so the status appears as the final field of a prompt
+	// line (e.g. "mbsh:/path> 2"). Require that final field to be exactly "2" so
+	// the assertion cannot false-pass on a stray "2" embedded in a path or prompt.
+	found := false
+	for _, line := range strings.Split(strings.ReplaceAll(out, "\r\n", "\n"), "\n") {
+		fields := strings.Fields(line)
+		if len(fields) > 0 && fields[len(fields)-1] == "2" {
+			found = true
+			break
+		}
+	}
+	if !found {
+		t.Errorf("stdout = %q, want the $? output field to be 2 after syntax error", out)
+	}
+}
+
 func requireCmd(t *testing.T, name string) {
 	t.Helper()
 	if _, err := exec.LookPath(name); err != nil {

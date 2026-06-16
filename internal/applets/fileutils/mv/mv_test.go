@@ -28,6 +28,18 @@ func writeFile(t *testing.T, path, content string) {
 	}
 }
 
+func TestNameAndSynopsis(t *testing.T) {
+	t.Parallel()
+	c := mv.New()
+	if c.Name() != "mv" {
+		t.Errorf("Name() = %q, want %q", c.Name(), "mv")
+	}
+	want := "Rename SOURCE to DESTINATION, or move SOURCE(s) to DIRECTORY"
+	if c.Synopsis() != want {
+		t.Errorf("Synopsis() = %q, want %q", c.Synopsis(), want)
+	}
+}
+
 func TestRename(t *testing.T) {
 	t.Parallel()
 	dir := t.TempDir()
@@ -100,6 +112,118 @@ func TestNoClobberDoesNotOverwrite(t *testing.T) {
 	}
 	if string(got) != "old\n" {
 		t.Errorf("dest content = %q, want %q (must not overwrite)", string(got), "old\n")
+	}
+}
+
+func TestVerboseReportsRename(t *testing.T) {
+	t.Parallel()
+	dir := t.TempDir()
+	src := filepath.Join(dir, "a.txt")
+	dest := filepath.Join(dir, "b.txt")
+	writeFile(t, src, "x\n")
+
+	out, errOut, err := run(t, "", "-v", src, dest)
+	if err != nil {
+		t.Fatalf("Run error = %v (stderr=%q)", err, errOut)
+	}
+	if !strings.Contains(out, "renamed") || !strings.Contains(out, dest) {
+		t.Errorf("verbose output = %q, want it to mention the rename to %q", out, dest)
+	}
+}
+
+func TestForceOverwritesViaRun(t *testing.T) {
+	t.Parallel()
+	dir := t.TempDir()
+	src := filepath.Join(dir, "a.txt")
+	dest := filepath.Join(dir, "b.txt")
+	writeFile(t, src, "new\n")
+	writeFile(t, dest, "old\n")
+
+	if _, errOut, err := run(t, "", "-f", src, dest); err != nil {
+		t.Fatalf("Run error = %v (stderr=%q)", err, errOut)
+	}
+	got, _ := os.ReadFile(dest) //nolint:gosec // test-written file
+	if string(got) != "new\n" {
+		t.Errorf("dest content = %q, want overwrite to %q", got, "new\n")
+	}
+}
+
+func TestBackupCreatesBackupViaRun(t *testing.T) {
+	t.Parallel()
+	dir := t.TempDir()
+	src := filepath.Join(dir, "a.txt")
+	dest := filepath.Join(dir, "b.txt")
+	writeFile(t, src, "new\n")
+	writeFile(t, dest, "old\n")
+
+	// -b -i with a "yes" answer triggers the backup+interactive force path,
+	// where the source is moved aside to the "~" suffixed name rather than
+	// over the existing destination, so the original destination survives.
+	if _, errOut, err := run(t, "y\n", "-b", "-i", src, dest); err != nil {
+		t.Fatalf("Run error = %v (stderr=%q)", err, errOut)
+	}
+	backup := dest + "~"
+	movedContent, err := os.ReadFile(backup) //nolint:gosec // test-written file
+	if err != nil {
+		t.Fatalf("expected backup-named file %s: %v", backup, err)
+	}
+	if string(movedContent) != "new\n" {
+		t.Errorf("backup-named file content = %q, want %q", movedContent, "new\n")
+	}
+	origDest, err := os.ReadFile(dest) //nolint:gosec // test-written file
+	if err != nil {
+		t.Fatalf("original destination should survive: %v", err)
+	}
+	if string(origDest) != "old\n" {
+		t.Errorf("original dest content = %q, want %q", origDest, "old\n")
+	}
+	if _, err := os.Stat(src); !os.IsNotExist(err) {
+		t.Errorf("source should be moved away: %v", err)
+	}
+}
+
+func TestSourceMissing(t *testing.T) {
+	t.Parallel()
+	dir := t.TempDir()
+	src := filepath.Join(dir, "nope.txt")
+	dest := filepath.Join(dir, "dest.txt")
+
+	out, errOut, err := run(t, "", src, dest)
+	if err == nil {
+		t.Fatal("expected error for missing source")
+	}
+	if out != "" {
+		t.Errorf("out = %q, want empty", out)
+	}
+	if !strings.Contains(errOut, "doesn't exist") {
+		t.Errorf("stderr = %q, want it to mention the missing source", errOut)
+	}
+}
+
+func TestSameSourceAndDestination(t *testing.T) {
+	t.Parallel()
+	dir := t.TempDir()
+	src := filepath.Join(dir, "a.txt")
+	writeFile(t, src, "x\n")
+
+	_, errOut, err := run(t, "", src, src)
+	if err == nil {
+		t.Fatal("expected error when source and destination are the same")
+	}
+	if !strings.Contains(errOut, "is same") {
+		t.Errorf("stderr = %q, want it to report same path", errOut)
+	}
+}
+
+func TestInvalidOptionCombination(t *testing.T) {
+	t.Parallel()
+	dir := t.TempDir()
+	src := filepath.Join(dir, "a.txt")
+	dest := filepath.Join(dir, "b.txt")
+	writeFile(t, src, "x\n")
+
+	if _, _, err := run(t, "", "-n", "-b", src, dest); err == nil {
+		t.Fatal("expected error for --no-clobber with --backup")
 	}
 }
 
