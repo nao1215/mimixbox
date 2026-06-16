@@ -10,10 +10,10 @@ import (
 	"context"
 	"fmt"
 	"io"
-	"os"
 	"strings"
 
 	"github.com/dsnet/compress/bzip2"
+	"github.com/nao1215/mimixbox/internal/applets/archival/comp"
 	"github.com/nao1215/mimixbox/internal/command"
 )
 
@@ -32,15 +32,9 @@ func (c *Command) Name() string { return "bzip2" }
 // Synopsis returns the one-line description shown in the applet list.
 func (c *Command) Synopsis() string { return "Compress or decompress files (.bz2)" }
 
-type options struct {
-	decompress bool
-	stdout     bool
-	keep       bool
-	force      bool
-	test       bool
-}
-
-// Run executes bzip2.
+// Run executes bzip2 by delegating the shared file-handling model to the comp
+// frontend; this Command only supplies the codec, the -t test mode and the
+// naming rules.
 func (c *Command) Run(_ context.Context, stdio command.IO, args []string) error {
 	fs := command.NewFlagSet(c.Name(), "[OPTION]... [FILE]...", stdio.Err).WithHelp(c.help())
 	decompress := fs.BoolP("decompress", "d", false, "decompress")
@@ -54,103 +48,21 @@ func (c *Command) Run(_ context.Context, stdio command.IO, args []string) error 
 		return err
 	}
 
-	opts := options{
-		decompress: *decompress || *test,
-		stdout:     *stdout,
-		keep:       *keep,
-		force:      *force,
-		test:       *test,
+	cfg := comp.Config{
+		Name:                c.Name(),
+		Transform:           transform,
+		Test:                testStream,
+		OutputName:          outputName,
+		RemoveOutputOnError: true,
 	}
-
-	files := fs.Args()
-	if len(files) == 0 || (len(files) == 1 && files[0] == "-") {
-		return c.runStream(stdio, opts)
+	opts := comp.Options{
+		Decompress: *decompress || *test,
+		Stdout:     *stdout,
+		Keep:       *keep,
+		Force:      *force,
+		Test:       *test,
 	}
-
-	var failed bool
-	for _, f := range files {
-		if err := c.processFile(stdio, f, opts); err != nil {
-			_, _ = fmt.Fprintf(stdio.Err, "%s: %v\n", c.Name(), err)
-			failed = true
-		}
-	}
-	if failed {
-		return command.SilentFailure()
-	}
-	return nil
-}
-
-// runStream handles the stdin/stdout (no FILE) case.
-func (c *Command) runStream(stdio command.IO, opts options) error {
-	if opts.test {
-		if err := testStream(stdio.In); err != nil {
-			_, _ = fmt.Fprintf(stdio.Err, "%s: %v\n", c.Name(), err)
-			return command.SilentFailure()
-		}
-		return nil
-	}
-	if err := transform(stdio.In, stdio.Out, opts.decompress); err != nil {
-		_, _ = fmt.Fprintf(stdio.Err, "%s: %v\n", c.Name(), err)
-		return command.SilentFailure()
-	}
-	return nil
-}
-
-// processFile compresses, decompresses or tests one file.
-func (c *Command) processFile(stdio command.IO, name string, opts options) error {
-	if opts.test {
-		in, err := os.Open(name) //nolint:gosec // user-named file
-		if err != nil {
-			return err
-		}
-		defer func() { _ = in.Close() }()
-		if err := testStream(in); err != nil {
-			return fmt.Errorf("%s: %w", name, err)
-		}
-		return nil
-	}
-
-	if opts.stdout {
-		in, err := os.Open(name) //nolint:gosec // user-named file
-		if err != nil {
-			return err
-		}
-		defer func() { _ = in.Close() }()
-		return transform(in, stdio.Out, opts.decompress)
-	}
-
-	out, err := outputName(name, opts.decompress)
-	if err != nil {
-		return err
-	}
-	if !opts.force {
-		if _, statErr := os.Stat(out); statErr == nil {
-			return fmt.Errorf("%s already exists; use -f to overwrite", out)
-		}
-	}
-
-	in, err := os.Open(name) //nolint:gosec // user-named file
-	if err != nil {
-		return err
-	}
-	defer func() { _ = in.Close() }()
-
-	w, err := os.Create(out) //nolint:gosec // user-named file
-	if err != nil {
-		return err
-	}
-	if err := transform(in, w, opts.decompress); err != nil {
-		_ = w.Close()
-		_ = os.Remove(out)
-		return err
-	}
-	if err := w.Close(); err != nil {
-		return err
-	}
-	if !opts.keep {
-		return os.Remove(name)
-	}
-	return nil
+	return cfg.Run(stdio, opts, fs.Args())
 }
 
 // outputName derives the output filename: add .bz2 when compressing, strip it

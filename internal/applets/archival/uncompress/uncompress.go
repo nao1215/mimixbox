@@ -6,9 +6,10 @@ package uncompress
 import (
 	"context"
 	"fmt"
-	"os"
+	"io"
 	"strings"
 
+	"github.com/nao1215/mimixbox/internal/applets/archival/comp"
 	"github.com/nao1215/mimixbox/internal/applets/archival/lzw"
 	"github.com/nao1215/mimixbox/internal/command"
 )
@@ -25,13 +26,8 @@ func (c *Command) Name() string { return "uncompress" }
 // Synopsis returns the one-line description shown in the applet list.
 func (c *Command) Synopsis() string { return "Decompress LZW (.Z) files" }
 
-type options struct {
-	stdout bool
-	keep   bool
-	force  bool
-}
-
-// Run executes uncompress.
+// Run executes uncompress by delegating the shared file-handling model to the
+// comp frontend in decompress-only mode.
 func (c *Command) Run(_ context.Context, stdio command.IO, args []string) error {
 	fs := command.NewFlagSet(c.Name(), "[OPTION]... [FILE]...", stdio.Err).WithHelp(command.Help{
 		Description: "Decompress each .Z FILE produced by the classic Unix compress (LZW), replacing FILE.Z with FILE. " +
@@ -51,65 +47,27 @@ func (c *Command) Run(_ context.Context, stdio command.IO, args []string) error 
 	if err != nil || !proceed {
 		return err
 	}
-	opts := options{stdout: *stdout, keep: *keep, force: *force}
 
-	files := fs.Args()
-	if len(files) == 0 || (len(files) == 1 && files[0] == "-") {
-		if err := lzw.Decompress(stdio.In, stdio.Out); err != nil {
-			_, _ = fmt.Fprintf(stdio.Err, "uncompress: %v\n", err)
-			return command.SilentFailure()
-		}
-		return nil
+	cfg := comp.Config{
+		Name:       c.Name(),
+		Transform:  transform,
+		OutputName: outputName,
 	}
-
-	var failed bool
-	for _, f := range files {
-		if err := c.processFile(stdio, f, opts); err != nil {
-			_, _ = fmt.Fprintf(stdio.Err, "uncompress: %v\n", err)
-			failed = true
-		}
-	}
-	if failed {
-		return command.SilentFailure()
-	}
-	return nil
+	opts := comp.Options{Decompress: true, Stdout: *stdout, Keep: *keep, Force: *force}
+	return cfg.Run(stdio, opts, fs.Args())
 }
 
-// processFile decompresses one .Z file to FILE (or to stdout with -c).
-func (c *Command) processFile(stdio command.IO, name string, opts options) error {
-	in, err := os.Open(name) //nolint:gosec // user-named file
-	if err != nil {
-		return err
-	}
-	defer func() { _ = in.Close() }()
+// transform LZW-decompresses r into w. uncompress only ever decompresses, so the
+// decompress flag from the shared frontend is always true and ignored here.
+func transform(r io.Reader, w io.Writer, _ bool) error {
+	return lzw.Decompress(r, w)
+}
 
-	if opts.stdout {
-		return lzw.Decompress(in, stdio.Out)
-	}
-
+// outputName strips the .Z suffix, rejecting a name that does not end in .Z.
+// uncompress only decompresses, so the decompress flag is always true.
+func outputName(name string, _ bool) (string, error) {
 	if !strings.HasSuffix(name, ".Z") {
-		return fmt.Errorf("%s: unknown suffix -- ignored", name)
+		return "", fmt.Errorf("%s: unknown suffix -- ignored", name)
 	}
-	out := strings.TrimSuffix(name, ".Z")
-	if !opts.force {
-		if _, statErr := os.Stat(out); statErr == nil {
-			return fmt.Errorf("%s already exists; use -f to overwrite", out)
-		}
-	}
-
-	w, err := os.Create(out) //nolint:gosec // user-named file
-	if err != nil {
-		return err
-	}
-	if err := lzw.Decompress(in, w); err != nil {
-		_ = w.Close()
-		return err
-	}
-	if err := w.Close(); err != nil {
-		return err
-	}
-	if !opts.keep {
-		return os.Remove(name)
-	}
-	return nil
+	return strings.TrimSuffix(name, ".Z"), nil
 }
