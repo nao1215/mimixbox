@@ -304,6 +304,17 @@ func cpFile(stdio command.IO, src, dest string, info os.FileInfo, opts options) 
 		return fmt.Errorf("'%s' and '%s' are the same file", src, target)
 	}
 
+	return copyRegularFile(stdio, src, target, info, opts)
+}
+
+// copyRegularFile is the single per-file execution path for copying a regular
+// file's contents to target. It centralizes the overwrite policy — -n
+// (no-clobber), -u (update), -i (interactive prompt), and --backup — so that
+// direct copies (cpFile) and files discovered during a recursive walk (cpDir)
+// share exactly one decision path. Traversal stays in the callers; per-file
+// policy lives here. The caller resolves target (including same-file guards)
+// before calling.
+func copyRegularFile(stdio command.IO, src, target string, info os.FileInfo, opts options) error {
 	// -n: never overwrite an existing destination.
 	if opts.noClobber {
 		if _, err := os.Stat(target); err == nil {
@@ -318,6 +329,7 @@ func cpFile(stdio command.IO, src, dest string, info os.FileInfo, opts options) 
 		}
 	}
 
+	// -i: prompt before overwriting an existing destination.
 	if opts.interactive {
 		if _, err := os.Stat(target); err == nil {
 			if !question(stdio, fmt.Sprintf("cp: overwrite '%s'? ", target)) {
@@ -380,18 +392,9 @@ func cpDir(stdio command.IO, src, dest string, opts options) error {
 				// recursed into; copying its contents is out of scope.
 				return nil
 			}
-			if opts.noClobber {
-				if _, statErr := os.Stat(target); statErr == nil {
-					return nil
-				}
-			}
-			if err := copyFileContents(p, target, ti, opts); err != nil {
-				return err
-			}
-			if opts.verbose {
-				_, _ = fmt.Fprintf(stdio.Out, "'%s' -> '%s'\n", p, target)
-			}
-			return nil
+			// A followed symlink yields a regular file; route it through the
+			// shared overwrite policy just like any other walked file.
+			return copyRegularFile(stdio, p, target, ti, opts)
 		}
 
 		if info.IsDir() {
@@ -407,18 +410,8 @@ func cpDir(stdio command.IO, src, dest string, opts options) error {
 			}
 			return nil
 		}
-		if opts.noClobber {
-			if _, statErr := os.Stat(target); statErr == nil {
-				return nil // -n: skip existing file
-			}
-		}
-		if err := copyFileContents(p, target, info, opts); err != nil {
-			return err
-		}
-		if opts.verbose {
-			_, _ = fmt.Fprintf(stdio.Out, "'%s' -> '%s'\n", p, target)
-		}
-		return nil
+		// Regular files share the same overwrite policy as direct copies.
+		return copyRegularFile(stdio, p, target, info, opts)
 	})
 }
 
