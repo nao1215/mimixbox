@@ -249,6 +249,9 @@ func printUsage(w interface{ Write([]byte) (int, error) }) {
 		"  find . -name '*.go'          Find files whose name ends in .go.\n" +
 		"  find /tmp -type d -empty     Find empty directories under /tmp.\n" +
 		"  find . -type f -print0       Print file paths separated by NUL (for xargs -0).\n\n" +
+		"Exit status:\n" +
+		"  0  the search completed successfully.\n" +
+		"  1  a path could not be read or the expression was invalid.\n\n" +
 		"Notes:\n" +
 		"  - This is a subset of GNU find: the tests, depth limits, and actions listed above.\n" +
 		"  - -print0 pairs with 'xargs -0' to handle paths that contain spaces or newlines.\n"))
