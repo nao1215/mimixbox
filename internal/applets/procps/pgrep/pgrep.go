@@ -5,15 +5,12 @@ package pgrep
 import (
 	"context"
 	"fmt"
-	"os"
-	"path/filepath"
 	"regexp"
-	"sort"
-	"strconv"
 	"strings"
 	"syscall"
 
 	"github.com/nao1215/mimixbox/internal/command"
+	"github.com/nao1215/mimixbox/internal/proctable"
 	"github.com/nao1215/mimixbox/internal/signal"
 )
 
@@ -43,7 +40,7 @@ func (c *Command) Synopsis() string {
 }
 
 // procDir is the /proc mount; tests point it at a fixture.
-var procDir = "/proc"
+var procDir = proctable.DefaultProcDir
 
 // sendSignal is indirected so signaling is testable.
 var sendSignal = func(pid int, sig syscall.Signal) error { return syscall.Kill(pid, sig) }
@@ -79,7 +76,7 @@ func (c *Command) Run(_ context.Context, stdio command.IO, args []string) error 
 		return command.Failuref("invalid pattern: %v", err)
 	}
 
-	pids := match(re)
+	pids := proctable.MatchRegexp(procDir, re)
 	if len(pids) == 0 {
 		return command.SilentFailure() // pgrep/pkill exit 1 when nothing matches
 	}
@@ -106,30 +103,6 @@ func (c *Command) Run(_ context.Context, stdio command.IO, args []string) error 
 		return command.SilentFailure()
 	}
 	return nil
-}
-
-// match returns the sorted PIDs whose process name matches re.
-func match(re *regexp.Regexp) []int {
-	entries, err := os.ReadDir(procDir)
-	if err != nil {
-		return nil
-	}
-	var pids []int
-	for _, e := range entries {
-		pid, err := strconv.Atoi(e.Name())
-		if err != nil {
-			continue
-		}
-		data, err := os.ReadFile(filepath.Join(procDir, e.Name(), "comm")) //nolint:gosec // /proc path
-		if err != nil {
-			continue
-		}
-		if re.MatchString(strings.TrimSpace(string(data))) {
-			pids = append(pids, pid)
-		}
-	}
-	sort.Ints(pids)
-	return pids
 }
 
 func (c *Command) help() command.Help {

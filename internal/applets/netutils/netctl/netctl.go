@@ -88,19 +88,22 @@ func (c *Command) Synopsis() string {
 	return "networking control"
 }
 
-// Run validates args, builds the plan, and returns the capability error.
+// Run validates args, builds the plan, and returns the capability error via the
+// shared plan-and-gate flow.
 func (c *Command) Run(_ context.Context, stdio command.IO, args []string) error {
 	fs := command.NewFlagSet(c.name, c.usage(), stdio.Err).WithHelp(c.help())
-	proceed, err := fs.Parse(stdio, args)
-	if err != nil || !proceed {
-		return err
-	}
-	plan, err := c.plan(fs.Args())
-	if err != nil {
-		return command.Failure(err)
-	}
-	_, _ = fmt.Fprintf(stdio.Out, "%s: planned action: %s\n", c.name, plan.String())
-	return gate(plan)
+	var built Plan
+	return command.PlanGate{
+		Plan: func(operands []string) (string, error) {
+			p, err := c.plan(operands)
+			if err != nil {
+				return "", err
+			}
+			built = p
+			return p.String(), nil
+		},
+		Gate: func(string) error { return gate(built) },
+	}.Run(fs, stdio, args)
 }
 
 // plan validates operands and builds the Plan for the applet.
