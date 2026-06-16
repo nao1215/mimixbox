@@ -349,7 +349,7 @@ func selected(ranges []rng, pos int) bool {
 	return false
 }
 
-// keep reports whether the 1-based position pos should be emitted, honouring
+// keep reports whether the 1-based position pos should be emitted, honoring
 // --complement (which inverts the range selection).
 func keepPos(opts options, pos int) bool {
 	in := selected(opts.ranges, pos)
