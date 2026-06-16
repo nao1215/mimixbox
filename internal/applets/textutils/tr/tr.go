@@ -25,9 +25,10 @@ func (c *Command) Name() string { return "tr" }
 func (c *Command) Synopsis() string { return "Translate or delete characters" }
 
 type options struct {
-	delete     bool
-	squeeze    bool
-	complement bool
+	delete       bool
+	squeeze      bool
+	complement   bool
+	truncateSet1 bool
 }
 
 // Run executes tr.
@@ -48,6 +49,7 @@ func (c *Command) Run(_ context.Context, stdio command.IO, args []string) error 
 	complement := fs.BoolP("complement", "c", false, "use the complement of SET1")
 	// GNU tr also spells --complement as -C.
 	fs.BoolP("Complement", "C", false, "use the complement of SET1 (same as -c)")
+	truncate := fs.BoolP("truncate-set1", "t", false, "first truncate SET1 to length of SET2")
 
 	proceed, err := fs.Parse(stdio, args)
 	if err != nil || !proceed {
@@ -56,9 +58,10 @@ func (c *Command) Run(_ context.Context, stdio command.IO, args []string) error 
 
 	complementC, _ := fs.GetBool("Complement")
 	opts := options{
-		delete:     *del,
-		squeeze:    *squeeze,
-		complement: *complement || complementC,
+		delete:       *del,
+		squeeze:      *squeeze,
+		complement:   *complement || complementC,
+		truncateSet1: *truncate,
 	}
 
 	operands := fs.Args()
@@ -78,6 +81,13 @@ func (c *Command) Run(_ context.Context, stdio command.IO, args []string) error 
 			_, _ = fmt.Fprintf(stdio.Err, "tr: %v\n", err)
 			return command.SilentFailure()
 		}
+	}
+
+	// With --truncate-set1 (-t), SET1 is truncated to the length of SET2 before
+	// translating, so any SET1 characters beyond SET2's length are passed through
+	// unchanged. GNU applies this only when translating (SET2 present).
+	if opts.truncateSet1 && len(set2) > 0 && len(set1) > len(set2) {
+		set1 = set1[:len(set2)]
 	}
 
 	data, readErr := io.ReadAll(stdio.In)

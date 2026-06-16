@@ -34,6 +34,7 @@ func (c *Command) Run(ctx context.Context, stdio command.IO, args []string) erro
 			{Command: "tail -n 50 file.log", Explain: "Print the last 50 lines."},
 			{Command: "tail -f app.log", Explain: "Follow the file and print new lines as they arrive."},
 			{Command: "tail -F app.log", Explain: "Follow by name and retry if the file is rotated."},
+			{Command: "tail -z -n 1 app.log", Explain: "Treat NUL as the line delimiter and print the last record."},
 		},
 		ExitStatus: "0  success.\n1  a file could not be opened (without --retry).",
 	})
@@ -41,6 +42,7 @@ func (c *Command) Run(ctx context.Context, stdio command.IO, args []string) erro
 	bytesN := fs.IntP("bytes", "c", 0, "output the last NUM bytes of each file")
 	quiet := fs.BoolP("quiet", "q", false, "never print headers giving file names")
 	verbose := fs.BoolP("verbose", "v", false, "always print headers giving file names")
+	zeroTerminated := fs.BoolP("zero-terminated", "z", false, "line delimiter is NUL, not newline")
 	followMode := fs.StringP("follow", "f", "", "output appended data as the file grows; MODE is 'name' or 'descriptor'")
 	fs.Lookup("follow").NoOptDefVal = "descriptor"
 	followName := fs.BoolP("follow-name", "F", false, "same as --follow=name --retry")
@@ -68,6 +70,10 @@ func (c *Command) Run(ctx context.Context, stdio command.IO, args []string) erro
 		files = []string{"-"}
 	}
 	showHeader := (len(files) > 1 || *verbose) && !*quiet
+	delim := byte('\n')
+	if *zeroTerminated {
+		delim = '\x00'
+	}
 
 	var firstErr error
 	for i, name := range files {
@@ -83,7 +89,7 @@ func (c *Command) Run(ctx context.Context, stdio command.IO, args []string) erro
 		if *bytesN > 0 {
 			err = textproc.TailBytes(stdio.Out, r, *bytesN)
 		} else {
-			err = textproc.TailLines(stdio.Out, r, *lines)
+			err = textproc.TailRecords(stdio.Out, r, *lines, delim)
 		}
 		_ = r.Close()
 		if err != nil {

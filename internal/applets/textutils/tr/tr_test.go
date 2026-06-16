@@ -86,6 +86,40 @@ func TestRunMissingSet2(t *testing.T) {
 	}
 }
 
+// TestRunTruncateSet1 checks --truncate-set1/-t: SET1 is cut to the length of
+// SET2 before translating, so SET1 characters past SET2's length pass through
+// unchanged instead of mapping to SET2's last rune.
+func TestRunTruncateSet1(t *testing.T) {
+	t.Parallel()
+	tests := []struct {
+		name string
+		args []string
+		in   string
+		want string
+	}{
+		// SET1=abc SET2=xy: with -t, a->x, b->y, c is left unchanged.
+		{"long flag", []string{"--truncate-set1", "abc", "xy"}, "abc\n", "xyc\n"},
+		{"short flag", []string{"-t", "abc", "xy"}, "abc\n", "xyc\n"},
+		// Without -t the default GNU padding maps c to SET2's last rune (y).
+		{"no truncate pads", []string{"abc", "xy"}, "abc\n", "xyy\n"},
+		// Equal-length sets are unaffected by -t.
+		{"equal length", []string{"-t", "abc", "xyz"}, "abc\n", "xyz\n"},
+	}
+	for _, tt := range tests {
+		tt := tt
+		t.Run(tt.name, func(t *testing.T) {
+			t.Parallel()
+			out, errOut, err := run(t, tt.in, tt.args...)
+			if err != nil {
+				t.Fatalf("Run error = %v (stderr=%q)", err, errOut)
+			}
+			if out != tt.want {
+				t.Errorf("out = %q, want %q", out, tt.want)
+			}
+		})
+	}
+}
+
 func TestRunHelp(t *testing.T) {
 	t.Parallel()
 	out, _, err := run(t, "", "--help")

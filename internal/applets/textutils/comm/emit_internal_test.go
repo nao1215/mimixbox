@@ -25,11 +25,12 @@ func TestEmitWriteError(t *testing.T) {
 	t.Parallel()
 	boom := errors.New("broken pipe")
 	io := errIO(&failingWriter{err: boom})
+	c := New()
 
-	if err := emit(io, true, "", "line"); err == nil {
+	if err := c.emit(io, true, "", "line"); err == nil {
 		t.Error("emit must surface a write error when the column is shown")
 	}
-	if err := emit(io, false, "", "line"); err != nil {
+	if err := c.emit(io, false, "", "line"); err != nil {
 		t.Errorf("emit on a suppressed column must not error, got %v", err)
 	}
 }

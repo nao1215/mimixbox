@@ -3,6 +3,7 @@ package textproc_test
 import (
 	"bytes"
 	"errors"
+	"regexp"
 	"strings"
 	"testing"
 	"testing/iotest"
@@ -389,5 +390,57 @@ func TestNumbererStreamsAcrossReads(t *testing.T) {
 	want := "     1\ta\n     2\tbb\n     3\tccc"
 	if buf.String() != want {
 		t.Errorf("streamed = %q, want %q", buf.String(), want)
+	}
+}
+
+func TestNumbererSections(t *testing.T) {
+	t.Parallel()
+	// H1 is in the body section (no header delimiter precedes it); the
+	// delimiters \:\:\:, \:\: and \: switch to header, body and footer and reset
+	// the counter, and each is emitted as a blank line.
+	input := "H1\n\\:\\:\\:\nHDR\n\\:\\:\nB1\n\\:\nF1\n"
+	re := regexp.MustCompile("HDR")
+	n := textproc.Numberer{
+		Style:        textproc.NumberNonBlank,
+		Start:        1,
+		Increment:    1,
+		Width:        6,
+		Separator:    "\t",
+		PadBlank:     true,
+		Sections:     true,
+		HeaderStyle:  textproc.NumberRegexp,
+		HeaderRegexp: re,
+		FooterStyle:  textproc.NumberAll,
+	}
+	var buf bytes.Buffer
+	if err := n.WriteTo(&buf, strings.NewReader(input)); err != nil {
+		t.Fatalf("WriteTo error = %v", err)
+	}
+	want := "     1\tH1\n\n     1\tHDR\n\n     1\tB1\n\n     1\tF1\n"
+	if buf.String() != want {
+		t.Errorf("sections = %q, want %q", buf.String(), want)
+	}
+}
+
+func TestNumbererJoinBlankLines(t *testing.T) {
+	t.Parallel()
+	n := textproc.Numberer{
+		Style:          textproc.NumberAll,
+		Start:          1,
+		Increment:      1,
+		Width:          6,
+		Separator:      "\t",
+		PadBlank:       true,
+		JoinBlankLines: 2,
+	}
+	var buf bytes.Buffer
+	if err := n.WriteTo(&buf, strings.NewReader("a\n\n\n\n\nb\n")); err != nil {
+		t.Fatalf("WriteTo error = %v", err)
+	}
+	// Two consecutive blank lines count as one: the number lands on the 2nd and
+	// 4th blank line.
+	want := "     1\ta\n       \n     2\t\n       \n     3\t\n     4\tb\n"
+	if buf.String() != want {
+		t.Errorf("join blank = %q, want %q", buf.String(), want)
 	}
 }

@@ -73,6 +73,128 @@ func TestRunCut(t *testing.T) {
 	}
 }
 
+// TestRunComplement exercises --complement over fields, bytes and characters.
+func TestRunComplement(t *testing.T) {
+	t.Parallel()
+	tests := []struct {
+		name  string
+		stdin string
+		args  []string
+		want  string
+	}{
+		{
+			"complement field keeps the rest",
+			"a,b,c\n",
+			[]string{"-f", "2", "-d", ",", "--complement"},
+			"a,c\n",
+		},
+		{
+			"complement field range",
+			"a,b,c,d\n",
+			[]string{"-f", "2-3", "-d", ",", "--complement"},
+			"a,d\n",
+		},
+		{
+			"complement open field range",
+			"a,b,c,d\n",
+			[]string{"-f", "3-", "-d", ",", "--complement"},
+			"a,b\n",
+		},
+		{
+			"complement chars keeps the others",
+			"abcde\n",
+			[]string{"-c", "2-3", "--complement"},
+			"ade\n",
+		},
+		{
+			"complement bytes keeps the others",
+			"abcde\n",
+			[]string{"-b", "1", "--complement"},
+			"bcde\n",
+		},
+		{
+			"complement chars single",
+			"abcde\n",
+			[]string{"-c", "3", "--complement"},
+			"abde\n",
+		},
+		{
+			"complement empty when all selected",
+			"abc\n",
+			[]string{"-c", "1-", "--complement"},
+			"\n",
+		},
+	}
+	for _, tt := range tests {
+		tt := tt
+		t.Run(tt.name, func(t *testing.T) {
+			t.Parallel()
+			out, _, err := runStdin(t, tt.stdin, tt.args...)
+			if err != nil {
+				t.Fatalf("Run error = %v", err)
+			}
+			if out != tt.want {
+				t.Errorf("out = %q, want %q", out, tt.want)
+			}
+		})
+	}
+}
+
+// TestRunZeroTerminated checks NUL-delimited input and output for -z.
+func TestRunZeroTerminated(t *testing.T) {
+	t.Parallel()
+	tests := []struct {
+		name  string
+		stdin string
+		args  []string
+		want  string
+	}{
+		{
+			"zero terminated fields",
+			"a,b,c\x00d,e,f\x00",
+			[]string{"-f", "2", "-d", ",", "-z"},
+			"b\x00e\x00",
+		},
+		{
+			"zero terminated chars",
+			"abc\x00def\x00",
+			[]string{"-c", "1-2", "-z"},
+			"ab\x00de\x00",
+		},
+		{
+			"zero terminated long flag",
+			"abc\x00def\x00",
+			[]string{"-c", "1", "--zero-terminated"},
+			"a\x00d\x00",
+		},
+		{
+			"zero terminated complement",
+			"a,b,c\x00d,e,f\x00",
+			[]string{"-f", "2", "-d", ",", "-z", "--complement"},
+			"a,c\x00d,f\x00",
+		},
+		{
+			"zero terminated newline preserved in field",
+			"a\nx,b\x00",
+			[]string{"-f", "1", "-d", ",", "-z"},
+			"a\nx\x00",
+		},
+	}
+	for _, tt := range tests {
+		tt := tt
+		t.Run(tt.name, func(t *testing.T) {
+			t.Parallel()
+			out, _, err := runStdin(t, tt.stdin, tt.args...)
+			if err != nil {
+				t.Fatalf("Run error = %v", err)
+			}
+			if out != tt.want {
+				t.Errorf("out = %q, want %q", out, tt.want)
+			}
+		})
+	}
+}
+
 func TestRunNoListSpecified(t *testing.T) {
 	t.Parallel()
 	out, errOut, err := runStdin(t, "a,b\n")
