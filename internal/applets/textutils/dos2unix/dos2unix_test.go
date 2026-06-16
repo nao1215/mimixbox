@@ -181,6 +181,91 @@ func TestRunPreservesFileMode(t *testing.T) {
 	}
 }
 
+// TestSynopsisAndName covers the metadata accessors.
+func TestSynopsisAndName(t *testing.T) {
+	t.Parallel()
+	c := dos2unix.New()
+	if c.Name() != "dos2unix" {
+		t.Errorf("Name() = %q, want dos2unix", c.Name())
+	}
+	if c.Synopsis() == "" {
+		t.Error("Synopsis() is empty")
+	}
+}
+
+// TestRunLineWithoutTrailingCRLF covers the toLF branch that leaves a final line
+// without a trailing CRLF unchanged.
+func TestRunLineWithoutTrailingCRLF(t *testing.T) {
+	t.Parallel()
+	dir := t.TempDir()
+	file := filepath.Join(dir, "noeol.txt")
+	// Last line "b" has no trailing newline at all.
+	if err := os.WriteFile(file, []byte("a\r\nb"), 0o600); err != nil {
+		t.Fatal(err)
+	}
+	if _, _, err := run(t, file); err != nil {
+		t.Fatalf("Run error = %v", err)
+	}
+	got, _ := os.ReadFile(file) //nolint:gosec // test-written file
+	if want := "a\nb"; string(got) != want {
+		t.Errorf("content = %q, want %q", string(got), want)
+	}
+}
+
+// TestRunReadErrorReported covers the read-failure branch of convert: a regular
+// file that cannot be opened for reading.
+func TestRunReadErrorReported(t *testing.T) {
+	if os.Geteuid() == 0 {
+		t.Skip("running as root bypasses file permission checks")
+	}
+	dir := t.TempDir()
+	file := filepath.Join(dir, "unreadable.txt")
+	if err := os.WriteFile(file, []byte("a\r\n"), 0o600); err != nil {
+		t.Fatal(err)
+	}
+	if err := os.Chmod(file, 0o000); err != nil {
+		t.Fatal(err)
+	}
+	defer func() { _ = os.Chmod(file, 0o600) }()
+
+	out, errOut, err := run(t, file)
+	if err == nil {
+		t.Fatal("expected error for unreadable file")
+	}
+	if out != "" {
+		t.Errorf("stdout = %q, want empty", out)
+	}
+	if !strings.Contains(errOut, "can't read file") {
+		t.Errorf("stderr = %q, want read-error message", errOut)
+	}
+}
+
+// TestRunWriteErrorReported covers the write-failure branch of convert: the file
+// is readable but its directory is read-only, so the atomic rewrite cannot
+// create its temporary file.
+func TestRunWriteErrorReported(t *testing.T) {
+	if os.Geteuid() == 0 {
+		t.Skip("running as root bypasses directory permission checks")
+	}
+	dir := t.TempDir()
+	file := filepath.Join(dir, "ro.txt")
+	if err := os.WriteFile(file, []byte("a\r\n"), 0o600); err != nil {
+		t.Fatal(err)
+	}
+	if err := os.Chmod(dir, 0o500); err != nil {
+		t.Fatal(err)
+	}
+	defer func() { _ = os.Chmod(dir, 0o700) }()
+
+	_, errOut, err := run(t, file)
+	if err == nil {
+		t.Fatal("expected error when the directory is not writable")
+	}
+	if errOut == "" {
+		t.Error("stderr should report the write failure")
+	}
+}
+
 func TestHelpSections(t *testing.T) {
 	t.Parallel()
 	out, _, err := run(t, "--help")
