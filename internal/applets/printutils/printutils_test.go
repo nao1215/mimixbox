@@ -102,6 +102,90 @@ func TestLpdRequiresOutput(t *testing.T) {
 	}
 }
 
+// TestLpqCorruptControlFile proves a control file with invalid JSON is reported
+// as a corrupt-spool error rather than silently skipped.
+func TestLpqCorruptControlFile(t *testing.T) {
+	spool := filepath.Join(t.TempDir(), "spool")
+	if err := os.MkdirAll(spool, 0o700); err != nil {
+		t.Fatal(err)
+	}
+	if err := os.WriteFile(filepath.Join(spool, "cf0001"), []byte("{not json"), 0o600); err != nil {
+		t.Fatal(err)
+	}
+	_, errOut, err := run(t, NewLpq(), "", "-S", spool)
+	if err == nil {
+		t.Fatal("expected error for corrupt control file")
+	}
+	if !strings.Contains(errOut, "corrupt control file") {
+		t.Errorf("stderr = %q, want 'corrupt control file'", errOut)
+	}
+}
+
+// TestLpdMissingDataFile proves draining a job whose data file has vanished
+// fails and leaves the job's control file in the queue (it is not dropped).
+func TestLpdMissingDataFile(t *testing.T) {
+	spool := filepath.Join(t.TempDir(), "spool")
+	if _, _, err := run(t, NewLpr(), "body", "-S", spool); err != nil {
+		t.Fatal(err)
+	}
+	jobs, err := openSpool(spool).list()
+	if err != nil || len(jobs) != 1 {
+		t.Fatalf("setup queue = %+v err=%v", jobs, err)
+	}
+	// Remove the data file out from under the spool.
+	if err := os.Remove(filepath.Join(spool, jobs[0].DataFile)); err != nil {
+		t.Fatal(err)
+	}
+	printed := filepath.Join(t.TempDir(), "printed")
+	if _, _, err := run(t, NewLpd(), "", "-S", spool, "-o", printed); err == nil {
+		t.Fatal("expected error draining a job with a missing data file")
+	}
+	// The job's control file must remain so the failure is not silently lost.
+	after, err := openSpool(spool).list()
+	if err != nil || len(after) != 1 {
+		t.Errorf("queue after failed drain = %+v err=%v, want the job retained", after, err)
+	}
+}
+
+// TestLpdPartialDrainFailure proves a drain with one good and one broken job
+// prints the good one (and removes it) while reporting overall failure and
+// keeping the broken job queued.
+func TestLpdPartialDrainFailure(t *testing.T) {
+	spool := filepath.Join(t.TempDir(), "spool")
+	if _, _, err := run(t, NewLpr(), "good one", "-S", spool); err != nil {
+		t.Fatal(err)
+	}
+	if _, _, err := run(t, NewLpr(), "broken one", "-S", spool); err != nil {
+		t.Fatal(err)
+	}
+	jobs, err := openSpool(spool).list()
+	if err != nil || len(jobs) != 2 {
+		t.Fatalf("setup queue = %+v err=%v", jobs, err)
+	}
+	// Break the second job by deleting its data file.
+	if err := os.Remove(filepath.Join(spool, jobs[1].DataFile)); err != nil {
+		t.Fatal(err)
+	}
+	printed := filepath.Join(t.TempDir(), "printed")
+	out, _, err := run(t, NewLpd(), "", "-S", spool, "-o", printed)
+	if err == nil {
+		t.Fatal("expected overall failure when one job cannot be drained")
+	}
+	if !strings.Contains(out, "printed job 1") {
+		t.Errorf("good job should still print: %q", out)
+	}
+	// Exactly the good job's output exists.
+	entries, _ := os.ReadDir(printed)
+	if len(entries) != 1 {
+		t.Errorf("expected 1 printed file, got %d", len(entries))
+	}
+	// The broken job remains queued; the good job was removed.
+	after, err := openSpool(spool).list()
+	if err != nil || len(after) != 1 || after[0].ID != jobs[1].ID {
+		t.Errorf("queue after partial drain = %+v err=%v, want only the broken job", after, err)
+	}
+}
+
 func TestIDsIncrement(t *testing.T) {
 	spool := filepath.Join(t.TempDir(), "spool")
 	if _, _, err := run(t, NewLpr(), "a", "-S", spool); err != nil {
@@ -110,7 +194,7 @@ func TestIDsIncrement(t *testing.T) {
 	if _, _, err := run(t, NewLpr(), "b", "-S", spool); err != nil {
 		t.Fatal(err)
 	}
-	jobs, err := readQueue(spool)
+	jobs, err := openSpool(spool).list()
 	if err != nil {
 		t.Fatal(err)
 	}
