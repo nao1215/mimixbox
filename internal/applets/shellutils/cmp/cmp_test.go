@@ -264,6 +264,125 @@ func TestPrefixEOFOnSecond(t *testing.T) {
 	}
 }
 
+// TestBytesLimit covers -n/--bytes: a difference past the limit is not seen, so
+// the comparison succeeds (exit 0); within the limit it is reported (exit 1).
+func TestBytesLimit(t *testing.T) {
+	t.Parallel()
+	dir := t.TempDir()
+	a := writeFile(t, dir, "a", "abcXdef")
+	b := writeFile(t, dir, "b", "abcYdef")
+
+	// Differ at byte 4; limiting to 3 bytes hides it.
+	out, errOut, code := run(t, "-n", "3", a, b)
+	if code != 0 {
+		t.Errorf("exit = %d, want 0 with -n 3", code)
+	}
+	if out != "" || errOut != "" {
+		t.Errorf("output = %q / %q, want empty", out, errOut)
+	}
+
+	// Long-form --bytes=4 reaches the difference.
+	out, _, code = run(t, "--bytes=4", a, b)
+	if code != 1 {
+		t.Fatalf("exit = %d, want 1 with --bytes=4", code)
+	}
+	want := a + " " + b + " differ: byte 4, line 1\n"
+	if out != want {
+		t.Errorf("out = %q, want %q", out, want)
+	}
+}
+
+// TestIgnoreInitialSingle covers -i N: the first N bytes of both files are
+// skipped before comparing.
+func TestIgnoreInitialSingle(t *testing.T) {
+	t.Parallel()
+	dir := t.TempDir()
+	// Bytes 1-3 differ but are skipped; the rest is identical.
+	a := writeFile(t, dir, "a", "XXXcommon")
+	b := writeFile(t, dir, "b", "YYYcommon")
+
+	out, errOut, code := run(t, "-i", "3", a, b)
+	if code != 0 {
+		t.Errorf("exit = %d, want 0 after skipping 3 bytes; stderr=%q", code, errOut)
+	}
+	if out != "" {
+		t.Errorf("out = %q, want empty", out)
+	}
+}
+
+// TestIgnoreInitialPair covers -i N:M: different skip counts for each file, with
+// reported offsets counted from the first compared byte.
+func TestIgnoreInitialPair(t *testing.T) {
+	t.Parallel()
+	dir := t.TempDir()
+	// Skip 1 of FILE1 and 3 of FILE2; remaining "abZ" vs "abQ" differ at byte 3.
+	a := writeFile(t, dir, "a", "_abZ")
+	b := writeFile(t, dir, "b", "___abQ")
+
+	out, _, code := run(t, "-i", "1:3", a, b)
+	if code != 1 {
+		t.Fatalf("exit = %d, want 1", code)
+	}
+	want := a + " " + b + " differ: byte 3, line 1\n"
+	if out != want {
+		t.Errorf("out = %q, want %q", out, want)
+	}
+}
+
+// TestIgnoreInitialInvalid covers a malformed --ignore-initial value (exit 2).
+func TestIgnoreInitialInvalid(t *testing.T) {
+	t.Parallel()
+	dir := t.TempDir()
+	a := writeFile(t, dir, "a", "x")
+	b := writeFile(t, dir, "b", "x")
+	_, errOut, code := run(t, "-i", "abc", a, b)
+	if code != 2 {
+		t.Fatalf("exit = %d, want 2", code)
+	}
+	if !strings.Contains(errOut, "invalid --ignore-initial") {
+		t.Errorf("stderr = %q, want invalid --ignore-initial message", errOut)
+	}
+}
+
+// TestPrintBytes covers -b/--print-bytes: the differ message gains the octal
+// values and rendered characters of the two differing bytes, in GNU format.
+func TestPrintBytes(t *testing.T) {
+	t.Parallel()
+	dir := t.TempDir()
+	a := writeFile(t, dir, "a", "first\nsecond\n")
+	b := writeFile(t, dir, "b", "first\nSECOND\n")
+
+	out, _, code := run(t, "-b", a, b)
+	if code != 1 {
+		t.Fatalf("exit = %d, want 1", code)
+	}
+	// 's' = 0163 octal, 'S' = 0123 octal; byte 7, line 2 (verified vs GNU cmp).
+	want := a + " " + b + " differ: byte 7, line 2 is 163 s 123 S\n"
+	if out != want {
+		t.Errorf("-b out = %q, want %q", out, want)
+	}
+}
+
+// TestPrintBytesControl covers sprintc's caret notation for control bytes in the
+// --print-bytes output.
+func TestPrintBytesControl(t *testing.T) {
+	t.Parallel()
+	dir := t.TempDir()
+	a := writeFile(t, dir, "a", "a\tb")
+	b := writeFile(t, dir, "b", "a\nb")
+
+	out, _, code := run(t, "-b", a, b)
+	if code != 1 {
+		t.Fatalf("exit = %d, want 1", code)
+	}
+	// '\t' = 11 octal, '\n' = 12 octal (GNU pads the octal field with spaces to
+	// width 3); rendered ^I and ^J. Verified against GNU cmp 3.10.
+	want := a + " " + b + " differ: byte 2, line 1 is  11 ^I  12 ^J\n"
+	if out != want {
+		t.Errorf("-b control out = %q, want %q", out, want)
+	}
+}
+
 // TestHelpSections verifies that --help renders both the Examples and the
 // Exit status sections supplied through WithHelp.
 func TestHelpSections(t *testing.T) {

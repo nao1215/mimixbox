@@ -52,6 +52,9 @@ type options struct {
 	interactive bool
 	noClobber   bool
 	verbose     bool
+	update      bool
+	targetDir   string
+	noTargetDir bool
 }
 
 // Run executes mv.
@@ -69,6 +72,9 @@ func (c *Command) Run(_ context.Context, stdio command.IO, args []string) error 
 	interactive := fs.BoolP("interactive", "i", false, "prompt before overwrite")
 	noClobber := fs.BoolP("no-clobber", "n", false, "do not overwrite an existing file")
 	verbose := fs.BoolP("verbose", "v", false, "explain what is being done")
+	update := fs.BoolP("update", "u", false, "move only when the SOURCE is newer than the destination, or when the destination is missing")
+	targetDir := fs.StringP("target-directory", "t", "", "move all SOURCE arguments into DIRECTORY")
+	noTargetDir := fs.BoolP("no-target-directory", "T", false, "treat DEST as a normal file always")
 
 	proceed, err := fs.Parse(stdio, args)
 	if err != nil || !proceed {
@@ -81,15 +87,51 @@ func (c *Command) Run(_ context.Context, stdio command.IO, args []string) error 
 		interactive: *interactive,
 		noClobber:   *noClobber,
 		verbose:     *verbose,
+		update:      *update,
+		targetDir:   *targetDir,
+		noTargetDir: *noTargetDir,
 	}
 
 	operands := fs.Args()
+
+	// -t DIR: every operand is a source moved into DIR. The destination is the
+	// target directory rather than the last operand.
+	if opts.targetDir != "" {
+		if len(operands) == 0 {
+			_, _ = fmt.Fprintln(stdio.Err, "mv: missing file operand")
+			return command.SilentFailure()
+		}
+		srcPaths := make([]string, 0, len(operands))
+		for _, arg := range operands {
+			abs, err := filepath.Abs(os.ExpandEnv(arg))
+			if err != nil {
+				return command.Failure(err)
+			}
+			srcPaths = append(srcPaths, abs)
+		}
+		destPath, err := filepath.Abs(os.ExpandEnv(opts.targetDir))
+		if err != nil {
+			return command.Failure(err)
+		}
+		if err := validArgs(opts); err != nil {
+			return command.Failure(err)
+		}
+		return c.move(stdio, srcPaths, destPath, opts)
+	}
+
 	if len(operands) == 0 {
 		_, _ = fmt.Fprintln(stdio.Err, "mv: missing file operand")
 		return command.SilentFailure()
 	}
 	if len(operands) == 1 {
 		_, _ = fmt.Fprintf(stdio.Err, "mv: missing destination file operand after '%s'\n", operands[0])
+		return command.SilentFailure()
+	}
+
+	// -T: the destination is always a normal file; reject the multi-source
+	// "mv SOURCE... DIRECTORY" form.
+	if opts.noTargetDir && len(operands) > 2 {
+		_, _ = fmt.Fprintf(stdio.Err, "mv: extra operand '%s'\n", operands[2])
 		return command.SilentFailure()
 	}
 
@@ -138,6 +180,12 @@ func (c *Command) move(stdio command.IO, srcPaths []string, dest string, opts op
 		if isSameFilePath(src, dest) {
 			_, _ = fmt.Fprintln(stdio.Err, "mv: source '"+src+"' and destination '"+dest+"' is same")
 			failed = true
+			continue
+		}
+
+		// -u: skip the move when the destination exists and is at least as new
+		// as the source. A missing destination always moves.
+		if opts.update && !shouldUpdate(src, decideDestAbsPath(src, dest, opts)) {
 			continue
 		}
 
@@ -288,6 +336,14 @@ func question(stdio command.IO, ask string) bool {
 func decideDestAbsPath(src string, dest string, opts options) string {
 	destPath := os.ExpandEnv(dest)
 	srcPath := os.ExpandEnv(src)
+	// -T: never descend into an existing destination directory; the
+	// destination path is used verbatim (with optional backup).
+	if opts.noTargetDir {
+		if mb.Exists(destPath) && opts.backup {
+			destPath = decideBackupFileName(destPath)
+		}
+		return destPath
+	}
 	if mb.IsDir(srcPath) && mb.IsDir(destPath) {
 		destPath = filepath.Join(dest, filepath.Base(srcPath))
 		if filepath.Base(srcPath) == filepath.Base(destPath) && opts.backup {
@@ -317,6 +373,23 @@ func decideBackupFileName(path string) string {
 
 func isSameFilePath(src string, dest string) bool {
 	return src == dest
+}
+
+// shouldUpdate reports whether -u should move src to destPath. It returns true
+// when the destination is missing or when the source's modification time is
+// strictly newer than the destination's; an equal-or-older source is skipped.
+func shouldUpdate(src, destPath string) bool {
+	destInfo, err := os.Stat(destPath)
+	if err != nil {
+		// Missing (or unstattable) destination: always move.
+		return true
+	}
+	srcInfo, err := os.Stat(src)
+	if err != nil {
+		// Let the later move attempt surface the source error.
+		return true
+	}
+	return srcInfo.ModTime().After(destInfo.ModTime())
 }
 
 // getSrcAbsPaths returns the absolute paths of every operand except the last

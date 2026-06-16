@@ -84,3 +84,54 @@ TestWcDirectoryAndFileSameTime() {
 TestWcNoExistFileNameFromPipeWithLinesOption() {
     echo "no_exist_file" | wc -l
 }
+
+SetupWcGnu() {
+    export TEST_DIR=${MIMIXBOX_IT_ROOT}
+    export WC_A=${MIMIXBOX_IT_ROOT}/wc_a.txt
+    export WC_B=${MIMIXBOX_IT_ROOT}/wc_b.txt
+    export WC_LIST=${MIMIXBOX_IT_ROOT}/wc_list.nul
+    export LANG=C
+
+    mkdir -p ${TEST_DIR}
+
+    printf 'a\nb\nc\n' > ${WC_A}
+    printf 'x\n' > ${WC_B}
+    printf '%s\0%s\0' "${WC_A}" "${WC_B}" > ${WC_LIST}
+}
+
+CleanupWcGnu() {
+    rm -rf ${MIMIXBOX_IT_ROOT}
+}
+
+TestWcTotalOnly() {
+    export WC_A=${MIMIXBOX_IT_ROOT}/wc_a.txt
+    export WC_B=${MIMIXBOX_IT_ROOT}/wc_b.txt
+    wc --total=only ${WC_A} ${WC_B}
+}
+
+TestWcTotalNever() {
+    export WC_A=${MIMIXBOX_IT_ROOT}/wc_a.txt
+    export WC_B=${MIMIXBOX_IT_ROOT}/wc_b.txt
+    wc --total=never ${WC_A} ${WC_B}
+}
+
+TestWcTotalAlways() {
+    export WC_A=${MIMIXBOX_IT_ROOT}/wc_a.txt
+    wc --total=always ${WC_A}
+}
+
+TestWcFiles0From() {
+    export WC_LIST=${MIMIXBOX_IT_ROOT}/wc_list.nul
+    wc --files0-from=${WC_LIST}
+}
+
+TestWcFiles0FromStdin() {
+    export WC_A=${MIMIXBOX_IT_ROOT}/wc_a.txt
+    export WC_B=${MIMIXBOX_IT_ROOT}/wc_b.txt
+    printf '%s\0%s\0' "${WC_A}" "${WC_B}" | wc --files0-from=-
+}
+
+TestWcFiles0FromOnly() {
+    export WC_LIST=${MIMIXBOX_IT_ROOT}/wc_list.nul
+    wc --files0-from=${WC_LIST} --total=only
+}

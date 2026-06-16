@@ -32,6 +32,7 @@ func (c *Command) Run(_ context.Context, stdio command.IO, args []string) error 
 			{Command: "head notes.txt", Explain: "Print the first 10 lines of notes.txt."},
 			{Command: "head -n 5 notes.txt", Explain: "Print the first 5 lines of notes.txt."},
 			{Command: "head -c 100 notes.txt", Explain: "Print the first 100 bytes of notes.txt."},
+			{Command: "head -z -n 1 notes.txt", Explain: "Treat NUL as the line delimiter and print the first record."},
 		},
 		ExitStatus: "0  all input was printed successfully.\n1  a file could not be read.",
 	})
@@ -39,6 +40,7 @@ func (c *Command) Run(_ context.Context, stdio command.IO, args []string) error 
 	bytesN := fs.IntP("bytes", "c", 0, "print the first NUM bytes of each file")
 	quiet := fs.BoolP("quiet", "q", false, "never print headers giving file names")
 	verbose := fs.BoolP("verbose", "v", false, "always print headers giving file names")
+	zeroTerminated := fs.BoolP("zero-terminated", "z", false, "line delimiter is NUL, not newline")
 
 	proceed, err := fs.Parse(stdio, args)
 	if err != nil || !proceed {
@@ -50,6 +52,10 @@ func (c *Command) Run(_ context.Context, stdio command.IO, args []string) error 
 		files = []string{"-"}
 	}
 	showHeader := (len(files) > 1 || *verbose) && !*quiet
+	delim := byte('\n')
+	if *zeroTerminated {
+		delim = '\x00'
+	}
 
 	var firstErr error
 	for i, name := range files {
@@ -65,7 +71,7 @@ func (c *Command) Run(_ context.Context, stdio command.IO, args []string) error 
 		if *bytesN > 0 {
 			err = textproc.HeadBytes(stdio.Out, r, *bytesN)
 		} else {
-			err = textproc.HeadLines(stdio.Out, r, *lines)
+			err = textproc.HeadRecords(stdio.Out, r, *lines, delim)
 		}
 		_ = r.Close()
 		if err != nil {

@@ -8,6 +8,7 @@ import (
 	"bufio"
 	"fmt"
 	"io"
+	"regexp"
 	"strings"
 	"unicode"
 )
@@ -110,6 +111,8 @@ const (
 	NumberAll
 	// NumberNonBlank numbers only non-empty lines (cat -b, nl -bt).
 	NumberNonBlank
+	// NumberRegexp numbers only lines matching Pattern (nl -b pBRE).
+	NumberRegexp
 )
 
 // NumberJustify selects how the line number is padded inside its field.
@@ -136,7 +139,34 @@ type Numberer struct {
 	Separator string
 	Justify   NumberJustify
 	PadBlank  bool
+	// Pattern is consulted when Style is NumberRegexp (nl -b pBRE).
+	Pattern *regexp.Regexp
+
+	// Sections enables nl's header/body/footer behavior. When false the input is
+	// numbered as a single body using Style. When true the input is divided into
+	// header/body/footer sections by the delimiter lines (\:\:\: header, \:\:
+	// body, \: footer); each section is numbered with HeaderStyle / Style /
+	// FooterStyle respectively, the delimiter lines are emitted as blank lines,
+	// and the line number resets to Start at the start of each logical page (the
+	// header, or a body that is not preceded by a header).
+	Sections     bool
+	HeaderStyle  NumberStyle
+	FooterStyle  NumberStyle
+	HeaderRegexp *regexp.Regexp
+	FooterRegexp *regexp.Regexp
+	// JoinBlankLines counts this many consecutive blank lines as a single line
+	// for numbering (nl -l). Zero or one disables the grouping.
+	JoinBlankLines int
 }
+
+// section identifies which logical part of the input a line belongs to.
+type section int
+
+const (
+	sectionBody section = iota
+	sectionHeader
+	sectionFooter
+)
 
 // WriteTo copies r to w, numbering lines according to the Numberer's settings.
 // It reads r one line at a time rather than slurping it all into memory, so it
@@ -145,6 +175,8 @@ type Numberer struct {
 func (n Numberer) WriteTo(w io.Writer, r io.Reader) error {
 	br := bufio.NewReader(r)
 	num := n.Start
+	cur := sectionBody
+	blankRun := 0 // consecutive blank lines seen so far in the current run
 	for {
 		chunk, err := br.ReadString('\n')
 		if chunk != "" {
@@ -152,7 +184,30 @@ func (n Numberer) WriteTo(w io.Writer, r io.Reader) error {
 			if strings.HasSuffix(chunk, "\n") {
 				body, nl = chunk[:len(chunk)-1], "\n"
 			}
-			numbered, werr := n.emitLine(w, body, nl, num)
+
+			// A section delimiter line switches sections, resets the line number
+			// to Start (every delimiter begins a fresh section, matching GNU nl
+			// without -p), and is itself emitted as a blank line (never numbered).
+			// Delimiters are only honored in Sections mode.
+			if n.Sections {
+				if sec, ok := delimiterSection(body); ok {
+					num = n.Start
+					cur = sec
+					blankRun = 0
+					if _, werr := io.WriteString(w, nl); werr != nil {
+						return werr
+					}
+					if err == io.EOF {
+						return nil
+					}
+					if err != nil {
+						return err
+					}
+					continue
+				}
+			}
+
+			numbered, werr := n.emitLine(w, body, nl, num, cur, &blankRun)
 			if werr != nil {
 				return werr
 			}
@@ -169,10 +224,39 @@ func (n Numberer) WriteTo(w io.Writer, r io.Reader) error {
 	}
 }
 
+// delimiterSection reports the section a delimiter line opens. GNU nl uses the
+// escape sequences "\:\:\:" (header), "\:\:" (body) and "\:" (footer), where the
+// backslash-colon pair appears literally in the input.
+func delimiterSection(body string) (section, bool) {
+	switch body {
+	case `\:\:\:`:
+		return sectionHeader, true
+	case `\:\:`:
+		return sectionBody, true
+	case `\:`:
+		return sectionFooter, true
+	default:
+		return sectionBody, false
+	}
+}
+
 // emitLine writes one numbered (or blank-padded) line and reports whether it
-// consumed a line number.
-func (n Numberer) emitLine(w io.Writer, body, nl string, num int) (bool, error) {
-	if n.numbered(body) {
+// consumed a line number. sec selects the section's numbering style, and
+// blankRun tracks the length of the current run of blank lines so that
+// JoinBlankLines can collapse N of them into a single numbered line.
+func (n Numberer) emitLine(w io.Writer, body, nl string, num int, sec section, blankRun *int) (bool, error) {
+	if body == "" {
+		*blankRun++
+	} else {
+		*blankRun = 0
+	}
+
+	if n.numbered(body, sec, *blankRun) {
+		if body == "" {
+			// A numbered blank line ends the current run so the next blank line
+			// starts a fresh group of JoinBlankLines.
+			*blankRun = 0
+		}
 		_, err := io.WriteString(w, n.format(num)+n.Separator+body+nl)
 		return true, err
 	}
@@ -184,12 +268,34 @@ func (n Numberer) emitLine(w io.Writer, body, nl string, num int) (bool, error) 
 	return false, err
 }
 
-func (n Numberer) numbered(body string) bool {
-	switch n.Style {
+// styleFor returns the numbering style and regexp pattern that govern the given
+// section.
+func (n Numberer) styleFor(sec section) (NumberStyle, *regexp.Regexp) {
+	switch sec {
+	case sectionHeader:
+		return n.HeaderStyle, n.HeaderRegexp
+	case sectionFooter:
+		return n.FooterStyle, n.FooterRegexp
+	default:
+		return n.Style, n.Pattern
+	}
+}
+
+// numbered reports whether the given line is numbered. blankRun is the count of
+// consecutive blank lines ending at this line (1 for the first blank); with
+// JoinBlankLines set to N a blank line is numbered only on every Nth blank.
+func (n Numberer) numbered(body string, sec section, blankRun int) bool {
+	style, pattern := n.styleFor(sec)
+	switch style {
 	case NumberAll:
+		if body == "" && n.JoinBlankLines > 1 {
+			return blankRun%n.JoinBlankLines == 0
+		}
 		return true
 	case NumberNonBlank:
 		return body != ""
+	case NumberRegexp:
+		return pattern != nil && pattern.MatchString(body)
 	default:
 		return false
 	}
@@ -208,12 +314,20 @@ func (n Numberer) format(num int) string {
 
 // HeadLines writes the first n lines of r to w, preserving line endings.
 func HeadLines(w io.Writer, r io.Reader, n int) error {
+	return HeadRecords(w, r, n, '\n')
+}
+
+// HeadRecords writes the first n records of r to w, preserving each record's
+// trailing delimiter. With delim '\n' this is the line-oriented head; with
+// delim '\0' (the -z/--zero-terminated mode) records are NUL-delimited and any
+// embedded newlines are kept verbatim.
+func HeadRecords(w io.Writer, r io.Reader, n int, delim byte) error {
 	if n <= 0 {
 		return nil
 	}
 	br := bufio.NewReader(r)
 	for i := 0; i < n; i++ {
-		s, err := br.ReadString('\n')
+		s, err := br.ReadString(delim)
 		if s != "" {
 			if _, werr := io.WriteString(w, s); werr != nil {
 				return werr
@@ -231,13 +345,21 @@ func HeadLines(w io.Writer, r io.Reader, n int) error {
 
 // TailLines writes the last n lines of r to w, preserving line endings.
 func TailLines(w io.Writer, r io.Reader, n int) error {
+	return TailRecords(w, r, n, '\n')
+}
+
+// TailRecords writes the last n records of r to w, preserving each record's
+// trailing delimiter. With delim '\n' this is the line-oriented tail; with
+// delim '\0' (the -z/--zero-terminated mode) records are NUL-delimited and any
+// embedded newlines are kept verbatim.
+func TailRecords(w io.Writer, r io.Reader, n int, delim byte) error {
 	if n <= 0 {
 		return nil
 	}
 	br := bufio.NewReader(r)
 	ring := make([]string, 0, n)
 	for {
-		s, err := br.ReadString('\n')
+		s, err := br.ReadString(delim)
 		if s != "" {
 			if len(ring) < n {
 				ring = append(ring, s)

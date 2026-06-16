@@ -67,8 +67,10 @@ func TestRunMultipleMissingFiles(t *testing.T) {
 	if !strings.Contains(errOut, "/no/such/a") || !strings.Contains(errOut, "/no/such/b") {
 		t.Errorf("stderr = %q, want both missing files reported", errOut)
 	}
-	if out != "" {
-		t.Errorf("out = %q, want empty when all inputs failed", out)
+	// With two FILE operands the total line is printed even when every read
+	// fails, matching GNU wc (the counts are all zero).
+	if out != "0 0 0 total\n" {
+		t.Errorf("out = %q, want %q", out, "0 0 0 total\n")
 	}
 }
 
