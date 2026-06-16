@@ -260,41 +260,50 @@ func (c *Command) help() command.Help {
 	note := "This applet reconfigures privileged kernel network state, which is not available in this " +
 		"environment. It validates arguments and serializes the requested action into a plan, then fails " +
 		"with a documented capability error (it never silently does nothing)."
+	gatedNotes := []string{
+		"Capability-gated: applying the plan needs CAP_NET_ADMIN and kernel support that MimixBox does not exercise, so the command reports a backend error instead of changing kernel state.",
+	}
 	switch c.name {
 	case "brctl":
 		return command.Help{
 			Description: "Manage Ethernet bridges (addbr, delbr, addif, delif, show). " + note,
 			Examples:    []command.Example{{Command: "brctl addbr br0", Explain: "Plan creating bridge br0."}},
+			Notes:       gatedNotes,
 			ExitStatus:  "0  never (capability-gated).\n1  always: validated plan then a documented backend error.",
 		}
 	case "ifenslave":
 		return command.Help{
 			Description: "Attach (or detach) slave interfaces to a bonding master. " + note,
 			Examples:    []command.Example{{Command: "ifenslave bond0 eth0 eth1", Explain: "Plan enslaving eth0 and eth1 to bond0."}},
+			Notes:       gatedNotes,
 			ExitStatus:  "0  never (capability-gated).\n1  always: validated plan then a documented backend error.",
 		}
 	case "tunctl":
 		return command.Help{
 			Description: "Create (-t) or delete (-d) a persistent TUN/TAP device. " + note,
 			Examples:    []command.Example{{Command: "tunctl -t tap0", Explain: "Plan creating TAP device tap0."}},
+			Notes:       gatedNotes,
 			ExitStatus:  "0  never (capability-gated).\n1  always: validated plan then a documented backend error.",
 		}
 	case "vconfig":
 		return command.Help{
 			Description: "Manage 802.1q VLAN interfaces (add, rem, set_flag, ...). " + note,
 			Examples:    []command.Example{{Command: "vconfig add eth0 100", Explain: "Plan creating VLAN 100 on eth0."}},
+			Notes:       gatedNotes,
 			ExitStatus:  "0  never (capability-gated).\n1  always: validated plan then a documented backend error.",
 		}
 	case "zcip":
 		return command.Help{
 			Description: "Manage IPv4 link-local (169.254/16) addressing via a configuration script. " + note,
 			Examples:    []command.Example{{Command: "zcip eth0 /etc/zcip.script", Explain: "Plan link-local configuration of eth0."}},
+			Notes:       gatedNotes,
 			ExitStatus:  "0  never (capability-gated).\n1  always: validated plan then a documented backend error.",
 		}
 	case "nbd-client":
 		return command.Help{
 			Description: "Attach (HOST PORT NBDDEVICE) or detach (-d NBDDEVICE) a network block device. " + note,
 			Examples:    []command.Example{{Command: "nbd-client 10.0.0.1 10809 /dev/nbd0", Explain: "Plan attaching /dev/nbd0 to 10.0.0.1:10809."}},
+			Notes:       gatedNotes,
 			ExitStatus:  "0  never (capability-gated).\n1  always: validated plan then a documented backend error.",
 		}
 	}

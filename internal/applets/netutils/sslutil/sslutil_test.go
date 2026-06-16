@@ -85,3 +85,16 @@ func TestClientRequiresServer(t *testing.T) {
 		t.Error("ssl_client should fail without -s")
 	}
 }
+
+// TestServerHelpNotes asserts ssl_server --help documents a Notes section.
+func TestServerHelpNotes(t *testing.T) {
+	t.Parallel()
+	out := &bytes.Buffer{}
+	io := command.IO{In: strings.NewReader(""), Out: out, Err: &bytes.Buffer{}}
+	if err := NewSSLServer().Run(context.Background(), io, []string{"--help"}); err != nil {
+		t.Fatalf("--help err = %v", err)
+	}
+	if !strings.Contains(out.String(), "Notes:") {
+		t.Errorf("ssl_server --help missing Notes section: %q", out.String())
+	}
+}

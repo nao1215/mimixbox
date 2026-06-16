@@ -43,6 +43,10 @@ func (c *Command) Run(ctx context.Context, stdio command.IO, args []string) erro
 				{Command: c.Name() + ` "$x" = y ` + c.close, Explain: "True when $x equals y."},
 			},
 			ExitStatus: "0  the expression is true.\n1  the expression is false.\n2  the expression is malformed.",
+			Notes: []string{
+				"This is the bracket form of test: the final argument must be the matching " + c.close + ".",
+				"As a shell builtin the same syntax is usually available without invoking this applet.",
+			},
 		})
 		_, _ = fs.Parse(stdio, args)
 		return nil
