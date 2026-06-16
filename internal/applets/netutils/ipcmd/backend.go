@@ -6,6 +6,80 @@ import (
 	"strings"
 )
 
+// This file is the shared read-only backend for the whole ip family. It owns
+// the object model, the OBJECT/subcommand parsing the dispatcher relies on, the
+// injectable data source, and the dump/render routines. The per-applet command
+// surfaces (constructors, help, synopses) live in ipcmd.go and reuse everything
+// here so each command renders identical output.
+
+// object identifies the iproute2 object an ip subcommand operates on.
+type object int
+
+const (
+	objLink object = iota
+	objAddr
+	objRoute
+	objNeigh
+	objRule
+)
+
+// objectAliases maps an object to the keywords users type (and the dispatcher
+// matches as a prefix, like real iproute2: "a"/"addr"/"address").
+var objectAliases = map[object][]string{
+	objLink:  {"link"},
+	objAddr:  {"address", "addr", "a"},
+	objRoute: {"route", "ro", "r"},
+	objNeigh: {"neighbour", "neighbor", "neigh", "n"},
+	objRule:  {"rule", "ru"},
+}
+
+// matchObject resolves an OBJECT keyword by unambiguous prefix match, like
+// iproute2 itself.
+func matchObject(kw string) (object, bool) {
+	for obj, aliases := range objectAliases {
+		for _, a := range aliases {
+			if a == kw {
+				return obj, true
+			}
+		}
+	}
+	// Prefix match against the canonical (first) alias.
+	var found object
+	matches := 0
+	for obj, aliases := range objectAliases {
+		if strings.HasPrefix(aliases[0], kw) {
+			found = obj
+			matches++
+		}
+	}
+	if matches == 1 {
+		return found, true
+	}
+	return 0, false
+}
+
+// splitSub separates the subcommand from any trailing target (e.g. a device or
+// prefix filter). An empty subcommand defaults to "show".
+func splitSub(rest []string) (sub string, target []string) {
+	if len(rest) == 0 {
+		return "", nil
+	}
+	return rest[0], rest[1:]
+}
+
+// filterDev extracts a "dev NAME" or bare device filter from a show target.
+func filterDev(target []string) string {
+	for i := 0; i < len(target); i++ {
+		if target[i] == "dev" && i+1 < len(target) {
+			return target[i+1]
+		}
+	}
+	if len(target) == 1 {
+		return target[0]
+	}
+	return ""
+}
+
 // NetData is the injectable snapshot the read-only ip commands render. The
 // default source returns an empty snapshot so go test stays hermetic; tests
 // install fixtures via SetSource.
@@ -60,6 +134,10 @@ type Rule struct {
 	Action   string // e.g. "lookup main"
 }
 
+// source supplies the fixture data the read-only subcommands render. Tests
+// replace it; the default reflects an empty, hermetic system.
+var source = defaultSource
+
 // defaultSource returns an empty snapshot, keeping the live kernel out of tests.
 func defaultSource() NetData { return NetData{} }
 
@@ -70,6 +148,24 @@ func SetSource(d NetData) (restore func()) {
 	orig := source
 	source = func() NetData { return d }
 	return func() { source = orig }
+}
+
+// dump renders the requested object's table from the fixture source. It is the
+// shared dispatch every command surface funnels its show/list request through.
+func dump(w io.Writer, obj object, target []string) {
+	data := source()
+	switch obj {
+	case objLink:
+		writeLinks(w, data.Links, filterDev(target))
+	case objAddr:
+		writeAddrs(w, data.Links, filterDev(target))
+	case objRoute:
+		writeRoutes(w, data.Routes)
+	case objNeigh:
+		writeNeighbours(w, data.Neighbours)
+	case objRule:
+		writeRules(w, data.Rules)
+	}
 }
 
 // writeLinks renders "ip link show".
