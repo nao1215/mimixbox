@@ -179,7 +179,12 @@ func TestHelpSections(t *testing.T) {
 				}
 			}
 			desc := help[strings.Index(help, "\n")+1:]
-			if before, _, _ := strings.Cut(desc, "\nOptions:"); strings.TrimSpace(before) == "" {
+			before, _, found := strings.Cut(desc, "\nOptions:")
+			if !found {
+				t.Errorf("%s --help missing Options section\n%s", c.Name(), help)
+				return
+			}
+			if strings.TrimSpace(before) == "" {
 				t.Errorf("%s --help has no purpose paragraph\n%s", c.Name(), help)
 			}
 		})

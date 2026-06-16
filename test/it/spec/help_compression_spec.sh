@@ -25,5 +25,9 @@ Describe 'compression applets self-describing --help'
         The output should include 'Examples:'
         The output should include 'Exit status:'
         The line 1 of output should start with "Usage: $1"
+        # A non-empty purpose paragraph sits on line 3 (line 2 is blank).
+        The line 3 of output should not equal ''
+        # At least one example command line starts with the command name.
+        The output should include "  $1 "
     End
 End
