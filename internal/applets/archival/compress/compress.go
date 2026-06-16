@@ -7,9 +7,10 @@ package compress
 import (
 	"context"
 	"fmt"
-	"os"
+	"io"
 	"strings"
 
+	"github.com/nao1215/mimixbox/internal/applets/archival/comp"
 	"github.com/nao1215/mimixbox/internal/applets/archival/lzw"
 	"github.com/nao1215/mimixbox/internal/command"
 )
@@ -26,13 +27,8 @@ func (c *Command) Name() string { return "compress" }
 // Synopsis returns the one-line description shown in the applet list.
 func (c *Command) Synopsis() string { return "Compress files with LZW (.Z)" }
 
-type options struct {
-	stdout bool
-	keep   bool
-	force  bool
-}
-
-// Run executes compress.
+// Run executes compress by delegating the shared file-handling model to the
+// comp frontend in compress-only mode.
 func (c *Command) Run(_ context.Context, stdio command.IO, args []string) error {
 	fs := command.NewFlagSet(c.Name(), "[OPTION]... [FILE]...", stdio.Err).WithHelp(command.Help{
 		Description: "Compress each FILE in place with the classic Unix LZW algorithm, replacing it with FILE.Z. " +
@@ -52,65 +48,27 @@ func (c *Command) Run(_ context.Context, stdio command.IO, args []string) error 
 	if err != nil || !proceed {
 		return err
 	}
-	opts := options{stdout: *stdout, keep: *keep, force: *force}
 
-	files := fs.Args()
-	if len(files) == 0 || (len(files) == 1 && files[0] == "-") {
-		if err := lzw.Compress(stdio.In, stdio.Out); err != nil {
-			_, _ = fmt.Fprintf(stdio.Err, "compress: %v\n", err)
-			return command.SilentFailure()
-		}
-		return nil
+	cfg := comp.Config{
+		Name:       c.Name(),
+		Transform:  transform,
+		OutputName: outputName,
 	}
-
-	var failed bool
-	for _, f := range files {
-		if err := c.processFile(stdio, f, opts); err != nil {
-			_, _ = fmt.Fprintf(stdio.Err, "compress: %v\n", err)
-			failed = true
-		}
-	}
-	if failed {
-		return command.SilentFailure()
-	}
-	return nil
+	opts := comp.Options{Stdout: *stdout, Keep: *keep, Force: *force}
+	return cfg.Run(stdio, opts, fs.Args())
 }
 
-// processFile compresses one file to FILE.Z (or to stdout with -c).
-func (c *Command) processFile(stdio command.IO, name string, opts options) error {
-	in, err := os.Open(name) //nolint:gosec // user-named file
-	if err != nil {
-		return err
-	}
-	defer func() { _ = in.Close() }()
+// transform LZW-compresses r into w. compress only ever compresses, so the
+// decompress flag from the shared frontend is always false and ignored here.
+func transform(r io.Reader, w io.Writer, _ bool) error {
+	return lzw.Compress(r, w)
+}
 
-	if opts.stdout {
-		return lzw.Compress(in, stdio.Out)
-	}
-
+// outputName appends the .Z suffix, rejecting a name that already ends in .Z.
+// compress only compresses, so the decompress flag is always false.
+func outputName(name string, _ bool) (string, error) {
 	if strings.HasSuffix(name, ".Z") {
-		return fmt.Errorf("%s already has .Z suffix -- unchanged", name)
+		return "", fmt.Errorf("%s already has .Z suffix -- unchanged", name)
 	}
-	out := name + ".Z"
-	if !opts.force {
-		if _, statErr := os.Stat(out); statErr == nil {
-			return fmt.Errorf("%s already exists; use -f to overwrite", out)
-		}
-	}
-
-	w, err := os.Create(out) //nolint:gosec // user-named file
-	if err != nil {
-		return err
-	}
-	if err := lzw.Compress(in, w); err != nil {
-		_ = w.Close()
-		return err
-	}
-	if err := w.Close(); err != nil {
-		return err
-	}
-	if !opts.keep {
-		return os.Remove(name)
-	}
-	return nil
+	return name + ".Z", nil
 }

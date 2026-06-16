@@ -8,9 +8,9 @@ import (
 	"context"
 	"fmt"
 	"io"
-	"os"
 	"strings"
 
+	"github.com/nao1215/mimixbox/internal/applets/archival/comp"
 	"github.com/nao1215/mimixbox/internal/command"
 )
 
@@ -26,13 +26,8 @@ func (c *Command) Name() string { return "gunzip" }
 // Synopsis returns the one-line description shown in the applet list.
 func (c *Command) Synopsis() string { return "Decompress gzip (.gz) files" }
 
-type options struct {
-	keep   bool
-	stdout bool
-	force  bool
-}
-
-// Run executes gunzip.
+// Run executes gunzip by delegating the shared file-handling model to the comp
+// frontend in decompress-only mode.
 func (c *Command) Run(_ context.Context, stdio command.IO, args []string) error {
 	fs := command.NewFlagSet(c.Name(), "[OPTION]... [FILE]...", stdio.Err).WithHelp(command.Help{
 		Description: "Decompress each gzip (.gz) FILE, replacing FILE.gz with FILE. With no FILE, or with -, read " +
@@ -52,78 +47,26 @@ func (c *Command) Run(_ context.Context, stdio command.IO, args []string) error 
 	if err != nil || !proceed {
 		return err
 	}
-	opts := options{keep: *keep, stdout: *stdout, force: *force}
 
-	files := fs.Args()
-	if len(files) == 0 || (len(files) == 1 && files[0] == "-") {
-		if err := decompressStream(stdio.In, stdio.Out); err != nil {
-			_, _ = fmt.Fprintf(stdio.Err, "gunzip: %v\n", err)
-			return command.SilentFailure()
-		}
-		return nil
+	cfg := comp.Config{
+		Name:                c.Name(),
+		Transform:           transform,
+		OutputName:          outputName,
+		RemoveOutputOnError: true, // don't leave a partial/empty output file behind on failure
 	}
-
-	var failed bool
-	for _, f := range files {
-		if err := c.processFile(stdio, f, opts); err != nil {
-			_, _ = fmt.Fprintf(stdio.Err, "gunzip: %v\n", err)
-			failed = true
-		}
-	}
-	if failed {
-		return command.SilentFailure()
-	}
-	return nil
+	opts := comp.Options{Decompress: true, Keep: *keep, Stdout: *stdout, Force: *force}
+	return cfg.Run(stdio, opts, fs.Args())
 }
 
-// processFile decompresses one .gz file. With -c the result goes to stdout;
-// otherwise FILE.gz becomes FILE and (unless -k) the input is removed.
-func (c *Command) processFile(stdio command.IO, name string, opts options) error {
-	if opts.stdout {
-		in, err := os.Open(name) //nolint:gosec // user-named file
-		if err != nil {
-			return err
-		}
-		defer func() { _ = in.Close() }()
-		return decompressStream(in, stdio.Out)
-	}
-
-	out, err := outputName(name)
-	if err != nil {
-		return err
-	}
-	if !opts.force {
-		if _, statErr := os.Stat(out); statErr == nil {
-			return fmt.Errorf("%s already exists; use -f to overwrite", out)
-		}
-	}
-
-	in, err := os.Open(name) //nolint:gosec // user-named file
-	if err != nil {
-		return err
-	}
-	defer func() { _ = in.Close() }()
-
-	w, err := os.Create(out) //nolint:gosec // user-named file
-	if err != nil {
-		return err
-	}
-	if err := decompressStream(in, w); err != nil {
-		_ = w.Close()
-		_ = os.Remove(out) // don't leave a partial/empty output file behind on failure
-		return err
-	}
-	if err := w.Close(); err != nil {
-		return err
-	}
-	if !opts.keep {
-		return os.Remove(name)
-	}
-	return nil
+// transform decompresses r into w. gunzip only ever decompresses, so the
+// decompress flag from the shared frontend is always true and ignored here.
+func transform(r io.Reader, w io.Writer, _ bool) error {
+	return decompressStream(r, w)
 }
 
 // outputName strips a .gz/.tgz suffix to derive the decompressed file name.
-func outputName(name string) (string, error) {
+// gunzip only decompresses, so the decompress flag is always true.
+func outputName(name string, _ bool) (string, error) {
 	switch {
 	case strings.HasSuffix(name, ".gz"):
 		return strings.TrimSuffix(name, ".gz"), nil
