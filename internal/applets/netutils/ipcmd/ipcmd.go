@@ -4,36 +4,18 @@
 // neighbour/rule) and a subcommand (show/list), then renders fixture data from
 // an injectable source. Mutating subcommands (add/del/...) are intentionally
 // deferred and fail with a documented capability error, never a silent no-op.
+//
+// This file is the command surface: the per-applet constructors, names,
+// synopses, usage strings, and help text. The shared parsing/dump backend that
+// every command funnels through lives in backend.go.
 package ipcmd
 
 import (
 	"context"
 	"fmt"
-	"strings"
 
 	"github.com/nao1215/mimixbox/internal/command"
 )
-
-// object identifies the iproute2 object an ip subcommand operates on.
-type object int
-
-const (
-	objLink object = iota
-	objAddr
-	objRoute
-	objNeigh
-	objRule
-)
-
-// objectName maps an object to the keyword users type (and the dispatcher
-// matches as a prefix, like real iproute2: "a"/"addr"/"address").
-var objectAliases = map[object][]string{
-	objLink:  {"link"},
-	objAddr:  {"address", "addr", "a"},
-	objRoute: {"route", "ro", "r"},
-	objNeigh: {"neighbour", "neighbor", "neigh", "n"},
-	objRule:  {"rule", "ru"},
-}
 
 // Command is one applet in the ip family.
 type Command struct {
@@ -82,10 +64,6 @@ func (c *Command) Synopsis() string {
 	}
 }
 
-// source supplies the fixture data the read-only subcommands render. Tests
-// replace it; the default reflects an empty, hermetic system.
-var source = defaultSource
-
 // Run executes an ip-family command.
 func (c *Command) Run(_ context.Context, stdio command.IO, args []string) error {
 	fs := command.NewFlagSet(c.Name(), c.usage(), stdio.Err).WithHelp(c.help())
@@ -103,7 +81,8 @@ func (c *Command) Run(_ context.Context, stdio command.IO, args []string) error 
 	sub, target := splitSub(rest)
 	switch sub {
 	case "show", "list", "lst", "":
-		return c.show(stdio, obj, target)
+		dump(stdio.Out, obj, target)
+		return nil
 	default:
 		return command.Failuref(
 			"%q is a mutating subcommand and is not implemented in this read-only slice; "+
@@ -126,71 +105,6 @@ func (c *Command) resolveObject(operands []string) (object, []string, error) {
 		return 0, nil, fmt.Errorf("unknown object %q (expected link, address, route, neighbour, or rule)", operands[0])
 	}
 	return obj, operands[1:], nil
-}
-
-// matchObject resolves an OBJECT keyword by unambiguous prefix match, like
-// iproute2 itself.
-func matchObject(kw string) (object, bool) {
-	for obj, aliases := range objectAliases {
-		for _, a := range aliases {
-			if a == kw {
-				return obj, true
-			}
-		}
-	}
-	// Prefix match against the canonical (first) alias.
-	var found object
-	matches := 0
-	for obj, aliases := range objectAliases {
-		if strings.HasPrefix(aliases[0], kw) {
-			found = obj
-			matches++
-		}
-	}
-	if matches == 1 {
-		return found, true
-	}
-	return 0, false
-}
-
-// splitSub separates the subcommand from any trailing target (e.g. a device or
-// prefix filter). An empty subcommand defaults to "show".
-func splitSub(rest []string) (sub string, target []string) {
-	if len(rest) == 0 {
-		return "", nil
-	}
-	return rest[0], rest[1:]
-}
-
-// show renders the requested object's table from the fixture source.
-func (c *Command) show(stdio command.IO, obj object, target []string) error {
-	data := source()
-	switch obj {
-	case objLink:
-		writeLinks(stdio.Out, data.Links, filterDev(target))
-	case objAddr:
-		writeAddrs(stdio.Out, data.Links, filterDev(target))
-	case objRoute:
-		writeRoutes(stdio.Out, data.Routes)
-	case objNeigh:
-		writeNeighbours(stdio.Out, data.Neighbours)
-	case objRule:
-		writeRules(stdio.Out, data.Rules)
-	}
-	return nil
-}
-
-// filterDev extracts a "dev NAME" or bare device filter from a show target.
-func filterDev(target []string) string {
-	for i := 0; i < len(target); i++ {
-		if target[i] == "dev" && i+1 < len(target) {
-			return target[i+1]
-		}
-	}
-	if len(target) == 1 {
-		return target[0]
-	}
-	return ""
 }
 
 func (c *Command) usage() string {
