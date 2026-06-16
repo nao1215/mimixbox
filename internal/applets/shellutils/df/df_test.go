@@ -3,6 +3,7 @@ package df_test
 import (
 	"bytes"
 	"context"
+	"errors"
 	"strings"
 	"testing"
 
@@ -199,6 +200,57 @@ func TestRunInodes(t *testing.T) {
 		if fields[i] != want[i] {
 			t.Errorf("inode row field %d = %q, want %q", i, fields[i], want[i])
 		}
+	}
+}
+
+// TestPercentZeroTotal covers the total==0 guard in percent via an empty
+// filesystem (no usable blocks), which must report 0% rather than divide by 0.
+func TestPercentZeroTotal(t *testing.T) {
+	s := df.StatfsResult{Bsize: 1024, Blocks: 0, Bfree: 0, Bavail: 0}
+	u := df.ComputeUsage(s)
+	if u.UsePct() != 0 {
+		t.Errorf("UsePct = %d, want 0 for empty filesystem", u.UsePct())
+	}
+}
+
+// TestRunStatfsError exercises the error path of Run (the keep() helper) by
+// injecting a statfs that fails, and confirms a non-zero exit while the header
+// is still printed.
+func TestRunStatfsError(t *testing.T) {
+	restore := df.SetStatfs(func(path string) (df.StatfsResult, error) {
+		return df.StatfsResult{}, errors.New("statfs boom")
+	})
+	defer restore()
+
+	out, errOut, err := run(t, "/data")
+	if err == nil {
+		t.Fatal("expected non-nil error when statfs fails")
+	}
+	if !strings.HasPrefix(out, "Filesystem") {
+		t.Errorf("header should still be printed, got %q", out)
+	}
+	if !strings.Contains(errOut, "df:") {
+		t.Errorf("stderr = %q, want df: prefix", errOut)
+	}
+}
+
+// TestRunStatfsErrorThenSuccess confirms keep() preserves the first error while
+// later operands are still processed.
+func TestRunStatfsErrorThenSuccess(t *testing.T) {
+	restore := df.SetStatfs(func(path string) (df.StatfsResult, error) {
+		if path == "/bad" {
+			return df.StatfsResult{}, errors.New("nope")
+		}
+		return df.StatfsResult{Bsize: 1024, Blocks: 10, Bavail: 5}, nil
+	})
+	defer restore()
+
+	out, _, err := run(t, "/bad", "/good")
+	if err == nil {
+		t.Fatal("expected non-nil error from the failing operand")
+	}
+	if !strings.Contains(out, "/good") {
+		t.Errorf("the good operand should still be printed, got %q", out)
 	}
 }
 

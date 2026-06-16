@@ -142,6 +142,94 @@ func TestBadArchive(t *testing.T) {
 	}
 }
 
+// TestCopyOutMissingFile covers copyOut's os.Stat error branch.
+func TestCopyOutMissingFile(t *testing.T) {
+	t.Parallel()
+	_, errOut, err := run(t, []byte("no_such_file_here.txt\n"), "-o")
+	if err == nil {
+		t.Fatal("expected error when a named file is missing")
+	}
+	if !strings.Contains(errOut, "cpio:") {
+		t.Errorf("stderr = %q, want cpio: prefix", errOut)
+	}
+}
+
+// TestCopyOutSkipsBlankNames covers the blank-name continue branch of copyOut.
+func TestCopyOutSkipsBlankNames(t *testing.T) {
+	// Uses t.Chdir; cannot be parallel.
+	dir := t.TempDir()
+	t.Chdir(dir)
+	if err := os.WriteFile("only.txt", []byte("data"), 0o644); err != nil {
+		t.Fatal(err)
+	}
+	// Blank lines and whitespace-only lines must be ignored.
+	out, _, err := run(t, []byte("\n  \nonly.txt\n\n"), "-o")
+	if err != nil {
+		t.Fatalf("copy-out err = %v", err)
+	}
+	listOut, _, err := run(t, []byte(out), "-i", "-t")
+	if err != nil {
+		t.Fatalf("list err = %v", err)
+	}
+	if got := strings.Count(strings.TrimSpace(listOut), "\n"); got != 0 {
+		t.Errorf("expected exactly one listed entry, got %q", listOut)
+	}
+	if !strings.Contains(listOut, "only.txt") {
+		t.Errorf("list = %q, want only.txt", listOut)
+	}
+}
+
+// TestDirectoryRoundTrip covers copyOut for a directory (no data) and
+// extractEntry's IsDir branch.
+func TestDirectoryRoundTrip(t *testing.T) {
+	// Uses t.Chdir; cannot be parallel.
+	dir := t.TempDir()
+	t.Chdir(dir)
+	if err := os.Mkdir("adir", 0o755); err != nil {
+		t.Fatal(err)
+	}
+
+	archive := archiveOf(t, "adir")
+
+	extractDir := filepath.Join(dir, "out")
+	if err := os.Mkdir(extractDir, 0o755); err != nil {
+		t.Fatal(err)
+	}
+	t.Chdir(extractDir)
+	if _, errOut, err := run(t, archive, "-i"); err != nil {
+		t.Fatalf("extract err = %v (stderr=%q)", err, errOut)
+	}
+	info, err := os.Stat(filepath.Join(extractDir, "adir"))
+	if err != nil {
+		t.Fatalf("stat extracted dir: %v", err)
+	}
+	if !info.IsDir() {
+		t.Errorf("extracted adir is not a directory")
+	}
+}
+
+// TestTruncatedArchive covers copyIn's short-read error path: a header that
+// promises a name longer than the remaining bytes.
+func TestTruncatedArchive(t *testing.T) {
+	// Uses t.Chdir; cannot be parallel.
+	dir := t.TempDir()
+	t.Chdir(dir)
+	if err := os.WriteFile("f.txt", []byte("hello"), 0o644); err != nil {
+		t.Fatal(err)
+	}
+	archive := archiveOf(t, "f.txt")
+	// Cut off the archive mid-entry (keep the header but drop the body).
+	truncated := archive[:115]
+
+	_, errOut, err := run(t, truncated, "-i", "-t")
+	if err == nil {
+		t.Fatal("expected error for a truncated archive")
+	}
+	if !strings.Contains(errOut, "cpio:") {
+		t.Errorf("stderr = %q, want cpio: prefix", errOut)
+	}
+}
+
 func TestHelp(t *testing.T) {
 	t.Parallel()
 	out, _, err := run(t, nil, "--help")
