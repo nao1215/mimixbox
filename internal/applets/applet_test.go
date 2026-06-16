@@ -80,7 +80,7 @@ func TestListAppletsTo(t *testing.T) {
 	t.Parallel()
 
 	var out bytes.Buffer
-	ListAppletsTo(&out)
+	ListAppletsTo(&out, ListFilter{})
 	got := out.String()
 
 	if len(Applets) == 0 {

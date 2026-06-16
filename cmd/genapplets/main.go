@@ -76,6 +76,58 @@ type pkg struct {
 	importPath string
 	alias      string
 	ctors      []string
+	// subsystem is the applet family (top-level directory under
+	// internal/applets, e.g. "textutils", "procps").
+	subsystem string
+	// stability is the maturity classification emitted for every command in
+	// this package; see stabilityFor.
+	stability string
+}
+
+// subsystemFor returns the applet family for a package path relative to
+// internal/applets: the first path component (e.g. "textutils/cat" ->
+// "textutils", "printutils" -> "printutils").
+func subsystemFor(rel string) string {
+	parts := strings.Split(filepath.ToSlash(rel), "/")
+	return parts[0]
+}
+
+// gatedSubsystems are families dominated by privileged/destructive operations
+// (mounts, raw block devices, login/security/power surfaces), so their applets
+// default to the "gated" stability. Everything else defaults to "stable".
+var gatedSubsystems = map[string]bool{
+	"loginutils":    true,
+	"securityutils": true,
+	"pmutils":       true,
+	"util-linux":    true,
+	"embedded":      true,
+	"runit":         true,
+	"console-tools": true,
+}
+
+// stabilityFor returns the default stability for a subsystem. Privileged
+// families are "gated"; everything else (coreutils-style text/shell/file
+// utilities, games, jokes, ...) is "stable".
+func stabilityFor(subsystem string) string {
+	if gatedSubsystems[subsystem] {
+		return "gated"
+	}
+	return "stable"
+}
+
+// stabilityConst maps a stability value to the exported applets.Stability
+// constant used in the generated source.
+func stabilityConst(stability string) string {
+	switch stability {
+	case "gated":
+		return "StabilityGated"
+	case "partial":
+		return "StabilityPartial"
+	case "experimental":
+		return "StabilityExperimental"
+	default:
+		return "StabilityStable"
+	}
 }
 
 // scan walks the applet tree and returns, sorted by import path, every package
@@ -119,10 +171,13 @@ func scan(appletsDir string) ([]pkg, error) {
 			return nil, rerr
 		}
 		sort.Strings(ctors)
+		sub := subsystemFor(rel)
 		pkgs = append(pkgs, pkg{
 			importPath: modulePath + "/" + appletsRel + "/" + filepath.ToSlash(rel),
 			alias:      aliasFor(rel),
 			ctors:      ctors,
+			subsystem:  sub,
+			stability:  stabilityFor(sub),
 		})
 	}
 	sort.Slice(pkgs, func(i, j int) bool { return pkgs[i].importPath < pkgs[j].importPath })
@@ -178,8 +233,9 @@ func render(pkgs []pkg) ([]byte, error) {
 	b.WriteString("func init() {\n")
 	fmt.Fprintf(&b, "\tApplets = make(map[string]Applet, %d)\n", total)
 	for _, p := range pkgs {
+		stab := stabilityConst(p.stability)
 		for _, c := range p.ctors {
-			fmt.Fprintf(&b, "\tregister(%s.%s())\n", p.alias, c)
+			fmt.Fprintf(&b, "\tregister(%s.%s(), %q, %s)\n", p.alias, c, p.subsystem, stab)
 		}
 	}
 	b.WriteString("}\n")
