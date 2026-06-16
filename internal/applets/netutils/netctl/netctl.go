@@ -14,8 +14,6 @@ package netctl
 import (
 	"context"
 	"fmt"
-	"net"
-	"strconv"
 	"strings"
 
 	"github.com/nao1215/mimixbox/internal/command"
@@ -42,6 +40,19 @@ func gate(p Plan) error {
 		"%s: planned action [%s] requires privileged kernel network configuration not available in this "+
 			"environment (capability-gated backend)", p.Tool, p.String())
 }
+
+// gatedNotes are the shared help notes for every capability-gated netctl applet.
+var gatedNotes = []string{
+	"Capability-gated: applying the plan needs CAP_NET_ADMIN and kernel support that MimixBox does not exercise, so the command reports a backend error instead of changing kernel state.",
+}
+
+// gatedNote is the shared help description suffix for every netctl applet.
+const gatedNote = "This applet reconfigures privileged kernel network state, which is not available in this " +
+	"environment. It validates arguments and serializes the requested action into a plan, then fails " +
+	"with a documented capability error (it never silently does nothing)."
+
+// gatedExitStatus is the shared ExitStatus help text for every netctl applet.
+const gatedExitStatus = "0  never (capability-gated).\n1  always: validated plan then a documented backend error."
 
 // Command is one of the netctl applets, selected by name.
 type Command struct {
@@ -125,190 +136,40 @@ func (c *Command) plan(args []string) (Plan, error) {
 	return Plan{}, fmt.Errorf("%s: unknown applet", c.name)
 }
 
-func planBrctl(args []string) (Plan, error) {
-	if len(args) < 1 {
-		return Plan{}, fmt.Errorf("brctl: a command is required (addbr/delbr/addif/delif/show)")
-	}
-	action := args[0]
-	rest := args[1:]
-	switch action {
-	case "addbr", "delbr", "show":
-		if action != "show" && len(rest) < 1 {
-			return Plan{}, fmt.Errorf("brctl %s: a bridge name is required", action)
-		}
-	case "addif", "delif":
-		if len(rest) < 2 {
-			return Plan{}, fmt.Errorf("brctl %s: a bridge and an interface are required", action)
-		}
-	default:
-		return Plan{}, fmt.Errorf("brctl: unknown command %q", action)
-	}
-	return Plan{Tool: "brctl", Action: action, Args: rest}, nil
-}
-
-func planIfenslave(args []string) (Plan, error) {
-	if len(args) < 2 {
-		return Plan{}, fmt.Errorf("ifenslave: a master and at least one slave interface are required")
-	}
-	return Plan{Tool: "ifenslave", Action: "enslave", Args: args}, nil
-}
-
-func planTunctl(args []string) (Plan, error) {
-	// tunctl [-d IFACE] (delete) or tunctl [-t IFACE] (create).
-	action := "create"
-	var name string
-	for i := 0; i < len(args); i++ {
-		switch args[i] {
-		case "-d":
-			action = "delete"
-			if i+1 < len(args) {
-				name = args[i+1]
-				i++
-			}
-		case "-t":
-			action = "create"
-			if i+1 < len(args) {
-				name = args[i+1]
-				i++
-			}
-		default:
-			if name == "" {
-				name = args[i]
-			}
-		}
-	}
-	if name == "" {
-		return Plan{}, fmt.Errorf("tunctl: an interface name is required (-t NAME or -d NAME)")
-	}
-	return Plan{Tool: "tunctl", Action: action, Args: []string{name}}, nil
-}
-
-func planVconfig(args []string) (Plan, error) {
-	if len(args) < 1 {
-		return Plan{}, fmt.Errorf("vconfig: a command is required (add/rem/set_flag/...)")
-	}
-	action := args[0]
-	rest := args[1:]
-	switch action {
-	case "add":
-		if len(rest) < 2 {
-			return Plan{}, fmt.Errorf("vconfig add: IFACE and VID are required")
-		}
-		vid, err := strconv.Atoi(rest[1])
-		if err != nil || vid < 0 || vid > 4094 {
-			return Plan{}, fmt.Errorf("vconfig add: invalid VLAN id %q (0-4094)", rest[1])
-		}
-	case "rem":
-		if len(rest) < 1 {
-			return Plan{}, fmt.Errorf("vconfig rem: a VLAN interface name is required")
-		}
-	default:
-		if len(rest) < 1 {
-			return Plan{}, fmt.Errorf("vconfig %s: an argument is required", action)
-		}
-	}
-	return Plan{Tool: "vconfig", Action: action, Args: rest}, nil
-}
-
-func planZcip(args []string) (Plan, error) {
-	if len(args) < 2 {
-		return Plan{}, fmt.Errorf("zcip: an interface and a script are required")
-	}
-	return Plan{Tool: "zcip", Action: "configure", Args: args}, nil
-}
-
-func planNbdClient(args []string) (Plan, error) {
-	// nbd-client HOST PORT NBDDEVICE  (or -d NBDDEVICE to disconnect).
-	if len(args) >= 2 && args[0] == "-d" {
-		return Plan{Tool: "nbd-client", Action: "disconnect", Args: args[1:2]}, nil
-	}
-	if len(args) < 3 {
-		return Plan{}, fmt.Errorf("nbd-client: HOST PORT NBDDEVICE are required (or -d NBDDEVICE)")
-	}
-	if net.ParseIP(args[0]) == nil && !looksLikeHostname(args[0]) {
-		return Plan{}, fmt.Errorf("nbd-client: invalid host %q", args[0])
-	}
-	if p, err := strconv.Atoi(args[1]); err != nil || p < 1 || p > 65535 {
-		return Plan{}, fmt.Errorf("nbd-client: invalid port %q", args[1])
-	}
-	return Plan{Tool: "nbd-client", Action: "connect", Args: args[:3]}, nil
-}
-
-func looksLikeHostname(s string) bool {
-	if s == "" || strings.ContainsAny(s, " \t/") {
-		return false
-	}
-	return true
-}
-
+// usage returns the synopsis line for the applet's flag set.
 func (c *Command) usage() string {
 	switch c.name {
 	case "brctl":
-		return "COMMAND [BRIDGE [INTERFACE]]"
+		return brctlUsage
 	case "ifenslave":
-		return "MASTER SLAVE..."
+		return ifenslaveUsage
 	case "tunctl":
-		return "[-t NAME | -d NAME]"
+		return tunctlUsage
 	case "vconfig":
-		return "COMMAND [ARG...]"
+		return vconfigUsage
 	case "zcip":
-		return "IFACE SCRIPT"
+		return zcipUsage
 	case "nbd-client":
-		return "HOST PORT NBDDEVICE | -d NBDDEVICE"
+		return nbdClientUsage
 	}
 	return "[ARG...]"
 }
 
+// help returns the full help text for the applet.
 func (c *Command) help() command.Help {
-	note := "This applet reconfigures privileged kernel network state, which is not available in this " +
-		"environment. It validates arguments and serializes the requested action into a plan, then fails " +
-		"with a documented capability error (it never silently does nothing)."
-	gatedNotes := []string{
-		"Capability-gated: applying the plan needs CAP_NET_ADMIN and kernel support that MimixBox does not exercise, so the command reports a backend error instead of changing kernel state.",
-	}
 	switch c.name {
 	case "brctl":
-		return command.Help{
-			Description: "Manage Ethernet bridges (addbr, delbr, addif, delif, show). " + note,
-			Examples:    []command.Example{{Command: "brctl addbr br0", Explain: "Plan creating bridge br0."}},
-			Notes:       gatedNotes,
-			ExitStatus:  "0  never (capability-gated).\n1  always: validated plan then a documented backend error.",
-		}
+		return brctlHelp()
 	case "ifenslave":
-		return command.Help{
-			Description: "Attach (or detach) slave interfaces to a bonding master. " + note,
-			Examples:    []command.Example{{Command: "ifenslave bond0 eth0 eth1", Explain: "Plan enslaving eth0 and eth1 to bond0."}},
-			Notes:       gatedNotes,
-			ExitStatus:  "0  never (capability-gated).\n1  always: validated plan then a documented backend error.",
-		}
+		return ifenslaveHelp()
 	case "tunctl":
-		return command.Help{
-			Description: "Create (-t) or delete (-d) a persistent TUN/TAP device. " + note,
-			Examples:    []command.Example{{Command: "tunctl -t tap0", Explain: "Plan creating TAP device tap0."}},
-			Notes:       gatedNotes,
-			ExitStatus:  "0  never (capability-gated).\n1  always: validated plan then a documented backend error.",
-		}
+		return tunctlHelp()
 	case "vconfig":
-		return command.Help{
-			Description: "Manage 802.1q VLAN interfaces (add, rem, set_flag, ...). " + note,
-			Examples:    []command.Example{{Command: "vconfig add eth0 100", Explain: "Plan creating VLAN 100 on eth0."}},
-			Notes:       gatedNotes,
-			ExitStatus:  "0  never (capability-gated).\n1  always: validated plan then a documented backend error.",
-		}
+		return vconfigHelp()
 	case "zcip":
-		return command.Help{
-			Description: "Manage IPv4 link-local (169.254/16) addressing via a configuration script. " + note,
-			Examples:    []command.Example{{Command: "zcip eth0 /etc/zcip.script", Explain: "Plan link-local configuration of eth0."}},
-			Notes:       gatedNotes,
-			ExitStatus:  "0  never (capability-gated).\n1  always: validated plan then a documented backend error.",
-		}
+		return zcipHelp()
 	case "nbd-client":
-		return command.Help{
-			Description: "Attach (HOST PORT NBDDEVICE) or detach (-d NBDDEVICE) a network block device. " + note,
-			Examples:    []command.Example{{Command: "nbd-client 10.0.0.1 10809 /dev/nbd0", Explain: "Plan attaching /dev/nbd0 to 10.0.0.1:10809."}},
-			Notes:       gatedNotes,
-			ExitStatus:  "0  never (capability-gated).\n1  always: validated plan then a documented backend error.",
-		}
+		return nbdClientHelp()
 	}
-	return command.Help{Description: note}
+	return command.Help{Description: gatedNote}
 }

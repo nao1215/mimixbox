@@ -19,11 +19,14 @@
 // system. The same package backs all three command names; the action performed
 // depends on the name the command was constructed with. The options follow the
 // util-linux/sysvinit man pages (-f, -n, -w, -d, and -p for halt).
+//
+// The work is split behind explicit seams: planner.go decides which reboot
+// action the options map to and runs the sync/reboot execution, wtmp.go owns the
+// shutdown-record encoding, and this file wires the CLI together.
 package halt
 
 import (
 	"context"
-	"encoding/binary"
 	"fmt"
 	"os"
 	"syscall"
@@ -101,22 +104,6 @@ type options struct {
 	poweroff bool // -p: when called as halt, power off instead of halting
 }
 
-// action returns the syscall.Reboot command constant for this command, honoring
-// "halt -p" (power off instead of halt).
-func (c *Command) action(opts options) int {
-	switch c.name {
-	case nameReboot:
-		return syscall.LINUX_REBOOT_CMD_RESTART
-	case namePoweroff:
-		return syscall.LINUX_REBOOT_CMD_POWER_OFF
-	default:
-		if opts.poweroff {
-			return syscall.LINUX_REBOOT_CMD_POWER_OFF
-		}
-		return syscall.LINUX_REBOOT_CMD_HALT
-	}
-}
-
 // Run executes halt/poweroff/reboot. It requires root; otherwise it prints a
 // permission message and returns a silent failure without touching rebootFn.
 func (c *Command) Run(_ context.Context, stdio command.IO, args []string) error {
@@ -166,47 +153,4 @@ func (c *Command) Run(_ context.Context, stdio command.IO, args []string) error 
 	}
 
 	return c.stop(opts)
-}
-
-// stop syncs filesystems (unless suppressed) and performs the requested action
-// via the replaceable rebootFn so tests stay safe.
-func (c *Command) stop(opts options) error {
-	if !opts.noSync && !opts.force {
-		syncFn()
-	}
-	if err := rebootFn(c.action(opts)); err != nil {
-		return command.Failure(err)
-	}
-	return nil
-}
-
-// utmpRecordSize is the size of a Linux struct utmp record.
-const utmpRecordSize = 384
-
-// utmp record type for a run-level (shutdown) entry.
-const runLevel = 1
-
-// writeWtmp appends a "shutdown" login record to path, as sysvinit's halt does,
-// so utilities such as "who" and "last" can report the shutdown time. The
-// record layout matches Linux's struct utmp.
-func writeWtmp(path string, now time.Time) error {
-	rec := make([]byte, utmpRecordSize)
-	binary.LittleEndian.PutUint16(rec[0:], runLevel)                        // ut_type
-	copy(rec[8:40], "~~")                                                   // ut_line[32]
-	copy(rec[40:44], "~~")                                                  // ut_id[4]
-	copy(rec[44:76], "shutdown")                                            // ut_user[32]
-	binary.LittleEndian.PutUint32(rec[340:], uint32(now.Unix()))            // ut_tv.tv_sec
-	binary.LittleEndian.PutUint32(rec[344:], uint32(now.Nanosecond()/1000)) // ut_tv.tv_usec
-
-	f, err := os.OpenFile(path, os.O_WRONLY|os.O_APPEND|os.O_CREATE, 0644) //nolint:gosec // wtmp is world-readable
-	if err != nil {
-		return err
-	}
-	defer func() {
-		if cerr := f.Close(); cerr != nil && err == nil {
-			err = cerr
-		}
-	}()
-	_, err = f.Write(rec)
-	return err
 }
