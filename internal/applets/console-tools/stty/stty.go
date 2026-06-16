@@ -11,6 +11,7 @@ import (
 	"strings"
 
 	"github.com/nao1215/mimixbox/internal/command"
+	"github.com/nao1215/mimixbox/internal/version"
 	"golang.org/x/sys/unix"
 )
 
@@ -68,6 +69,9 @@ func (c *Command) Run(_ context.Context, stdio command.IO, args []string) error 
 		switch a {
 		case "--help", "-h":
 			fs.WriteUsage(stdio.Out)
+			return nil
+		case "--version":
+			version.Print(stdio.Out, c.Name())
 			return nil
 		case "-a", "--all":
 			all = true
