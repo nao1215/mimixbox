@@ -275,6 +275,65 @@ func TestRunMultiSourceNonDirDest(t *testing.T) {
 	}
 }
 
+// TestRunDirectoryVerbose covers the verbose branch of makeDirectories.
+func TestRunDirectoryVerbose(t *testing.T) {
+	t.Parallel()
+	dir := t.TempDir()
+	target := filepath.Join(dir, "made")
+	out, _, err := run(t, "-d", "-v", target)
+	if err != nil {
+		t.Fatalf("Run -d -v error = %v", err)
+	}
+	if !strings.Contains(out, "creating directory") {
+		t.Errorf("verbose output = %q, want creating-directory message", out)
+	}
+}
+
+// TestRunDirectoryMultipleWithFailure verifies that makeDirectories continues
+// past a failed directory and still reports failure. A directory whose parent
+// is a regular file cannot be created.
+func TestRunDirectoryMultipleWithFailure(t *testing.T) {
+	t.Parallel()
+	dir := t.TempDir()
+	good := filepath.Join(dir, "good")
+	fileParent := filepath.Join(dir, "afile")
+	writeFile(t, fileParent, "x")
+	bad := filepath.Join(fileParent, "child") // parent is a file -> mkdir fails
+
+	_, errOut, err := run(t, "-d", bad, good)
+	if err == nil {
+		t.Fatal("expected failure for un-creatable directory")
+	}
+	if !strings.Contains(errOut, "cannot create directory") {
+		t.Errorf("stderr = %q, want cannot-create-directory message", errOut)
+	}
+	// The reachable directory was still created.
+	if info, statErr := os.Stat(good); statErr != nil || !info.IsDir() {
+		t.Errorf("good directory not created: %v", statErr)
+	}
+}
+
+// TestRunCopyOpenError covers copyFile's open-error branch: a source that
+// cannot be opened (unreadable) surfaces an install error.
+func TestRunCopyDestUnwritable(t *testing.T) {
+	t.Parallel()
+	dir := t.TempDir()
+	src := filepath.Join(dir, "src")
+	writeFile(t, src, "data")
+	// Destination's parent is a regular file, so os.Create fails.
+	fileParent := filepath.Join(dir, "afile")
+	writeFile(t, fileParent, "x")
+	dst := filepath.Join(fileParent, "dst")
+
+	_, errOut, err := run(t, src, dst)
+	if err == nil {
+		t.Fatal("expected error: destination not creatable")
+	}
+	if !strings.Contains(errOut, "install:") {
+		t.Errorf("stderr = %q, want install: prefix", errOut)
+	}
+}
+
 func TestRunHelp(t *testing.T) {
 	t.Parallel()
 	out, _, err := run(t, "--help")

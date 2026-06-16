@@ -95,6 +95,44 @@ func TestRunMissingFile(t *testing.T) {
 	}
 }
 
+func TestNameSynopsis(t *testing.T) {
+	t.Parallel()
+	c := head.New()
+	if c.Name() != "head" {
+		t.Errorf("Name() = %q, want %q", c.Name(), "head")
+	}
+	if c.Synopsis() == "" {
+		t.Error("Synopsis() is empty")
+	}
+}
+
+// TestVerboseStdinHeader checks that -v prints a header for standard input,
+// using the "standard input" label rather than "-".
+func TestVerboseStdinHeader(t *testing.T) {
+	t.Parallel()
+	out, _, err := run(t, "x\ny\n", "-v", "-n", "1")
+	if err != nil {
+		t.Fatalf("Run error = %v", err)
+	}
+	want := "==> standard input <==\nx\n"
+	if out != want {
+		t.Errorf("out = %q, want %q", out, want)
+	}
+}
+
+// TestMultipleMissingFilesKeepsFirstError ensures that two missing files both
+// report on stderr while a single failure error is returned.
+func TestMultipleMissingFilesKeepsFirstError(t *testing.T) {
+	t.Parallel()
+	_, errOut, err := run(t, "", "/no/such/a", "/no/such/b")
+	if err == nil {
+		t.Fatal("expected error")
+	}
+	if !strings.Contains(errOut, "/no/such/a") || !strings.Contains(errOut, "/no/such/b") {
+		t.Errorf("stderr = %q, want both missing files reported", errOut)
+	}
+}
+
 func TestHelpSections(t *testing.T) {
 	out, _, err := run(t, "", "--help")
 	if err != nil {

@@ -172,3 +172,43 @@ func TestKillRealProcess(t *testing.T) {
 		t.Fatal("expected sleep to be killed, but it exited cleanly")
 	}
 }
+
+func TestNameSynopsis(t *testing.T) {
+	t.Parallel()
+	c := New()
+	if c.Name() != "kill" {
+		t.Errorf("Name() = %q, want %q", c.Name(), "kill")
+	}
+	if c.Synopsis() == "" {
+		t.Error("Synopsis() is empty")
+	}
+}
+
+// TestSignalNonexistentProcess exercises sendSignals' delivery-error branch by
+// sending signal 0 to a PID that does not exist, which yields ESRCH.
+func TestSignalNonexistentProcess(t *testing.T) {
+	t.Parallel()
+	// PID 2^30 is far above any real process; signal 0 only probes existence.
+	deadPID := strconv.Itoa(1 << 30)
+	_, errBuf, err := run("-s", "0", deadPID)
+	if err == nil {
+		t.Fatal("expected error signaling a non-existent process")
+	}
+	if !strings.Contains(errBuf, "kill: "+deadPID+":") {
+		t.Errorf("stderr = %q, want delivery error for pid %s", errBuf, deadPID)
+	}
+}
+
+// TestSignalContinuesAfterBadPID confirms that an invalid PID in the middle of
+// the list does not stop delivery to the valid PIDs, while failure is reported.
+func TestSignalContinuesAfterBadPID(t *testing.T) {
+	t.Parallel()
+	self := strconv.Itoa(os.Getpid())
+	_, errBuf, err := run("-s", "0", "notapid", self)
+	if err == nil {
+		t.Fatal("expected failure because one operand is invalid")
+	}
+	if !strings.Contains(errBuf, "notapid") {
+		t.Errorf("stderr = %q, want invalid pid reported", errBuf)
+	}
+}

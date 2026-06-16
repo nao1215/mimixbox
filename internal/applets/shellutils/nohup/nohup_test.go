@@ -92,6 +92,74 @@ func TestRedirectsToNohupOut(t *testing.T) {
 	}
 }
 
+// TestOutputWriterPassThrough returns the original stdout unchanged when it is
+// not a terminal, with a no-op cleanup.
+func TestOutputWriterPassThrough(t *testing.T) {
+	orig := isTerminal
+	isTerminal = func(io.Writer) bool { return false }
+	t.Cleanup(func() { isTerminal = orig })
+
+	out := &bytes.Buffer{}
+	stdio := command.IO{In: strings.NewReader(""), Out: out, Err: &bytes.Buffer{}}
+	w, cleanup, err := outputWriter(stdio)
+	if err != nil {
+		t.Fatalf("outputWriter err = %v", err)
+	}
+	defer cleanup()
+	if w != out {
+		t.Errorf("outputWriter returned %v, want the original stdout", w)
+	}
+}
+
+// TestOutputWriterFallsBackToHome forces the cwd open to fail (read-only
+// directory) so outputWriter writes to $HOME/nohup.out instead.
+func TestOutputWriterFallsBackToHome(t *testing.T) {
+	orig := isTerminal
+	isTerminal = func(io.Writer) bool { return true }
+	t.Cleanup(func() { isTerminal = orig })
+
+	// A directory we own but make read-only, so creating ./nohup.out fails.
+	roDir := t.TempDir()
+	wd, _ := os.Getwd()
+	if err := os.Chdir(roDir); err != nil {
+		t.Fatal(err)
+	}
+	t.Cleanup(func() { _ = os.Chdir(wd) })
+	if err := os.Chmod(roDir, 0o500); err != nil {
+		t.Fatal(err)
+	}
+	t.Cleanup(func() { _ = os.Chmod(roDir, 0o700) })
+
+	home := t.TempDir()
+	t.Setenv("HOME", home)
+
+	errBuf := &bytes.Buffer{}
+	stdio := command.IO{In: strings.NewReader(""), Out: termOut{}, Err: errBuf}
+	w, cleanup, err := outputWriter(stdio)
+	if err != nil {
+		// If the filesystem still allows the write (e.g. running as root), skip
+		// rather than fail spuriously.
+		t.Skipf("could not force cwd open failure: %v", err)
+	}
+	defer cleanup()
+	if _, ok := w.(*os.File); !ok {
+		t.Errorf("expected a *os.File writer, got %T", w)
+	}
+	if !strings.Contains(errBuf.String(), "appending output to 'nohup.out'") {
+		t.Errorf("stderr = %q, want the redirect notice", errBuf.String())
+	}
+	if _, statErr := os.Stat(home + "/nohup.out"); statErr != nil {
+		t.Errorf("expected $HOME/nohup.out to be created: %v", statErr)
+	}
+}
+
+// termOut is a writer that satisfies the Fd() probe so it is treated like a
+// terminal-backed stream by outputWriter's writer-type checks.
+type termOut struct{}
+
+func (termOut) Write(p []byte) (int, error) { return len(p), nil }
+func (termOut) Fd() uintptr                 { return 0 }
+
 func TestNameSynopsis(t *testing.T) {
 	t.Parallel()
 	c := New()
