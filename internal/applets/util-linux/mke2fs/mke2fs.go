@@ -11,20 +11,40 @@ import (
 	"github.com/nao1215/mimixbox/internal/command"
 )
 
+// Front-end command names. mke2fs is canonical; mkfs.ext2 is the traditional
+// mkfs-style alias. Both drive the same ext2 builder.
+const (
+	cmdMke2fs   = "mke2fs"
+	cmdMkfsExt2 = "mkfs.ext2"
+)
+
+// aliasConfig is the metadata for one front-end name under which the ext2
+// builder is exposed. Every alias shares the builder logic and differs only by
+// the command name it reports.
+type aliasConfig struct {
+	synopsis string
+}
+
+// aliases is the name -> config table that drives the ext2 front-ends.
+var aliases = map[string]aliasConfig{
+	cmdMke2fs:   {synopsis: "Create an ext2 filesystem"},
+	cmdMkfsExt2: {synopsis: "Create an ext2 filesystem"},
+}
+
 // Command is the mke2fs applet. It is also registered as mkfs.ext2.
 type Command struct{ name string }
 
 // New returns a mke2fs command.
-func New() *Command { return &Command{name: "mke2fs"} }
+func New() *Command { return &Command{name: cmdMke2fs} }
 
 // NewMkfsExt2 returns the same applet under the name mkfs.ext2.
-func NewMkfsExt2() *Command { return &Command{name: "mkfs.ext2"} }
+func NewMkfsExt2() *Command { return &Command{name: cmdMkfsExt2} }
 
 // Name returns the command name.
 func (c *Command) Name() string { return c.name }
 
 // Synopsis returns the one-line description shown in the applet list.
-func (c *Command) Synopsis() string { return "Create an ext2 filesystem" }
+func (c *Command) Synopsis() string { return aliases[c.name].synopsis }
 
 // now is indirected so the recorded timestamps are deterministic in tests.
 var now = time.Now
