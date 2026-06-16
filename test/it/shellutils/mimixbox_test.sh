@@ -14,6 +14,28 @@ MbUnknownOption() {
     mimixbox --definitely-not-an-option
 }
 
+# --- Issues #781-#783: top-level list/JSON/filter/suggestion surfaces --------
+
+# MbListJSON emits the applet list as a JSON array on stdout.
+MbListJSON() {
+    mimixbox --list --json
+}
+
+# MbListFilter lists only applets whose name starts with "cat".
+MbListFilter() {
+    mimixbox --list --filter=cat
+}
+
+# MbListSubsystem lists only the textutils subsystem.
+MbListSubsystem() {
+    mimixbox --list --subsystem=textutils
+}
+
+# MbUnknownCommand runs a near-miss command name to exercise suggestions.
+MbUnknownCommand() {
+    mimixbox lss
+}
+
 # MbInstallRemoveSmoke creates applet symlinks in a fresh temp directory, then
 # removes them, asserting the round trip end to end. It prints "ok" only when
 # every step behaves as expected so the spec can assert on a single token.
