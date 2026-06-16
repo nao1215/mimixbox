@@ -26,7 +26,7 @@ func TestTypeSymlink(t *testing.T) {
 		t.Fatalf("err = %v", err)
 	}
 	got := lines(out)
-	if len(got) != 1 || !strings.HasSuffix(got[0], "link") {
+	if len(got) != 1 || got[0] != link {
 		t.Errorf("-type l got %v, want the symlink", got)
 	}
 }
@@ -76,7 +76,7 @@ func TestTypePipe(t *testing.T) {
 		t.Fatalf("err = %v", err)
 	}
 	got := lines(out)
-	if len(got) != 1 || !strings.HasSuffix(got[0], "pipe") {
+	if len(got) != 1 || got[0] != fifo {
 		t.Errorf("-type p got %v, want the fifo", got)
 	}
 }

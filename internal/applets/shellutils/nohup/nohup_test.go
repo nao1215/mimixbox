@@ -6,6 +6,7 @@ import (
 	"errors"
 	"io"
 	"os"
+	"path/filepath"
 	"strings"
 	"testing"
 
@@ -148,7 +149,14 @@ func TestOutputWriterFallsBackToHome(t *testing.T) {
 	if !strings.Contains(errBuf.String(), "appending output to 'nohup.out'") {
 		t.Errorf("stderr = %q, want the redirect notice", errBuf.String())
 	}
-	if _, statErr := os.Stat(home + "/nohup.out"); statErr != nil {
+	homeOut := filepath.Join(home, "nohup.out")
+	if _, statErr := os.Stat(homeOut); statErr != nil {
+		// In privileged environments the read-only directory may still allow the
+		// write, so ./nohup.out is created and the HOME fallback is never taken.
+		cwdOut := filepath.Join(roDir, "nohup.out")
+		if _, cwdErr := os.Stat(cwdOut); cwdErr == nil {
+			t.Skip("could not force cwd nohup.out creation failure in this environment")
+		}
 		t.Errorf("expected $HOME/nohup.out to be created: %v", statErr)
 	}
 }

@@ -272,8 +272,16 @@ func TestDashAmongFilesStreamsStdio(t *testing.T) {
 		t.Fatalf("Run error = %v, stderr = %q", err, errOut)
 	}
 	// stdin was compressed to stdout for the "-" operand.
-	if _, gzErr := gzip.NewReader(bytes.NewReader([]byte(out))); gzErr != nil {
+	gr, gzErr := gzip.NewReader(bytes.NewReader([]byte(out)))
+	if gzErr != nil {
 		t.Errorf("stdout for '-' is not gzip: %v", gzErr)
+	} else {
+		if _, rerr := io.ReadAll(gr); rerr != nil {
+			t.Errorf("stdout for '-' failed while reading gzip stream: %v", rerr)
+		}
+		if cerr := gr.Close(); cerr != nil {
+			t.Errorf("stdout for '-' close error: %v", cerr)
+		}
 	}
 	// The named file was compressed on disk.
 	if _, statErr := os.Stat(name + ".gz"); statErr != nil {
@@ -294,7 +302,13 @@ func TestDashStreamsStdio(t *testing.T) {
 	if err != nil {
 		t.Fatalf("output is not gzip: %v", err)
 	}
-	got, _ := io.ReadAll(gr)
+	got, rerr := io.ReadAll(gr)
+	if rerr != nil {
+		t.Fatalf("failed to read gzip stream: %v", rerr)
+	}
+	if cerr := gr.Close(); cerr != nil {
+		t.Fatalf("gzip close error: %v", cerr)
+	}
 	if string(got) != "hello stream\n" {
 		t.Errorf("decompressed = %q, want %q", got, "hello stream\n")
 	}

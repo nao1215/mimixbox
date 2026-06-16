@@ -203,12 +203,15 @@ func TestSignalNonexistentProcess(t *testing.T) {
 // the list does not stop delivery to the valid PIDs, while failure is reported.
 func TestSignalContinuesAfterBadPID(t *testing.T) {
 	t.Parallel()
-	self := strconv.Itoa(os.Getpid())
-	_, errBuf, err := run("-s", "0", "notapid", self)
+	deadPID := strconv.Itoa(1 << 30)
+	_, errBuf, err := run("-s", "0", "notapid", deadPID)
 	if err == nil {
 		t.Fatal("expected failure because one operand is invalid")
 	}
 	if !strings.Contains(errBuf, "notapid") {
 		t.Errorf("stderr = %q, want invalid pid reported", errBuf)
+	}
+	if !strings.Contains(errBuf, deadPID) {
+		t.Errorf("stderr = %q, want processing to continue to pid %s", errBuf, deadPID)
 	}
 }

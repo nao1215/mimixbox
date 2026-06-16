@@ -284,8 +284,20 @@ func TestStatusTwoAfterSyntaxError(t *testing.T) {
 	if err != nil {
 		t.Fatalf("Run error = %v", err)
 	}
-	if !strings.Contains(out, "2") {
-		t.Errorf("stdout = %q, want $? == 2 after syntax error", out)
+	// $? is echoed on its own command line, but the interactive prompt is written
+	// to the same stream, so the status appears as the final field of a prompt
+	// line (e.g. "mbsh:/path> 2"). Require that final field to be exactly "2" so
+	// the assertion cannot false-pass on a stray "2" embedded in a path or prompt.
+	found := false
+	for _, line := range strings.Split(strings.ReplaceAll(out, "\r\n", "\n"), "\n") {
+		fields := strings.Fields(line)
+		if len(fields) > 0 && fields[len(fields)-1] == "2" {
+			found = true
+			break
+		}
+	}
+	if !found {
+		t.Errorf("stdout = %q, want the $? output field to be 2 after syntax error", out)
 	}
 }
 

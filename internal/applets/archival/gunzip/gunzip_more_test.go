@@ -66,6 +66,9 @@ func TestBadGzipFileLeavesNoOutput(t *testing.T) {
 	if !strings.Contains(errOut, "gunzip:") {
 		t.Errorf("stderr = %q, want gunzip error", errOut)
 	}
+	if _, statErr := os.Stat(filepath.Join(dir, "corrupt")); !os.IsNotExist(statErr) {
+		t.Errorf("a partial output file was left behind after corrupt input: %v", statErr)
+	}
 }
 
 // TestMultipleFilesOneBad covers Run's failed-loop branch: a good file is still

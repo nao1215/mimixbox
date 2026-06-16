@@ -27,8 +27,16 @@ func TestRunTwoMissingFiles(t *testing.T) {
 	if err == nil {
 		t.Fatal("expected error for two missing files")
 	}
-	if !strings.Contains(errOut, "/no/such/a") || !strings.Contains(errOut, "/no/such/b") {
+	// The first failing path must be reported before the second one, proving the
+	// returned error corresponds to the first failure (a.before b). The returned
+	// error itself is an intentionally silent failure whose message is already on
+	// stderr, so assert ordering on stderr rather than on err.Error().
+	idxA := strings.Index(errOut, "/no/such/a")
+	idxB := strings.Index(errOut, "/no/such/b")
+	if idxA < 0 || idxB < 0 {
 		t.Errorf("stderr = %q, want both missing files reported", errOut)
+	} else if idxA > idxB {
+		t.Errorf("stderr = %q, want /no/such/a reported as the first failure", errOut)
 	}
 }
 

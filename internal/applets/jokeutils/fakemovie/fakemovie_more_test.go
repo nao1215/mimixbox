@@ -74,11 +74,14 @@ func TestRunCorruptImage(t *testing.T) {
 // two files: both are reported and the run fails.
 func TestRunTwoBadFiles(t *testing.T) {
 	t.Parallel()
-	_, errOut, err := run(t, "/no/such/a.png", "/no/such/b.png")
+	dir := t.TempDir()
+	a := filepath.Join(dir, "missing-a.png")
+	b := filepath.Join(dir, "missing-b.png")
+	_, errOut, err := run(t, a, b)
 	if err == nil {
 		t.Fatal("expected error for two missing files")
 	}
-	if !strings.Contains(errOut, "a.png") || !strings.Contains(errOut, "b.png") {
+	if !strings.Contains(errOut, "missing-a.png") || !strings.Contains(errOut, "missing-b.png") {
 		t.Errorf("stderr = %q, want both files reported", errOut)
 	}
 }
