@@ -18,17 +18,34 @@ import (
 // Command is one shell front-end (its name distinguishes sh/ash/hush/bash).
 type Command struct{ name string }
 
+// aliases lists every shell front-end name this package provides. All four are
+// the same launcher under a different name, so they are described by this single
+// table instead of being duplicated across constructors.
+var aliases = []string{"sh", "ash", "hush", "bash"}
+
+// newAlias returns the front-end for the named shell.
+func newAlias(name string) *Command { return &Command{name: name} }
+
+// All returns one front-end Command for every shell alias, in table order.
+func All() []*Command {
+	cmds := make([]*Command, len(aliases))
+	for i, name := range aliases {
+		cmds[i] = newAlias(name)
+	}
+	return cmds
+}
+
 // NewSh returns the sh front-end.
-func NewSh() *Command { return &Command{name: "sh"} }
+func NewSh() *Command { return newAlias("sh") }
 
 // NewAsh returns the ash front-end.
-func NewAsh() *Command { return &Command{name: "ash"} }
+func NewAsh() *Command { return newAlias("ash") }
 
 // NewHush returns the hush front-end.
-func NewHush() *Command { return &Command{name: "hush"} }
+func NewHush() *Command { return newAlias("hush") }
 
 // NewBash returns the bash front-end.
-func NewBash() *Command { return &Command{name: "bash"} }
+func NewBash() *Command { return newAlias("bash") }
 
 // Name returns the command name.
 func (c *Command) Name() string { return c.name }

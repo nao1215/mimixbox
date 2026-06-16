@@ -23,6 +23,7 @@ import (
 	"os"
 	"path"
 	"path/filepath"
+	"strings"
 
 	"github.com/nao1215/mimixbox/internal/applets"
 	"github.com/nao1215/mimixbox/internal/command"
@@ -94,8 +95,7 @@ func runOption(first string, params []string, stdio command.IO) int {
 		version.Print(stdio.Out, cmdName)
 		return command.ExitSuccess
 	case "-l", "--list":
-		applets.ListAppletsTo(stdio.Out)
-		return command.ExitSuccess
+		return runList(params, stdio)
 	case "-i", "--install":
 		return runInstall(params, stdio, false)
 	case "-f", "--full-install":
@@ -105,6 +105,48 @@ func runOption(first string, params []string, stdio command.IO) int {
 	default:
 		return unsupported(first, stdio)
 	}
+}
+
+// runList implements -l/--list, including JSON output and filtering.
+//
+// Accepted parameters (any order):
+//
+//	--json                  emit a JSON array instead of the text table
+//	--filter=PREFIX         keep only applets whose name starts with PREFIX
+//	--subsystem=NAME        keep only applets in subsystem NAME
+//	PREFIX or PREFIX*       bare prefix operand (trailing "*" glob optional)
+//
+// With no parameters the behavior is unchanged: the full text table on stdout.
+func runList(params []string, stdio command.IO) int {
+	jsonOut := false
+	var filter applets.ListFilter
+	for _, p := range params {
+		switch {
+		case p == "--json":
+			jsonOut = true
+		case strings.HasPrefix(p, "--filter="):
+			filter.Prefix = strings.TrimPrefix(p, "--filter=")
+		case strings.HasPrefix(p, "--subsystem="):
+			filter.Subsystem = strings.TrimPrefix(p, "--subsystem=")
+		case strings.HasPrefix(p, "-"):
+			_, _ = fmt.Fprintf(stdio.Err, "%s: --list: unknown option %q\n", cmdName, p)
+			return command.ExitFailure
+		default:
+			// A bare operand is a name prefix; an optional trailing "*" glob is
+			// accepted so both "cat" and "cat*" select cat-prefixed applets.
+			filter.Prefix = strings.TrimSuffix(p, "*")
+		}
+	}
+
+	if jsonOut {
+		if err := applets.ListAppletsJSONTo(stdio.Out, filter); err != nil {
+			_, _ = fmt.Fprintln(stdio.Err, err)
+			return command.ExitFailure
+		}
+		return command.ExitSuccess
+	}
+	applets.ListAppletsTo(stdio.Out, filter)
+	return command.ExitSuccess
 }
 
 // runInstall implements -i/--install (full=false) and -f/--full-install
@@ -137,7 +179,27 @@ func runRemove(params []string, stdio command.IO) int {
 
 // unsupported reports an unknown command/option and the supported applet list,
 // both on stderr so a script's stdout is never polluted by an error.
+//
+// When the input looks like a command name (not a "-"/"--" option), the
+// error is shown error-first with up to five nearest-applet suggestions by
+// Levenshtein distance, e.g.
+//
+//	mimixbox: 'lss' is not a mimixbox command. Did you mean: ls?
+//
+// The full applet wall is still printed afterwards, but only as a secondary
+// fallback below the concise suggestion line.
 func unsupported(name string, stdio command.IO) int {
+	if !strings.HasPrefix(name, "-") {
+		_, _ = fmt.Fprintf(stdio.Err, "%s: '%s' is not a mimixbox command.", cmdName, name)
+		if suggestions := applets.SuggestApplets(name, 5); len(suggestions) > 0 {
+			_, _ = fmt.Fprintf(stdio.Err, " Did you mean: %s?", strings.Join(suggestions, ", "))
+		}
+		_, _ = fmt.Fprint(stdio.Err, "\n\n")
+		_, _ = fmt.Fprintln(stdio.Err, "[Commands supported by MimixBox]")
+		applets.ShowAppletsBySpaceSeparatedTo(stdio.Err)
+		return command.ExitFailure
+	}
+
 	_, _ = fmt.Fprintf(stdio.Err, "%s: %q is not a mimixbox command or option\n\n", cmdName, name)
 	_, _ = fmt.Fprintln(stdio.Err, "[Commands supported by MimixBox]")
 	applets.ShowAppletsBySpaceSeparatedTo(stdio.Err)
@@ -159,8 +221,17 @@ Options:
   -v, --version            print version information and exit
   -h, --help               print this help and exit
 
+List options (used after -l/--list):
+  --json                   emit the applet list as a JSON array
+  --filter=PREFIX          show only applets whose name starts with PREFIX
+                           (a bare "PREFIX" or "PREFIX*" operand works too)
+  --subsystem=NAME         show only applets in subsystem NAME (e.g. textutils)
+
 Examples:
   mimixbox --list                    Show every applet and its one-line description.
+  mimixbox --list --json             Show every applet as a JSON array.
+  mimixbox --list --filter=ca        Show only applets whose name starts with "ca".
+  mimixbox --list --subsystem=textutils   Show only the textutils applets.
   mimixbox cat file.txt              Run the cat applet directly.
   cat file.txt                       Same, when invoked through an installed symlink.
   mimixbox APPLET --help             Show the applet's own help, options, and examples.
