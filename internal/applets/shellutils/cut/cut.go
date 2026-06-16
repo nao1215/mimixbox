@@ -5,6 +5,7 @@ package cut
 
 import (
 	"bufio"
+	"bytes"
 	"context"
 	"fmt"
 	"io"
@@ -44,6 +45,8 @@ type options struct {
 	delimiter       string
 	outputDelimiter string
 	onlyDelimited   bool
+	complement      bool
+	lineDelim       byte
 }
 
 // Run executes cut.
@@ -65,6 +68,8 @@ func (c *Command) Run(_ context.Context, stdio command.IO, args []string) error 
 	delimiter := fs.StringP("delimiter", "d", "\t", "use DELIM instead of TAB for field delimiter")
 	onlyDelimited := fs.BoolP("only-delimited", "s", false, "do not print lines not containing delimiters")
 	outputDelimiter := fs.String("output-delimiter", "", "use STRING as the output delimiter")
+	complement := fs.Bool("complement", false, "complement the set of selected bytes, characters or fields")
+	zeroTerminated := fs.BoolP("zero-terminated", "z", false, "line delimiter is NUL, not newline")
 
 	proceed, err := fs.Parse(stdio, args)
 	if err != nil || !proceed {
@@ -72,7 +77,8 @@ func (c *Command) Run(_ context.Context, stdio command.IO, args []string) error 
 	}
 
 	opts, err := buildOptions(stdio, *bytesList, *charsList, *fieldsList,
-		*delimiter, *outputDelimiter, *onlyDelimited, fs.Changed("output-delimiter"))
+		*delimiter, *outputDelimiter, *onlyDelimited, fs.Changed("output-delimiter"),
+		*complement, *zeroTerminated)
 	if err != nil {
 		return err
 	}
@@ -84,7 +90,7 @@ func (c *Command) Run(_ context.Context, stdio command.IO, args []string) error 
 // range list, returning the resolved options. Errors are written to stderr and
 // reported as silent failures so the runner only sets the exit code.
 func buildOptions(stdio command.IO, bytesList, charsList, fieldsList,
-	delimiter, outputDelimiter string, onlyDelimited, outDelimSet bool) (options, error) {
+	delimiter, outputDelimiter string, onlyDelimited, outDelimSet, complement, zeroTerminated bool) (options, error) {
 	m, list, err := selectMode(stdio, bytesList, charsList, fieldsList)
 	if err != nil {
 		return options{}, err
@@ -107,12 +113,19 @@ func buildOptions(stdio command.IO, bytesList, charsList, fieldsList,
 		}
 	}
 
+	lineDelim := byte('\n')
+	if zeroTerminated {
+		lineDelim = 0
+	}
+
 	return options{
 		mode:            m,
 		ranges:          ranges,
 		delimiter:       delimiter,
 		outputDelimiter: outDelim,
 		onlyDelimited:   onlyDelimited,
+		complement:      complement,
+		lineDelim:       lineDelim,
 	}, nil
 }
 
@@ -170,10 +183,13 @@ func run(stdio command.IO, opts options, files []string) error {
 	return firstErr
 }
 
-// cutReader processes r line by line, writing the cut output to w.
+// cutReader processes r line by line, writing the cut output to w. Lines are
+// split on opts.lineDelim ('\n' by default, NUL with -z) and the same delimiter
+// terminates each emitted line.
 func cutReader(w io.Writer, r io.Reader, opts options) error {
 	sc := bufio.NewScanner(r)
 	sc.Buffer(make([]byte, 0, 64*1024), 1024*1024)
+	sc.Split(splitOn(opts.lineDelim))
 	bw := bufio.NewWriter(w)
 	for sc.Scan() {
 		out, emit := cutLine(sc.Text(), opts)
@@ -183,7 +199,7 @@ func cutReader(w io.Writer, r io.Reader, opts options) error {
 		if _, err := bw.WriteString(out); err != nil {
 			return err
 		}
-		if err := bw.WriteByte('\n'); err != nil {
+		if err := bw.WriteByte(opts.lineDelim); err != nil {
 			return err
 		}
 	}
@@ -191,6 +207,24 @@ func cutReader(w io.Writer, r io.Reader, opts options) error {
 		return err
 	}
 	return bw.Flush()
+}
+
+// splitOn returns a bufio.SplitFunc that splits input on the byte delim,
+// stripping the delimiter from each returned token. A trailing chunk without a
+// final delimiter is still returned as the last token.
+func splitOn(delim byte) bufio.SplitFunc {
+	return func(data []byte, atEOF bool) (advance int, token []byte, err error) {
+		if atEOF && len(data) == 0 {
+			return 0, nil, nil
+		}
+		if i := bytes.IndexByte(data, delim); i >= 0 {
+			return i + 1, data[:i], nil
+		}
+		if atEOF {
+			return len(data), data, nil
+		}
+		return 0, nil, nil
+	}
 }
 
 // rng is a 1-based inclusive range from a cut list. A zero hi means the range
@@ -315,6 +349,16 @@ func selected(ranges []rng, pos int) bool {
 	return false
 }
 
+// keep reports whether the 1-based position pos should be emitted, honouring
+// --complement (which inverts the range selection).
+func keepPos(opts options, pos int) bool {
+	in := selected(opts.ranges, pos)
+	if opts.complement {
+		return !in
+	}
+	return in
+}
+
 // cutLine applies the selection to a single input line (without its trailing
 // newline). The second result reports whether the line should be emitted at
 // all (false only for -s lines that contain no delimiter).
@@ -329,49 +373,49 @@ func cutLine(line string, opts options) (string, bool) {
 	}
 }
 
-// cutBytes selects bytes from line, joining selected ranges with the output
-// delimiter.
+// cutBytes selects bytes from line. Contiguous kept positions are emitted as a
+// run; the output delimiter separates non-adjacent runs. --complement inverts
+// the kept set.
 func cutBytes(line string, opts options) string {
 	var b strings.Builder
-	for i, r := range opts.ranges {
-		if i > 0 {
-			b.WriteString(opts.outputDelimiter)
-		}
-		end := r.hi
-		if r.open() || end > len(line) {
-			end = len(line)
-		}
-		if r.lo > len(line) || r.lo > end {
+	prevKept := false
+	for i := 0; i < len(line); i++ {
+		if !keepPos(opts, i+1) {
+			prevKept = false
 			continue
 		}
-		b.WriteString(line[r.lo-1 : end])
+		if !prevKept && b.Len() > 0 {
+			b.WriteString(opts.outputDelimiter)
+		}
+		b.WriteByte(line[i])
+		prevKept = true
 	}
 	return b.String()
 }
 
-// cutRunes selects characters (runes) from line, joining selected ranges with
-// the output delimiter.
+// cutRunes selects characters (runes) from line, mirroring cutBytes but over
+// runes so multibyte characters stay intact.
 func cutRunes(line string, opts options) string {
 	runes := []rune(line)
 	var b strings.Builder
-	for i, r := range opts.ranges {
-		if i > 0 {
-			b.WriteString(opts.outputDelimiter)
-		}
-		end := r.hi
-		if r.open() || end > len(runes) {
-			end = len(runes)
-		}
-		if r.lo > len(runes) || r.lo > end {
+	prevKept := false
+	for i := range runes {
+		if !keepPos(opts, i+1) {
+			prevKept = false
 			continue
 		}
-		b.WriteString(string(runes[r.lo-1 : end]))
+		if !prevKept && b.Len() > 0 {
+			b.WriteString(opts.outputDelimiter)
+		}
+		b.WriteRune(runes[i])
+		prevKept = true
 	}
 	return b.String()
 }
 
 // cutFields selects fields from line split on the delimiter. Lines with no
 // delimiter are passed through unchanged unless -s suppresses them.
+// --complement inverts the selected fields.
 func cutFields(line string, opts options) (string, bool) {
 	if !strings.Contains(line, opts.delimiter) {
 		if opts.onlyDelimited {
@@ -382,7 +426,7 @@ func cutFields(line string, opts options) (string, bool) {
 	fields := strings.Split(line, opts.delimiter)
 	var selectedFields []string
 	for i := range fields {
-		if selected(opts.ranges, i+1) {
+		if keepPos(opts, i+1) {
 			selectedFields = append(selectedFields, fields[i])
 		}
 	}
