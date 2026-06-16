@@ -24,13 +24,12 @@ func (c *Command) runDump(stdio command.IO, args []string) error {
 	if len(rest) != 2 {
 		return command.Failuref("usage: i2cdump [-y] BUS CHIP-ADDR")
 	}
-	bus, err := parseInt(rest[0])
+	// Route bus and CHIP-ADDR through the shared parser so i2cdump enforces the
+	// same 0x03-0x77 address range as i2cget/i2cset. The register slot is unused
+	// here (a dump always reads every register), so reg is discarded.
+	bus, addr, _, err := parseChipReg(rest, false)
 	if err != nil {
-		return command.Failuref("invalid bus %q", rest[0])
-	}
-	addr, err := parseInt(rest[1])
-	if err != nil {
-		return command.Failuref("invalid chip address %q", rest[1])
+		return command.Failuref("%v", err)
 	}
 	var regs [256]byte
 	for reg := 0; reg < 256; reg++ {

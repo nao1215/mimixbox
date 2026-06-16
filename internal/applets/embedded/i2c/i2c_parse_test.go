@@ -172,6 +172,8 @@ func TestInvalidOperandsAcrossApplets(t *testing.T) {
 		{"set too few", NewI2cset, []string{"-y", "1", "0x50", "0x10"}},
 		{"dump bad bus", NewI2cdump, []string{"-y", "bad", "0x50"}},
 		{"dump bad addr", NewI2cdump, []string{"-y", "1", "bad"}},
+		{"dump addr too high", NewI2cdump, []string{"-y", "1", "0x99"}},
+		{"dump addr too low", NewI2cdump, []string{"-y", "1", "0x02"}},
 		{"dump wrong arity", NewI2cdump, []string{"-y", "1"}},
 	}
 	for _, tt := range tests {
