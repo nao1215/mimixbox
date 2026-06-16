@@ -11,9 +11,9 @@ import (
 	"context"
 	"fmt"
 	"io"
-	"os"
 	"strings"
 
+	"github.com/nao1215/mimixbox/internal/applets/archival/comp"
 	"github.com/nao1215/mimixbox/internal/command"
 	"github.com/ulikunitz/xz"
 	"github.com/ulikunitz/xz/lzma"
@@ -114,14 +114,8 @@ func (c *Command) Synopsis() string {
 	return "Compress or decompress files (" + strings.TrimPrefix(c.codec.suffix, ".") + ")"
 }
 
-type options struct {
-	decompress bool
-	stdout     bool
-	keep       bool
-	force      bool
-}
-
-// Run executes the applet.
+// Run executes the applet by delegating the shared file-handling model to the
+// comp frontend; this Command only supplies the codec and naming rules.
 func (c *Command) Run(_ context.Context, stdio command.IO, args []string) error {
 	fs := command.NewFlagSet(c.Name(), "[OPTION]... [FILE]...", stdio.Err).WithHelp(c.help())
 	decompress := fs.BoolP("decompress", "d", false, "decompress")
@@ -134,78 +128,18 @@ func (c *Command) Run(_ context.Context, stdio command.IO, args []string) error 
 		return err
 	}
 
-	opts := options{
-		decompress: c.forceDecompress || *decompress || c.codec.newWriter == nil,
-		stdout:     c.forceStdout || *stdout,
-		keep:       *keep,
-		force:      *force,
+	cfg := comp.Config{
+		Name:       c.Name(),
+		Transform:  c.transform,
+		OutputName: c.outputName,
 	}
-
-	files := fs.Args()
-	if len(files) == 0 || (len(files) == 1 && files[0] == "-") {
-		if err := c.transform(stdio.In, stdio.Out, opts.decompress); err != nil {
-			_, _ = fmt.Fprintf(stdio.Err, "%s: %v\n", c.Name(), err)
-			return command.SilentFailure()
-		}
-		return nil
+	opts := comp.Options{
+		Decompress: c.forceDecompress || *decompress || c.codec.newWriter == nil,
+		Stdout:     c.forceStdout || *stdout,
+		Keep:       *keep,
+		Force:      *force,
 	}
-
-	var failed bool
-	for _, f := range files {
-		if err := c.processFile(stdio, f, opts); err != nil {
-			_, _ = fmt.Fprintf(stdio.Err, "%s: %v\n", c.Name(), err)
-			failed = true
-		}
-	}
-	if failed {
-		return command.SilentFailure()
-	}
-	return nil
-}
-
-// processFile compresses or decompresses one file, either to stdout (-c) or in
-// place with the suffix added/stripped.
-func (c *Command) processFile(stdio command.IO, name string, opts options) error {
-	if opts.stdout {
-		in, err := os.Open(name) //nolint:gosec // user-named file
-		if err != nil {
-			return err
-		}
-		defer func() { _ = in.Close() }()
-		return c.transform(in, stdio.Out, opts.decompress)
-	}
-
-	out, err := c.outputName(name, opts.decompress)
-	if err != nil {
-		return err
-	}
-	if !opts.force {
-		if _, statErr := os.Stat(out); statErr == nil {
-			return fmt.Errorf("%s already exists; use -f to overwrite", out)
-		}
-	}
-
-	in, err := os.Open(name) //nolint:gosec // user-named file
-	if err != nil {
-		return err
-	}
-	defer func() { _ = in.Close() }()
-
-	w, err := os.Create(out) //nolint:gosec // user-named file
-	if err != nil {
-		return err
-	}
-	if err := c.transform(in, w, opts.decompress); err != nil {
-		_ = w.Close()
-		return err
-	}
-	if err := w.Close(); err != nil {
-		return err
-	}
-	if !opts.keep {
-		return os.Remove(name)
-	}
-	return nil
+	return cfg.Run(stdio, opts, fs.Args())
 }
 
 // outputName derives the output filename: add the suffix when compressing, or
