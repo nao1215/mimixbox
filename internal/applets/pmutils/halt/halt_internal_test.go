@@ -38,6 +38,33 @@ func TestWriteWtmpRecord(t *testing.T) {
 	}
 }
 
+func TestEncodeWtmpRecord(t *testing.T) {
+	now := time.Unix(1700000000, 123000)
+	rec := encodeWtmpRecord(now)
+
+	if len(rec) != utmpRecordSize {
+		t.Fatalf("record size = %d, want %d", len(rec), utmpRecordSize)
+	}
+	if got := binary.LittleEndian.Uint16(rec[0:]); got != runLevel {
+		t.Errorf("ut_type = %d, want %d (RUN_LVL)", got, runLevel)
+	}
+	if got := cstr(rec[44:76]); got != "shutdown" {
+		t.Errorf("ut_user = %q, want %q", got, "shutdown")
+	}
+	if got := cstr(rec[8:40]); got != "~~" {
+		t.Errorf("ut_line = %q, want %q", got, "~~")
+	}
+	if got := cstr(rec[40:44]); got != "~~" {
+		t.Errorf("ut_id = %q, want %q", got, "~~")
+	}
+	if got := binary.LittleEndian.Uint32(rec[340:]); got != uint32(now.Unix()) {
+		t.Errorf("ut_tv.tv_sec = %d, want %d", got, now.Unix())
+	}
+	if got := binary.LittleEndian.Uint32(rec[344:]); got != uint32(now.Nanosecond()/1000) {
+		t.Errorf("ut_tv.tv_usec = %d, want %d", got, now.Nanosecond()/1000)
+	}
+}
+
 func TestWriteWtmpAppends(t *testing.T) {
 	path := filepath.Join(t.TempDir(), "wtmp")
 	now := time.Unix(1700000000, 0)
