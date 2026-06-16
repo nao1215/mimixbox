@@ -35,9 +35,9 @@ Describe 'script / scriptreplay round-trip'
   End
 
   It 'writes a timing file of "delay bytes" records'
-    # Every line is two whitespace-separated fields: a float delay and an
-    # integer byte count.
-    When run grep -Eq '^[0-9]+\.[0-9]+[[:space:]]+[0-9]+$' "$timing"
+    # Every non-empty line must be two whitespace-separated fields: a float
+    # delay and an integer byte count (and there must be at least one record).
+    When run awk 'NF && $1 ~ /^[0-9]+\.[0-9]+$/ && $2 ~ /^[0-9]+$/ { ok++ } END { exit !(NR>0 && ok==NR) }' "$timing"
     The status should be success
   End
 
