@@ -82,3 +82,29 @@ func TestHelpSections(t *testing.T) {
 		}
 	}
 }
+
+// TestMetaOnlyAsFirstArg proves --help/--version are honored only as the first
+// operand (GitHub issue #758): a later --help is an ordinary operand.
+func TestMetaOnlyAsFirstArg(t *testing.T) {
+	t.Parallel()
+	// --version as the first operand prints the version banner.
+	out, _, err := run(t, "--version")
+	if err != nil {
+		t.Fatalf("--version err = %v", err)
+	}
+	if !strings.Contains(out, "printf (mimixbox)") {
+		t.Errorf("--version = %q, want version banner", out)
+	}
+	// A later --help is a normal operand: the format is printed and no usage
+	// block appears.
+	out, _, err = run(t, "foo --help\n")
+	if err != nil {
+		t.Fatalf("err = %v", err)
+	}
+	if strings.Contains(out, "Usage:") {
+		t.Errorf("a non-first --help must not trigger help: %q", out)
+	}
+	if !strings.Contains(out, "foo --help") {
+		t.Errorf("expected the format to be printed, got %q", out)
+	}
+}
