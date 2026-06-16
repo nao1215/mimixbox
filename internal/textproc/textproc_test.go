@@ -2,9 +2,10 @@ package textproc_test
 
 import (
 	"bytes"
+	"errors"
 	"strings"
-	"testing/iotest"
 	"testing"
+	"testing/iotest"
 
 	"github.com/nao1215/mimixbox/internal/textproc"
 )
@@ -233,6 +234,145 @@ func TestTailBytes(t *testing.T) {
 	}
 	if buf.String() != "world" {
 		t.Errorf("TailBytes = %q, want %q", buf.String(), "world")
+	}
+}
+
+// TestCountAddKeepsLargerMaxLineWidth covers the branch where the receiver's
+// MaxLineWidth is already the larger of the two and must be preserved.
+func TestCountAddKeepsLargerMaxLineWidth(t *testing.T) {
+	t.Parallel()
+	a := textproc.Count{MaxLineWidth: 9}
+	b := textproc.Count{MaxLineWidth: 3}
+	if got := a.Add(b); got.MaxLineWidth != 9 {
+		t.Errorf("Add kept MaxLineWidth = %d, want 9", got.MaxLineWidth)
+	}
+}
+
+// errReader fails after returning its payload once, so the streaming readers'
+// error paths are exercised.
+type errReader struct {
+	data []byte
+	done bool
+}
+
+func (e *errReader) Read(p []byte) (int, error) {
+	if e.done {
+		return 0, errors.New("boom")
+	}
+	e.done = true
+	n := copy(p, e.data)
+	return n, nil
+}
+
+// TestNumbererStyleNumberNone covers the default branch of numbered: with
+// NumberNone no line is numbered, and with PadBlank=false the body is emitted
+// verbatim (cat without -n/-b).
+func TestNumbererStyleNumberNone(t *testing.T) {
+	t.Parallel()
+	n := textproc.Numberer{Style: textproc.NumberNone, Start: 1, Increment: 1, Width: 6, Separator: "\t"}
+	var buf bytes.Buffer
+	if err := n.WriteTo(&buf, strings.NewReader("a\nb\n")); err != nil {
+		t.Fatalf("WriteTo error = %v", err)
+	}
+	if buf.String() != "a\nb\n" {
+		t.Errorf("NumberNone = %q, want %q", buf.String(), "a\nb\n")
+	}
+}
+
+// TestWriteToReaderError verifies WriteTo surfaces a read error.
+func TestWriteToReaderError(t *testing.T) {
+	t.Parallel()
+	n := textproc.Numberer{Style: textproc.NumberAll, Start: 1, Increment: 1, Width: 6, Separator: "\t"}
+	err := n.WriteTo(&bytes.Buffer{}, &errReader{data: []byte("a\n")})
+	if err == nil {
+		t.Fatal("expected WriteTo to return the reader error")
+	}
+}
+
+// TestHeadLinesReaderError verifies HeadLines surfaces a read error.
+func TestHeadLinesReaderError(t *testing.T) {
+	t.Parallel()
+	err := textproc.HeadLines(&bytes.Buffer{}, &errReader{data: []byte("a\n")}, 5)
+	if err == nil {
+		t.Fatal("expected HeadLines to return the reader error")
+	}
+}
+
+// TestTailLinesReaderError verifies TailLines surfaces a read error.
+func TestTailLinesReaderError(t *testing.T) {
+	t.Parallel()
+	err := textproc.TailLines(&bytes.Buffer{}, &errReader{data: []byte("a\n")}, 5)
+	if err == nil {
+		t.Fatal("expected TailLines to return the reader error")
+	}
+}
+
+// TestCountReaderError verifies CountReader surfaces a non-EOF read error.
+func TestCountReaderError(t *testing.T) {
+	t.Parallel()
+	_, err := textproc.CountReader(&errReader{data: []byte("a")})
+	if err == nil {
+		t.Fatal("expected CountReader to return the reader error")
+	}
+}
+
+// TestHeadBytesZero verifies the n<=0 short-circuit writes nothing.
+func TestHeadBytesZero(t *testing.T) {
+	t.Parallel()
+	var buf bytes.Buffer
+	if err := textproc.HeadBytes(&buf, strings.NewReader("hello"), 0); err != nil {
+		t.Fatalf("HeadBytes error = %v", err)
+	}
+	if buf.Len() != 0 {
+		t.Errorf("HeadBytes(0) wrote %q, want empty", buf.String())
+	}
+}
+
+// TestHeadBytesMoreThanAvailable verifies that requesting more bytes than exist
+// copies everything and treats the resulting EOF as success.
+func TestHeadBytesMoreThanAvailable(t *testing.T) {
+	t.Parallel()
+	var buf bytes.Buffer
+	if err := textproc.HeadBytes(&buf, strings.NewReader("hi"), 100); err != nil {
+		t.Fatalf("HeadBytes error = %v", err)
+	}
+	if buf.String() != "hi" {
+		t.Errorf("HeadBytes = %q, want %q", buf.String(), "hi")
+	}
+}
+
+// TestTailBytesZero verifies the n<=0 short-circuit writes nothing.
+func TestTailBytesZero(t *testing.T) {
+	t.Parallel()
+	var buf bytes.Buffer
+	if err := textproc.TailBytes(&buf, strings.NewReader("hello"), 0); err != nil {
+		t.Fatalf("TailBytes error = %v", err)
+	}
+	if buf.Len() != 0 {
+		t.Errorf("TailBytes(0) wrote %q, want empty", buf.String())
+	}
+}
+
+// TestTailBytesMoreThanAvailable verifies that requesting more bytes than exist
+// clamps to the whole input.
+func TestTailBytesMoreThanAvailable(t *testing.T) {
+	t.Parallel()
+	var buf bytes.Buffer
+	if err := textproc.TailBytes(&buf, strings.NewReader("hi"), 100); err != nil {
+		t.Fatalf("TailBytes error = %v", err)
+	}
+	if buf.String() != "hi" {
+		t.Errorf("TailBytes = %q, want %q", buf.String(), "hi")
+	}
+}
+
+// TestTailBytesReaderError verifies TailBytes surfaces a read error from
+// io.ReadAll.
+func TestTailBytesReaderError(t *testing.T) {
+	t.Parallel()
+	err := textproc.TailBytes(&bytes.Buffer{}, iotest.ErrReader(errors.New("boom")), 5)
+	if err == nil {
+		t.Fatal("expected TailBytes to return the reader error")
 	}
 }
 
