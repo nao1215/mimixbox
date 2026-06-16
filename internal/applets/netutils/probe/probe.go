@@ -5,6 +5,11 @@
 // is an injectable function that, by default, reports a deterministic capability
 // error instead of attempting a privileged operation. This satisfies the
 // "never a silent no-op" rule: the first slice fails clearly and explains why.
+//
+// This file holds the shared probe/packet helpers (the applet spec table, the
+// validated Target, the injectable transport, target parsing, and the common
+// Run flow). Each CLI surface lives in its own file (traceroute.go, ping6.go,
+// arping.go) and differs only in which spec it selects.
 package probe
 
 import (
@@ -67,20 +72,9 @@ var specs = map[kind]spec{
 	},
 }
 
-// Command is one probe applet.
+// Command is one probe applet. The per-applet constructors live in their own
+// CLI-surface files (traceroute.go, ping6.go, arping.go).
 type Command struct{ kind kind }
-
-// NewTraceroute returns the traceroute applet.
-func NewTraceroute() *Command { return &Command{kind: kindTraceroute} }
-
-// NewTraceroute6 returns the traceroute6 applet.
-func NewTraceroute6() *Command { return &Command{kind: kindTraceroute6} }
-
-// NewPing6 returns the ping6 applet.
-func NewPing6() *Command { return &Command{kind: kindPing6} }
-
-// NewArping returns the arping applet.
-func NewArping() *Command { return &Command{kind: kindArping} }
 
 // Name returns the command name.
 func (c *Command) Name() string { return specs[c.kind].name }
