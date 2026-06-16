@@ -201,8 +201,8 @@ func (c *Command) Run(_ context.Context, stdio command.IO, args []string) error 
 		if info.IsDir() && !opts.dirSelf {
 			dirs = append(dirs, name)
 		} else {
-			// Reuse the Lstat result so the listing pipeline never restats this
-			// command-line operand.
+			// Reuse the Lstat result so the listing pipeline never calls Lstat
+			// again on this command-line operand.
 			files = append(files, entry{name: name, dir: "", info: info})
 		}
 	}
@@ -416,8 +416,8 @@ func (c *Command) listDir(out, errw io.Writer, dir string, opts options) error {
 	}
 
 	// Populate each entry's metadata once; sorting, decoration, long-format
-	// rendering, and recursion all consume this cached info instead of
-	// restatting the path.
+	// rendering, and recursion all consume this cached info instead of calling
+	// Lstat on the path again.
 	items := make([]entry, 0, len(names))
 	for _, n := range names {
 		items = append(items, newEntry(dir, n))
@@ -466,7 +466,7 @@ func filtered(name string, opts options) bool {
 // entry is a listing item paired with its already-resolved metadata. Building
 // it once per operand or directory entry lets sorting, decoration, long-format
 // rendering, and recursive traversal share a single os.Lstat instead of
-// restatting the same path through every helper.
+// re-running Lstat on the same path through every helper.
 type entry struct {
 	name string      // display name (may be "." or "..")
 	dir  string      // directory the name lives in ("" for command-line operands)
