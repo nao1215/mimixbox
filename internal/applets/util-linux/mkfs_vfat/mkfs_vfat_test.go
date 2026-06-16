@@ -99,6 +99,12 @@ func TestMkdosfsAlias(t *testing.T) {
 	if New().Name() != "mkfs.vfat" || NewMkdosfs().Name() != "mkdosfs" {
 		t.Errorf("alias names wrong: %q / %q", New().Name(), NewMkdosfs().Name())
 	}
+	// Both aliases resolve their synopsis through the shared name -> config table.
+	for _, c := range []*Command{New(), NewMkdosfs()} {
+		if c.Synopsis() != "Create a FAT16 filesystem" {
+			t.Errorf("%s synopsis = %q", c.Name(), c.Synopsis())
+		}
+	}
 }
 
 func TestErrors(t *testing.T) {

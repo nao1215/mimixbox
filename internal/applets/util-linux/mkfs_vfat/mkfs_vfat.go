@@ -13,21 +13,41 @@ import (
 	"golang.org/x/sys/unix"
 )
 
+// Front-end command names. mkfs.vfat is canonical; mkdosfs is the traditional
+// alias. Both drive the same FAT16 builder.
+const (
+	cmdMkfsVfat = "mkfs.vfat"
+	cmdMkdosfs  = "mkdosfs"
+)
+
+// aliasConfig is the metadata for one front-end name under which the FAT16
+// builder is exposed. Every alias shares the builder logic and differs only by
+// the command name it reports.
+type aliasConfig struct {
+	synopsis string
+}
+
+// aliases is the name -> config table that drives the FAT16 front-ends.
+var aliases = map[string]aliasConfig{
+	cmdMkfsVfat: {synopsis: "Create a FAT16 filesystem"},
+	cmdMkdosfs:  {synopsis: "Create a FAT16 filesystem"},
+}
+
 // Command is the mkfs.vfat applet. It is also registered under the traditional
 // name mkdosfs.
 type Command struct{ name string }
 
 // New returns a mkfs.vfat command.
-func New() *Command { return &Command{name: "mkfs.vfat"} }
+func New() *Command { return &Command{name: cmdMkfsVfat} }
 
 // NewMkdosfs returns the same applet under the name mkdosfs.
-func NewMkdosfs() *Command { return &Command{name: "mkdosfs"} }
+func NewMkdosfs() *Command { return &Command{name: cmdMkdosfs} }
 
 // Name returns the command name.
 func (c *Command) Name() string { return c.name }
 
 // Synopsis returns the one-line description shown in the applet list.
-func (c *Command) Synopsis() string { return "Create a FAT16 filesystem" }
+func (c *Command) Synopsis() string { return aliases[c.name].synopsis }
 
 const (
 	sectorSize      = 512
