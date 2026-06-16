@@ -62,6 +62,10 @@ func (c *Command) runServer(_ context.Context, stdio command.IO, args []string) 
 			{Command: "ssl_server -c cert.pem -k key.pem -b 127.0.0.1:8443", Explain: "Terminate TLS on loopback port 8443 using the given cert/key."},
 		},
 		ExitStatus: "0  clean shutdown.\n1  missing cert/key, load error, or bind error.",
+		Notes: []string{
+			"Binds a loopback address only; it is intended for local testing, not as a public-facing TLS server.",
+			"Pair it with ssl_client to exercise a TLS exchange end to end.",
+		},
 	})
 	certFile := fs.StringP("cert", "c", "", "PEM certificate file")
 	keyFile := fs.StringP("key", "k", "", "PEM private key file")

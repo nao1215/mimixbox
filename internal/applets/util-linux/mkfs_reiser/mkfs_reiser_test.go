@@ -32,3 +32,16 @@ func TestRequiresDevice(t *testing.T) {
 		t.Errorf("missing device should fail")
 	}
 }
+
+// TestHelpNotes asserts the --help output documents a Notes section.
+func TestHelpNotes(t *testing.T) {
+	t.Parallel()
+	out := &bytes.Buffer{}
+	io := command.IO{In: strings.NewReader(""), Out: out, Err: &bytes.Buffer{}}
+	if err := New().Run(context.Background(), io, []string{"--help"}); err != nil {
+		t.Fatalf("--help err = %v", err)
+	}
+	if !strings.Contains(out.String(), "Notes:") {
+		t.Errorf("--help missing Notes section: %q", out.String())
+	}
+}

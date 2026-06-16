@@ -81,3 +81,22 @@ func TestRunGatesAfterValidation(t *testing.T) {
 		t.Error("expected validation error for bad command")
 	}
 }
+
+// TestHelpNotes asserts every capability-gated netctl applet documents a Notes
+// section in --help (GitHub issues #712, #714, #716, #718, #719, #720).
+func TestHelpNotes(t *testing.T) {
+	t.Parallel()
+	for _, c := range []*Command{
+		NewBrctl(), NewIfenslave(), NewTunctl(),
+		NewVconfig(), NewZcip(), NewNbdClient(),
+	} {
+		out := &bytes.Buffer{}
+		io := command.IO{In: strings.NewReader(""), Out: out, Err: &bytes.Buffer{}}
+		if err := c.Run(context.Background(), io, []string{"--help"}); err != nil {
+			t.Fatalf("%s --help err = %v", c.Name(), err)
+		}
+		if !strings.Contains(out.String(), "Notes:") {
+			t.Errorf("%s --help missing Notes section: %q", c.Name(), out.String())
+		}
+	}
+}

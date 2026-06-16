@@ -54,6 +54,10 @@ func (c *Command) Run(ctx context.Context, stdio command.IO, args []string) erro
 			{Command: "acpid -f", Explain: "Run the ACPI event daemon in the foreground."},
 		},
 		ExitStatus: "0  the daemon stopped cleanly.\n1  -f was not given or the event source was unavailable.",
+		Notes: []string{
+			"Only foreground mode (-f) is supported; MimixBox does not daemonize or write a PID file.",
+			"Reading /proc/acpi/event requires a Linux host that still exposes the legacy ACPI event interface.",
+		},
 	})
 	foreground := fs.BoolP("foreground", "f", false, "run in the foreground (the only supported mode)")
 
