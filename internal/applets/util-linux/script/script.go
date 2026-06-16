@@ -158,6 +158,7 @@ func (c *Command) runReplay(_ context.Context, stdio command.IO, args []string) 
 		Examples: []command.Example{
 			{Command: "scriptreplay timing build.log", Explain: "Replay the recorded session."},
 		},
+		ExitStatus: "0  the session replayed successfully.\n1  the timing or typescript file could not be read.",
 	})
 	proceed, err := fs.Parse(stdio, args)
 	if err != nil || !proceed {
