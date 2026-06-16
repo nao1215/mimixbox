@@ -41,6 +41,24 @@ func TestValidateModuleName(t *testing.T) {
 	}
 }
 
+func TestValidateModuleNames(t *testing.T) {
+	t.Parallel()
+	if err := validateModuleNames([]string{"loop", "ext4", "jbd2"}); err != nil {
+		t.Errorf("all-valid batch should pass: %v", err)
+	}
+	if err := validateModuleNames(nil); err != nil {
+		t.Errorf("empty batch should pass: %v", err)
+	}
+	// The first invalid name decides the batch result.
+	err := validateModuleNames([]string{"loop", "bad/name", "ext4"})
+	if err == nil {
+		t.Fatal("batch with an invalid name should fail")
+	}
+	if !strings.Contains(err.Error(), "bad/name") {
+		t.Errorf("error should name the first offending entry: %v", err)
+	}
+}
+
 func TestInsmodValidatesThenGates(t *testing.T) {
 	dir := t.TempDir()
 	ko := writeKO(t, dir, "loop.ko", []byte("license=GPL\x00depends=\x00"))
