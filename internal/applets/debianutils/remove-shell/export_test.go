@@ -5,3 +5,9 @@ package removeShell
 func RemoveShellsForTest(path string, shells []string) error {
 	return removeShells(path, shells)
 }
+
+// ReadShellsForTest exposes the unexported readShells helper to the external
+// test package.
+func ReadShellsForTest(path string) ([]string, error) {
+	return readShells(path)
+}
