@@ -5,12 +5,11 @@ package pidof
 import (
 	"context"
 	"fmt"
-	"os"
-	"path/filepath"
 	"strconv"
 	"strings"
 
 	"github.com/nao1215/mimixbox/internal/command"
+	"github.com/nao1215/mimixbox/internal/proctable"
 )
 
 // Command is the pidof applet.
@@ -81,43 +80,24 @@ func (c *Command) Run(_ context.Context, stdio command.IO, args []string) error 
 
 // matchPIDs returns the PIDs whose process name matches any requested program,
 // in descending PID order (newest first), like pidof. With single, only the
-// first match is returned.
+// first match is returned. The actual matching is the shared proctable backend.
 func matchPIDs(procs []process, names []string, single bool) []int {
-	want := make(map[string]bool, len(names))
-	for _, n := range names {
-		want[filepath.Base(n)] = true
+	shared := make([]proctable.Process, len(procs))
+	for i, p := range procs {
+		shared[i] = proctable.Process{PID: p.pid, Name: p.name}
 	}
-	var pids []int
-	for _, p := range procs {
-		if want[p.name] {
-			pids = append(pids, p.pid)
-		}
-	}
-	// procFromProcfs already returns descending PIDs; honour single-shot.
-	if single && len(pids) > 1 {
-		pids = pids[:1]
-	}
-	return pids
+	return proctable.MatchNames(shared, names, single)
 }
 
-// procFromProcfs reads the running processes from /proc.
+// procFromProcfs reads the running processes from /proc via the shared backend.
 func procFromProcfs() ([]process, error) {
-	entries, err := os.ReadDir("/proc")
+	shared, err := proctable.List(proctable.DefaultProcDir)
 	if err != nil {
 		return nil, err
 	}
-	var procs []process
-	// Walk in reverse so the highest PID (newest) comes first.
-	for i := len(entries) - 1; i >= 0; i-- {
-		pid, err := strconv.Atoi(entries[i].Name())
-		if err != nil {
-			continue
-		}
-		data, err := os.ReadFile(filepath.Join("/proc", entries[i].Name(), "comm"))
-		if err != nil {
-			continue
-		}
-		procs = append(procs, process{pid: pid, name: strings.TrimSpace(string(data))})
+	procs := make([]process, len(shared))
+	for i, p := range shared {
+		procs[i] = process{pid: p.PID, name: p.Name}
 	}
 	return procs, nil
 }
