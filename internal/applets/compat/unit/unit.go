@@ -28,6 +28,9 @@ func (c *Command) Run(_ context.Context, stdio command.IO, args []string) error 
 	fs := command.NewFlagSet(c.Name(), "", stdio.Err).WithHelp(command.Help{
 		Description: "BusyBox's unit applet runs its internal libbb unit tests. MimixBox does not " +
 			"embed that suite, so this applet does nothing except point at MimixBox's own tests.",
+		Examples: []command.Example{
+			{Command: "unit", Explain: "Report that MimixBox ships no embedded unit-test suite and exit 2."},
+		},
 		Notes: []string{
 			"Run 'go test ./...' for unit tests and 'make test-e2e' for the ShellSpec suite.",
 		},
