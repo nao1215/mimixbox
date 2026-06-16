@@ -35,7 +35,16 @@ type options struct {
 
 // Run executes touch.
 func (c *Command) Run(_ context.Context, stdio command.IO, args []string) error {
-	fs := command.NewFlagSet(c.Name(), "[OPTION]... FILE...", stdio.Err)
+	fs := command.NewFlagSet(c.Name(), "[OPTION]... FILE...", stdio.Err).WithHelp(command.Help{
+		Description: "Update the access and modification times of each FILE to the current time. " +
+			"A FILE that does not exist is created empty, unless -c is given.",
+		Examples: []command.Example{
+			{Command: "touch report.txt", Explain: "Create report.txt if missing, else update its timestamps."},
+			{Command: "touch -c existing.log", Explain: "Update timestamps but never create the file."},
+			{Command: "touch -m notes.md", Explain: "Change only the modification time."},
+		},
+		ExitStatus: "0  all files were touched successfully.\n1  a file could not be created or its times could not be changed.",
+	})
 	noCreate := fs.BoolP("no-create", "c", false, "do not create any files")
 	accessOnly := fs.BoolP("access", "a", false, "change only the access time")
 	modifyOnly := fs.BoolP("modify", "m", false, "change only the modification time")

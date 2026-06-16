@@ -125,3 +125,16 @@ func TestRunRejectsNonDirectory(t *testing.T) {
 		t.Errorf("file must not be removed by rmdir, stat error = %v", statErr)
 	}
 }
+
+func TestHelpSections(t *testing.T) {
+	t.Parallel()
+	out, _, err := run(t, "--help")
+	if err != nil {
+		t.Fatalf("--help error = %v", err)
+	}
+	for _, want := range []string{"Usage: rmdir", "Examples:", "Exit status:"} {
+		if !strings.Contains(out, want) {
+			t.Errorf("--help missing %q\n%s", want, out)
+		}
+	}
+}

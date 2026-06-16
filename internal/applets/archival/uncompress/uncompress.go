@@ -33,7 +33,16 @@ type options struct {
 
 // Run executes uncompress.
 func (c *Command) Run(_ context.Context, stdio command.IO, args []string) error {
-	fs := command.NewFlagSet(c.Name(), "[OPTION]... [FILE]...", stdio.Err)
+	fs := command.NewFlagSet(c.Name(), "[OPTION]... [FILE]...", stdio.Err).WithHelp(command.Help{
+		Description: "Decompress each .Z FILE produced by the classic Unix compress (LZW), replacing FILE.Z with FILE. " +
+			"With no FILE, or with -, read standard input and write to standard output.",
+		Examples: []command.Example{
+			{Command: "uncompress archive.Z", Explain: "Decompress archive.Z to archive and remove the .Z file."},
+			{Command: "uncompress -c archive.Z", Explain: "Write the decompressed data to standard output."},
+			{Command: "uncompress -k data.Z", Explain: "Decompress but keep the original .Z file."},
+		},
+		ExitStatus: "0  all files were decompressed successfully.\n1  a file was missing, had a bad stream, or could not be written.",
+	})
 	stdout := fs.BoolP("stdout", "c", false, "write on standard output, keep original files unchanged")
 	keep := fs.BoolP("keep", "k", false, "keep (don't delete) input files")
 	force := fs.BoolP("force", "f", false, "force overwrite of output file")

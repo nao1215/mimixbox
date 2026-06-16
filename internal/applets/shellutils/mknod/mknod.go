@@ -27,7 +27,14 @@ func (c *Command) Synopsis() string { return "Make block or character special fi
 
 // Run executes mknod.
 func (c *Command) Run(_ context.Context, stdio command.IO, args []string) error {
-	fs := command.NewFlagSet(c.Name(), "[OPTION]... NAME TYPE [MAJOR MINOR]", stdio.Err)
+	fs := command.NewFlagSet(c.Name(), "[OPTION]... NAME TYPE [MAJOR MINOR]", stdio.Err).WithHelp(command.Help{
+		Description: "Create the special file NAME of the given TYPE: p for a FIFO, b for a block special file, or c (or u) for a character special file. Block and character devices require MAJOR and MINOR device numbers and privileges; a FIFO can be created by any user.",
+		Examples: []command.Example{
+			{Command: "mknod mypipe p", Explain: "Create a FIFO named 'mypipe'."},
+			{Command: "mknod /dev/loop0 b 7 0", Explain: "Create a block device with major 7, minor 0."},
+		},
+		ExitStatus: "0  the special file was created.\n1  the operands were invalid or the file could not be created.",
+	})
 	modeStr := fs.StringP("mode", "m", "666", "set file permission bits to MODE, not a=rw - umask")
 
 	proceed, err := fs.Parse(stdio, args)

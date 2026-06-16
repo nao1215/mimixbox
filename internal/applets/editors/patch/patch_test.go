@@ -206,4 +206,10 @@ func TestHelp(t *testing.T) {
 	if !strings.Contains(out, "Usage: patch") {
 		t.Errorf("help = %q", out)
 	}
+	if !strings.Contains(out, "Examples:") {
+		t.Errorf("--help missing Examples section:\n%s", out)
+	}
+	if !strings.Contains(out, "Exit status:") {
+		t.Errorf("--help missing Exit status section:\n%s", out)
+	}
 }

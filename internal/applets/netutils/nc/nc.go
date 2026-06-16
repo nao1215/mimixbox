@@ -30,7 +30,14 @@ func (c *Command) Synopsis() string { return "Read and write data across network
 
 // Run executes nc.
 func (c *Command) Run(_ context.Context, stdio command.IO, args []string) error {
-	fs := command.NewFlagSet(c.Name(), "[-u] [-l] [-p PORT] [HOST] [PORT]", stdio.Err)
+	fs := command.NewFlagSet(c.Name(), "[-u] [-l] [-p PORT] [HOST] [PORT]", stdio.Err).WithHelp(command.Help{
+		Description: "Read and write data across a TCP (default) or UDP (-u) network connection. By default nc connects to HOST and PORT and shuttles data between the connection and the standard streams; with -l it listens for a single incoming connection instead.",
+		Examples: []command.Example{
+			{Command: "nc example.com 80", Explain: "Open a TCP connection to example.com on port 80."},
+			{Command: "nc -l -p 8080", Explain: "Listen on TCP port 8080 for one incoming connection."},
+		},
+		ExitStatus: "0  the connection completed normally.\n1  the connection could not be established or failed.",
+	})
 	listen := fs.BoolP("listen", "l", false, "listen for an incoming connection")
 	udp := fs.BoolP("udp", "u", false, "use UDP instead of TCP")
 	port := fs.StringP("port", "p", "", "listen on (or source from) this port")

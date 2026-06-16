@@ -32,7 +32,14 @@ type options struct {
 
 // Run executes ln.
 func (c *Command) Run(_ context.Context, stdio command.IO, args []string) error {
-	fs := command.NewFlagSet(c.Name(), "[OPTION]... TARGET [LINK_NAME]", stdio.Err)
+	fs := command.NewFlagSet(c.Name(), "[OPTION]... TARGET [LINK_NAME]", stdio.Err).WithHelp(command.Help{
+		Description: "Create a link named LINK_NAME to TARGET. By default a hard link is made; with -s a symbolic link is made instead. With a single TARGET the link is created in the current directory; with several TARGETs the last operand must be a directory and a link to each is created there.",
+		Examples: []command.Example{
+			{Command: "ln -s /usr/bin/python3 python", Explain: "Create a symbolic link 'python' pointing to /usr/bin/python3."},
+			{Command: "ln -f foo bar", Explain: "Hard-link foo to bar, removing an existing bar first."},
+		},
+		ExitStatus: "0  every link was created.\n1  a link could not be created.",
+	})
 	symbolic := fs.BoolP("symbolic", "s", false, "make symbolic links instead of hard links")
 	force := fs.BoolP("force", "f", false, "remove existing destination files")
 	verbose := fs.BoolP("verbose", "v", false, "print name of each linked file")

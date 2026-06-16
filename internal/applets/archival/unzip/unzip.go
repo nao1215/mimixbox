@@ -34,7 +34,16 @@ type options struct {
 
 // Run executes unzip.
 func (c *Command) Run(_ context.Context, stdio command.IO, args []string) error {
-	fs := command.NewFlagSet(c.Name(), "[OPTION]... ARCHIVE", stdio.Err)
+	fs := command.NewFlagSet(c.Name(), "[OPTION]... ARCHIVE", stdio.Err).WithHelp(command.Help{
+		Description: "List or extract the contents of a ZIP ARCHIVE. By default every entry is extracted into the " +
+			"current directory; -l lists entries instead, and -d chooses a destination directory.",
+		Examples: []command.Example{
+			{Command: "unzip files.zip", Explain: "Extract every entry into the current directory."},
+			{Command: "unzip -l files.zip", Explain: "List the archive contents without extracting."},
+			{Command: "unzip -d out files.zip", Explain: "Extract the archive into the out directory."},
+		},
+		ExitStatus: "0  the archive was listed or extracted successfully.\n1  the archive was missing, malformed, or could not be extracted.",
+	})
 	list := fs.BoolP("list", "l", false, "list archive contents without extracting")
 	dir := fs.StringP("dir", "d", "", "extract files into this directory")
 	verbose := fs.BoolP("verbose", "v", false, "print each file as it is extracted")

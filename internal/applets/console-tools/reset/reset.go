@@ -34,7 +34,16 @@ func (c *Command) Synopsis() string { return "Reset terminal" }
 // Run executes reset: it writes the terminal-reset escape sequence to
 // stdio.Out.
 func (c *Command) Run(_ context.Context, stdio command.IO, args []string) error {
-	fs := command.NewFlagSet(c.Name(), "[OPTION]", stdio.Err)
+	fs := command.NewFlagSet(c.Name(), "[OPTION]", stdio.Err).WithHelp(command.Help{
+		Description: "Reset the terminal to its initial state by writing the standard reset escape " +
+			"sequence: it restores the default character set and display attributes, clears the " +
+			"screen, and makes the cursor visible again. Use it to recover a terminal left in a " +
+			"confused state, for example after a program emits raw binary data.",
+		Examples: []command.Example{
+			{Command: "reset", Explain: "Reset the terminal to a sane, usable state."},
+		},
+		ExitStatus: "0  the reset sequence was written successfully.",
+	})
 
 	proceed, err := fs.Parse(stdio, args)
 	if err != nil || !proceed {

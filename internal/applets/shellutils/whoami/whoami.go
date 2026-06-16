@@ -25,7 +25,14 @@ func (c *Command) Synopsis() string { return "Print login user name" }
 // Run executes whoami. GNU whoami takes no operands, so any extra operand is an
 // error. On success it prints the effective user name followed by a newline.
 func (c *Command) Run(_ context.Context, stdio command.IO, args []string) error {
-	fs := command.NewFlagSet(c.Name(), "[OPTION]", stdio.Err)
+	fs := command.NewFlagSet(c.Name(), "[OPTION]", stdio.Err).WithHelp(command.Help{
+		Description: "Print the user name associated with the current effective user ID, followed by a " +
+			"newline. This command takes no operands.",
+		Examples: []command.Example{
+			{Command: "whoami", Explain: "Print the current effective user name."},
+		},
+		ExitStatus: "0  the user name was printed.\n1  an extra operand was given or the user could not be determined.",
+	})
 
 	proceed, err := fs.Parse(stdio, args)
 	if err != nil || !proceed {

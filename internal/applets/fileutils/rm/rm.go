@@ -34,7 +34,19 @@ type options struct {
 
 // Run executes rm.
 func (c *Command) Run(_ context.Context, stdio command.IO, args []string) error {
-	fs := command.NewFlagSet(c.Name(), "[OPTION]... FILE...", stdio.Err)
+	fs := command.NewFlagSet(c.Name(), "[OPTION]... FILE...", stdio.Err).WithHelp(command.Help{
+		Description: "Remove each FILE. By default rm does not remove directories; use -r (or -R) to " +
+			"remove a directory and its contents recursively, or -d to remove an empty directory. " +
+			"With -f nonexistent operands are ignored and no prompt is shown, while -i prompts " +
+			"before every removal.",
+		Examples: []command.Example{
+			{Command: "rm file.txt", Explain: "Remove a single file."},
+			{Command: "rm -r dir", Explain: "Remove a directory and everything under it."},
+			{Command: "rm -f *.tmp", Explain: "Remove matching files, ignoring any that do not exist."},
+			{Command: "rm -i note.txt", Explain: "Prompt for confirmation before removing note.txt."},
+		},
+		ExitStatus: "0  all operands were removed (or ignored with -f).\n1  a file could not be removed or no operand was given.",
+	})
 	recursive := fs.BoolP("recursive", "r", false, "remove directories and their contents recursively")
 	// -R is an alias for -r in GNU rm.
 	recursiveUpper := fs.BoolP("Recursive", "R", false, "equivalent to -r")

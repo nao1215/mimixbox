@@ -26,7 +26,15 @@ func (c *Command) Synopsis() string { return "Output a string repeatedly until k
 // stream reports an error (for example a closed pipe), so it terminates the way
 // the system yes does when its reader goes away.
 func (c *Command) Run(ctx context.Context, stdio command.IO, args []string) error {
-	fs := command.NewFlagSet(c.Name(), "[STRING]...", stdio.Err)
+	fs := command.NewFlagSet(c.Name(), "[STRING]...", stdio.Err).WithHelp(command.Help{
+		Description: "Repeatedly print a line until killed, writing \"y\" by default or the STRING " +
+			"operands joined by spaces. Useful for feeding an affirmative answer to an interactive program.",
+		Examples: []command.Example{
+			{Command: "yes", Explain: "Print \"y\" repeatedly until interrupted."},
+			{Command: "yes no", Explain: "Print \"no\" repeatedly until interrupted."},
+		},
+		ExitStatus: "0  output ended normally (the reader closed the pipe).\n1  an error occurred.",
+	})
 
 	proceed, err := fs.Parse(stdio, args)
 	if err != nil || !proceed {

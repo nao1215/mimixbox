@@ -25,7 +25,14 @@ func (c *Command) Synopsis() string { return "See if a directory is a mountpoint
 
 // Run executes mountpoint.
 func (c *Command) Run(_ context.Context, stdio command.IO, args []string) error {
-	fs := command.NewFlagSet(c.Name(), "[OPTION]... DIRECTORY", stdio.Err)
+	fs := command.NewFlagSet(c.Name(), "[OPTION]... DIRECTORY", stdio.Err).WithHelp(command.Help{
+		Description: "Report whether DIRECTORY is the mount point of a file system. The exit status reflects the answer, so the command is useful in shell tests; with -q it prints nothing and only sets the exit code.",
+		Examples: []command.Example{
+			{Command: "mountpoint /mnt", Explain: "Print whether /mnt is a mountpoint."},
+			{Command: "mountpoint -q /mnt && echo mounted", Explain: "Run a command only when /mnt is a mountpoint."},
+		},
+		ExitStatus: "0  DIRECTORY is a mountpoint.\n1  DIRECTORY is not a mountpoint, or an error occurred.",
+	})
 	quiet := fs.BoolP("quiet", "q", false, "be quiet, only set the exit code")
 
 	proceed, err := fs.Parse(stdio, args)

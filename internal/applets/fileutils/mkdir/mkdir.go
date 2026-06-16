@@ -25,7 +25,14 @@ func (c *Command) Synopsis() string { return "Make directories" }
 
 // Run executes mkdir.
 func (c *Command) Run(_ context.Context, stdio command.IO, args []string) error {
-	fs := command.NewFlagSet(c.Name(), "[OPTION]... DIRECTORY...", stdio.Err)
+	fs := command.NewFlagSet(c.Name(), "[OPTION]... DIRECTORY...", stdio.Err).WithHelp(command.Help{
+		Description: "Create each named DIRECTORY if it does not already exist. With -p, create any missing parent directories and do not error when a directory already exists.",
+		Examples: []command.Example{
+			{Command: "mkdir -p a/b/c", Explain: "Create a/b/c, making parents as needed."},
+			{Command: "mkdir -m 700 secret", Explain: "Create 'secret' with mode 0700."},
+		},
+		ExitStatus: "0  every directory was created.\n1  a directory could not be created.",
+	})
 	parents := fs.BoolP("parents", "p", false, "no error if existing, make parent directories as needed")
 	verbose := fs.BoolP("verbose", "v", false, "print a message for each created directory")
 	mode := fs.StringP("mode", "m", "", "set file mode (as in chmod), not a=rwx - umask")

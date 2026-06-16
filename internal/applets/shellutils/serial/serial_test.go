@@ -164,3 +164,16 @@ func TestRunEmptyDir(t *testing.T) {
 		t.Fatal("expected error for empty directory")
 	}
 }
+
+func TestHelpSections(t *testing.T) {
+	t.Parallel()
+	out, _, err := run(t, "--help")
+	if err != nil {
+		t.Fatalf("--help error = %v", err)
+	}
+	for _, want := range []string{"Usage: serial", "Examples:", "Exit status:"} {
+		if !strings.Contains(out, want) {
+			t.Errorf("--help missing %q\n%s", want, out)
+		}
+	}
+}

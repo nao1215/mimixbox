@@ -43,7 +43,16 @@ func (c *Command) Synopsis() string { return c.synopsis }
 // with none it digests standard input as "-". The -c/--check flag switches to
 // verifying the digest list(s) named by the operands.
 func (c *Command) Run(_ context.Context, stdio command.IO, args []string) error {
-	fs := command.NewFlagSet(c.Name(), "[OPTION]... [FILE]...", stdio.Err)
+	fs := command.NewFlagSet(c.Name(), "[OPTION]... [FILE]...", stdio.Err).WithHelp(command.Help{
+		Description: "Print or check " + c.Name() + " message digests. With FILE operands, print " +
+			"\"<digest>  <name>\" for each; with none, digest standard input. With -c, read digest " +
+			"lists from the FILEs and verify them.",
+		Examples: []command.Example{
+			{Command: c.Name() + " file.txt", Explain: "Print the digest of file.txt."},
+			{Command: c.Name() + " -c sums.txt", Explain: "Check files against the digests in sums.txt."},
+		},
+		ExitStatus: "0  success; in -c mode every file matched.\n1  a file could not be read or a digest did not match.",
+	})
 	check := fs.BoolP("check", "c", false, "read checksums from the FILEs and check them")
 	// -b/--binary and -t/--text are accepted for GNU compatibility. The output
 	// of a Go hash is identical for both modes, so they have no observable

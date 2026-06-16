@@ -27,8 +27,10 @@ func TestRunHelp(t *testing.T) {
 	if code != command.ExitSuccess {
 		t.Errorf("exit code = %d, want 0", code)
 	}
-	if !strings.Contains(out.String(), "Usage: true") {
-		t.Errorf("help out = %q", out.String())
+	for _, want := range []string{"Usage: true", "Examples:", "Exit status:"} {
+		if !strings.Contains(out.String(), want) {
+			t.Errorf("help missing %q: %q", want, out.String())
+		}
 	}
 }
 

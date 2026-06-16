@@ -36,7 +36,14 @@ func (c *Command) Synopsis() string {
 
 // Run executes zip-pwcrack.
 func (c *Command) Run(_ context.Context, stdio command.IO, args []string) error {
-	fs := command.NewFlagSet(c.Name(), "ARCHIVE -w WORDLIST", stdio.Err)
+	fs := command.NewFlagSet(c.Name(), "ARCHIVE -w WORDLIST", stdio.Err).WithHelp(command.Help{
+		Description: "Recover the password of a ZipCrypto (traditional PKWARE) encrypted ARCHIVE by " +
+			"trying each word in WORDLIST, for authorized recovery and testing only.",
+		Examples: []command.Example{
+			{Command: "zip-pwcrack secret.zip -w words.txt", Explain: "Try each word in words.txt against secret.zip."},
+		},
+		ExitStatus: "0  the password was found and printed.\n1  the password was not in the wordlist, or an error occurred.",
+	})
 	wordlist := fs.StringP("wordlist", "w", "", "file of candidate passwords, one per line")
 
 	proceed, err := fs.Parse(stdio, args)

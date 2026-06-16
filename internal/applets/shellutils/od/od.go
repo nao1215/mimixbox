@@ -30,7 +30,16 @@ func (c *Command) Synopsis() string { return "Dump files in octal and other form
 
 // Run executes od.
 func (c *Command) Run(_ context.Context, stdio command.IO, args []string) error {
-	fs := command.NewFlagSet(c.Name(), "[OPTION]... [FILE]...", stdio.Err)
+	fs := command.NewFlagSet(c.Name(), "[OPTION]... [FILE]...", stdio.Err).WithHelp(command.Help{
+		Description: "Write an unambiguous representation, octal bytes by default, of each FILE " +
+			"to standard output. With no FILE, or when FILE is -, read standard input.",
+		Examples: []command.Example{
+			{Command: "od file.bin", Explain: "Dump file.bin as 2-byte octal words."},
+			{Command: "od -A x -t x1 file.bin", Explain: "Show hexadecimal offsets and bytes."},
+			{Command: "od -c file.txt", Explain: "Display bytes as named or escaped characters."},
+		},
+		ExitStatus: "0  success.\n1  a file could not be opened or read.",
+	})
 	addr := fs.StringP("address-radix", "A", "o", "decide how file offsets are printed (o, x, d, n)")
 	typ := fs.StringP("format", "t", "", "select output format")
 	b := fs.BoolP("octal-bytes", "b", false, "same as -t o1")

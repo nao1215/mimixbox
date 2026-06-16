@@ -1,7 +1,7 @@
 # shellcheck shell=sh
 # Issue #477: dedicated shell-level contract spec for the "netcat" applet.
-# netcat is an alias for the `nc` applet, so --help prints nc's usage;
-# dedicated spec per #477.
+# netcat is an alias for the `nc` applet, but it renders its own netcat-named
+# structured --help so the usage and example lines match the invoked command.
 #
 # Every MimixBox applet's --help is rendered by internal/command's
 # FlagSet.WriteUsage, so it exits 0, prints a "Usage: <cmd>" line, and writes
@@ -12,7 +12,7 @@ Describe 'netcat'
   It 'describes itself with --help'
     When run command netcat --help
     The status should be success
-    The output should include 'Usage: nc'
+    The output should include 'Usage: netcat'
     The stderr should equal ''
   End
 End

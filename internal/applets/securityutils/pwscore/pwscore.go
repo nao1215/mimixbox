@@ -28,7 +28,16 @@ func (c *Command) Synopsis() string { return "Estimate the strength of a passwor
 
 // Run executes pwscore.
 func (c *Command) Run(_ context.Context, stdio command.IO, args []string) error {
-	fs := command.NewFlagSet(c.Name(), "[PASSWORD]", stdio.Err)
+	fs := command.NewFlagSet(c.Name(), "[PASSWORD]", stdio.Err).WithHelp(command.Help{
+		Description: "Estimate the strength of a password on a scale of 0 to 100 and explain the reasoning, " +
+			"based on length, character-class diversity, and a common-password check. The password is " +
+			"given as an operand or read from standard input.",
+		Examples: []command.Example{
+			{Command: "pwscore 'Tr0ub4dor&3'", Explain: "Score the given password and print the reasoning."},
+			{Command: "echo 'password' | pwscore", Explain: "Read the password to score from stdin."},
+		},
+		ExitStatus: "0  a score was produced.\n1  no password was provided or input failed.",
+	})
 
 	proceed, err := fs.Parse(stdio, args)
 	if err != nil || !proceed {

@@ -22,6 +22,14 @@ func (c *Command) Synopsis() string { return "Do nothing. Return success(0)" }
 // Run always succeeds. Like GNU true it ignores its operands, except that a
 // leading --help or --version is honored.
 func (c *Command) Run(_ context.Context, stdio command.IO, args []string) error {
-	command.HandleHelpVersion(stdio, c.Name(), "[IGNORED]...", args)
+	command.HandleHelpVersionWith(stdio, c.Name(), "[IGNORED]...", command.Help{
+		Description: "Do nothing and exit successfully. All operands are ignored; true exists so that " +
+			"shell scripts have a command that always succeeds.",
+		Examples: []command.Example{
+			{Command: "true && echo ok", Explain: "Print ok, because true always succeeds."},
+			{Command: "while true; do :; done", Explain: "Loop forever (true never fails)."},
+		},
+		ExitStatus: "0  always.",
+	}, args)
 	return nil
 }

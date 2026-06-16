@@ -25,7 +25,17 @@ func (c *Command) Synopsis() string { return "Reverse the order of characters in
 
 // Run executes rev.
 func (c *Command) Run(_ context.Context, stdio command.IO, args []string) error {
-	fs := command.NewFlagSet(c.Name(), "[OPTION]... [FILE]...", stdio.Err)
+	fs := command.NewFlagSet(c.Name(), "[OPTION]... [FILE]...", stdio.Err).WithHelp(command.Help{
+		Description: "Copy each FILE to standard output, reversing the order of the characters in " +
+			"every line. With no FILE, or when FILE is '-', read from standard input. Reversal is " +
+			"performed on Unicode runes, so multi-byte UTF-8 characters are preserved rather than " +
+			"split.",
+		Examples: []command.Example{
+			{Command: "rev file.txt", Explain: "Reverse the characters of every line in file.txt."},
+			{Command: "echo hello | rev", Explain: "Print 'olleh'."},
+		},
+		ExitStatus: "0  all input was reversed successfully.\n1  a file could not be read.",
+	})
 
 	proceed, err := fs.Parse(stdio, args)
 	if err != nil || !proceed {

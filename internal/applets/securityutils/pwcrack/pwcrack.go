@@ -43,7 +43,17 @@ type target struct {
 
 // Run executes pwcrack.
 func (c *Command) Run(_ context.Context, stdio command.IO, args []string) error {
-	fs := command.NewFlagSet(c.Name(), "-w WORDLIST [HASH | --shadow FILE]", stdio.Err)
+	fs := command.NewFlagSet(c.Name(), "-w WORDLIST [HASH | --shadow FILE]", stdio.Err).WithHelp(command.Help{
+		Description: "Audit crypt(3) password hashes against a wordlist. The hash is given as an operand, " +
+			"read from a passwd/shadow-format file with --shadow, or read from standard input. " +
+			"Use only on systems you are authorized to test.",
+		Examples: []command.Example{
+			{Command: "pwcrack -w words.txt '$6$salt$hash'", Explain: "Crack a single hash using words.txt."},
+			{Command: "pwcrack -w words.txt --shadow /etc/shadow", Explain: "Crack every entry of a shadow file."},
+			{Command: "echo '$1$salt$hash' | pwcrack -w words.txt", Explain: "Read the hash to crack from stdin."},
+		},
+		ExitStatus: "0  at least one hash was cracked.\n1  no hash was cracked, or an error occurred.",
+	})
 	wordlist := fs.StringP("wordlist", "w", "", "file of candidate passwords, one per line")
 	shadow := fs.StringP("shadow", "s", "", "crack every entry of a passwd/shadow-format file")
 

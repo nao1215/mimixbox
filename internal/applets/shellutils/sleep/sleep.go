@@ -27,7 +27,17 @@ func (c *Command) Synopsis() string { return "Pause for NUMBER seconds(minutes, 
 // sleeps for the sum of all operands, and the sleep is canceled if ctx is
 // done.
 func (c *Command) Run(ctx context.Context, stdio command.IO, args []string) error {
-	fs := command.NewFlagSet(c.Name(), "NUMBER[smhd]...", stdio.Err)
+	fs := command.NewFlagSet(c.Name(), "NUMBER[smhd]...", stdio.Err).WithHelp(command.Help{
+		Description: "Pause for the amount of time given by the operands. Each NUMBER may have a suffix: " +
+			"s for seconds (the default), m for minutes, h for hours, or d for days. The total time " +
+			"slept is the sum of all operands.",
+		Examples: []command.Example{
+			{Command: "sleep 5", Explain: "Pause for five seconds."},
+			{Command: "sleep 1m", Explain: "Pause for one minute."},
+			{Command: "sleep 1h 30m", Explain: "Pause for one hour and thirty minutes."},
+		},
+		ExitStatus: "0  success.\n1  an error occurred (e.g. an operand was missing or could not be parsed).",
+	})
 
 	proceed, err := fs.Parse(stdio, args)
 	if err != nil || !proceed {

@@ -26,7 +26,16 @@ func (c *Command) Synopsis() string { return "Overwrite a file to hide its conte
 
 // Run executes shred.
 func (c *Command) Run(_ context.Context, stdio command.IO, args []string) error {
-	fs := command.NewFlagSet(c.Name(), "[OPTION]... FILE...", stdio.Err)
+	fs := command.NewFlagSet(c.Name(), "[OPTION]... FILE...", stdio.Err).WithHelp(command.Help{
+		Description: "Overwrite the specified FILE(s) repeatedly with random data to make it harder " +
+			"to recover their contents, and optionally remove them afterwards.",
+		Examples: []command.Example{
+			{Command: "shred secret.txt", Explain: "Overwrite secret.txt three times in place."},
+			{Command: "shred -u -n 5 secret.txt", Explain: "Overwrite five times, then remove the file."},
+			{Command: "shred -z secret.txt", Explain: "Overwrite, then add a final pass of zeros."},
+		},
+		ExitStatus: "0  success.\n1  an error occurred (e.g. a file could not be opened or written).",
+	})
 	iterations := fs.IntP("iterations", "n", 3, "overwrite N times instead of the default 3")
 	zero := fs.BoolP("zero", "z", false, "add a final overwrite with zeros to hide shredding")
 	remove := fs.BoolP("remove", "u", false, "truncate and remove the file after overwriting")

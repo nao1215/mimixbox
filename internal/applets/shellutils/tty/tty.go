@@ -32,7 +32,15 @@ var isTerminal = term.IsTerminal
 
 // Run executes tty.
 func (c *Command) Run(_ context.Context, stdio command.IO, args []string) error {
-	fs := command.NewFlagSet(c.Name(), "[OPTION]...", stdio.Err)
+	fs := command.NewFlagSet(c.Name(), "[OPTION]...", stdio.Err).WithHelp(command.Help{
+		Description: "Print the file name of the terminal connected to standard input. " +
+			"With -s, print nothing and report the result through the exit status only.",
+		Examples: []command.Example{
+			{Command: "tty", Explain: "Print the terminal device, e.g. /dev/pts/0."},
+			{Command: "tty -s", Explain: "Silently test whether standard input is a terminal."},
+		},
+		ExitStatus: "0  standard input is a terminal.\n1  standard input is not a terminal.\n2  a usage error occurred.",
+	})
 	silent := fs.BoolP("silent", "s", false, "print nothing, only return an exit status")
 
 	proceed, err := fs.Parse(stdio, args)

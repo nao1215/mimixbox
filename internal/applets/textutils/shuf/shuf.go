@@ -28,7 +28,16 @@ func (c *Command) Synopsis() string { return "Generate a random permutation of i
 
 // Run executes shuf.
 func (c *Command) Run(_ context.Context, stdio command.IO, args []string) error {
-	fs := command.NewFlagSet(c.Name(), "[OPTION]... [FILE]", stdio.Err)
+	fs := command.NewFlagSet(c.Name(), "[OPTION]... [FILE]", stdio.Err).WithHelp(command.Help{
+		Description: "Write a random permutation of the input lines to standard output. With no FILE, " +
+			"or when FILE is -, read standard input.",
+		Examples: []command.Example{
+			{Command: "shuf file.txt", Explain: "Print the lines of file.txt in random order."},
+			{Command: "shuf -n 1 file.txt", Explain: "Pick one random line from file.txt."},
+			{Command: "shuf -i 1-100", Explain: "Print the numbers 1 through 100 in random order."},
+		},
+		ExitStatus: "0  success.\n1  an error occurred (e.g. the input could not be read or an argument was invalid).",
+	})
 	echo := fs.BoolP("echo", "e", false, "treat each ARG as an input line")
 	inputRange := fs.StringP("input-range", "i", "", "treat each number LO through HI as an input line")
 	count := fs.IntP("head-count", "n", -1, "output at most COUNT lines")

@@ -35,7 +35,15 @@ var lookPath = exec.LookPath
 
 // Run executes posixer.
 func (c *Command) Run(_ context.Context, stdio command.IO, args []string) error {
-	fs := command.NewFlagSet(c.Name(), "[check]", stdio.Err)
+	fs := command.NewFlagSet(c.Name(), "[check]", stdio.Err).WithHelp(command.Help{
+		Description: "Report whether the POSIX-defined utilities are installed on the system, printing a " +
+			"table of each utility's name, type, installation status, and path.",
+		Examples: []command.Example{
+			{Command: "posixer", Explain: "List every checked POSIX utility and its status."},
+			{Command: "posixer check", Explain: "Same as running posixer with no argument."},
+		},
+		ExitStatus: "0  the report was produced successfully.\n1  an unknown subcommand was given or output failed.",
+	})
 
 	proceed, err := fs.Parse(stdio, args)
 	if err != nil || !proceed {

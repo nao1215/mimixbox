@@ -30,7 +30,21 @@ func (c *Command) Synopsis() string { return "Evaluate a conditional expression"
 // is the exit status only: nil for true (0), ExitError{Code: 1} for false, and
 // ExitError{Code: 2} for a malformed expression (whose message the runner prints
 // as "test: <message>").
-func (c *Command) Run(_ context.Context, _ command.IO, args []string) error {
+func (c *Command) Run(_ context.Context, stdio command.IO, args []string) error {
+	// Like GNU test, honor --help/--version only when it is the sole argument so
+	// that `test --help = x` still evaluates a string comparison.
+	if len(args) == 1 && command.HandleHelpVersionWith(stdio, c.Name(), "EXPRESSION", command.Help{
+		Description: "Evaluate a conditional EXPRESSION and exit with its truth value. Supports the " +
+			"usual file tests (-e, -f, -d, ...), string tests (-z, -n, =, !=), integer comparisons " +
+			"(-eq, -ne, -lt, ...), and the !/-a/-o operators.",
+		Examples: []command.Example{
+			{Command: "test -f /etc/hosts", Explain: "Succeed when /etc/hosts exists and is a regular file."},
+			{Command: `test "$x" = y`, Explain: "Succeed when $x equals y."},
+		},
+		ExitStatus: "0  the expression is true.\n1  the expression is false.\n2  the expression is malformed.",
+	}, args) {
+		return nil
+	}
 	ok, err := eval(args)
 	if err != nil {
 		return &command.ExitError{Code: 2, Err: err}

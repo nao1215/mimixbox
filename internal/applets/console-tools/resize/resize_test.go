@@ -112,8 +112,10 @@ func TestRunHelp(t *testing.T) {
 	if err != nil {
 		t.Fatalf("Run --help error = %v", err)
 	}
-	if !strings.Contains(out, "Usage: resize") {
-		t.Errorf("help = %q, want usage line", out)
+	for _, want := range []string{"Usage: resize", "Examples:", "Exit status:"} {
+		if !strings.Contains(out, want) {
+			t.Errorf("help missing %q\n%s", want, out)
+		}
 	}
 }
 

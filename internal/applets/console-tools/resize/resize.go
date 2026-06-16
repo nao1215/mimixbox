@@ -51,7 +51,18 @@ var winsize = func() (rows, cols uint16, err error) {
 
 // Run executes resize.
 func (c *Command) Run(_ context.Context, stdio command.IO, args []string) error {
-	fs := command.NewFlagSet(c.Name(), "[OPTION]", stdio.Err)
+	fs := command.NewFlagSet(c.Name(), "[OPTION]", stdio.Err).WithHelp(command.Help{
+		Description: "Query the controlling terminal's size and print shell commands that set the " +
+			"COLUMNS and LINES environment variables, like the xterm 'resize' utility. By default " +
+			"Bourne-shell (sh/ksh/bash) syntax is written; -c selects C-shell (csh/tcsh) syntax. " +
+			"Evaluate the output (eval `resize`) to update the current shell after the window has " +
+			"changed size.",
+		Examples: []command.Example{
+			{Command: "eval `resize`", Explain: "Update COLUMNS and LINES in the current Bourne shell."},
+			{Command: "resize -c", Explain: "Write the assignments in C-shell syntax."},
+		},
+		ExitStatus: "0  the terminal size was determined and printed.\n1  the terminal size could not be determined.",
+	})
 	sh := fs.BoolP("sh", "u", false, "write Bourne-shell (sh/ksh/bash) commands (default)")
 	csh := fs.BoolP("csh", "c", false, "write C-shell (csh/tcsh) commands")
 

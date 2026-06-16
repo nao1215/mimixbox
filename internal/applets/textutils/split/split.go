@@ -28,7 +28,15 @@ func (c *Command) Synopsis() string { return "Split a file into pieces" }
 
 // Run executes split.
 func (c *Command) Run(_ context.Context, stdio command.IO, args []string) error {
-	fs := command.NewFlagSet(c.Name(), "[OPTION]... [INPUT [PREFIX]]", stdio.Err)
+	fs := command.NewFlagSet(c.Name(), "[OPTION]... [INPUT [PREFIX]]", stdio.Err).WithHelp(command.Help{
+		Description: "Split INPUT into fixed-size output files named PREFIXaa, PREFIXab, and so on " +
+			"(PREFIX defaults to x). With no INPUT, or when INPUT is -, read standard input.",
+		Examples: []command.Example{
+			{Command: "split -l 100 big.txt part_", Explain: "Split big.txt into files of 100 lines each, named part_aa, part_ab, ..."},
+			{Command: "split -b 1M data.bin", Explain: "Split data.bin into 1 MiB pieces named xaa, xab, ..."},
+		},
+		ExitStatus: "0  success.\n1  an error occurred (e.g. the input could not be read or an option was invalid).",
+	})
 	lines := fs.IntP("lines", "l", 1000, "put NUMBER lines per output file")
 	byteSpec := fs.StringP("bytes", "b", "", "put SIZE bytes per output file (suffixes K, M allowed)")
 

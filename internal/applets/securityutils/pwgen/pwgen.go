@@ -36,7 +36,16 @@ const (
 
 // Run executes pwgen.
 func (c *Command) Run(_ context.Context, stdio command.IO, args []string) error {
-	fs := command.NewFlagSet(c.Name(), "[OPTION]...", stdio.Err)
+	fs := command.NewFlagSet(c.Name(), "[OPTION]...", stdio.Err).WithHelp(command.Help{
+		Description: "Generate cryptographically random passwords for authorized testing and " +
+			"password-strength auditing, printing one password per line.",
+		Examples: []command.Example{
+			{Command: "pwgen", Explain: "Generate one 16-character password."},
+			{Command: "pwgen -l 24 -n 5", Explain: "Generate five 24-character passwords."},
+			{Command: "pwgen -s -o out.txt", Explain: "Include symbols and write the result to out.txt."},
+		},
+		ExitStatus: "0  the passwords were generated.\n1  an invalid option value was given or output failed.",
+	})
 	length := fs.IntP("length", "l", 16, "length of each password")
 	count := fs.IntP("number", "n", 1, "how many passwords to generate")
 	withSymbols := fs.BoolP("symbols", "s", false, "include symbol characters")

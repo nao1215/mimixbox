@@ -51,7 +51,16 @@ func (s selection) orDefault() selection {
 
 // Run executes wc.
 func (c *Command) Run(_ context.Context, stdio command.IO, args []string) error {
-	fs := command.NewFlagSet(c.Name(), "[OPTION]... [FILE]...", stdio.Err)
+	fs := command.NewFlagSet(c.Name(), "[OPTION]... [FILE]...", stdio.Err).WithHelp(command.Help{
+		Description: "Print newline, word, and byte counts for each FILE, and a total line when more than " +
+			"one FILE is given. With no FILE, or when FILE is -, read standard input.",
+		Examples: []command.Example{
+			{Command: "wc -l file.txt", Explain: "Count the lines in file.txt."},
+			{Command: "wc -w file.txt", Explain: "Count the words in file.txt."},
+			{Command: "wc file1 file2", Explain: "Count lines, words, and bytes with a total line."},
+		},
+		ExitStatus: "0  all counts were printed.\n1  a file could not be read.",
+	})
 	lines := fs.BoolP("lines", "l", false, "print the newline counts")
 	words := fs.BoolP("words", "w", false, "print the word counts")
 	chars := fs.BoolP("chars", "m", false, "print the character counts")

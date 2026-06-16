@@ -159,3 +159,17 @@ func TestInvalidKillAfter(t *testing.T) {
 		t.Errorf("err = %v", err)
 	}
 }
+
+func TestHelpSections(t *testing.T) {
+	t.Parallel()
+	out := &bytes.Buffer{}
+	io := command.IO{In: strings.NewReader(""), Out: out, Err: &bytes.Buffer{}}
+	if err := New().Run(context.Background(), io, []string{"--help"}); err != nil {
+		t.Fatalf("Run --help error = %v", err)
+	}
+	for _, want := range []string{"Examples:", "Exit status:"} {
+		if !strings.Contains(out.String(), want) {
+			t.Errorf("--help missing %q section:\n%s", want, out.String())
+		}
+	}
+}

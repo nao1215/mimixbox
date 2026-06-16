@@ -61,7 +61,15 @@ var runEngine = func(name string, args []string) error {
 
 // Run executes speaker.
 func (c *Command) Run(_ context.Context, stdio command.IO, args []string) error {
-	fs := command.NewFlagSet(c.Name(), "[OPTION]... TEXT...", stdio.Err)
+	fs := command.NewFlagSet(c.Name(), "[OPTION]... TEXT...", stdio.Err).WithHelp(command.Help{
+		Description: "Speak the given TEXT aloud using an available text-to-speech engine " +
+			"(spd-say, espeak, or say). The TEXT operands are joined with spaces.",
+		Examples: []command.Example{
+			{Command: "speaker Hello world", Explain: "Speak the phrase \"Hello world\"."},
+			{Command: "speaker -l en Good morning", Explain: "Speak using the English voice."},
+		},
+		ExitStatus: "0  success.\n1  an error occurred (e.g. no text was given or no engine was found).",
+	})
 	lang := fs.StringP("language", "l", "", "language/voice to use (engine-specific)")
 
 	proceed, err := fs.Parse(stdio, args)

@@ -25,7 +25,15 @@ func (c *Command) Synopsis() string { return "Print printable character sequence
 
 // Run executes strings.
 func (c *Command) Run(_ context.Context, stdio command.IO, args []string) error {
-	fs := command.NewFlagSet(c.Name(), "[OPTION]... [FILE]...", stdio.Err)
+	fs := command.NewFlagSet(c.Name(), "[OPTION]... [FILE]...", stdio.Err).WithHelp(command.Help{
+		Description: "Print the printable character sequences of at least a minimum length (4 by default) " +
+			"found in each FILE. With no FILE, or when FILE is -, read standard input.",
+		Examples: []command.Example{
+			{Command: "strings program.bin", Explain: "Print the printable strings found in program.bin."},
+			{Command: "strings -n 8 program.bin", Explain: "Print only strings of at least eight characters."},
+		},
+		ExitStatus: "0  success.\n1  an error occurred (e.g. a file could not be read or -n was invalid).",
+	})
 	minLen := fs.IntP("bytes", "n", 4, "print sequences of at least N printable characters")
 
 	proceed, err := fs.Parse(stdio, args)

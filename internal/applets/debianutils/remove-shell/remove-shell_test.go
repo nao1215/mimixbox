@@ -2,13 +2,30 @@ package removeShell_test
 
 import (
 	"bufio"
+	"bytes"
+	"context"
 	"os"
 	"path/filepath"
 	"strings"
 	"testing"
 
 	removeShell "github.com/nao1215/mimixbox/internal/applets/debianutils/remove-shell"
+	"github.com/nao1215/mimixbox/internal/command"
 )
+
+func TestHelpSections(t *testing.T) {
+	t.Parallel()
+	out := &bytes.Buffer{}
+	io := command.IO{In: strings.NewReader(""), Out: out, Err: &bytes.Buffer{}}
+	if err := removeShell.New().Run(context.Background(), io, []string{"--help"}); err != nil {
+		t.Fatalf("--help error = %v", err)
+	}
+	for _, want := range []string{"Usage: remove-shell", "Examples:", "Exit status:"} {
+		if !strings.Contains(out.String(), want) {
+			t.Errorf("--help missing %q\n%s", want, out.String())
+		}
+	}
+}
 
 func TestNew(t *testing.T) {
 	t.Parallel()

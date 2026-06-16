@@ -42,7 +42,16 @@ const (
 
 // Run executes ping.
 func (c *Command) Run(_ context.Context, stdio command.IO, args []string) error {
-	fs := command.NewFlagSet(c.Name(), "[OPTION]... HOST", stdio.Err)
+	fs := command.NewFlagSet(c.Name(), "[OPTION]... HOST", stdio.Err).WithHelp(command.Help{
+		Description: "Send ICMP ECHO_REQUEST packets to HOST and report the round-trip times. " +
+			"A raw socket is required, so this command needs CAP_NET_RAW or root privileges.",
+		Examples: []command.Example{
+			{Command: "ping example.com", Explain: "Send the default four echo requests to example.com."},
+			{Command: "ping -c 10 192.0.2.1", Explain: "Send ten packets to 192.0.2.1."},
+			{Command: "ping -i 0.5 -W 2 example.com", Explain: "Wait 0.5s between packets and 2s per reply."},
+		},
+		ExitStatus: "0  at least one reply was received.\n1  no reply was received, or an error occurred.",
+	})
 	count := fs.IntP("count", "c", 4, "stop after sending COUNT packets")
 	interval := fs.Float64P("interval", "i", 1.0, "seconds to wait between packets")
 	timeout := fs.Float64P("timeout", "W", 1.0, "seconds to wait for each reply")

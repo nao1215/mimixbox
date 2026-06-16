@@ -31,6 +31,18 @@ func (c *Command) Synopsis() string { return "Format and print data" }
 // fewer arguments than are supplied, the format is reused until the arguments
 // are exhausted, matching GNU printf.
 func (c *Command) Run(_ context.Context, stdio command.IO, args []string) error {
+	if command.HandleHelpVersionWith(stdio, c.Name(), "FORMAT [ARGUMENT]...", command.Help{
+		Description: "Write the ARGUMENTs under the control of FORMAT, interpreting backslash escapes " +
+			"(\\n, \\t, ...) and %-conversions (%s, %d, %x, ...). The FORMAT is reused until every " +
+			"ARGUMENT is consumed.",
+		Examples: []command.Example{
+			{Command: `printf '%s\n' hello`, Explain: "Print hello followed by a newline."},
+			{Command: `printf '%s=%d\n' x 1 y 2`, Explain: "Reuse the format for each pair of arguments."},
+		},
+		ExitStatus: "0  success.\n1  a write error or an invalid format directive.",
+	}, args) {
+		return nil
+	}
 	if len(args) == 0 {
 		_, _ = fmt.Fprintln(stdio.Err, "printf: missing operand")
 		return command.SilentFailure()

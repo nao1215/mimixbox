@@ -61,7 +61,14 @@ func TrainFrame(offset int) string {
 
 // Run executes sl.
 func (c *Command) Run(ctx context.Context, stdio command.IO, args []string) error {
-	fs := command.NewFlagSet(c.Name(), "[OPTION]", stdio.Err)
+	fs := command.NewFlagSet(c.Name(), "[OPTION]", stdio.Err).WithHelp(command.Help{
+		Description: "Display an animated steam locomotive that runs across the terminal. It is a playful " +
+			"reminder for when sl is typed by mistake instead of ls.",
+		Examples: []command.Example{
+			{Command: "sl", Explain: "Run the steam locomotive animation across the terminal."},
+		},
+		ExitStatus: "0  success.\n1  an error occurred.",
+	})
 
 	proceed, err := fs.Parse(stdio, args)
 	if err != nil || !proceed {

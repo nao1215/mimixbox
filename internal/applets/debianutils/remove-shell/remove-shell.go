@@ -46,7 +46,16 @@ func (c *Command) Synopsis() string { return "Remove shell name from /etc/shells
 
 // Run executes remove-shell.
 func (c *Command) Run(_ context.Context, stdio command.IO, args []string) error {
-	fs := command.NewFlagSet(c.Name(), "SHELLNAME...", stdio.Err)
+	fs := command.NewFlagSet(c.Name(), "SHELLNAME...", stdio.Err).WithHelp(command.Help{
+		Description: "Remove each named SHELLNAME from the list of login shells in /etc/shells, " +
+			"rewriting the file with the remaining entries in their original order. Names that " +
+			"are not present are silently ignored.",
+		Examples: []command.Example{
+			{Command: "remove-shell /bin/zsh", Explain: "Remove /bin/zsh from /etc/shells."},
+			{Command: "remove-shell /bin/ksh /bin/tcsh", Explain: "Remove several shells at once."},
+		},
+		ExitStatus: "0  the named shells were removed (or were already absent).\n1  /etc/shells could not be rewritten or no shell name was given.",
+	})
 
 	proceed, err := fs.Parse(stdio, args)
 	if err != nil || !proceed {

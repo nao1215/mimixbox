@@ -36,7 +36,17 @@ const (
 
 // Run executes timeout.
 func (c *Command) Run(_ context.Context, stdio command.IO, args []string) error {
-	fs := command.NewFlagSet(c.Name(), "[OPTION] DURATION COMMAND [ARG]...", stdio.Err)
+	fs := command.NewFlagSet(c.Name(), "[OPTION] DURATION COMMAND [ARG]...", stdio.Err).WithHelp(command.Help{
+		Description: "Run COMMAND and terminate it if it is still running after DURATION. DURATION is a " +
+			"number with an optional suffix: s for seconds (the default), m for minutes, h for hours, " +
+			"or d for days.",
+		Examples: []command.Example{
+			{Command: "timeout 10 sleep 30", Explain: "Run \"sleep 30\" but kill it after ten seconds."},
+			{Command: "timeout -s KILL 5 ./worker", Explain: "Send SIGKILL instead of SIGTERM after five seconds."},
+		},
+		ExitStatus: "0    success.\n124  COMMAND timed out and was terminated.\n" +
+			"126  COMMAND was found but could not be run.\n127  COMMAND was not found.",
+	})
 	// Stop parsing options at the first operand (the DURATION) so flags meant
 	// for the wrapped command are passed through untouched.
 	fs.SetInterspersed(false)
