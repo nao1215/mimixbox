@@ -10,6 +10,7 @@ import (
 	"io"
 	"os"
 	"path/filepath"
+	"strconv"
 	"strings"
 
 	"github.com/nao1215/mimixbox/internal/command"
@@ -43,6 +44,22 @@ const (
 	derefCmdline
 )
 
+// backupMode selects how --backup names the backup of an overwritten
+// destination, mirroring GNU cp's CONTROL values.
+type backupMode int
+
+const (
+	// backupNone makes no backup (CONTROL none/off, or --backup absent).
+	backupNone backupMode = iota
+	// backupSimple appends the simple suffix (CONTROL simple/never), e.g. file~.
+	backupSimple
+	// backupNumbered makes numbered backups (CONTROL numbered/t), e.g. file.~1~.
+	backupNumbered
+	// backupExisting makes numbered backups if any already exist, else simple
+	// (CONTROL existing/nil).
+	backupExisting
+)
+
 type options struct {
 	recursive   bool
 	force       bool
@@ -50,7 +67,19 @@ type options struct {
 	interactive bool
 	preserve    bool
 	noClobber   bool
+	update      bool
 	deref       derefMode
+
+	// noTargetDir is -T: never treat the destination as a directory.
+	noTargetDir bool
+	// parents is --parents: recreate each source's full path prefix under the
+	// destination directory.
+	parents bool
+
+	// backup selects the backup naming scheme for an overwritten destination.
+	backup backupMode
+	// suffix is the simple-backup suffix (default "~").
+	suffix string
 }
 
 // Run executes cp.
@@ -64,6 +93,10 @@ func (c *Command) Run(_ context.Context, stdio command.IO, args []string) error 
 			{Command: "cp -r src/ dst/", Explain: "Copy a directory tree."},
 			{Command: "cp -a src/ dst/", Explain: "Copy recursively, preserving mode and timestamps (= -rp)."},
 			{Command: "cp -i a.txt dir/", Explain: "Prompt before overwriting dir/a.txt."},
+			{Command: "cp -t dir/ a.txt b.txt", Explain: "Copy each source into dir/ (destination-first)."},
+			{Command: "cp --parents src/a/b.txt dst/", Explain: "Recreate the prefix as dst/src/a/b.txt."},
+			{Command: "cp -u a.txt dir/", Explain: "Copy only if a.txt is newer than dir/a.txt."},
+			{Command: "cp --backup a.txt dir/", Explain: "Back up an existing dir/a.txt before overwriting."},
 		},
 		ExitStatus: "0  all files were copied successfully.\n1  one or more files could not be copied.",
 		Notes: []string{
@@ -90,10 +123,25 @@ func (c *Command) Run(_ context.Context, stdio command.IO, args []string) error 
 	_ = fs.MarkHidden("dereference-cmdline")
 	noDerefPreserve := fs.BoolP("no-deref-preserve-links", "d", false, "same as --no-dereference")
 	_ = fs.MarkHidden("no-deref-preserve-links")
+	update := fs.BoolP("update", "u", false, "copy only when the SOURCE file is newer than the destination file or when the destination file is missing")
+	targetDir := fs.StringP("target-directory", "t", "", "copy all SOURCE arguments into DIRECTORY")
+	noTargetDir := fs.BoolP("no-target-directory", "T", false, "treat DEST as a normal file")
+	parents := fs.Bool("parents", false, "use full source file name under DIRECTORY")
+	// --backup takes an optional CONTROL word; with no value (bare --backup) the
+	// default is "existing". pflag's NoOptDefVal makes "--backup" alone valid.
+	backup := fs.String("backup", "", "make a backup of each existing destination file (CONTROL: none, numbered, existing, simple)")
+	fs.Lookup("backup").NoOptDefVal = "existing"
+	suffix := fs.StringP("suffix", "S", "", "override the usual backup suffix")
 
 	proceed, err := fs.Parse(stdio, args)
 	if err != nil || !proceed {
 		return err
+	}
+
+	backupMode, err := resolveBackup(*backup)
+	if err != nil {
+		_, _ = fmt.Fprintf(stdio.Err, "cp: %s\n", err)
+		return command.SilentFailure()
 	}
 
 	opts := options{
@@ -103,10 +151,33 @@ func (c *Command) Run(_ context.Context, stdio command.IO, args []string) error 
 		interactive: *interactive,
 		preserve:    *preserve || *archive,
 		noClobber:   *noClobber,
+		update:      *update,
 		deref:       resolveDeref(*deref, *noDeref || *noDerefPreserve, *followCmdline, *archive),
+		noTargetDir: *noTargetDir,
+		parents:     *parents,
+		backup:      backupMode,
+		suffix:      resolveSuffix(*suffix),
+	}
+
+	if *noTargetDir && *targetDir != "" {
+		_, _ = fmt.Fprintf(stdio.Err, "cp: cannot combine --target-directory (-t) and --no-target-directory (-T)\n")
+		return command.SilentFailure()
 	}
 
 	operands := fs.Args()
+
+	// -t DIR: every operand is a SOURCE copied into DIR. Rearrange the operands
+	// into the internal "SOURCE... DEST" shape by appending DIR as the final
+	// destination, then proceed through the normal path.
+	if *targetDir != "" {
+		if len(operands) == 0 {
+			_, _ = fmt.Fprintf(stdio.Err, "cp: missing file operand\n")
+			return command.SilentFailure()
+		}
+		operands = append(operands, *targetDir)
+		return cp(stdio, operands, opts)
+	}
+
 	if len(operands) == 0 {
 		_, _ = fmt.Fprintf(stdio.Err, "cp: missing file operand\n")
 		return command.SilentFailure()
@@ -125,9 +196,25 @@ func cp(stdio command.IO, operands []string, opts options) error {
 	dest := os.ExpandEnv(operands[len(operands)-1])
 	sources := operands[:len(operands)-1]
 
+	// -T (--no-target-directory): the destination is always a normal file, never
+	// a directory, so it accepts exactly one source and must not already be a
+	// directory (GNU refuses to overwrite a directory with a non-directory).
+	if opts.noTargetDir {
+		if len(sources) > 1 {
+			_, _ = fmt.Fprintf(stdio.Err, "cp: extra operand '%s'\n", sources[1])
+			return command.SilentFailure()
+		}
+		if di, err := os.Stat(dest); err == nil && di.IsDir() {
+			_, _ = fmt.Fprintf(stdio.Err, "cp: cannot overwrite directory '%s' with non-directory\n", dest)
+			return command.SilentFailure()
+		}
+	}
+
 	// With more than one source, GNU cp requires the destination to be an
 	// existing directory; otherwise each source would overwrite the last.
-	if len(sources) > 1 {
+	// --parents always copies into the destination directory, so it has the same
+	// requirement even with a single source.
+	if len(sources) > 1 || opts.parents {
 		if di, err := os.Stat(dest); err != nil || !di.IsDir() {
 			_, _ = fmt.Fprintf(stdio.Err, "cp: target '%s' is not a directory\n", dest)
 			return command.SilentFailure()
@@ -168,13 +255,28 @@ func cp(stdio command.IO, operands []string, opts options) error {
 			return command.SilentFailure()
 		}
 
+		// --parents: recreate src's full directory prefix under the destination
+		// directory, so "cp --parents a/b/c.txt dst" creates dst/a/b/c.txt. The
+		// effective destination becomes dst/<dir(src)>, created up front.
+		effectiveDest := dest
+		if opts.parents {
+			prefix := filepath.Dir(src)
+			if prefix != "." && prefix != string(os.PathSeparator) {
+				effectiveDest = filepath.Join(dest, prefix)
+				if err := os.MkdirAll(effectiveDest, 0o755); err != nil {
+					_, _ = fmt.Fprintf(stdio.Err, "cp: %s\n", err)
+					return command.SilentFailure()
+				}
+			}
+		}
+
 		if info.IsDir() {
-			if err := cpDir(stdio, src, dest, opts); err != nil {
+			if err := cpDir(stdio, src, effectiveDest, opts); err != nil {
 				_, _ = fmt.Fprintf(stdio.Err, "cp: %s\n", err)
 				return command.SilentFailure()
 			}
 		} else {
-			if err := cpFile(stdio, src, dest, info, opts); err != nil {
+			if err := cpFile(stdio, src, effectiveDest, info, opts); err != nil {
 				_, _ = fmt.Fprintf(stdio.Err, "cp: %s\n", err)
 				return command.SilentFailure()
 			}
@@ -187,8 +289,12 @@ func cp(stdio command.IO, operands []string, opts options) error {
 // directory, the file keeps its base name inside it.
 func cpFile(stdio command.IO, src, dest string, info os.FileInfo, opts options) error {
 	target := dest
-	if di, err := os.Stat(dest); err == nil && di.IsDir() {
-		target = filepath.Join(dest, filepath.Base(src))
+	// -T forces the destination to be a normal file; otherwise an existing
+	// directory means the file keeps its base name inside it.
+	if !opts.noTargetDir {
+		if di, err := os.Stat(dest); err == nil && di.IsDir() {
+			target = filepath.Join(dest, filepath.Base(src))
+		}
 	}
 
 	// The early src-vs-dest check cannot see this: when dest is a directory the
@@ -205,12 +311,24 @@ func cpFile(stdio command.IO, src, dest string, info os.FileInfo, opts options) 
 		}
 	}
 
+	// -u: copy only when src is newer than an existing destination.
+	if opts.update {
+		if di, err := os.Stat(target); err == nil && !info.ModTime().After(di.ModTime()) {
+			return nil // destination is at least as new; skip
+		}
+	}
+
 	if opts.interactive {
 		if _, err := os.Stat(target); err == nil {
 			if !question(stdio, fmt.Sprintf("cp: overwrite '%s'? ", target)) {
 				return nil // skip this file
 			}
 		}
+	}
+
+	// --backup: before overwriting an existing destination, move it aside.
+	if err := makeBackup(target, opts); err != nil {
+		return err
 	}
 
 	if err := copyFileContents(src, target, info, opts); err != nil {
@@ -376,6 +494,89 @@ func resolveDeref(deref, noDeref, followCmdline, archive bool) derefMode {
 		return derefNever // -a implies -d
 	default:
 		return derefDefault
+	}
+}
+
+// resolveBackup maps a --backup CONTROL word to a backupMode. An empty string
+// means --backup was not given (no backup). GNU also honors VERSION_CONTROL but
+// the explicit flag value takes precedence here.
+func resolveBackup(control string) (backupMode, error) {
+	switch control {
+	case "":
+		return backupNone, nil
+	case "none", "off":
+		return backupNone, nil
+	case "numbered", "t":
+		return backupNumbered, nil
+	case "existing", "nil":
+		return backupExisting, nil
+	case "simple", "never":
+		return backupSimple, nil
+	default:
+		return backupNone, fmt.Errorf("invalid argument '%s' for '--backup'", control)
+	}
+}
+
+// resolveSuffix returns the simple-backup suffix: the explicit --suffix value,
+// then $SIMPLE_BACKUP_SUFFIX, then the default "~".
+func resolveSuffix(suffix string) string {
+	if suffix != "" {
+		return suffix
+	}
+	if env := os.Getenv("SIMPLE_BACKUP_SUFFIX"); env != "" {
+		return env
+	}
+	return "~"
+}
+
+// makeBackup moves an existing target aside before it is overwritten, following
+// the selected backup scheme. It is a no-op when --backup was not requested or
+// the target does not exist.
+func makeBackup(target string, opts options) error {
+	if opts.backup == backupNone {
+		return nil
+	}
+	if _, err := os.Lstat(target); err != nil {
+		return nil // nothing to back up
+	}
+
+	mode := opts.backup
+	if mode == backupExisting {
+		// Numbered if any numbered backup already exists, else simple.
+		if numberedBackupsExist(target) {
+			mode = backupNumbered
+		} else {
+			mode = backupSimple
+		}
+	}
+
+	var backupPath string
+	switch mode {
+	case backupNumbered:
+		backupPath = nextNumberedBackup(target)
+	default: // backupSimple
+		backupPath = target + opts.suffix
+	}
+	return os.Rename(target, backupPath)
+}
+
+// numberedBackupsExist reports whether any file named "<target>.~N~" exists.
+func numberedBackupsExist(target string) bool {
+	for n := 1; ; n++ {
+		p := fmt.Sprintf("%s.~%d~", target, n)
+		if _, err := os.Lstat(p); err != nil {
+			return n > 1
+		}
+	}
+}
+
+// nextNumberedBackup returns the first unused "<target>.~N~" name.
+func nextNumberedBackup(target string) string {
+	for n := 1; ; n++ {
+		p := target + ".~" + strconv.Itoa(n) + "~"
+		if _, err := os.Lstat(p); err != nil {
+			return p
+		}
 	}
 }
 

@@ -1,6 +1,8 @@
 // Package ls implements the ls applet: list directory contents. It covers the
 // everyday desktop subset - plain, -1, -a, -A, -d, -l, -F, -h, -R - with stable
-// name sorting and deterministic error reporting.
+// name sorting and deterministic error reporting, plus the GNU presentation
+// flags --color, --file-type/--indicator-style, --sort/--time/--group-
+// directories-first, --hide/--ignore, and --inode/--block-size/--kibibytes.
 package ls
 
 import (
@@ -9,6 +11,7 @@ import (
 	"io"
 	"os"
 	"os/user"
+	"path"
 	"path/filepath"
 	"sort"
 	"strconv"
@@ -17,6 +20,7 @@ import (
 	"time"
 
 	"github.com/nao1215/mimixbox/internal/command"
+	"golang.org/x/term"
 )
 
 // Command is the ls applet.
@@ -31,14 +35,65 @@ func (c *Command) Name() string { return "ls" }
 // Synopsis returns the one-line description shown in the applet list.
 func (c *Command) Synopsis() string { return "List directory contents" }
 
+// indicatorStyle selects which trailing suffix is appended to entry names.
+type indicatorStyle int
+
+const (
+	indicatorNone     indicatorStyle = iota // no suffix
+	indicatorSlash                          // directories only, "/"
+	indicatorFileType                       // like classify but no "*" for executables
+	indicatorClassify                       // full set: / * @ | =
+)
+
+// sortKey selects the comparison used to order entries.
+type sortKey int
+
+const (
+	sortName      sortKey = iota // default: lexicographic name
+	sortNone                     // -U / --sort=none: directory order
+	sortSize                     // --sort=size
+	sortTime                     // --sort=time
+	sortVersion                  // --sort=version
+	sortExtension                // --sort=extension
+)
+
+// timeField selects which timestamp --sort=time (and -l) considers.
+type timeField int
+
+const (
+	timeMtime timeField = iota
+	timeAtime
+	timeCtime
+)
+
+// GNU-style default ANSI colors (LS_COLORS-like minimal set).
+const (
+	colorDir     = "\x1b[01;34m" // bold blue
+	colorExec    = "\x1b[01;32m" // bold green
+	colorSymlink = "\x1b[01;36m" // bold cyan
+	colorReset   = "\x1b[0m"
+)
+
 type options struct {
 	all       bool // -a: include . and ..
 	almostAll bool // -A: include dotfiles but not . and ..
 	long      bool // -l
 	dirSelf   bool // -d
-	classify  bool // -F
 	human     bool // -h
 	recursive bool // -R
+	inode     bool // -i: print inode number
+
+	indicator indicatorStyle // -F / --file-type / --indicator-style
+	color     bool           // resolved color decision (after auto)
+
+	sortBy    sortKey
+	timeBy    timeField
+	groupDirs bool // --group-directories-first
+
+	hide   string // --hide=PATTERN
+	ignore string // --ignore=PATTERN
+
+	blockSize int64 // bytes per block for -l sizes (0 == raw bytes)
 }
 
 // Run executes ls.
@@ -48,6 +103,7 @@ func (c *Command) Run(_ context.Context, stdio command.IO, args []string) error 
 		Examples: []command.Example{
 			{Command: "ls -la", Explain: "Long format, including dotfiles."},
 			{Command: "ls -R dir", Explain: "List dir and its subdirectories recursively."},
+			{Command: "ls --color=always --sort=size", Explain: "Colorized output, largest first."},
 		},
 		ExitStatus: "0  success.\n2  a FILE could not be accessed.",
 	})
@@ -58,14 +114,74 @@ func (c *Command) Run(_ context.Context, stdio command.IO, args []string) error 
 	classify := fs.BoolP("classify", "F", false, "append an indicator (one of */=@|) to entries")
 	human := fs.BoolP("human-readable", "h", false, "with -l, print sizes like 1K 234M")
 	recursive := fs.BoolP("recursive", "R", false, "list subdirectories recursively")
+	inode := fs.BoolP("inode", "i", false, "print the index number of each file")
 	_ = fs.BoolP("one-per-line", "1", false, "list one file per line (the default for non-terminals)")
-	_ = fs.String("color", "never", "colorize the output; only 'never' is supported")
+
+	// #722 color.
+	color := fs.String("color", "never", "colorize the output; WHEN is 'always', 'auto', or 'never'")
+	fs.Lookup("color").NoOptDefVal = "always" // bare --color == --color=always
+
+	// #723 indicator styles.
+	fileType := fs.Bool("file-type", false, "append indicators (/=@|) but not '*' for executables")
+	indicatorStyleFlag := fs.String("indicator-style", "", "append indicator STYLE: none, slash, file-type, classify")
+
+	// #724 sorting.
+	sortFlag := fs.String("sort", "name", "sort by WORD: none, size, time, version, extension")
+	timeFlag := fs.String("time", "mtime", "with --sort=time, use atime, mtime, or ctime")
+	groupDirs := fs.Bool("group-directories-first", false, "list directories before files")
+	noneSort := fs.BoolP("none-sort", "U", false, "do not sort; list entries in directory order")
+
+	// #725 hide/ignore.
+	hide := fs.String("hide", "", "do not list entries matching shell PATTERN (overridden by -a/-A)")
+	ignore := fs.String("ignore", "", "do not list entries matching shell PATTERN")
+
+	// #726 inode / block size.
+	blockSize := fs.String("block-size", "", "with -l, scale sizes by SIZE (e.g. K, M, 1024)")
+	kibibytes := fs.BoolP("kibibytes", "k", false, "with -l, use 1024-byte blocks for sizes")
 
 	proceed, err := fs.Parse(stdio, args)
 	if err != nil || !proceed {
 		return err
 	}
-	opts := options{all: *all, almostAll: *almost, long: *long, dirSelf: *dirSelf, classify: *classify, human: *human, recursive: *recursive}
+
+	opts := options{
+		all:       *all,
+		almostAll: *almost,
+		long:      *long,
+		dirSelf:   *dirSelf,
+		human:     *human,
+		recursive: *recursive,
+		inode:     *inode,
+		groupDirs: *groupDirs,
+		hide:      *hide,
+		ignore:    *ignore,
+	}
+
+	opts.indicator = resolveIndicator(*classify, *fileType, *indicatorStyleFlag)
+
+	cm, err := parseColorMode(*color)
+	if err != nil {
+		_, _ = fmt.Fprintf(stdio.Err, "ls: %s\n", err)
+		return &command.ExitError{Code: 2}
+	}
+	opts.color = resolveColor(cm, stdio.Out)
+
+	opts.sortBy, err = parseSort(*sortFlag, *noneSort)
+	if err != nil {
+		_, _ = fmt.Fprintf(stdio.Err, "ls: %s\n", err)
+		return &command.ExitError{Code: 2}
+	}
+	opts.timeBy, err = parseTime(*timeFlag)
+	if err != nil {
+		_, _ = fmt.Fprintf(stdio.Err, "ls: %s\n", err)
+		return &command.ExitError{Code: 2}
+	}
+
+	opts.blockSize, err = resolveBlockSize(*blockSize, *kibibytes)
+	if err != nil {
+		_, _ = fmt.Fprintf(stdio.Err, "ls: %s\n", err)
+		return &command.ExitError{Code: 2}
+	}
 
 	operands := fs.Args()
 	if len(operands) == 0 {
@@ -90,6 +206,7 @@ func (c *Command) Run(_ context.Context, stdio command.IO, args []string) error 
 	}
 
 	if len(files) > 0 {
+		c.sortNames(files, "", opts)
 		c.listNames(stdio.Out, "", files, opts)
 		if len(dirs) > 0 {
 			_, _ = fmt.Fprintln(stdio.Out)
@@ -115,6 +232,164 @@ func (c *Command) Run(_ context.Context, stdio command.IO, args []string) error 
 	return nil
 }
 
+// resolveIndicator collapses -F, --file-type, and --indicator-style into one
+// indicator style. An explicit --indicator-style wins; otherwise --file-type
+// implies file-type and -F implies classify.
+func resolveIndicator(classify, fileType bool, style string) indicatorStyle {
+	switch strings.ToLower(strings.TrimSpace(style)) {
+	case "none":
+		return indicatorNone
+	case "slash":
+		return indicatorSlash
+	case "file-type":
+		return indicatorFileType
+	case "classify":
+		return indicatorClassify
+	}
+	if fileType {
+		return indicatorFileType
+	}
+	if classify {
+		return indicatorClassify
+	}
+	return indicatorNone
+}
+
+// parseColorMode validates the --color WHEN argument.
+func parseColorMode(when string) (string, error) {
+	switch strings.ToLower(strings.TrimSpace(when)) {
+	case "", "always", "yes", "force":
+		if when == "" {
+			return "never", nil
+		}
+		return "always", nil
+	case "auto", "tty", "if-tty":
+		return "auto", nil
+	case "never", "no", "none":
+		return "never", nil
+	default:
+		return "", fmt.Errorf("invalid argument '%s' for '--color'", when)
+	}
+}
+
+// resolveColor turns a color mode into a concrete on/off decision. "auto"
+// colors only when out is a terminal.
+func resolveColor(mode string, out io.Writer) bool {
+	switch mode {
+	case "always":
+		return true
+	case "auto":
+		if f, ok := out.(*os.File); ok {
+			return term.IsTerminal(int(f.Fd()))
+		}
+		return false
+	default:
+		return false
+	}
+}
+
+// parseSort maps --sort/-U to a sort key.
+func parseSort(word string, none bool) (sortKey, error) {
+	if none {
+		return sortNone, nil
+	}
+	switch strings.ToLower(strings.TrimSpace(word)) {
+	case "", "name":
+		return sortName, nil
+	case "none":
+		return sortNone, nil
+	case "size":
+		return sortSize, nil
+	case "time":
+		return sortTime, nil
+	case "version":
+		return sortVersion, nil
+	case "extension":
+		return sortExtension, nil
+	default:
+		return sortName, fmt.Errorf("invalid argument '%s' for '--sort'", word)
+	}
+}
+
+// parseTime maps --time to a timestamp field.
+func parseTime(word string) (timeField, error) {
+	switch strings.ToLower(strings.TrimSpace(word)) {
+	case "", "mtime", "modification", "mod":
+		return timeMtime, nil
+	case "atime", "access", "use":
+		return timeAtime, nil
+	case "ctime", "status":
+		return timeCtime, nil
+	default:
+		return timeMtime, fmt.Errorf("invalid argument '%s' for '--time'", word)
+	}
+}
+
+// resolveBlockSize converts -k / --block-size into a byte count per block. A
+// zero result means "report raw bytes" (the default).
+func resolveBlockSize(spec string, kibibytes bool) (int64, error) {
+	spec = strings.TrimSpace(spec)
+	if spec == "" {
+		if kibibytes {
+			return 1024, nil
+		}
+		return 0, nil
+	}
+	n, err := parseSize(spec)
+	if err != nil {
+		return 0, fmt.Errorf("invalid --block-size argument '%s'", spec)
+	}
+	return n, nil
+}
+
+// parseSize parses a size like "1024", "K", "1M", "512" into a byte count.
+// A bare suffix (e.g. "K") means one unit (1024 bytes).
+func parseSize(spec string) (int64, error) {
+	spec = strings.TrimSpace(spec)
+	if spec == "" {
+		return 0, fmt.Errorf("empty size")
+	}
+	// Split leading digits from a trailing unit suffix.
+	i := 0
+	for i < len(spec) && spec[i] >= '0' && spec[i] <= '9' {
+		i++
+	}
+	numPart := spec[:i]
+	unitPart := strings.ToUpper(spec[i:])
+
+	var base int64
+	switch unitPart {
+	case "":
+		base = 1
+	case "K", "KIB":
+		base = 1024
+	case "M", "MIB":
+		base = 1024 * 1024
+	case "G", "GIB":
+		base = 1024 * 1024 * 1024
+	case "KB":
+		base = 1000
+	case "MB":
+		base = 1000 * 1000
+	case "GB":
+		base = 1000 * 1000 * 1000
+	default:
+		return 0, fmt.Errorf("unknown unit %q", unitPart)
+	}
+
+	if numPart == "" {
+		return base, nil
+	}
+	n, err := strconv.ParseInt(numPart, 10, 64)
+	if err != nil {
+		return 0, err
+	}
+	if n <= 0 {
+		return 0, fmt.Errorf("non-positive size")
+	}
+	return n * base, nil
+}
+
 // listDir lists one directory's entries, recursing when -R is set.
 func (c *Command) listDir(out, errw io.Writer, dir string, opts options) error {
 	entries, err := os.ReadDir(dir)
@@ -128,13 +403,17 @@ func (c *Command) listDir(out, errw io.Writer, dir string, opts options) error {
 		names = append(names, ".", "..")
 	}
 	for _, e := range entries {
-		if !opts.all && !opts.almostAll && strings.HasPrefix(e.Name(), ".") {
+		name := e.Name()
+		if !opts.all && !opts.almostAll && strings.HasPrefix(name, ".") {
 			continue
 		}
-		names = append(names, e.Name())
+		if filtered(name, opts) {
+			continue
+		}
+		names = append(names, name)
 	}
-	sort.Strings(names)
 
+	c.sortNames(names, dir, opts)
 	c.listNames(out, dir, names, opts)
 
 	if opts.recursive {
@@ -159,11 +438,81 @@ func (c *Command) listDir(out, errw io.Writer, dir string, opts options) error {
 	return nil
 }
 
+// filtered reports whether name should be omitted by --ignore/--hide. --ignore
+// always applies; --hide is suppressed when -a/-A is given (GNU precedence).
+func filtered(name string, opts options) bool {
+	if opts.ignore != "" {
+		if ok, _ := path.Match(opts.ignore, name); ok {
+			return true
+		}
+	}
+	if opts.hide != "" && !opts.all && !opts.almostAll {
+		if ok, _ := path.Match(opts.hide, name); ok {
+			return true
+		}
+	}
+	return false
+}
+
+// sortNames orders names in place according to the active sort key. "." and
+// ".." always sort first to match GNU's name ordering; --group-directories-
+// first hoists directories ahead of files within the chosen order.
+func (c *Command) sortNames(names []string, dir string, opts options) {
+	if opts.sortBy == sortNone && !opts.groupDirs {
+		return
+	}
+
+	less := func(i, j int) bool {
+		a, b := names[i], names[j]
+		if opts.groupDirs {
+			ad, bd := isDir(dir, a), isDir(dir, b)
+			if ad != bd {
+				return ad
+			}
+		}
+		switch opts.sortBy {
+		case sortNone:
+			return false // keep directory order within the group
+		case sortSize:
+			sa, sb := sizeOf(dir, a), sizeOf(dir, b)
+			if sa != sb {
+				return sa > sb // larger first, like GNU
+			}
+			return a < b
+		case sortTime:
+			ta, tb := timeOf(dir, a, opts.timeBy), timeOf(dir, b, opts.timeBy)
+			if !ta.Equal(tb) {
+				return ta.After(tb) // newest first
+			}
+			return a < b
+		case sortVersion:
+			if cmp := versionCompare(a, b); cmp != 0 {
+				return cmp < 0
+			}
+			return a < b
+		case sortExtension:
+			ea, eb := filepath.Ext(a), filepath.Ext(b)
+			if ea != eb {
+				return ea < eb
+			}
+			return a < b
+		default:
+			return a < b
+		}
+	}
+
+	sort.SliceStable(names, less)
+}
+
 // listNames prints the given names (which live in dir) in the selected format.
 func (c *Command) listNames(out io.Writer, dir string, names []string, opts options) {
 	if !opts.long {
 		for _, n := range names {
-			_, _ = fmt.Fprintln(out, n+c.indicator(dir, n, opts))
+			prefix := ""
+			if opts.inode {
+				prefix = fmt.Sprintf("%d ", inodeOf(dir, n))
+			}
+			_, _ = fmt.Fprintln(out, prefix+c.decorate(dir, n, opts))
 		}
 		return
 	}
@@ -172,21 +521,61 @@ func (c *Command) listNames(out io.Writer, dir string, names []string, opts opti
 	}
 }
 
-// indicator returns the -F suffix for a name, or "" when -F is off.
+// decorate returns the display name with color (if enabled) and indicator (if
+// requested) applied.
+func (c *Command) decorate(dir, name string, opts options) string {
+	return c.colorize(dir, name, opts) + c.indicator(dir, name, opts)
+}
+
+// colorize wraps name in ANSI escapes based on its type, when color is on.
+func (c *Command) colorize(dir, name string, opts options) string {
+	if !opts.color {
+		return name
+	}
+	info, err := os.Lstat(pathOf(dir, name))
+	if err != nil {
+		return name
+	}
+	var col string
+	switch {
+	case info.IsDir():
+		col = colorDir
+	case info.Mode()&os.ModeSymlink != 0:
+		col = colorSymlink
+	case info.Mode()&0o111 != 0 && info.Mode().IsRegular():
+		col = colorExec
+	default:
+		return name
+	}
+	return col + name + colorReset
+}
+
+// indicator returns the type suffix for a name per the active indicator style.
 func (c *Command) indicator(dir, name string, opts options) string {
-	if !opts.classify {
+	if opts.indicator == indicatorNone {
 		return ""
 	}
 	info, err := os.Lstat(pathOf(dir, name))
 	if err != nil {
 		return ""
 	}
-	switch {
-	case info.IsDir():
+	if info.IsDir() {
 		return "/"
+	}
+	if opts.indicator == indicatorSlash {
+		return ""
+	}
+	switch {
 	case info.Mode()&os.ModeSymlink != 0:
 		return "@"
+	case info.Mode()&os.ModeNamedPipe != 0:
+		return "|"
+	case info.Mode()&os.ModeSocket != 0:
+		return "="
 	case info.Mode()&0o111 != 0 && info.Mode().IsRegular():
+		if opts.indicator == indicatorFileType {
+			return "" // file-type omits the executable marker
+		}
 		return "*"
 	default:
 		return ""
@@ -207,16 +596,123 @@ func (c *Command) longLine(dir, name string, opts options) string {
 		owner = lookupUser(st.Uid)
 		group = lookupGroup(st.Gid)
 	}
-	size := sizeString(info.Size(), opts.human)
-	when := timeString(info.ModTime())
-	display := name + c.indicator(dir, name, opts)
+	size := sizeString(info.Size(), opts.human, opts.blockSize)
+	when := timeString(timeFromInfo(info, opts.timeBy))
+	display := c.colorize(dir, name, opts) + c.indicator(dir, name, opts)
 	if info.Mode()&os.ModeSymlink != 0 {
 		if target, err := os.Readlink(pathOf(dir, name)); err == nil {
-			display = name + " -> " + target
+			display = c.colorize(dir, name, opts) + " -> " + target
 		}
 	}
-	return fmt.Sprintf("%s %d %s %s %s %s %s", mode, nlink, owner, group, size, when, display)
+	prefix := ""
+	if opts.inode {
+		prefix = fmt.Sprintf("%d ", inodeOf(dir, name))
+	}
+	return fmt.Sprintf("%s%s %d %s %s %s %s %s", prefix, mode, nlink, owner, group, size, when, display)
 }
+
+// inodeOf returns the inode number for a name, or 0 when it cannot be stated.
+func inodeOf(dir, name string) uint64 {
+	info, err := os.Lstat(pathOf(dir, name))
+	if err != nil {
+		return 0
+	}
+	if st, ok := info.Sys().(*syscall.Stat_t); ok {
+		return st.Ino
+	}
+	return 0
+}
+
+// isDir reports whether name (in dir) is a directory.
+func isDir(dir, name string) bool {
+	info, err := os.Lstat(pathOf(dir, name))
+	return err == nil && info.IsDir()
+}
+
+// sizeOf returns the byte size of a name, or 0 when it cannot be stated.
+func sizeOf(dir, name string) int64 {
+	info, err := os.Lstat(pathOf(dir, name))
+	if err != nil {
+		return 0
+	}
+	return info.Size()
+}
+
+// timeOf returns the selected timestamp for a name.
+func timeOf(dir, name string, field timeField) time.Time {
+	info, err := os.Lstat(pathOf(dir, name))
+	if err != nil {
+		return time.Time{}
+	}
+	return timeFromInfo(info, field)
+}
+
+// timeFromInfo extracts the requested timestamp from a FileInfo.
+func timeFromInfo(info os.FileInfo, field timeField) time.Time {
+	if st, ok := info.Sys().(*syscall.Stat_t); ok {
+		switch field {
+		case timeAtime:
+			return time.Unix(st.Atim.Sec, st.Atim.Nsec)
+		case timeCtime:
+			return time.Unix(st.Ctim.Sec, st.Ctim.Nsec)
+		}
+	}
+	return info.ModTime()
+}
+
+// versionCompare compares two strings "naturally", so file2 sorts before
+// file10. It returns -1, 0, or 1.
+func versionCompare(a, b string) int {
+	i, j := 0, 0
+	for i < len(a) && j < len(b) {
+		ai, bi := a[i], b[j]
+		if isDigit(ai) && isDigit(bi) {
+			// Compare runs of digits numerically.
+			si, ei := i, i
+			for ei < len(a) && isDigit(a[ei]) {
+				ei++
+			}
+			sj, ej := j, j
+			for ej < len(b) && isDigit(b[ej]) {
+				ej++
+			}
+			na := strings.TrimLeft(a[si:ei], "0")
+			nb := strings.TrimLeft(b[sj:ej], "0")
+			if len(na) != len(nb) {
+				if len(na) < len(nb) {
+					return -1
+				}
+				return 1
+			}
+			if na != nb {
+				if na < nb {
+					return -1
+				}
+				return 1
+			}
+			i, j = ei, ej
+			continue
+		}
+		if ai != bi {
+			if ai < bi {
+				return -1
+			}
+			return 1
+		}
+		i++
+		j++
+	}
+	switch {
+	case i < len(a):
+		return 1
+	case j < len(b):
+		return -1
+	default:
+		return 0
+	}
+}
+
+func isDigit(b byte) bool { return b >= '0' && b <= '9' }
 
 func pathOf(dir, name string) string {
 	if dir == "" || name == "." || name == ".." {
@@ -259,7 +755,16 @@ func modeString(info os.FileInfo) string {
 	return b.String()
 }
 
-func sizeString(size int64, human bool) string {
+// sizeString renders a size for ls -l. When blockSize > 0 the size is scaled to
+// that many bytes per block (rounding up), matching GNU --block-size/-k.
+func sizeString(size int64, human bool, blockSize int64) string {
+	if blockSize > 0 {
+		blocks := size / blockSize
+		if size%blockSize != 0 {
+			blocks++
+		}
+		return strconv.FormatInt(blocks, 10)
+	}
 	if !human {
 		return strconv.FormatInt(size, 10)
 	}

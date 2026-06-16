@@ -25,9 +25,12 @@ func (c *Command) Name() string { return "ln" }
 func (c *Command) Synopsis() string { return "Create hard or symbolic link" }
 
 type options struct {
-	symbolic bool
-	force    bool
-	verbose  bool
+	symbolic    bool
+	force       bool
+	verbose     bool
+	relative    bool
+	targetDir   string
+	noTargetDir bool
 }
 
 // Run executes ln.
@@ -43,6 +46,9 @@ func (c *Command) Run(_ context.Context, stdio command.IO, args []string) error 
 	symbolic := fs.BoolP("symbolic", "s", false, "make symbolic links instead of hard links")
 	force := fs.BoolP("force", "f", false, "remove existing destination files")
 	verbose := fs.BoolP("verbose", "v", false, "print name of each linked file")
+	relative := fs.BoolP("relative", "r", false, "with -s, create links relative to link location")
+	targetDir := fs.StringP("target-directory", "t", "", "specify the DIRECTORY in which to create the links")
+	noTargetDir := fs.BoolP("no-target-directory", "T", false, "treat LINK_NAME as a normal file always")
 
 	proceed, err := fs.Parse(stdio, args)
 	if err != nil || !proceed {
@@ -55,7 +61,14 @@ func (c *Command) Run(_ context.Context, stdio command.IO, args []string) error 
 		return command.SilentFailure()
 	}
 
-	opts := options{symbolic: *symbolic, force: *force, verbose: *verbose}
+	opts := options{
+		symbolic:    *symbolic,
+		force:       *force,
+		verbose:     *verbose,
+		relative:    *relative,
+		targetDir:   *targetDir,
+		noTargetDir: *noTargetDir,
+	}
 	return c.run(stdio, operands, opts)
 }
 
@@ -65,6 +78,18 @@ func (c *Command) Run(_ context.Context, stdio command.IO, args []string) error 
 //	ln TARGET LINK_NAME   -> link TARGET as LINK_NAME
 //	ln TARGET... DIRECTORY-> link each TARGET into DIRECTORY
 func (c *Command) run(stdio command.IO, operands []string, opts options) error {
+	// -t DIR: every operand is a target, linked into DIR (destination-first).
+	if opts.targetDir != "" {
+		var firstErr error
+		for _, target := range operands {
+			linkName := filepath.Join(opts.targetDir, filepath.Base(target))
+			if err := c.link(stdio, target, linkName, opts); err != nil {
+				firstErr = keep(firstErr)
+			}
+		}
+		return firstErr
+	}
+
 	// Single operand: create a link in the current directory whose name is
 	// the base name of the target.
 	if len(operands) == 1 {
@@ -73,6 +98,16 @@ func (c *Command) run(stdio command.IO, operands []string, opts options) error {
 	}
 
 	last := operands[len(operands)-1]
+
+	// -T: treat the destination as a normal file, never a directory. Only the
+	// two-operand "ln TARGET LINK_NAME" form is valid in this mode.
+	if opts.noTargetDir {
+		if len(operands) != 2 {
+			_, _ = fmt.Fprintf(stdio.Err, "%s: extra operand '%s'\n", c.Name(), operands[2])
+			return command.SilentFailure()
+		}
+		return c.link(stdio, operands[0], last, opts)
+	}
 
 	// When the final operand is an existing directory, link every target
 	// into it (GNU's "ln TARGET... DIRECTORY" form).
@@ -108,10 +143,22 @@ func (c *Command) link(stdio command.IO, target, linkName string, opts options) 
 	}
 
 	if opts.symbolic {
-		if err := os.Symlink(target, linkName); err != nil {
+		symTarget := target
+		// -r: store the target relative to the link's own directory so the
+		// symlink keeps resolving when the pair is moved together.
+		if opts.relative {
+			rel, err := relativeTarget(target, linkName)
+			if err != nil {
+				_, _ = fmt.Fprintf(stdio.Err, "%s: failed to create symbolic link '%s': %s\n", c.Name(), linkName, reason(err))
+				return command.SilentFailure()
+			}
+			symTarget = rel
+		}
+		if err := os.Symlink(symTarget, linkName); err != nil {
 			_, _ = fmt.Fprintf(stdio.Err, "%s: failed to create symbolic link '%s': %s\n", c.Name(), linkName, reason(err))
 			return command.SilentFailure()
 		}
+		target = symTarget
 	} else {
 		if err := os.Link(target, linkName); err != nil {
 			_, _ = fmt.Fprintf(stdio.Err, "%s: failed to create hard link '%s': %s\n", c.Name(), linkName, reason(err))
@@ -127,6 +174,21 @@ func (c *Command) link(stdio command.IO, target, linkName string, opts options) 
 		}
 	}
 	return nil
+}
+
+// relativeTarget returns target expressed relative to the directory that holds
+// linkName, mirroring GNU "ln -r". Both operands are resolved to absolute paths
+// first so filepath.Rel computes the link from the link's own location.
+func relativeTarget(target, linkName string) (string, error) {
+	absTarget, err := filepath.Abs(target)
+	if err != nil {
+		return "", err
+	}
+	absLink, err := filepath.Abs(linkName)
+	if err != nil {
+		return "", err
+	}
+	return filepath.Rel(filepath.Dir(absLink), absTarget)
 }
 
 // removeExisting deletes path when it exists, ignoring a not-exist condition so
