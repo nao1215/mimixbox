@@ -188,7 +188,7 @@ func (c *Command) Run(_ context.Context, stdio command.IO, args []string) error 
 		operands = []string{"."}
 	}
 
-	var files []string
+	var files []entry
 	var dirs []string
 	exitErr := false
 	for _, name := range operands {
@@ -201,13 +201,15 @@ func (c *Command) Run(_ context.Context, stdio command.IO, args []string) error 
 		if info.IsDir() && !opts.dirSelf {
 			dirs = append(dirs, name)
 		} else {
-			files = append(files, name)
+			// Reuse the Lstat result so the listing pipeline never restats this
+			// command-line operand.
+			files = append(files, entry{name: name, dir: "", info: info})
 		}
 	}
 
 	if len(files) > 0 {
-		c.sortNames(files, "", opts)
-		c.listNames(stdio.Out, "", files, opts)
+		sortEntries(files, opts)
+		c.listEntries(stdio.Out, files, opts)
 		if len(dirs) > 0 {
 			_, _ = fmt.Fprintln(stdio.Out)
 		}
@@ -413,18 +415,25 @@ func (c *Command) listDir(out, errw io.Writer, dir string, opts options) error {
 		names = append(names, name)
 	}
 
-	c.sortNames(names, dir, opts)
-	c.listNames(out, dir, names, opts)
+	// Populate each entry's metadata once; sorting, decoration, long-format
+	// rendering, and recursion all consume this cached info instead of
+	// restatting the path.
+	items := make([]entry, 0, len(names))
+	for _, n := range names {
+		items = append(items, newEntry(dir, n))
+	}
+
+	sortEntries(items, opts)
+	c.listEntries(out, items, opts)
 
 	if opts.recursive {
 		var subdirs []string
-		for _, n := range names {
-			if n == "." || n == ".." {
+		for _, e := range items {
+			if e.name == "." || e.name == ".." {
 				continue
 			}
-			full := filepath.Join(dir, n)
-			if info, err := os.Lstat(full); err == nil && info.IsDir() {
-				subdirs = append(subdirs, full)
+			if e.isDir() {
+				subdirs = append(subdirs, e.path())
 			}
 		}
 		for _, sd := range subdirs {
@@ -454,18 +463,74 @@ func filtered(name string, opts options) bool {
 	return false
 }
 
-// sortNames orders names in place according to the active sort key. "." and
-// ".." always sort first to match GNU's name ordering; --group-directories-
-// first hoists directories ahead of files within the chosen order.
-func (c *Command) sortNames(names []string, dir string, opts options) {
+// entry is a listing item paired with its already-resolved metadata. Building
+// it once per operand or directory entry lets sorting, decoration, long-format
+// rendering, and recursive traversal share a single os.Lstat instead of
+// restatting the same path through every helper.
+type entry struct {
+	name string      // display name (may be "." or "..")
+	dir  string      // directory the name lives in ("" for command-line operands)
+	info os.FileInfo // from Lstat; nil when the path could not be stated
+}
+
+// newEntry resolves name (within dir) to an entry, caching its Lstat result. A
+// stat failure yields an entry with a nil info, which the consumers treat the
+// same way the old per-helper Lstat-error branches did.
+func newEntry(dir, name string) entry {
+	info, err := os.Lstat(pathOf(dir, name))
+	if err != nil {
+		return entry{name: name, dir: dir}
+	}
+	return entry{name: name, dir: dir, info: info}
+}
+
+// path returns the filesystem path the entry refers to.
+func (e entry) path() string { return pathOf(e.dir, e.name) }
+
+// isDir reports whether the entry is a directory (false when unstated).
+func (e entry) isDir() bool { return e.info != nil && e.info.IsDir() }
+
+// size returns the entry's byte size, or 0 when unstated.
+func (e entry) size() int64 {
+	if e.info == nil {
+		return 0
+	}
+	return e.info.Size()
+}
+
+// inode returns the entry's inode number, or 0 when unavailable.
+func (e entry) inode() uint64 {
+	if e.info == nil {
+		return 0
+	}
+	if st, ok := e.info.Sys().(*syscall.Stat_t); ok {
+		return st.Ino
+	}
+	return 0
+}
+
+// modTime returns the entry's selected timestamp, or the zero time when
+// unstated.
+func (e entry) modTime(field timeField) time.Time {
+	if e.info == nil {
+		return time.Time{}
+	}
+	return timeFromInfo(e.info, field)
+}
+
+// sortEntries orders entries in place according to the active sort key.
+// --group-directories-first hoists directories ahead of files within the chosen
+// order. The comparison logic mirrors the previous name-based sort exactly so
+// output stays byte-for-byte stable.
+func sortEntries(entries []entry, opts options) {
 	if opts.sortBy == sortNone && !opts.groupDirs {
 		return
 	}
 
 	less := func(i, j int) bool {
-		a, b := names[i], names[j]
+		a, b := entries[i], entries[j]
 		if opts.groupDirs {
-			ad, bd := isDir(dir, a), isDir(dir, b)
+			ad, bd := a.isDir(), b.isDir()
 			if ad != bd {
 				return ad
 			}
@@ -474,105 +539,98 @@ func (c *Command) sortNames(names []string, dir string, opts options) {
 		case sortNone:
 			return false // keep directory order within the group
 		case sortSize:
-			sa, sb := sizeOf(dir, a), sizeOf(dir, b)
-			if sa != sb {
-				return sa > sb // larger first, like GNU
+			if a.size() != b.size() {
+				return a.size() > b.size() // larger first, like GNU
 			}
-			return a < b
+			return a.name < b.name
 		case sortTime:
-			ta, tb := timeOf(dir, a, opts.timeBy), timeOf(dir, b, opts.timeBy)
+			ta, tb := a.modTime(opts.timeBy), b.modTime(opts.timeBy)
 			if !ta.Equal(tb) {
 				return ta.After(tb) // newest first
 			}
-			return a < b
+			return a.name < b.name
 		case sortVersion:
-			if cmp := versionCompare(a, b); cmp != 0 {
+			if cmp := versionCompare(a.name, b.name); cmp != 0 {
 				return cmp < 0
 			}
-			return a < b
+			return a.name < b.name
 		case sortExtension:
-			ea, eb := filepath.Ext(a), filepath.Ext(b)
+			ea, eb := filepath.Ext(a.name), filepath.Ext(b.name)
 			if ea != eb {
 				return ea < eb
 			}
-			return a < b
+			return a.name < b.name
 		default:
-			return a < b
+			return a.name < b.name
 		}
 	}
 
-	sort.SliceStable(names, less)
+	sort.SliceStable(entries, less)
 }
 
-// listNames prints the given names (which live in dir) in the selected format.
-func (c *Command) listNames(out io.Writer, dir string, names []string, opts options) {
+// listEntries prints the given entries in the selected format.
+func (c *Command) listEntries(out io.Writer, entries []entry, opts options) {
 	if !opts.long {
-		for _, n := range names {
+		for _, e := range entries {
 			prefix := ""
 			if opts.inode {
-				prefix = fmt.Sprintf("%d ", inodeOf(dir, n))
+				prefix = fmt.Sprintf("%d ", e.inode())
 			}
-			_, _ = fmt.Fprintln(out, prefix+c.decorate(dir, n, opts))
+			_, _ = fmt.Fprintln(out, prefix+c.decorate(e, opts))
 		}
 		return
 	}
-	for _, n := range names {
-		_, _ = fmt.Fprintln(out, c.longLine(dir, n, opts))
+	for _, e := range entries {
+		_, _ = fmt.Fprintln(out, c.longLine(e, opts))
 	}
 }
 
 // decorate returns the display name with color (if enabled) and indicator (if
 // requested) applied.
-func (c *Command) decorate(dir, name string, opts options) string {
-	return c.colorize(dir, name, opts) + c.indicator(dir, name, opts)
+func (c *Command) decorate(e entry, opts options) string {
+	return c.colorize(e, opts) + c.indicator(e, opts)
 }
 
-// colorize wraps name in ANSI escapes based on its type, when color is on.
-func (c *Command) colorize(dir, name string, opts options) string {
-	if !opts.color {
-		return name
-	}
-	info, err := os.Lstat(pathOf(dir, name))
-	if err != nil {
-		return name
+// colorize wraps the entry's name in ANSI escapes based on its type, when color
+// is on.
+func (c *Command) colorize(e entry, opts options) string {
+	if !opts.color || e.info == nil {
+		return e.name
 	}
 	var col string
 	switch {
-	case info.IsDir():
+	case e.info.IsDir():
 		col = colorDir
-	case info.Mode()&os.ModeSymlink != 0:
+	case e.info.Mode()&os.ModeSymlink != 0:
 		col = colorSymlink
-	case info.Mode()&0o111 != 0 && info.Mode().IsRegular():
+	case e.info.Mode()&0o111 != 0 && e.info.Mode().IsRegular():
 		col = colorExec
 	default:
-		return name
+		return e.name
 	}
-	return col + name + colorReset
+	return col + e.name + colorReset
 }
 
-// indicator returns the type suffix for a name per the active indicator style.
-func (c *Command) indicator(dir, name string, opts options) string {
-	if opts.indicator == indicatorNone {
+// indicator returns the type suffix for the entry per the active indicator
+// style.
+func (c *Command) indicator(e entry, opts options) string {
+	if opts.indicator == indicatorNone || e.info == nil {
 		return ""
 	}
-	info, err := os.Lstat(pathOf(dir, name))
-	if err != nil {
-		return ""
-	}
-	if info.IsDir() {
+	if e.info.IsDir() {
 		return "/"
 	}
 	if opts.indicator == indicatorSlash {
 		return ""
 	}
 	switch {
-	case info.Mode()&os.ModeSymlink != 0:
+	case e.info.Mode()&os.ModeSymlink != 0:
 		return "@"
-	case info.Mode()&os.ModeNamedPipe != 0:
+	case e.info.Mode()&os.ModeNamedPipe != 0:
 		return "|"
-	case info.Mode()&os.ModeSocket != 0:
+	case e.info.Mode()&os.ModeSocket != 0:
 		return "="
-	case info.Mode()&0o111 != 0 && info.Mode().IsRegular():
+	case e.info.Mode()&0o111 != 0 && e.info.Mode().IsRegular():
 		if opts.indicator == indicatorFileType {
 			return "" // file-type omits the executable marker
 		}
@@ -583,11 +641,11 @@ func (c *Command) indicator(dir, name string, opts options) string {
 }
 
 // longLine formats one entry for -l.
-func (c *Command) longLine(dir, name string, opts options) string {
-	info, err := os.Lstat(pathOf(dir, name))
-	if err != nil {
-		return name
+func (c *Command) longLine(e entry, opts options) string {
+	if e.info == nil {
+		return e.name
 	}
+	info := e.info
 	mode := modeString(info)
 	nlink := uint64(1)
 	owner, group := "?", "?"
@@ -598,53 +656,17 @@ func (c *Command) longLine(dir, name string, opts options) string {
 	}
 	size := sizeString(info.Size(), opts.human, opts.blockSize)
 	when := timeString(timeFromInfo(info, opts.timeBy))
-	display := c.colorize(dir, name, opts) + c.indicator(dir, name, opts)
+	display := c.colorize(e, opts) + c.indicator(e, opts)
 	if info.Mode()&os.ModeSymlink != 0 {
-		if target, err := os.Readlink(pathOf(dir, name)); err == nil {
-			display = c.colorize(dir, name, opts) + " -> " + target
+		if target, err := os.Readlink(e.path()); err == nil {
+			display = c.colorize(e, opts) + " -> " + target
 		}
 	}
 	prefix := ""
 	if opts.inode {
-		prefix = fmt.Sprintf("%d ", inodeOf(dir, name))
+		prefix = fmt.Sprintf("%d ", e.inode())
 	}
 	return fmt.Sprintf("%s%s %d %s %s %s %s %s", prefix, mode, nlink, owner, group, size, when, display)
-}
-
-// inodeOf returns the inode number for a name, or 0 when it cannot be stated.
-func inodeOf(dir, name string) uint64 {
-	info, err := os.Lstat(pathOf(dir, name))
-	if err != nil {
-		return 0
-	}
-	if st, ok := info.Sys().(*syscall.Stat_t); ok {
-		return st.Ino
-	}
-	return 0
-}
-
-// isDir reports whether name (in dir) is a directory.
-func isDir(dir, name string) bool {
-	info, err := os.Lstat(pathOf(dir, name))
-	return err == nil && info.IsDir()
-}
-
-// sizeOf returns the byte size of a name, or 0 when it cannot be stated.
-func sizeOf(dir, name string) int64 {
-	info, err := os.Lstat(pathOf(dir, name))
-	if err != nil {
-		return 0
-	}
-	return info.Size()
-}
-
-// timeOf returns the selected timestamp for a name.
-func timeOf(dir, name string, field timeField) time.Time {
-	info, err := os.Lstat(pathOf(dir, name))
-	if err != nil {
-		return time.Time{}
-	}
-	return timeFromInfo(info, field)
 }
 
 // timeFromInfo extracts the requested timestamp from a FileInfo.
