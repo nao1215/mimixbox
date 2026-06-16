@@ -108,3 +108,26 @@ func TestHelpSections(t *testing.T) {
 		}
 	}
 }
+
+// TestMetaOnlyWhenSoleArg proves --help/--version are honored only as the sole
+// argument (GitHub issue #759): `test foo --help` evaluates as an expression.
+func TestMetaOnlyWhenSoleArg(t *testing.T) {
+	t.Parallel()
+	capture := func(args ...string) (string, int) {
+		out := &bytes.Buffer{}
+		io := command.IO{In: strings.NewReader(""), Out: out, Err: &bytes.Buffer{}}
+		code := command.Execute(context.Background(), testcmd.New(), io, args)
+		return out.String(), code
+	}
+	// Sole --help / --version produce metadata and exit 0.
+	if out, code := capture("--help"); code != 0 || !strings.Contains(out, "Usage: test") {
+		t.Errorf("test --help: code=%d out=%q", code, out)
+	}
+	if out, code := capture("--version"); code != 0 || !strings.Contains(out, "test (mimixbox)") {
+		t.Errorf("test --version: code=%d out=%q", code, out)
+	}
+	// A non-sole --help is an ordinary operand: it is evaluated, not shown as help.
+	if out, _ := capture("foo", "--help"); strings.Contains(out, "Usage: test") {
+		t.Errorf("test foo --help must not print help: %q", out)
+	}
+}
