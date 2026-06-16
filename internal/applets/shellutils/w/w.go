@@ -64,6 +64,7 @@ func (c *Command) Run(_ context.Context, stdio command.IO, args []string) error 
 		Examples: []command.Example{
 			{Command: "w", Explain: "Show who is logged in."},
 		},
+		ExitStatus: "0  success.\n1  an error occurred.",
 		Notes: []string{
 			"The IDLE and WHAT columns are placeholders ('-'); per-process accounting is not implemented.",
 		},

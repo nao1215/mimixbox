@@ -64,6 +64,7 @@ func (c *Command) Run(_ context.Context, stdio command.IO, args []string) error 
 			{Command: "last", Explain: "Show the login history."},
 			{Command: "last -n 10", Explain: "Show only the 10 most recent entries."},
 		},
+		ExitStatus: "0  the login history was listed successfully.\n1  the wtmp database could not be read.",
 	})
 	count := fs.IntP("count", "n", 0, "show only the last COUNT entries (0 = all)")
 	proceed, err := fs.Parse(stdio, args)

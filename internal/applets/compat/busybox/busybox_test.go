@@ -34,4 +34,7 @@ func TestHelpAndNoArgs(t *testing.T) {
 	if got := out(t); !strings.Contains(got, "Usage: busybox") {
 		t.Errorf("no args = %q", got)
 	}
+	if got := out(t, "--help"); !strings.Contains(got, "Exit status:") {
+		t.Errorf("--help missing exit status section = %q", got)
+	}
 }

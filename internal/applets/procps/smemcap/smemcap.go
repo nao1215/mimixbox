@@ -41,6 +41,7 @@ func (c *Command) Run(_ context.Context, stdio command.IO, args []string) error 
 		Examples: []command.Example{
 			{Command: "smemcap > capture.tar", Explain: "Capture the current memory state."},
 		},
+		ExitStatus: "0  success.\n1  an error occurred (e.g. /proc could not be read or the archive could not be written).",
 	})
 	proceed, err := fs.Parse(stdio, args)
 	if err != nil || !proceed {

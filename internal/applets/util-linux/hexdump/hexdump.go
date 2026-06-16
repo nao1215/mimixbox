@@ -163,6 +163,7 @@ func (c *Command) help() command.Help {
 			{Command: c.Name() + " file.bin", Explain: "Dump the whole file."},
 			{Command: c.Name() + " -n 64 file.bin", Explain: "Dump only the first 64 bytes."},
 		},
+		ExitStatus: "0  the input was dumped successfully.\n1  a file could not be read.",
 		Notes: []string{
 			"Repeated-line squeezing (the '*' line) is not implemented; all lines are shown.",
 		},

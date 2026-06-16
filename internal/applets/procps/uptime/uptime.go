@@ -48,6 +48,7 @@ func (c *Command) Run(_ context.Context, stdio command.IO, args []string) error 
 		Examples: []command.Example{
 			{Command: "uptime", Explain: "Show the uptime summary."},
 		},
+		ExitStatus: "0  success.\n1  an error occurred (e.g. /proc could not be read or an argument was invalid).",
 	})
 	proceed, err := fs.Parse(stdio, args)
 	if err != nil || !proceed {

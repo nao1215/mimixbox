@@ -37,6 +37,7 @@ func (c *Command) Run(ctx context.Context, stdio command.IO, args []string) erro
 		Notes: []string{
 			"The controlling-TTY allocation that BusyBox cttyhack performs is not implemented.",
 		},
+		ExitStatus: "the exit status of PROGRAM.\n1  PROGRAM could not be run (for example, the operand was missing).",
 	})
 	proceed, err := fs.Parse(stdio, args)
 	if err != nil || !proceed {

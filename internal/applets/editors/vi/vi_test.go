@@ -126,4 +126,7 @@ func TestHelp(t *testing.T) {
 	if !strings.Contains(out, "Usage: vi") {
 		t.Errorf("help = %q", out)
 	}
+	if !strings.Contains(out, "Exit status:") {
+		t.Errorf("help missing exit status section = %q", out)
+	}
 }

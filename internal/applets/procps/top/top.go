@@ -53,6 +53,7 @@ func (c *Command) Run(_ context.Context, stdio command.IO, args []string) error 
 		Notes: []string{
 			"The interactive display and the %CPU/PR/NI columns of real top are not implemented.",
 		},
+		ExitStatus: "0  success.\n1  an error occurred (e.g. /proc could not be read or an argument was invalid).",
 	})
 	_ = fs.BoolP("batch", "b", false, "batch mode (the only supported mode)")
 	_ = fs.IntP("iterations", "n", 1, "number of iterations (only 1 is performed)")

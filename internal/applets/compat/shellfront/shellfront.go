@@ -49,6 +49,7 @@ func (c *Command) Run(ctx context.Context, stdio command.IO, args []string) erro
 			{Command: c.Name() + " script.sh", Explain: "Run the commands in script.sh."},
 			{Command: "echo 'echo hi' | " + c.Name(), Explain: "Read commands from standard input."},
 		},
+		ExitStatus: "The exit status of the last command executed.\n2  a syntax or usage error in the shell itself.",
 		Notes: []string{
 			"This is mbsh under another name, not a full BusyBox/POSIX shell; it supports mbsh's syntax.",
 		},

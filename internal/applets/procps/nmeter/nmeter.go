@@ -44,6 +44,7 @@ func (c *Command) Run(_ context.Context, stdio command.IO, args []string) error 
 		Notes: []string{
 			"Only a single snapshot is printed; the continuous live display of real nmeter is not implemented.",
 		},
+		ExitStatus: "0  success.\n1  an error occurred (e.g. /proc could not be read or the FORMAT argument was invalid).",
 	})
 	proceed, err := fs.Parse(stdio, args)
 	if err != nil || !proceed {

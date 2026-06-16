@@ -62,6 +62,7 @@ func (c *Command) Run(_ context.Context, stdio command.IO, args []string) error 
 			{Command: "wall 'system going down in 5 minutes'", Explain: "Broadcast a warning."},
 			{Command: "echo done | wall", Explain: "Broadcast a message from standard input."},
 		},
+		ExitStatus: "0  the message was written to the available terminals.\n1  an error occurred.",
 	})
 	proceed, err := fs.Parse(stdio, args)
 	if err != nil || !proceed {

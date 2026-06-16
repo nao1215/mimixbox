@@ -56,6 +56,7 @@ func (c *Command) Run(ctx context.Context, stdio command.IO, args []string) erro
 			{Command: "echo hi | wc -c", Explain: "Pipe one command into another."},
 			{Command: "echo hi > out.txt", Explain: "Redirect output (>, >>, < are supported)."},
 		},
+		ExitStatus: "The exit status of the last command executed.\n2  a syntax or usage error in the shell itself.",
 		Notes: []string{
 			"Tokenizing supports single/double quotes, backslash escapes, $VAR/${VAR}/$? expansion, ~ home expansion, and NAME=value prefixes.",
 			"Operators: ; sequences commands, | pipes them, and < > >> redirect I/O. A pipeline's status is its last command's; a list's is its last pipeline's.",
