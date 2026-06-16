@@ -1134,6 +1134,156 @@ func TestRunBackupInvalidControl(t *testing.T) {
 	}
 }
 
+// --- #940: recursive copies must share the same overwrite policy ----------
+
+// TestRunDirUpdateSkipsNewerInTree proves recursive -u does not overwrite a
+// destination file inside the tree that is newer than its source (the direct
+// -u path already did this; the recursive path must too).
+func TestRunDirUpdateSkipsNewerInTree(t *testing.T) {
+	t.Parallel()
+	dir := t.TempDir()
+	src := filepath.Join(dir, "src")
+	if err := os.MkdirAll(src, 0o755); err != nil {
+		t.Fatal(err)
+	}
+	srcFile := filepath.Join(src, "f.txt")
+	if err := os.WriteFile(srcFile, []byte("from-src\n"), 0o644); err != nil {
+		t.Fatal(err)
+	}
+	// Destination already holds src/f.txt that is NEWER than the source.
+	dstTree := filepath.Join(dir, "dst", "src")
+	if err := os.MkdirAll(dstTree, 0o755); err != nil {
+		t.Fatal(err)
+	}
+	dstFile := filepath.Join(dstTree, "f.txt")
+	if err := os.WriteFile(dstFile, []byte("newer-dst\n"), 0o644); err != nil {
+		t.Fatal(err)
+	}
+	old := time.Now().Add(-1 * time.Hour)
+	newer := time.Now()
+	if err := os.Chtimes(srcFile, old, old); err != nil {
+		t.Fatal(err)
+	}
+	if err := os.Chtimes(dstFile, newer, newer); err != nil {
+		t.Fatal(err)
+	}
+	dst := filepath.Join(dir, "dst")
+	if _, stderr, err := run(t, "-r", "-u", src, dst); err != nil {
+		t.Fatalf("cp -ru error = %v (%s)", err, stderr)
+	}
+	if got, _ := os.ReadFile(dstFile); string(got) != "newer-dst\n" {
+		t.Errorf("cp -ru overwrote a newer file in the tree: %q, want newer-dst", got)
+	}
+}
+
+// TestRunDirInteractiveNoKeepsInTree proves recursive -i prompts before
+// overwriting a file inside the tree and honors a "n" answer.
+func TestRunDirInteractiveNoKeepsInTree(t *testing.T) {
+	t.Parallel()
+	dir := t.TempDir()
+	src := filepath.Join(dir, "src")
+	if err := os.MkdirAll(src, 0o755); err != nil {
+		t.Fatal(err)
+	}
+	if err := os.WriteFile(filepath.Join(src, "f.txt"), []byte("new\n"), 0o644); err != nil {
+		t.Fatal(err)
+	}
+	dstTree := filepath.Join(dir, "dst", "src")
+	if err := os.MkdirAll(dstTree, 0o755); err != nil {
+		t.Fatal(err)
+	}
+	dstFile := filepath.Join(dstTree, "f.txt")
+	if err := os.WriteFile(dstFile, []byte("old\n"), 0o644); err != nil {
+		t.Fatal(err)
+	}
+	dst := filepath.Join(dir, "dst")
+	out, stderr, err := runStdin(t, "n\n", "-r", "-i", src, dst)
+	if err != nil {
+		t.Fatalf("cp -ri error = %v (%s)", err, stderr)
+	}
+	if !strings.Contains(out, "overwrite") {
+		t.Errorf("cp -ri did not prompt before overwriting in the tree: out=%q", out)
+	}
+	if got, _ := os.ReadFile(dstFile); string(got) != "old\n" {
+		t.Errorf("cp -ri overwrote despite 'n': %q, want old", got)
+	}
+}
+
+// TestRunDirBackupInTree proves recursive --backup makes a backup of an
+// overwritten file inside the tree, like the direct path does.
+func TestRunDirBackupInTree(t *testing.T) {
+	t.Parallel()
+	dir := t.TempDir()
+	src := filepath.Join(dir, "src")
+	if err := os.MkdirAll(src, 0o755); err != nil {
+		t.Fatal(err)
+	}
+	if err := os.WriteFile(filepath.Join(src, "f.txt"), []byte("new\n"), 0o644); err != nil {
+		t.Fatal(err)
+	}
+	dstTree := filepath.Join(dir, "dst", "src")
+	if err := os.MkdirAll(dstTree, 0o755); err != nil {
+		t.Fatal(err)
+	}
+	dstFile := filepath.Join(dstTree, "f.txt")
+	if err := os.WriteFile(dstFile, []byte("old\n"), 0o644); err != nil {
+		t.Fatal(err)
+	}
+	dst := filepath.Join(dir, "dst")
+	if _, stderr, err := run(t, "-r", "--backup=simple", src, dst); err != nil {
+		t.Fatalf("cp -r --backup error = %v (%s)", err, stderr)
+	}
+	if got, _ := os.ReadFile(dstFile); string(got) != "new\n" {
+		t.Errorf("dst f.txt = %q, want new", got)
+	}
+	if got, _ := os.ReadFile(dstFile + "~"); string(got) != "old\n" {
+		t.Errorf("cp -r --backup did not create a backup in the tree: %q, want old", got)
+	}
+}
+
+// TestRunDirSymlinkFollowedUpdateSkipsNewer proves the shared overwrite policy
+// also covers files reached by following a symlink within the tree: a newer
+// destination must survive cp -ru.
+func TestRunDirSymlinkFollowedUpdateSkipsNewer(t *testing.T) {
+	t.Parallel()
+	dir := t.TempDir()
+	src := filepath.Join(dir, "src")
+	if err := os.MkdirAll(src, 0o755); err != nil {
+		t.Fatal(err)
+	}
+	if err := os.WriteFile(filepath.Join(src, "real.txt"), []byte("from-src\n"), 0o644); err != nil {
+		t.Fatal(err)
+	}
+	// A symlink within the tree pointing at a sibling file; the default deref
+	// mode follows it and copies the target as a regular file named "lnk".
+	if err := os.Symlink("real.txt", filepath.Join(src, "lnk")); err != nil {
+		t.Fatal(err)
+	}
+	dstTree := filepath.Join(dir, "dst", "src")
+	if err := os.MkdirAll(dstTree, 0o755); err != nil {
+		t.Fatal(err)
+	}
+	dstLnk := filepath.Join(dstTree, "lnk")
+	if err := os.WriteFile(dstLnk, []byte("newer-dst\n"), 0o644); err != nil {
+		t.Fatal(err)
+	}
+	old := time.Now().Add(-1 * time.Hour)
+	newer := time.Now()
+	if err := os.Chtimes(filepath.Join(src, "real.txt"), old, old); err != nil {
+		t.Fatal(err)
+	}
+	if err := os.Chtimes(dstLnk, newer, newer); err != nil {
+		t.Fatal(err)
+	}
+	dst := filepath.Join(dir, "dst")
+	if _, stderr, err := run(t, "-r", "-u", src, dst); err != nil {
+		t.Fatalf("cp -ru error = %v (%s)", err, stderr)
+	}
+	if got, _ := os.ReadFile(dstLnk); string(got) != "newer-dst\n" {
+		t.Errorf("cp -ru overwrote a newer followed-symlink file: %q, want newer-dst", got)
+	}
+}
+
 func TestRunArchivePreservesLinkInTree(t *testing.T) {
 	t.Parallel()
 	dir := t.TempDir()

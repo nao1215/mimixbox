@@ -94,4 +94,36 @@ Describe 'cp GNU flags'
         The output should equal "dstdata"
         The status should be success
     End
+
+    # #940: recursive copies must share the same overwrite policy as direct
+    # copies. -u inside a copied tree must leave a newer destination untouched.
+    It 'skips a newer file inside the tree with -ru (#940)'
+        TestRecursiveUpdate() {
+            cd "${WORK}" || exit 1
+            mkdir -p src dst/src
+            printf 'from-src\n' > src/f.txt
+            sleep 1.1
+            printf 'newer-dst\n' > dst/src/f.txt
+            cp -ru src dst
+            cat dst/src/f.txt
+        }
+        When call TestRecursiveUpdate
+        The output should equal "newer-dst"
+        The status should be success
+    End
+
+    # #940: --backup inside a copied tree must move the existing file aside.
+    It 'backs up a file inside the tree with -r --backup (#940)'
+        TestRecursiveBackup() {
+            cd "${WORK}" || exit 1
+            mkdir -p src dst/src
+            printf 'new\n' > src/f.txt
+            printf 'old\n' > dst/src/f.txt
+            cp -r --backup=simple src dst
+            cat dst/src/f.txt dst/src/f.txt~
+        }
+        When call TestRecursiveBackup
+        The output should equal "$(printf 'new\nold')"
+        The status should be success
+    End
 End
