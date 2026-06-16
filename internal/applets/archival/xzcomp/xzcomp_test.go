@@ -116,3 +116,37 @@ func TestHelp(t *testing.T) {
 		t.Errorf("--help = %q", out)
 	}
 }
+
+// TestHelpSections locks in the self-describing --help output for every xzcomp
+// applet (GitHub issues #649-#660 Examples, #698-#708 purpose paragraph): each
+// command must render a purpose paragraph, an Examples section, and an Exit
+// status section.
+func TestHelpSections(t *testing.T) {
+	t.Parallel()
+	ctors := []func() *Command{
+		NewXz, NewUnxz, NewXzcat,
+		NewLzma, NewUnlzma, NewLzcat,
+		NewZcat, NewBzcat,
+	}
+	for _, ctor := range ctors {
+		c := ctor()
+		t.Run(c.Name(), func(t *testing.T) {
+			t.Parallel()
+			out, _, err := capture(t, c, nil, "--help")
+			if err != nil {
+				t.Fatalf("%s --help err = %v", c.Name(), err)
+			}
+			help := string(out)
+			for _, want := range []string{"Usage: " + c.Name(), "Examples:", "Exit status:"} {
+				if !strings.Contains(help, want) {
+					t.Errorf("%s --help missing %q\n%s", c.Name(), want, help)
+				}
+			}
+			// A purpose paragraph sits between the Usage line and Options.
+			desc := help[strings.Index(help, "\n")+1:]
+			if before, _, _ := strings.Cut(desc, "\nOptions:"); strings.TrimSpace(before) == "" {
+				t.Errorf("%s --help has no purpose paragraph\n%s", c.Name(), help)
+			}
+		})
+	}
+}

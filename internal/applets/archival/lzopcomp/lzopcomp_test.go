@@ -155,3 +155,33 @@ func TestNames(t *testing.T) {
 		t.Fatal("unexpected applet names")
 	}
 }
+
+// TestHelpSections locks in the self-describing --help output for every lzopcomp
+// applet (GitHub issues #652/#653/#656 Examples, #701/#702/#704 purpose
+// paragraph, plus #701/#704 Notes): each command must render a purpose
+// paragraph, an Examples section, and an Exit status section.
+func TestHelpSections(t *testing.T) {
+	t.Parallel()
+	ctors := []func() *Command{NewLzop, NewUnlzop, NewLzopcat}
+	for _, ctor := range ctors {
+		c := ctor()
+		t.Run(c.Name(), func(t *testing.T) {
+			t.Parallel()
+			out := &bytes.Buffer{}
+			io := command.IO{In: strings.NewReader(""), Out: out, Err: &bytes.Buffer{}}
+			if err := c.Run(context.Background(), io, []string{"--help"}); err != nil {
+				t.Fatalf("%s --help err = %v", c.Name(), err)
+			}
+			help := out.String()
+			for _, want := range []string{"Usage: " + c.Name(), "Examples:", "Exit status:"} {
+				if !strings.Contains(help, want) {
+					t.Errorf("%s --help missing %q\n%s", c.Name(), want, help)
+				}
+			}
+			desc := help[strings.Index(help, "\n")+1:]
+			if before, _, _ := strings.Cut(desc, "\nOptions:"); strings.TrimSpace(before) == "" {
+				t.Errorf("%s --help has no purpose paragraph\n%s", c.Name(), help)
+			}
+		})
+	}
+}

@@ -31,7 +31,9 @@ func TestUnitHelp(t *testing.T) {
 	if err := New().Run(context.Background(), io, []string{"--help"}); err != nil {
 		t.Fatalf("--help err = %v", err)
 	}
-	if !strings.Contains(out.String(), "Usage: unit") {
-		t.Errorf("--help out = %q", out.String())
+	for _, want := range []string{"Usage: unit", "Examples:", "Exit status:", "Notes:"} {
+		if !strings.Contains(out.String(), want) {
+			t.Errorf("--help missing %q; out = %q", want, out.String())
+		}
 	}
 }
