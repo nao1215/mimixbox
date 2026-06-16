@@ -119,6 +119,135 @@ func TestMissingOperand(t *testing.T) {
 	}
 }
 
+func TestNameSynopsis(t *testing.T) {
+	t.Parallel()
+	c := ln.New()
+	if c.Name() != "ln" {
+		t.Errorf("Name() = %q, want %q", c.Name(), "ln")
+	}
+	if c.Synopsis() == "" {
+		t.Error("Synopsis() is empty")
+	}
+}
+
+// TestVerboseSymbolic exercises the verbose symbolic-link branch of link().
+func TestVerboseSymbolic(t *testing.T) {
+	t.Parallel()
+	dir := t.TempDir()
+	target := filepath.Join(dir, "target.txt")
+	link := filepath.Join(dir, "sym.txt")
+	writeTarget(t, target, "hi\n")
+
+	out, errOut, err := run(t, "-s", "-v", target, link)
+	if err != nil {
+		t.Fatalf("Run error = %v (stderr=%q)", err, errOut)
+	}
+	if !strings.Contains(out, "->") {
+		t.Errorf("verbose output = %q, want '->'", out)
+	}
+}
+
+// TestVerboseHardLink exercises the verbose hard-link branch of link().
+func TestVerboseHardLink(t *testing.T) {
+	t.Parallel()
+	dir := t.TempDir()
+	target := filepath.Join(dir, "target.txt")
+	link := filepath.Join(dir, "hard.txt")
+	writeTarget(t, target, "hi\n")
+
+	out, errOut, err := run(t, "-v", target, link)
+	if err != nil {
+		t.Fatalf("Run error = %v (stderr=%q)", err, errOut)
+	}
+	if !strings.Contains(out, "=>") {
+		t.Errorf("verbose output = %q, want '=>'", out)
+	}
+}
+
+// TestMultipleTargetsIntoDirectory covers run()'s "ln TARGET... DIRECTORY" form.
+func TestMultipleTargetsIntoDirectory(t *testing.T) {
+	t.Parallel()
+	dir := t.TempDir()
+	a := filepath.Join(dir, "a.txt")
+	b := filepath.Join(dir, "b.txt")
+	writeTarget(t, a, "A\n")
+	writeTarget(t, b, "B\n")
+	destDir := filepath.Join(dir, "dest")
+	if err := os.Mkdir(destDir, 0o755); err != nil {
+		t.Fatal(err)
+	}
+
+	_, errOut, err := run(t, "-s", a, b, destDir)
+	if err != nil {
+		t.Fatalf("Run error = %v (stderr=%q)", err, errOut)
+	}
+	for _, name := range []string{"a.txt", "b.txt"} {
+		if _, lerr := os.Lstat(filepath.Join(destDir, name)); lerr != nil {
+			t.Errorf("link %s missing: %v", name, lerr)
+		}
+	}
+}
+
+// TestMultipleTargetsNonDirectory checks the "target is not a directory" error
+// for three or more operands ending in a regular file.
+func TestMultipleTargetsNonDirectory(t *testing.T) {
+	t.Parallel()
+	dir := t.TempDir()
+	a := filepath.Join(dir, "a.txt")
+	b := filepath.Join(dir, "b.txt")
+	dst := filepath.Join(dir, "dst.txt")
+	writeTarget(t, a, "A\n")
+	writeTarget(t, b, "B\n")
+	writeTarget(t, dst, "D\n")
+
+	_, errOut, err := run(t, a, b, dst)
+	if err == nil {
+		t.Fatal("expected error: final operand is not a directory")
+	}
+	if !strings.Contains(errOut, "is not a directory") {
+		t.Errorf("stderr = %q, want not-a-directory message", errOut)
+	}
+}
+
+// TestForceRemovesExistingSymlink covers removeExisting via -f over a symlink.
+func TestForceRemovesExistingSymlink(t *testing.T) {
+	t.Parallel()
+	dir := t.TempDir()
+	target := filepath.Join(dir, "target.txt")
+	link := filepath.Join(dir, "link.txt")
+	writeTarget(t, target, "data\n")
+	// Pre-existing symlink at the destination.
+	if err := os.Symlink("nowhere", link); err != nil {
+		t.Fatal(err)
+	}
+
+	_, errOut, err := run(t, "-f", "-s", target, link)
+	if err != nil {
+		t.Fatalf("Run -f error = %v (stderr=%q)", err, errOut)
+	}
+	got, lerr := os.Readlink(link)
+	if lerr != nil {
+		t.Fatalf("symlink not created: %v", lerr)
+	}
+	if got != target {
+		t.Errorf("symlink points to %q, want %q", got, target)
+	}
+}
+
+// TestHardLinkMissingTargetReportsReason covers link()'s error branch and the
+// GNU-style reason rendering for a missing target.
+func TestHardLinkMissingTargetReportsReason(t *testing.T) {
+	t.Parallel()
+	dir := t.TempDir()
+	_, errOut, err := run(t, filepath.Join(dir, "nope"), filepath.Join(dir, "link"))
+	if err == nil {
+		t.Fatal("expected error for missing target")
+	}
+	if !strings.Contains(errOut, "failed to create hard link") {
+		t.Errorf("stderr = %q, want hard-link failure message", errOut)
+	}
+}
+
 func TestSingleOperandLinksInCwd(t *testing.T) {
 	dir := t.TempDir()
 	// The target lives in a subdirectory so the link, created in cwd with the

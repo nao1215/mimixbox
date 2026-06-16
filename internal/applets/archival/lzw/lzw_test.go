@@ -150,3 +150,61 @@ func TestDecompressShortHeader(t *testing.T) {
 		t.Error("expected error for truncated header")
 	}
 }
+
+// TestDecompressUnsupportedMaxBits rejects a header whose max-bits value is
+// outside the supported 9..16 range.
+func TestDecompressUnsupportedMaxBits(t *testing.T) {
+	t.Parallel()
+	for _, mb := range []byte{0x08, 0x11} { // 8 (too small), 17 (too large)
+		mb := mb
+		var out bytes.Buffer
+		// Valid magic, block mode set, with an out-of-range max-bits value.
+		hdr := []byte{0x1f, 0x9d, mb | 0x80}
+		if err := lzw.Decompress(bytes.NewReader(hdr), &out); err == nil {
+			t.Errorf("max bits %d: expected error", mb)
+		}
+	}
+}
+
+// TestDecompressTruncatedBody verifies that a valid header followed by an
+// incomplete code block does not panic and produces no spurious error: the
+// decoder treats a truncated stream as a clean end of input.
+func TestDecompressTruncatedBody(t *testing.T) {
+	t.Parallel()
+	var z bytes.Buffer
+	if err := lzw.Compress(strings.NewReader(strings.Repeat("abcd", 100)), &z); err != nil {
+		t.Fatal(err)
+	}
+	full := z.Bytes()
+	// Keep the 3-byte header plus a few code bytes, dropping the tail.
+	truncated := full[:min(len(full), 6)]
+	var out bytes.Buffer
+	// Should return without panicking; partial output is acceptable.
+	if err := lzw.Decompress(bytes.NewReader(truncated), &out); err != nil {
+		t.Errorf("unexpected error on truncated body: %v", err)
+	}
+}
+
+// TestRoundTripNonBlockModeRejectedByHeader confirms that the magic check is
+// strict: only the exact .Z magic bytes are accepted.
+func TestDecompressWrongSecondMagic(t *testing.T) {
+	t.Parallel()
+	var out bytes.Buffer
+	if err := lzw.Decompress(bytes.NewReader([]byte{0x1f, 0x00, 0x90}), &out); err == nil {
+		t.Error("expected error for wrong second magic byte")
+	}
+}
+
+// TestRoundTripBinaryWithAllByteValues round-trips a buffer that contains every
+// byte value in varied patterns, exercising the width-growth and flush paths
+// without the cost of filling the entire 16-bit dictionary.
+func TestRoundTripBinaryWithAllByteValues(t *testing.T) {
+	t.Parallel()
+	var b bytes.Buffer
+	for i := 0; i < 4096; i++ {
+		b.WriteByte(byte(i))
+		b.WriteByte(byte(i >> 8))
+		b.WriteByte(byte(i*7 + 3))
+	}
+	roundTrip(t, b.Bytes())
+}

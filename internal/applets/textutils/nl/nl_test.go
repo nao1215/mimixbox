@@ -59,3 +59,52 @@ func TestRunInvalidStyle(t *testing.T) {
 		t.Errorf("stderr = %q", errOut)
 	}
 }
+
+func TestNameAndSynopsis(t *testing.T) {
+	t.Parallel()
+	c := nl.New()
+	if c.Name() != "nl" {
+		t.Errorf("Name() = %q, want %q", c.Name(), "nl")
+	}
+	want := "Write each FILE to standard output with line numbers added"
+	if c.Synopsis() != want {
+		t.Errorf("Synopsis() = %q, want %q", c.Synopsis(), want)
+	}
+}
+
+func TestRunInvalidFormat(t *testing.T) {
+	t.Parallel()
+	_, errOut, err := run(t, "a\n", "-n", "zz")
+	if err == nil {
+		t.Fatal("expected error for invalid number format")
+	}
+	if !strings.Contains(errOut, "invalid line numbering format") {
+		t.Errorf("stderr = %q, want it to mention invalid format", errOut)
+	}
+}
+
+func TestRunLeftFormat(t *testing.T) {
+	t.Parallel()
+	// ln (left-justified) numbers padded on the right within the width field.
+	out, _, err := run(t, "a\n", "-n", "ln", "-w", "3", "-b", "a")
+	if err != nil {
+		t.Fatalf("Run error = %v", err)
+	}
+	if out != "1  \ta\n" {
+		t.Errorf("out = %q, want %q", out, "1  \ta\n")
+	}
+}
+
+func TestRunMissingFileKeepsError(t *testing.T) {
+	t.Parallel()
+	out, errOut, err := run(t, "", "/no/such/file")
+	if err == nil {
+		t.Fatal("expected error for missing file")
+	}
+	if out != "" {
+		t.Errorf("out = %q, want empty", out)
+	}
+	if !strings.Contains(errOut, "nl:") {
+		t.Errorf("stderr = %q, want an nl error", errOut)
+	}
+}
