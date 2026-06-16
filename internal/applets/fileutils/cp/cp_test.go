@@ -21,6 +21,28 @@ func run(t *testing.T, args ...string) (string, string, error) {
 	return out.String(), errBuf.String(), err
 }
 
+// runStdin is like run but lets the caller supply stdin, which the interactive
+// (-i) overwrite prompt reads its answer from.
+func runStdin(t *testing.T, stdin string, args ...string) (string, string, error) {
+	t.Helper()
+	out := &bytes.Buffer{}
+	errBuf := &bytes.Buffer{}
+	io := command.IO{In: strings.NewReader(stdin), Out: out, Err: errBuf}
+	err := cp.New().Run(context.Background(), io, args)
+	return out.String(), errBuf.String(), err
+}
+
+func TestSynopsisAndName(t *testing.T) {
+	t.Parallel()
+	c := cp.New()
+	if c.Name() != "cp" {
+		t.Errorf("Name() = %q, want cp", c.Name())
+	}
+	if c.Synopsis() == "" {
+		t.Error("Synopsis() is empty")
+	}
+}
+
 func TestRunCopyFile(t *testing.T) {
 	t.Parallel()
 	dir := t.TempDir()
@@ -348,6 +370,246 @@ func TestRunArchiveImpliesRecursiveAndPreserve(t *testing.T) {
 	}
 	if info.Mode().Perm() != 0o755 {
 		t.Errorf("cp -a should preserve mode, got %o", info.Mode().Perm())
+	}
+}
+
+// TestRunVerboseFile covers the -v reporting branch of cpFile.
+func TestRunVerboseFile(t *testing.T) {
+	t.Parallel()
+	dir := t.TempDir()
+	src := filepath.Join(dir, "src.txt")
+	dst := filepath.Join(dir, "dst.txt")
+	if err := os.WriteFile(src, []byte("v\n"), 0o644); err != nil {
+		t.Fatal(err)
+	}
+	out, _, err := run(t, "-v", src, dst)
+	if err != nil {
+		t.Fatalf("cp -v error = %v", err)
+	}
+	want := "'" + src + "' -> '" + dst + "'"
+	if !strings.Contains(out, want) {
+		t.Errorf("stdout = %q, want to contain %q", out, want)
+	}
+}
+
+// TestRunVerboseDir covers the -v reporting branch inside cpDir.
+func TestRunVerboseDir(t *testing.T) {
+	t.Parallel()
+	dir := t.TempDir()
+	src := filepath.Join(dir, "tree")
+	if err := os.MkdirAll(src, 0o755); err != nil {
+		t.Fatal(err)
+	}
+	if err := os.WriteFile(filepath.Join(src, "f.txt"), []byte("x"), 0o644); err != nil {
+		t.Fatal(err)
+	}
+	dst := filepath.Join(dir, "copy")
+	out, _, err := run(t, "-r", "-v", src, dst)
+	if err != nil {
+		t.Fatalf("cp -r -v error = %v", err)
+	}
+	if !strings.Contains(out, "f.txt'") {
+		t.Errorf("verbose stdout = %q, want to mention f.txt", out)
+	}
+}
+
+// TestRunInteractiveYesOverwrites covers question() returning true: an "y"
+// answer overwrites the existing destination.
+func TestRunInteractiveYesOverwrites(t *testing.T) {
+	t.Parallel()
+	dir := t.TempDir()
+	src := filepath.Join(dir, "src.txt")
+	dst := filepath.Join(dir, "dst.txt")
+	if err := os.WriteFile(src, []byte("new\n"), 0o644); err != nil {
+		t.Fatal(err)
+	}
+	if err := os.WriteFile(dst, []byte("old\n"), 0o644); err != nil {
+		t.Fatal(err)
+	}
+	out, _, err := runStdin(t, "y\n", "-i", src, dst)
+	if err != nil {
+		t.Fatalf("cp -i error = %v", err)
+	}
+	if !strings.Contains(out, "overwrite") {
+		t.Errorf("stdout = %q, want overwrite prompt", out)
+	}
+	got, _ := os.ReadFile(dst) //nolint:gosec // test-written file
+	if string(got) != "new\n" {
+		t.Errorf("dst content = %q, want new (yes should overwrite)", got)
+	}
+}
+
+// TestRunInteractiveNoKeeps covers question() returning false: a "n" answer
+// leaves the existing destination unchanged.
+func TestRunInteractiveNoKeeps(t *testing.T) {
+	t.Parallel()
+	dir := t.TempDir()
+	src := filepath.Join(dir, "src.txt")
+	dst := filepath.Join(dir, "dst.txt")
+	if err := os.WriteFile(src, []byte("new\n"), 0o644); err != nil {
+		t.Fatal(err)
+	}
+	if err := os.WriteFile(dst, []byte("old\n"), 0o644); err != nil {
+		t.Fatal(err)
+	}
+	if _, _, err := runStdin(t, "n\n", "-i", src, dst); err != nil {
+		t.Fatalf("cp -i error = %v", err)
+	}
+	got, _ := os.ReadFile(dst) //nolint:gosec // test-written file
+	if string(got) != "old\n" {
+		t.Errorf("dst content = %q, want old (no should not overwrite)", got)
+	}
+}
+
+// TestRunMissingSource covers the os.Stat error branch in cp().
+func TestRunMissingSource(t *testing.T) {
+	t.Parallel()
+	dir := t.TempDir()
+	missing := filepath.Join(dir, "nope.txt")
+	dst := filepath.Join(dir, "dst.txt")
+	_, errOut, err := run(t, missing, dst)
+	if err == nil {
+		t.Fatal("expected error for missing source")
+	}
+	if !strings.Contains(errOut, "cp:") {
+		t.Errorf("stderr = %q, want cp: prefix", errOut)
+	}
+}
+
+// TestRunNoDereferenceOntoExistingLink covers copySymlink's branch that removes
+// an existing destination symlink before recreating it.
+func TestRunNoDereferenceOntoExistingLink(t *testing.T) {
+	t.Parallel()
+	dir, _, link := symlinkFixture(t)
+	dst := filepath.Join(dir, "copy")
+	// Pre-create a different symlink at the destination so copySymlink must
+	// remove it before writing the new one.
+	if err := os.Symlink("somewhere-else", dst); err != nil {
+		t.Fatal(err)
+	}
+
+	if _, stderr, err := run(t, "-P", link, dst); err != nil {
+		t.Fatalf("cp -P error = %v (%s)", err, stderr)
+	}
+	target, err := os.Readlink(dst)
+	if err != nil {
+		t.Fatal(err)
+	}
+	if target != "real.txt" {
+		t.Errorf("symlink target = %q, want real.txt (existing link should be replaced)", target)
+	}
+}
+
+// TestRunNoClobberSkipsExistingLink covers copySymlink's -n early return.
+func TestRunNoClobberSkipsExistingLink(t *testing.T) {
+	t.Parallel()
+	dir, _, link := symlinkFixture(t)
+	dst := filepath.Join(dir, "copy")
+	if err := os.Symlink("original-target", dst); err != nil {
+		t.Fatal(err)
+	}
+
+	if _, stderr, err := run(t, "-P", "-n", link, dst); err != nil {
+		t.Fatalf("cp -P -n error = %v (%s)", err, stderr)
+	}
+	if target, _ := os.Readlink(dst); target != "original-target" {
+		t.Errorf("symlink target = %q, want original-target (-n must not replace it)", target)
+	}
+}
+
+// TestRunSymlinkSameFile covers the early same-path guard in cp() for the
+// copy-as-link path: "cp -P dir/link dir" resolves the target to dir/link.
+func TestRunSymlinkSameFile(t *testing.T) {
+	t.Parallel()
+	dir, _, link := symlinkFixture(t)
+	_, errOut, err := run(t, "-P", link, dir)
+	if err == nil {
+		t.Fatal("expected error when the resolved symlink target equals the source")
+	}
+	if !strings.Contains(errOut, "is same") {
+		t.Errorf("stderr = %q, want 'is same'", errOut)
+	}
+}
+
+// TestRunFollowCmdlineLink covers the derefCmdline (-H) resolution: a
+// command-line symlink is followed and its target copied.
+func TestRunFollowCmdlineLink(t *testing.T) {
+	t.Parallel()
+	dir, _, link := symlinkFixture(t)
+	dst := filepath.Join(dir, "copy")
+	if _, stderr, err := run(t, "-H", link, dst); err != nil {
+		t.Fatalf("cp -H error = %v (%s)", err, stderr)
+	}
+	fi, err := os.Lstat(dst)
+	if err != nil {
+		t.Fatal(err)
+	}
+	if fi.Mode()&os.ModeSymlink != 0 {
+		t.Errorf("cp -H should follow the command-line link, got a symlink at %q", dst)
+	}
+}
+
+// TestRunDirSymlinkToDirSkipped covers cpDir's branch that follows a symlink to
+// a directory within a tree but does not recurse into it.
+func TestRunDirSymlinkToDirSkipped(t *testing.T) {
+	t.Parallel()
+	dir := t.TempDir()
+	src := filepath.Join(dir, "src")
+	realSub := filepath.Join(src, "realdir")
+	if err := os.MkdirAll(realSub, 0o755); err != nil {
+		t.Fatal(err)
+	}
+	if err := os.WriteFile(filepath.Join(realSub, "inside.txt"), []byte("z"), 0o644); err != nil {
+		t.Fatal(err)
+	}
+	// A symlink pointing at the sibling directory; default deref follows it but
+	// must not recurse into the target's contents.
+	if err := os.Symlink("realdir", filepath.Join(src, "dlink")); err != nil {
+		t.Fatal(err)
+	}
+	dst := filepath.Join(dir, "dst")
+	if _, stderr, err := run(t, "-r", src, dst); err != nil {
+		t.Fatalf("cp -r error = %v (%s)", err, stderr)
+	}
+	// dst did not exist, so the tree lands directly at dst. The real directory
+	// and its file are copied; the followed dir-symlink is not recursed into,
+	// so no dlink/inside.txt is created.
+	if _, err := os.Stat(filepath.Join(dst, "realdir", "inside.txt")); err != nil {
+		t.Errorf("real directory content not copied: %v", err)
+	}
+	if _, err := os.Stat(filepath.Join(dst, "dlink", "inside.txt")); err == nil {
+		t.Errorf("dir-symlink was recursed into; it should be skipped")
+	}
+}
+
+// TestRunDirNoClobberSkipsExistingInTree covers cpDir's -n branch that skips a
+// file already present in the destination tree.
+func TestRunDirNoClobberSkipsExistingInTree(t *testing.T) {
+	t.Parallel()
+	dir := t.TempDir()
+	src := filepath.Join(dir, "src")
+	if err := os.MkdirAll(src, 0o755); err != nil {
+		t.Fatal(err)
+	}
+	if err := os.WriteFile(filepath.Join(src, "f.txt"), []byte("new\n"), 0o644); err != nil {
+		t.Fatal(err)
+	}
+	// Destination already holds src/f.txt with different content.
+	dstTree := filepath.Join(dir, "dst", "src")
+	if err := os.MkdirAll(dstTree, 0o755); err != nil {
+		t.Fatal(err)
+	}
+	if err := os.WriteFile(filepath.Join(dstTree, "f.txt"), []byte("old\n"), 0o644); err != nil {
+		t.Fatal(err)
+	}
+
+	dst := filepath.Join(dir, "dst")
+	if _, stderr, err := run(t, "-r", "-n", src, dst); err != nil {
+		t.Fatalf("cp -r -n error = %v (%s)", err, stderr)
+	}
+	got, _ := os.ReadFile(filepath.Join(dstTree, "f.txt")) //nolint:gosec // test-written file
+	if string(got) != "old\n" {
+		t.Errorf("existing file in tree was overwritten: %q, want old", got)
 	}
 }
 

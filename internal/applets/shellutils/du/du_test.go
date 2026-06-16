@@ -203,6 +203,56 @@ func TestHumanReadableFormatter(t *testing.T) {
 	}
 }
 
+// TestSynopsisAndName covers the metadata accessors.
+func TestSynopsisAndName(t *testing.T) {
+	t.Parallel()
+	c := du.New()
+	if c.Name() != "du" {
+		t.Errorf("Name() = %q, want du", c.Name())
+	}
+	if c.Synopsis() == "" {
+		t.Error("Synopsis() is empty")
+	}
+}
+
+// TestEmptyFileZeroBlocks covers the blocks(bytes<=0) branch: a zero-byte file
+// occupies zero 1K blocks.
+func TestEmptyFileZeroBlocks(t *testing.T) {
+	t.Parallel()
+	dir := t.TempDir()
+	f := filepath.Join(dir, "empty.txt")
+	if err := os.WriteFile(f, nil, 0o600); err != nil {
+		t.Fatal(err)
+	}
+	out, _, err := runDu(t, f)
+	if err != nil {
+		t.Fatalf("Run error = %v", err)
+	}
+	size, _ := splitLine(t, nonEmptyLines(out)[0])
+	if size != "0" {
+		t.Errorf("size = %q, want %q for empty file", size, "0")
+	}
+}
+
+// TestHumanReadableNoDecimalAboveTen covers the %.0f branch of humanReadable,
+// taken when the scaled value is >= 10 (here ~15K).
+func TestHumanReadableNoDecimalAboveTen(t *testing.T) {
+	t.Parallel()
+	dir := t.TempDir()
+	f := filepath.Join(dir, "big.bin")
+	if err := os.WriteFile(f, bytes.Repeat([]byte("z"), 15*1024), 0o600); err != nil {
+		t.Fatal(err)
+	}
+	out, _, err := runDu(t, "-h", f)
+	if err != nil {
+		t.Fatalf("Run error = %v", err)
+	}
+	size, _ := splitLine(t, nonEmptyLines(out)[0])
+	if size != "15K" {
+		t.Errorf("size = %q, want %q (no decimal place at/above 10)", size, "15K")
+	}
+}
+
 func TestMissingOperand(t *testing.T) {
 	t.Parallel()
 	_, errOut, err := runDu(t, "/no/such/path")
