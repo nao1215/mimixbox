@@ -31,7 +31,16 @@ func (c *Command) Synopsis() string {
 
 // Run executes chown.
 func (c *Command) Run(_ context.Context, stdio command.IO, args []string) error {
-	fs := command.NewFlagSet(c.Name(), "[OPTION]... OWNER[:GROUP] FILE...", stdio.Err)
+	fs := command.NewFlagSet(c.Name(), "[OPTION]... OWNER[:GROUP] FILE...", stdio.Err).WithHelp(command.Help{
+		Description: "Change the owner and/or group of each FILE. The owner spec is OWNER, OWNER:GROUP, OWNER:, " +
+			"or :GROUP, where each part is a name or a numeric ID; an omitted part is left unchanged.",
+		Examples: []command.Example{
+			{Command: "chown root file.txt", Explain: "Change the owner of file.txt to root."},
+			{Command: "chown root:staff file.txt", Explain: "Change the owner to root and the group to staff."},
+			{Command: "chown -R www-data /srv/www", Explain: "Recursively change the owner of /srv/www and its contents."},
+		},
+		ExitStatus: "0  all files were changed successfully.\n1  one or more files could not be changed.",
+	})
 	recursive := fs.BoolP("recursive", "R", false, "operate on files and directories recursively")
 	verbose := fs.BoolP("verbose", "v", false, "output a diagnostic for every file processed")
 

@@ -37,7 +37,18 @@ func (c *Command) Synopsis() string { return "Create, modify and extract from ar
 // Run executes ar. The first operand is a key letter (r, t or x) optionally
 // preceded by a dash, matching ar's traditional calling convention.
 func (c *Command) Run(_ context.Context, stdio command.IO, args []string) error {
-	fs := command.NewFlagSet(c.Name(), "{rtx}[v] ARCHIVE [MEMBER]...", stdio.Err)
+	fs := command.NewFlagSet(c.Name(), "{rtx}[v] ARCHIVE [MEMBER]...", stdio.Err).WithHelp(command.Help{
+		Description: "Create, list and extract members of a Unix \"common\" (System V/GNU) ar\n" +
+			"archive. The first operand is a key letter: r replaces or creates the\n" +
+			"archive from the named files, t lists its members, and x extracts them.\n" +
+			"Append v to the key for verbose output.",
+		Examples: []command.Example{
+			{Command: "ar rv libfoo.a foo.o bar.o", Explain: "create libfoo.a from the object files"},
+			{Command: "ar t libfoo.a", Explain: "list the members of libfoo.a"},
+			{Command: "ar x libfoo.a foo.o", Explain: "extract foo.o into the current directory"},
+		},
+		ExitStatus: "0  success.\n1  an invalid key was given, or the archive could not be read or written.",
+	})
 	proceed, err := fs.Parse(stdio, args)
 	if err != nil || !proceed {
 		return err

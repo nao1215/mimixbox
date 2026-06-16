@@ -72,7 +72,14 @@ func RenderFrame(width, height int, heads []int, glyph func(col, row int) rune) 
 
 // Run executes cmatrix.
 func (c *Command) Run(ctx context.Context, stdio command.IO, args []string) error {
-	fs := command.NewFlagSet(c.Name(), "[OPTION]", stdio.Err)
+	fs := command.NewFlagSet(c.Name(), "[OPTION]", stdio.Err).WithHelp(command.Help{
+		Description: "Show the falling-glyph \"digital rain\" animation in the terminal. The effect needs a real " +
+			"terminal; without one (for example under tests or CI) it exits gracefully. Press Ctrl-C to stop.",
+		Examples: []command.Example{
+			{Command: "cmatrix", Explain: "Run the digital rain animation until interrupted."},
+		},
+		ExitStatus: "0  the animation exited cleanly (or no terminal was available).",
+	})
 
 	proceed, err := fs.Parse(stdio, args)
 	if err != nil || !proceed {

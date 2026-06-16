@@ -43,7 +43,17 @@ var killProcess = func(pid int, sig syscall.Signal) error {
 
 // Run executes killall.
 func (c *Command) Run(_ context.Context, stdio command.IO, args []string) error {
-	fs := command.NewFlagSet(c.Name(), "[OPTION]... NAME...", stdio.Err)
+	fs := command.NewFlagSet(c.Name(), "[OPTION]... NAME...", stdio.Err).WithHelp(command.Help{
+		Description: "Send a signal to every process running any of the named programs. The " +
+			"default signal is SIGTERM; a different one may be given by name or number with " +
+			"-s.",
+		Examples: []command.Example{
+			{Command: "killall firefox", Explain: "Send SIGTERM to every firefox process."},
+			{Command: "killall -s KILL nginx", Explain: "Send SIGKILL to every nginx process."},
+			{Command: "killall -q sleep", Explain: "Kill matching processes without complaining if none are found."},
+		},
+		ExitStatus: "0  at least one process was signaled for every name.\n1  a name matched no running process.",
+	})
 	signalName := fs.StringP("signal", "s", "TERM", "send this signal instead of SIGTERM")
 	quiet := fs.BoolP("quiet", "q", false, "do not complain if no process was killed")
 

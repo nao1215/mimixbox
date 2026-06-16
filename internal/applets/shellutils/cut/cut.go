@@ -48,7 +48,17 @@ type options struct {
 
 // Run executes cut.
 func (c *Command) Run(_ context.Context, stdio command.IO, args []string) error {
-	fs := command.NewFlagSet(c.Name(), "OPTION... [FILE]...", stdio.Err)
+	fs := command.NewFlagSet(c.Name(), "OPTION... [FILE]...", stdio.Err).WithHelp(command.Help{
+		Description: "Print selected parts of each line from each FILE to standard output. " +
+			"Exactly one of -b (bytes), -c (characters), or -f (fields) selects the unit; " +
+			"with no FILE, or when FILE is -, read standard input.",
+		Examples: []command.Example{
+			{Command: "cut -d: -f1 /etc/passwd", Explain: "Print the first colon-separated field of each line."},
+			{Command: "cut -c1-5 file.txt", Explain: "Print the first five characters of each line."},
+			{Command: "cut -f2,4 -d, data.csv", Explain: "Print the second and fourth comma-separated fields."},
+		},
+		ExitStatus: "0  success.\n1  an error occurred (e.g. an input file could not be read).",
+	})
 	bytesList := fs.StringP("bytes", "b", "", "select only these bytes")
 	charsList := fs.StringP("characters", "c", "", "select only these characters")
 	fieldsList := fs.StringP("fields", "f", "", "select only these fields")

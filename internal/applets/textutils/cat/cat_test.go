@@ -115,6 +115,12 @@ func TestRunHelpAndVersion(t *testing.T) {
 	if !strings.Contains(out, "Usage: cat") {
 		t.Errorf("--help out = %q", out)
 	}
+	if !strings.Contains(out, "Examples:") {
+		t.Errorf("--help missing Examples: %q", out)
+	}
+	if !strings.Contains(out, "Exit status:") {
+		t.Errorf("--help missing Exit status: %q", out)
+	}
 
 	out, _, err = runStdin(t, "", "--version")
 	if err != nil {

@@ -25,7 +25,16 @@ func (c *Command) Synopsis() string { return "Print the first NUMBER(default=10)
 
 // Run executes head.
 func (c *Command) Run(_ context.Context, stdio command.IO, args []string) error {
-	fs := command.NewFlagSet(c.Name(), "[OPTION]... [FILE]...", stdio.Err)
+	fs := command.NewFlagSet(c.Name(), "[OPTION]... [FILE]...", stdio.Err).WithHelp(command.Help{
+		Description: "Print the first part of each FILE (or standard input when no FILE is given) to standard output. " +
+			"By default the first 10 lines are printed; with multiple files, each is preceded by a header.",
+		Examples: []command.Example{
+			{Command: "head notes.txt", Explain: "Print the first 10 lines of notes.txt."},
+			{Command: "head -n 5 notes.txt", Explain: "Print the first 5 lines of notes.txt."},
+			{Command: "head -c 100 notes.txt", Explain: "Print the first 100 bytes of notes.txt."},
+		},
+		ExitStatus: "0  all input was printed successfully.\n1  a file could not be read.",
+	})
 	lines := fs.IntP("lines", "n", 10, "print the first NUM lines instead of the first 10")
 	bytesN := fs.IntP("bytes", "c", 0, "print the first NUM bytes of each file")
 	quiet := fs.BoolP("quiet", "q", false, "never print headers giving file names")

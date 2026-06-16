@@ -42,7 +42,18 @@ var signals = signal.List()
 //	kill -SIGNAL PID...    send SIGNAL to each PID (e.g. -9, -KILL, -SIGKILL)
 //	kill -l                list signal names
 func (c *Command) Run(_ context.Context, stdio command.IO, args []string) error {
-	fs := command.NewFlagSet(c.Name(), "[-s SIGNAL | -SIGNAL] PID... | -l", stdio.Err)
+	fs := command.NewFlagSet(c.Name(), "[-s SIGNAL | -SIGNAL] PID... | -l", stdio.Err).WithHelp(command.Help{
+		Description: "Send a signal to each process identified by PID. The default signal is " +
+			"SIGTERM (15); a different signal may be given by name or number with -s or as " +
+			"-SIGNAL. With -l, list the known signal names.",
+		Examples: []command.Example{
+			{Command: "kill 1234", Explain: "Send SIGTERM to process 1234."},
+			{Command: "kill -9 1234", Explain: "Send SIGKILL to process 1234."},
+			{Command: "kill -s HUP 1234", Explain: "Send SIGHUP to process 1234."},
+			{Command: "kill -l", Explain: "List the available signal names."},
+		},
+		ExitStatus: "0  every signal was delivered.\n1  a PID was invalid or a signal could not be sent.",
+	})
 	sigName := fs.StringP("signal", "s", "", "send the given SIGNAL instead of SIGTERM")
 	list := fs.BoolP("list", "l", false, "list signal names")
 

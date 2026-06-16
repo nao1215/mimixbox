@@ -27,7 +27,14 @@ func (c *Command) Synopsis() string { return "Clear terminal" }
 
 // Run executes clear: it writes the terminal-clear escape sequence to stdout.
 func (c *Command) Run(_ context.Context, stdio command.IO, args []string) error {
-	fs := command.NewFlagSet(c.Name(), "[OPTION]", stdio.Err)
+	fs := command.NewFlagSet(c.Name(), "[OPTION]", stdio.Err).WithHelp(command.Help{
+		Description: "Clear the terminal screen by writing the escape sequence that moves the cursor to the home " +
+			"position and erases the display.",
+		Examples: []command.Example{
+			{Command: "clear", Explain: "Clear the terminal screen."},
+		},
+		ExitStatus: "0  success.\n1  the clear sequence could not be written.",
+	})
 
 	proceed, err := fs.Parse(stdio, args)
 	if err != nil || !proceed {

@@ -28,7 +28,16 @@ const glyphHeight = 5
 
 // Run executes banner.
 func (c *Command) Run(_ context.Context, stdio command.IO, args []string) error {
-	fs := command.NewFlagSet(c.Name(), "MESSAGE...", stdio.Err)
+	fs := command.NewFlagSet(c.Name(), "MESSAGE...", stdio.Err).WithHelp(command.Help{
+		Description: "Print MESSAGE as large ASCII-art letters built from '#' characters.\n" +
+			"Multiple operands are joined with spaces, lowercase letters are\n" +
+			"upper-cased, and unknown characters are rendered as blank glyphs.",
+		Examples: []command.Example{
+			{Command: "banner HI", Explain: "print HI as ASCII-art letters"},
+			{Command: "banner hello world", Explain: "join the words and print them large"},
+		},
+		ExitStatus: "0  success.\n1  no message operand was given.",
+	})
 
 	proceed, err := fs.Parse(stdio, args)
 	if err != nil || !proceed {

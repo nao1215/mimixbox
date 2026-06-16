@@ -35,7 +35,17 @@ type options struct {
 
 // Run executes cat.
 func (c *Command) Run(_ context.Context, stdio command.IO, args []string) error {
-	fs := command.NewFlagSet(c.Name(), "[OPTION]... [FILE]...", stdio.Err)
+	fs := command.NewFlagSet(c.Name(), "[OPTION]... [FILE]...", stdio.Err).WithHelp(command.Help{
+		Description: "Concatenate each FILE to standard output. With no FILE, or when FILE is\n" +
+			"\"-\", read standard input. Options can number lines, squeeze repeated\n" +
+			"blank lines, and make line ends or tabs visible.",
+		Examples: []command.Example{
+			{Command: "cat file.txt", Explain: "print file.txt to standard output"},
+			{Command: "cat -n a.txt b.txt", Explain: "concatenate two files, numbering every line"},
+			{Command: "cat", Explain: "copy standard input to standard output"},
+		},
+		ExitStatus: "0  success.\n1  one or more files could not be opened or read.",
+	})
 	number := fs.BoolP("number", "n", false, "number all output lines")
 	numberNonBlank := fs.BoolP("number-nonblank", "b", false, "number non-empty output lines, overrides -n")
 	squeeze := fs.BoolP("squeeze-blank", "s", false, "suppress repeated empty output lines")

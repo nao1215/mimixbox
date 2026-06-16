@@ -53,7 +53,17 @@ func (c *Command) Synopsis() string { return "Detect if running in a chroot" }
 // *command.ExitError carrying status 1 (not a chroot) or 2 (undetectable)
 // otherwise.
 func (c *Command) Run(_ context.Context, stdio command.IO, args []string) error {
-	fs := command.NewFlagSet(c.Name(), "[OPTION]", stdio.Err)
+	fs := command.NewFlagSet(c.Name(), "[OPTION]", stdio.Err).WithHelp(command.Help{
+		Description: "Detect whether the current process is running in a chroot. The result is " +
+			"reported through the exit status. When the status cannot be determined, -f and " +
+			"-t choose the fallback answer.",
+		Examples: []command.Example{
+			{Command: "ischroot", Explain: "Exit 0 inside a chroot, 1 outside, 2 if undetermined."},
+			{Command: "ischroot -f", Explain: "Assume not in a chroot when detection fails."},
+			{Command: "ischroot -t", Explain: "Assume in a chroot when detection fails."},
+		},
+		ExitStatus: "0  running in a chroot.\n1  not in a chroot.\n2  could not be determined.",
+	})
 	defaultFalse := fs.BoolP("default-false", "f", false, "return 1 if detection fails (not root)")
 	defaultTrue := fs.BoolP("default-true", "t", false, "return 0 if detection fails (not root)")
 

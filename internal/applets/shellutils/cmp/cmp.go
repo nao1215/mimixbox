@@ -92,7 +92,16 @@ func compare(r1, r2 io.Reader) (result, error) {
 
 // Run executes cmp.
 func (c *Command) Run(_ context.Context, stdio command.IO, args []string) error {
-	fs := command.NewFlagSet(c.Name(), "[OPTION]... FILE1 [FILE2]", stdio.Err)
+	fs := command.NewFlagSet(c.Name(), "[OPTION]... FILE1 [FILE2]", stdio.Err).WithHelp(command.Help{
+		Description: "Compare two files byte by byte and report the byte offset and line number of the first " +
+			"difference. When FILE2 is omitted (or either file is '-'), standard input is compared.",
+		Examples: []command.Example{
+			{Command: "cmp a.txt b.txt", Explain: "Report the first byte at which a.txt and b.txt differ."},
+			{Command: "cmp -s a.txt b.txt", Explain: "Compare silently, reporting the result only via the exit status."},
+			{Command: "cmp -l a.txt b.txt", Explain: "List the offset and octal values of every differing byte."},
+		},
+		ExitStatus: "0  inputs are identical.\n1  they differ.\n2  an error occurred.",
+	})
 	silent := fs.BoolP("silent", "s", false, "suppress all normal output")
 	_ = fs.Bool("quiet", false, "suppress all normal output")
 	verbose := fs.BoolP("verbose", "l", false, "output byte numbers and differing byte values")

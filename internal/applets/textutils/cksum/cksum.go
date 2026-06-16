@@ -24,7 +24,16 @@ func (c *Command) Synopsis() string { return "Print CRC checksum and byte count 
 
 // Run executes cksum.
 func (c *Command) Run(_ context.Context, stdio command.IO, args []string) error {
-	fs := command.NewFlagSet(c.Name(), "[OPTION]... [FILE]...", stdio.Err)
+	fs := command.NewFlagSet(c.Name(), "[OPTION]... [FILE]...", stdio.Err).WithHelp(command.Help{
+		Description: "Print a POSIX CRC checksum and the byte count for each FILE. With no FILE, or when FILE " +
+			"is '-', read standard input. The output is compatible with GNU coreutils' cksum.",
+		Examples: []command.Example{
+			{Command: "cksum file.txt", Explain: "Print the CRC checksum, byte count, and name of file.txt."},
+			{Command: "cksum a.txt b.txt", Explain: "Print a checksum line for each named file."},
+			{Command: "cat file | cksum", Explain: "Checksum data read from standard input."},
+		},
+		ExitStatus: "0  all files were read successfully.\n1  one or more files could not be read.",
+	})
 
 	proceed, err := fs.Parse(stdio, args)
 	if err != nil || !proceed {

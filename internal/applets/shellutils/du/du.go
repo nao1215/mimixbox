@@ -49,7 +49,16 @@ type entry struct {
 
 // Run executes du.
 func (c *Command) Run(_ context.Context, stdio command.IO, args []string) error {
-	fs := command.NewFlagSet(c.Name(), "[OPTION]... [FILE]...", stdio.Err)
+	fs := command.NewFlagSet(c.Name(), "[OPTION]... [FILE]...", stdio.Err).WithHelp(command.Help{
+		Description: "Estimate and summarize disk space usage for each FILE, recursing into directories. " +
+			"With no FILE, summarize the current directory.",
+		Examples: []command.Example{
+			{Command: "du", Explain: "Show usage of the current directory tree."},
+			{Command: "du -sh /var/log", Explain: "Show a single human-readable total for /var/log."},
+			{Command: "du -a dir", Explain: "Show usage for every file, not just directories."},
+		},
+		ExitStatus: "0  success.\n1  an error occurred (e.g. a file could not be read).",
+	})
 	summarize := fs.BoolP("summarize", "s", false, "display only a total for each argument")
 	all := fs.BoolP("all", "a", false, "write counts for all files, not just directories")
 	human := fs.BoolP("human-readable", "h", false, "print sizes in human readable format (e.g., 1K 234M 2G)")

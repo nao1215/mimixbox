@@ -36,7 +36,17 @@ func (c *Command) Synopsis() string { return "Display a calendar" }
 
 // Run executes cal.
 func (c *Command) Run(_ context.Context, stdio command.IO, args []string) error {
-	fs := command.NewFlagSet(c.Name(), "[OPTION]... [[MONTH] YEAR]", stdio.Err)
+	fs := command.NewFlagSet(c.Name(), "[OPTION]... [[MONTH] YEAR]", stdio.Err).WithHelp(command.Help{
+		Description: "Display a calendar. With no operand the current month is shown; a single\n" +
+			"YEAR operand (or -y) shows the whole year, and a MONTH YEAR pair shows\n" +
+			"that month. Use -m to start each week on Monday.",
+		Examples: []command.Example{
+			{Command: "cal", Explain: "show the current month"},
+			{Command: "cal 2024", Explain: "show the whole year 2024"},
+			{Command: "cal 11 2023", Explain: "show November 2023"},
+		},
+		ExitStatus: "0  success.\n1  an invalid month or year operand was given.",
+	})
 	monday := fs.BoolP("monday", "m", false, "Monday as the first day of the week")
 	yearMode := fs.BoolP("year", "y", false, "display a calendar for the whole current year")
 

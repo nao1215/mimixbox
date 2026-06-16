@@ -27,7 +27,13 @@ var machine = realMachine
 
 // Run executes arch.
 func (c *Command) Run(_ context.Context, stdio command.IO, args []string) error {
-	fs := command.NewFlagSet(c.Name(), "", stdio.Err)
+	fs := command.NewFlagSet(c.Name(), "", stdio.Err).WithHelp(command.Help{
+		Description: "Print the machine hardware name, equivalent to \"uname -m\".",
+		Examples: []command.Example{
+			{Command: "arch", Explain: "print the hardware name, e.g. x86_64"},
+		},
+		ExitStatus: "0  success.\n1  the machine hardware name could not be determined.",
+	})
 
 	proceed, err := fs.Parse(stdio, args)
 	if err != nil || !proceed {

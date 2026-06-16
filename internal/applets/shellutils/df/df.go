@@ -138,7 +138,16 @@ func formatSize(bytes uint64, human bool) string {
 
 // Run executes df.
 func (c *Command) Run(_ context.Context, stdio command.IO, args []string) error {
-	fs := command.NewFlagSet(c.Name(), "[OPTION]... [FILE]...", stdio.Err)
+	fs := command.NewFlagSet(c.Name(), "[OPTION]... [FILE]...", stdio.Err).WithHelp(command.Help{
+		Description: "Report file system disk space usage for the file system that contains each FILE, " +
+			"or for the current directory's file system when no FILE is given.",
+		Examples: []command.Example{
+			{Command: "df", Explain: "Show disk space usage for the current file system."},
+			{Command: "df -h /", Explain: "Show usage for the root file system in human-readable form."},
+			{Command: "df -i .", Explain: "Show inode usage instead of block usage."},
+		},
+		ExitStatus: "0  success.\n1  an error occurred (e.g. a file could not be stat'd).",
+	})
 	human := fs.BoolP("human-readable", "h", false, "print sizes in powers of 1024 (e.g., 1023M)")
 	_ = fs.BoolP("kilobytes", "k", false, "use 1024-byte (1K) blocks (default)")
 	inodes := fs.BoolP("inodes", "i", false, "list inode information instead of block usage")

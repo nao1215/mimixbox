@@ -29,7 +29,16 @@ func (c *Command) Synopsis() string { return "Display a line of text" }
 
 // Run executes echo.
 func (c *Command) Run(_ context.Context, stdio command.IO, args []string) error {
-	if command.HandleHelpVersion(stdio, c.Name(), "[OPTION]... [STRING]...", args) {
+	if command.HandleHelpVersionWith(stdio, c.Name(), "[OPTION]... [STRING]...", command.Help{
+		Description: "Write each STRING to standard output, separated by spaces and followed by a " +
+			"newline. With -n no trailing newline is written; with -e backslash escapes (\\n, \\t, ...) " +
+			"are interpreted.",
+		Examples: []command.Example{
+			{Command: "echo hello world", Explain: "Print 'hello world' and a newline."},
+			{Command: "echo -n no-newline", Explain: "Print without the trailing newline."},
+		},
+		ExitStatus: "0  always, unless writing to standard output fails.",
+	}, args) {
 		return nil
 	}
 

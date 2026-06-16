@@ -60,3 +60,16 @@ func TestRunMissingOperand(t *testing.T) {
 		t.Errorf("stderr = %q", errOut)
 	}
 }
+
+func TestHelpSections(t *testing.T) {
+	t.Parallel()
+	out, _, err := run(t, "--help")
+	if err != nil {
+		t.Fatalf("--help error = %v", err)
+	}
+	for _, want := range []string{"Examples:", "Exit status:"} {
+		if !strings.Contains(out, want) {
+			t.Errorf("--help output missing %q:\n%s", want, out)
+		}
+	}
+}

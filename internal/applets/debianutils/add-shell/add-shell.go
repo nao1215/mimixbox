@@ -46,7 +46,15 @@ func (c *Command) Synopsis() string { return "Add shell name to /etc/shells" }
 
 // Run executes add-shell.
 func (c *Command) Run(_ context.Context, stdio command.IO, args []string) error {
-	fs := command.NewFlagSet(c.Name(), "SHELLNAME...", stdio.Err)
+	fs := command.NewFlagSet(c.Name(), "SHELLNAME...", stdio.Err).WithHelp(command.Help{
+		Description: "Add each SHELLNAME to /etc/shells, appending only the names that are\n" +
+			"not already listed. The file is created if it does not yet exist.",
+		Examples: []command.Example{
+			{Command: "add-shell /bin/zsh", Explain: "add /bin/zsh to /etc/shells if absent"},
+			{Command: "add-shell /usr/bin/fish /bin/dash", Explain: "add several shells at once"},
+		},
+		ExitStatus: "0  success.\n1  no shell name was given, or /etc/shells could not be written.",
+	})
 
 	proceed, err := fs.Parse(stdio, args)
 	if err != nil || !proceed {

@@ -28,7 +28,18 @@ func (c *Command) Synopsis() string { return "Pattern scanning and processing la
 
 // Run executes awk.
 func (c *Command) Run(_ context.Context, stdio command.IO, args []string) error {
-	fs := command.NewFlagSet(c.Name(), "[-F sep] [-v var=val]... 'program' [FILE]...", stdio.Err)
+	fs := command.NewFlagSet(c.Name(), "[-F sep] [-v var=val]... 'program' [FILE]...", stdio.Err).WithHelp(command.Help{
+		Description: "Apply the awk program to each FILE, or to standard input when no file is\n" +
+			"given. This is a small subset of awk: it supports BEGIN/END blocks,\n" +
+			"/regexp/ and comparison patterns, the field variables $0, $1..$NF, NR and\n" +
+			"NF, and the print and printf statements.",
+		Examples: []command.Example{
+			{Command: "awk '{print $1}' file.txt", Explain: "print the first field of every line"},
+			{Command: "awk -F: '{print $1}' /etc/passwd", Explain: "split fields on ':'"},
+			{Command: "awk -v n=3 '{print $n}' file.txt", Explain: "preset variable n before running"},
+		},
+		ExitStatus: "0  success.\n1  no program text was given, the program failed to parse, or a file could not be read.",
+	})
 	sep := fs.StringP("field-separator", "F", "", "use sep as the input field separator")
 	assigns := fs.StringArrayP("assign", "v", nil, "assign var=value before execution")
 

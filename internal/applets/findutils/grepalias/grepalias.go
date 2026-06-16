@@ -34,7 +34,24 @@ func (c *Command) Synopsis() string {
 	return "Search with extended regular expressions (grep -E)"
 }
 
-// Run delegates to grep with the alias's mode flag prepended.
+// Run delegates to grep with the alias's mode flag prepended. A leading --help
+// renders alias-named structured help so the usage and example lines match the
+// invoked command rather than grep's.
 func (c *Command) Run(ctx context.Context, stdio command.IO, args []string) error {
+	mode := "extended (-E)"
+	if c.flag == "-F" {
+		mode = "fixed-string (-F)"
+	}
+	if command.HandleHelpVersionWith(stdio, c.Name(), "[OPTION]... PATTERN [FILE]...", command.Help{
+		Description: "Search each FILE (or standard input) for lines matching PATTERN. " + c.Name() +
+			" is grep in " + mode + " mode.",
+		Examples: []command.Example{
+			{Command: c.Name() + " 'foo|bar' file.txt", Explain: "Print lines of file.txt that match the pattern."},
+			{Command: "ls | " + c.Name() + " -i readme", Explain: "Filter the listing case-insensitively."},
+		},
+		ExitStatus: "0  a line matched.\n1  no lines matched.\n2  an error occurred.",
+	}, args) {
+		return nil
+	}
 	return grep.New().Run(ctx, stdio, append([]string{c.flag}, args...))
 }
