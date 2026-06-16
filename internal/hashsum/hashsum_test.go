@@ -218,3 +218,167 @@ func TestHelpSections(t *testing.T) {
 		}
 	}
 }
+
+// TestCheckStdin verifies that, with no operand, -c reads the digest list from
+// standard input rather than from a file.
+func TestCheckStdin(t *testing.T) {
+	t.Parallel()
+	dir := t.TempDir()
+	f := filepath.Join(dir, "a.txt")
+	if err := os.WriteFile(f, []byte("test\n"), 0o600); err != nil {
+		t.Fatal(err)
+	}
+	list := md5hex("test\n") + "  " + f + "\n"
+	out, _, err := run(t, list, "-c")
+	if err != nil {
+		t.Fatalf("Run error = %v", err)
+	}
+	if out != f+": OK\n" {
+		t.Errorf("out = %q, want %q", out, f+": OK\n")
+	}
+}
+
+// TestCheckListMissing verifies that the digest-list file itself not existing is
+// reported on stderr and is a failure.
+func TestCheckListMissing(t *testing.T) {
+	t.Parallel()
+	out, errOut, err := run(t, "", "-c", "/no/such/list.txt")
+	if err == nil {
+		t.Fatal("expected error when the checksum list cannot be opened")
+	}
+	if out != "" {
+		t.Errorf("out = %q, want empty", out)
+	}
+	if !strings.HasPrefix(errOut, "md5sum: ") || !strings.Contains(errOut, "/no/such/list.txt") {
+		t.Errorf("stderr = %q, want md5sum-prefixed error mentioning the list", errOut)
+	}
+}
+
+// TestCheckMalformedLine verifies that a line that is not "<digest>  <file>" is
+// reported as improperly formatted and turns into a failure, while a valid line
+// in the same list is still verified.
+func TestCheckMalformedLine(t *testing.T) {
+	t.Parallel()
+	dir := t.TempDir()
+	f := filepath.Join(dir, "a.txt")
+	if err := os.WriteFile(f, []byte("test\n"), 0o600); err != nil {
+		t.Fatal(err)
+	}
+	list := filepath.Join(dir, "sums.txt")
+	// First line cannot be split into exactly digest+file; second is valid.
+	// A blank line is also present and must be skipped silently.
+	content := "garbage-with-no-separator-token\n\n" + md5hex("test\n") + "  " + f + "\n"
+	if err := os.WriteFile(list, []byte(content), 0o600); err != nil {
+		t.Fatal(err)
+	}
+	out, errOut, err := run(t, "", "-c", list)
+	if err == nil {
+		t.Fatal("expected failure when a line is improperly formatted")
+	}
+	if out != f+": OK\n" {
+		t.Errorf("out = %q, want %q", out, f+": OK\n")
+	}
+	if !strings.Contains(errOut, "improperly formatted checksum line") {
+		t.Errorf("stderr = %q, want improperly-formatted message", errOut)
+	}
+}
+
+// TestCheckSingleSpaceSeparator verifies parseLine's fallback: a line whose
+// digest and filename are separated by a single space (so strings.Fields yields
+// exactly two fields) is still accepted.
+func TestCheckSingleSpaceSeparator(t *testing.T) {
+	t.Parallel()
+	dir := t.TempDir()
+	f := filepath.Join(dir, "a.txt")
+	if err := os.WriteFile(f, []byte("test\n"), 0o600); err != nil {
+		t.Fatal(err)
+	}
+	list := filepath.Join(dir, "sums.txt")
+	// Single space, not the canonical two-space separator.
+	if err := os.WriteFile(list, []byte(md5hex("test\n")+" "+f+"\n"), 0o600); err != nil {
+		t.Fatal(err)
+	}
+	out, _, err := run(t, "", "-c", list)
+	if err != nil {
+		t.Fatalf("Run error = %v", err)
+	}
+	if out != f+": OK\n" {
+		t.Errorf("out = %q, want %q", out, f+": OK\n")
+	}
+}
+
+// TestCheckListReferencesMissingFile verifies that a well-formed line naming a
+// file that does not exist is reported on stderr and fails, without printing OK
+// or FAILED for it.
+func TestCheckListReferencesMissingFile(t *testing.T) {
+	t.Parallel()
+	dir := t.TempDir()
+	list := filepath.Join(dir, "sums.txt")
+	missing := filepath.Join(dir, "ghost.txt")
+	if err := os.WriteFile(list, []byte(md5hex("x")+"  "+missing+"\n"), 0o600); err != nil {
+		t.Fatal(err)
+	}
+	out, errOut, err := run(t, "", "-c", list)
+	if err == nil {
+		t.Fatal("expected failure when a listed file cannot be opened")
+	}
+	if out != "" {
+		t.Errorf("out = %q, want empty", out)
+	}
+	if !strings.Contains(errOut, "ghost.txt") {
+		t.Errorf("stderr = %q, want mention of the missing file", errOut)
+	}
+}
+
+// TestCheckMixedOKAndFailed verifies that within a single list a matching and a
+// mismatching entry each produce the right line and that the overall result is a
+// failure because of the mismatch.
+func TestCheckMixedOKAndFailed(t *testing.T) {
+	t.Parallel()
+	dir := t.TempDir()
+	good := filepath.Join(dir, "good.txt")
+	bad := filepath.Join(dir, "bad.txt")
+	if err := os.WriteFile(good, []byte("good\n"), 0o600); err != nil {
+		t.Fatal(err)
+	}
+	if err := os.WriteFile(bad, []byte("bad\n"), 0o600); err != nil {
+		t.Fatal(err)
+	}
+	list := filepath.Join(dir, "sums.txt")
+	content := md5hex("good\n") + "  " + good + "\n" +
+		"00000000000000000000000000000000  " + bad + "\n"
+	if err := os.WriteFile(list, []byte(content), 0o600); err != nil {
+		t.Fatal(err)
+	}
+	out, _, err := run(t, "", "-c", list)
+	if err == nil {
+		t.Fatal("expected failure because one digest mismatched")
+	}
+	want := good + ": OK\n" + bad + ": FAILED\n"
+	if out != want {
+		t.Errorf("out = %q, want %q", out, want)
+	}
+}
+
+// TestDigestMultipleFilesOneMissing verifies that a missing operand fails but
+// later valid operands are still digested (the first error is kept, processing
+// continues).
+func TestDigestMultipleFilesOneMissing(t *testing.T) {
+	t.Parallel()
+	dir := t.TempDir()
+	good := filepath.Join(dir, "good.txt")
+	if err := os.WriteFile(good, []byte("ok\n"), 0o600); err != nil {
+		t.Fatal(err)
+	}
+	missing := filepath.Join(dir, "missing.txt")
+	out, errOut, err := run(t, "", missing, good)
+	if err == nil {
+		t.Fatal("expected error because one operand is missing")
+	}
+	if out != md5hex("ok\n")+"  "+good+"\n" {
+		t.Errorf("out = %q, want digest of good only", out)
+	}
+	if !strings.Contains(errOut, "missing.txt: No such file or directory") {
+		t.Errorf("stderr = %q, want missing-file message", errOut)
+	}
+}
