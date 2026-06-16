@@ -175,6 +175,95 @@ func systemCmp(t *testing.T, a, b string) (string, bool) {
 	return out.String(), true
 }
 
+func TestNameSynopsis(t *testing.T) {
+	t.Parallel()
+	c := cmp.New()
+	if c.Name() != "cmp" {
+		t.Errorf("Name() = %q, want cmp", c.Name())
+	}
+	if c.Synopsis() == "" {
+		t.Error("Synopsis() is empty")
+	}
+}
+
+// TestVerboseListsDifferingByte covers the -l output path, which prints the
+// byte offset and the octal values of the two differing bytes.
+func TestVerboseListsDifferingByte(t *testing.T) {
+	t.Parallel()
+	dir := t.TempDir()
+	// 'A' (0101 octal) vs 'B' (0102 octal) at the first byte.
+	a := writeFile(t, dir, "a", "A")
+	b := writeFile(t, dir, "b", "B")
+
+	out, _, code := run(t, "-l", a, b)
+	if code != 1 {
+		t.Fatalf("exit = %d, want 1", code)
+	}
+	if out != "1 101 102\n" {
+		t.Errorf("-l out = %q, want %q", out, "1 101 102\n")
+	}
+}
+
+// TestMissingOperand covers the no-operand error (exit 2).
+func TestMissingOperand(t *testing.T) {
+	t.Parallel()
+	_, errOut, code := run(t)
+	if code != 2 {
+		t.Fatalf("exit = %d, want 2", code)
+	}
+	if !strings.Contains(errOut, "cmp: missing operand") {
+		t.Errorf("stderr = %q, want missing-operand message", errOut)
+	}
+}
+
+// TestExtraOperand covers the >2-operands error (exit 2).
+func TestExtraOperand(t *testing.T) {
+	t.Parallel()
+	dir := t.TempDir()
+	a := writeFile(t, dir, "a", "x")
+	b := writeFile(t, dir, "b", "x")
+	c := writeFile(t, dir, "c", "x")
+	_, errOut, code := run(t, a, b, c)
+	if code != 2 {
+		t.Fatalf("exit = %d, want 2", code)
+	}
+	if !strings.Contains(errOut, "extra operand") {
+		t.Errorf("stderr = %q, want extra-operand message", errOut)
+	}
+}
+
+// TestBothStdin covers the rejection of two '-' operands (exit 2).
+func TestBothStdin(t *testing.T) {
+	t.Parallel()
+	_, errOut, code := run(t, "-", "-")
+	if code != 2 {
+		t.Fatalf("exit = %d, want 2", code)
+	}
+	if !strings.Contains(errOut, "at most one operand may be '-'") {
+		t.Errorf("stderr = %q, want both-stdin message", errOut)
+	}
+}
+
+// TestPrefixEOFOnSecond exercises the eofOn==2 branch (second file is the
+// shorter prefix), which the existing prefix test does not reach.
+func TestPrefixEOFOnSecond(t *testing.T) {
+	t.Parallel()
+	dir := t.TempDir()
+	long := writeFile(t, dir, "long", "abcd")
+	short := writeFile(t, dir, "short", "abc")
+
+	out, errOut, code := run(t, long, short)
+	if code != 1 {
+		t.Fatalf("exit = %d, want 1", code)
+	}
+	if out != "" {
+		t.Errorf("stdout = %q, want empty", out)
+	}
+	if !strings.Contains(errOut, "cmp: EOF on "+short) {
+		t.Errorf("stderr = %q, want EOF on the second file %q", errOut, short)
+	}
+}
+
 // TestHelpSections verifies that --help renders both the Examples and the
 // Exit status sections supplied through WithHelp.
 func TestHelpSections(t *testing.T) {

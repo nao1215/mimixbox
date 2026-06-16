@@ -37,6 +37,36 @@ func TestFrameNegativeTrail(t *testing.T) {
 	}
 }
 
+// TestFrameLayout asserts the precise per-row layout: the rainbow streams from
+// the middle row while the other rows are indented by the same trail width, so
+// the cat art stays aligned.
+func TestFrameLayout(t *testing.T) {
+	t.Parallel()
+	const trail = 4
+	lines := strings.Split(Frame(trail), "\n")
+	if len(lines) != len(cat) {
+		t.Fatalf("Frame produced %d rows, want %d", len(lines), len(cat))
+	}
+	for i, line := range lines {
+		if i == 1 {
+			if !strings.HasPrefix(line, strings.Repeat("=", trail)) {
+				t.Errorf("middle row %q should start with a %d-wide rainbow", line, trail)
+			}
+		} else {
+			if !strings.HasPrefix(line, strings.Repeat(" ", trail)) {
+				t.Errorf("row %d %q should be indented by %d spaces", i, line, trail)
+			}
+			if strings.Contains(line, "=") {
+				t.Errorf("non-middle row %q must not contain rainbow", line)
+			}
+		}
+		// Each row must still end with its original cat art.
+		if !strings.HasSuffix(line, cat[i]) {
+			t.Errorf("row %d %q should end with cat art %q", i, line, cat[i])
+		}
+	}
+}
+
 func TestRunNoTerminalDegradesGracefully(t *testing.T) {
 	t.Parallel()
 	ctx, cancel := context.WithCancel(context.Background())

@@ -103,6 +103,82 @@ func TestRunFormats(t *testing.T) {
 	}
 }
 
+// TestHour12Midnight covers hour12's h==0 -> 12 branch (midnight in 12-hour
+// clock is 12 AM) and the %P lowercase am rendering.
+func TestHour12Midnight(t *testing.T) {
+	t.Parallel()
+	out, errOut, err := run(t, "-u", "-d", "2023-11-14T00:00:00Z", "+%I %p %P")
+	if err != nil {
+		t.Fatalf("Run error = %v (stderr=%q)", err, errOut)
+	}
+	if got := strings.TrimRight(out, "\n"); got != "12 AM am" {
+		t.Errorf("out = %q, want %q", got, "12 AM am")
+	}
+}
+
+// TestSundayISOWeekday covers specifier's %u Sunday=7 special case.
+func TestSundayISOWeekday(t *testing.T) {
+	t.Parallel()
+	// 2023-11-12 is a Sunday.
+	out, errOut, err := run(t, "-u", "-d", "2023-11-12", "+%u %w")
+	if err != nil {
+		t.Fatalf("Run error = %v (stderr=%q)", err, errOut)
+	}
+	if got := strings.TrimRight(out, "\n"); got != "7 0" {
+		t.Errorf("out = %q, want %q (ISO Sunday=7, w Sunday=0)", got, "7 0")
+	}
+}
+
+// TestISOFormats covers the hours/minutes/ns granularities of --iso-8601.
+func TestISOFormats(t *testing.T) {
+	t.Parallel()
+	tests := []struct {
+		arg  string
+		want string
+	}{
+		{"hours", "2023-11-14T22+00:00"},
+		{"minutes", "2023-11-14T22:13+00:00"},
+		{"ns", "2023-11-14T22:13:20+00:00"}, // zero nanoseconds are trimmed by the ,999... layout
+		{"date", "2023-11-14"},
+	}
+	for _, tt := range tests {
+		tt := tt
+		t.Run(tt.arg, func(t *testing.T) {
+			out, errOut, err := run(t, "-u", "--iso-8601="+tt.arg)
+			if err != nil {
+				t.Fatalf("Run error = %v (stderr=%q)", err, errOut)
+			}
+			if got := strings.TrimRight(out, "\n"); got != tt.want {
+				t.Errorf("--iso-8601=%s out = %q, want %q", tt.arg, got, tt.want)
+			}
+		})
+	}
+}
+
+// TestInvalidISOArg covers isoFormat's default (error) branch.
+func TestInvalidISOArg(t *testing.T) {
+	t.Parallel()
+	_, errOut, err := run(t, "--iso-8601=bogus")
+	if err == nil {
+		t.Fatal("expected error for invalid --iso-8601 argument")
+	}
+	if !strings.Contains(errOut, "invalid argument") {
+		t.Errorf("stderr = %q, want invalid argument message", errOut)
+	}
+}
+
+// TestExtraOperand covers operandFormat's "extra operand" branch.
+func TestExtraOperand(t *testing.T) {
+	t.Parallel()
+	_, errOut, err := run(t, "+%Y", "+%m")
+	if err == nil {
+		t.Fatal("expected error for a second operand")
+	}
+	if !strings.Contains(errOut, "extra operand") {
+		t.Errorf("stderr = %q, want extra operand message", errOut)
+	}
+}
+
 func TestRunInvalidDate(t *testing.T) {
 	t.Parallel()
 	_, errOut, err := run(t, "-d", "not-a-date")
@@ -191,7 +267,13 @@ func TestFormatTime(t *testing.T) {
 		{"%n", "\n"},
 		{"%t", "\t"},
 		{"trailing %", "trailing %"},
-		{"%Q", "%Q"}, // unknown specifier passes through
+		{"%Q", "%Q"},                        // unknown specifier passes through
+		{"%c", "Tue Nov  14 22:13:20 2023"}, // the layout pads the day field with a leading space
+		{"%D", "11/14/23"},
+		{"%r", "10:13:20 PM"},
+		{"%x", "11/14/23"},
+		{"%X", "22:13:20"},
+		{"%h", "Nov"},
 	}
 	for _, tt := range tests {
 		tt := tt

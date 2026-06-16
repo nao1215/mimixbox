@@ -3,6 +3,7 @@ package lifegame_test
 import (
 	"bytes"
 	"context"
+	"math/rand"
 	"strings"
 	"testing"
 	"time"
@@ -114,6 +115,71 @@ func TestLoneCellDies(t *testing.T) {
 	if len(alivePoints(next)) != 0 {
 		t.Errorf("lone cell survived: alive = %v", alivePoints(next))
 	}
+}
+
+// TestNewBoardClampsNegativeDimensions checks that negative width/height are
+// clamped to zero rather than allocating a negative-length slice.
+func TestNewBoardClampsNegativeDimensions(t *testing.T) {
+	t.Parallel()
+	b := lifegame.NewBoard(-5, -3)
+	if b.Width() != 0 || b.Height() != 0 {
+		t.Errorf("dimensions = %dx%d, want 0x0", b.Width(), b.Height())
+	}
+}
+
+// TestSetOutOfBoundsIgnored verifies that Set silently ignores out-of-range
+// coordinates and never panics.
+func TestSetOutOfBoundsIgnored(t *testing.T) {
+	t.Parallel()
+	b := lifegame.NewBoard(3, 3)
+	b.Set(-1, 0, true)
+	b.Set(0, -1, true)
+	b.Set(3, 0, true)
+	b.Set(0, 3, true)
+	if len(alivePoints(b)) != 0 {
+		t.Errorf("out-of-bounds Set changed board: %v", alivePoints(b))
+	}
+}
+
+// TestAliveOutOfBoundsIsDead checks the non-wrapping edge behavior: cells
+// outside the board read as dead.
+func TestAliveOutOfBoundsIsDead(t *testing.T) {
+	t.Parallel()
+	b := lifegame.NewBoard(2, 2)
+	if b.Alive(-1, 0) || b.Alive(0, -1) || b.Alive(2, 0) || b.Alive(0, 2) {
+		t.Error("out-of-bounds cell reported alive, want dead")
+	}
+}
+
+// TestRandomizeIsDeterministicForSeed checks Randomize: the same seed produces
+// the same pattern, and a different seed produces a different one, confirming
+// it actually reads from the supplied source.
+func TestRandomizeIsDeterministicForSeed(t *testing.T) {
+	t.Parallel()
+	a := lifegame.NewBoard(20, 20)
+	a.Randomize(rand.New(rand.NewSource(42)))
+
+	b := lifegame.NewBoard(20, 20)
+	b.Randomize(rand.New(rand.NewSource(42)))
+
+	if !equalPoints(alivePoints(a), pointsSlice(alivePoints(b))) {
+		t.Error("same seed produced different boards")
+	}
+
+	c := lifegame.NewBoard(20, 20)
+	c.Randomize(rand.New(rand.NewSource(7)))
+	if equalPoints(alivePoints(a), pointsSlice(alivePoints(c))) {
+		t.Error("different seeds produced identical boards (unlikely)")
+	}
+}
+
+// pointsSlice converts an alive set into the [][2]int form equalPoints expects.
+func pointsSlice(set map[[2]int]bool) [][2]int {
+	out := make([][2]int, 0, len(set))
+	for p := range set {
+		out = append(out, p)
+	}
+	return out
 }
 
 // TestRunNonTTY verifies that Run returns promptly without error when there is

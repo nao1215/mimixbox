@@ -65,6 +65,93 @@ func shellOf(t *testing.T, path, user string) string {
 	return ""
 }
 
+func TestNameSynopsis(t *testing.T) {
+	t.Parallel()
+	c := New()
+	if c.Name() != "chsh" {
+		t.Errorf("Name() = %q, want chsh", c.Name())
+	}
+	if c.Synopsis() == "" {
+		t.Error("Synopsis() is empty")
+	}
+}
+
+// TestTargetUserDefaultsToCurrent verifies that with no operand the current
+// user is resolved.
+func TestTargetUserDefaultsToCurrent(t *testing.T) {
+	t.Parallel()
+	got, err := targetUser(nil)
+	if err != nil {
+		t.Fatalf("targetUser(nil) err = %v", err)
+	}
+	if got == "" {
+		t.Error("targetUser(nil) returned an empty user name")
+	}
+}
+
+// TestTargetUserErrors covers the operand-validation branches.
+func TestTargetUserErrors(t *testing.T) {
+	t.Parallel()
+	if _, err := targetUser([]string{"alice", "bob"}); err == nil {
+		t.Error("more than one operand must error")
+	}
+	if _, err := targetUser([]string{""}); err == nil {
+		t.Error("an empty operand must error")
+	}
+	got, err := targetUser([]string{"alice"})
+	if err != nil || got != "alice" {
+		t.Errorf("targetUser([alice]) = (%q,%v), want (alice,nil)", got, err)
+	}
+}
+
+// TestReadShellsMissingFile verifies the open-error path of readShells.
+func TestReadShellsMissingFile(t *testing.T) {
+	orig := shellsPath
+	shellsPath = filepath.Join(t.TempDir(), "no-such-shells")
+	t.Cleanup(func() { shellsPath = orig })
+	if _, err := readShells(); err == nil {
+		t.Error("readShells on a missing file must error")
+	}
+}
+
+// TestChangeShellReadError verifies changeShell surfaces a read error when the
+// passwd database is absent.
+func TestChangeShellReadError(t *testing.T) {
+	orig := passwdPath
+	passwdPath = filepath.Join(t.TempDir(), "no-such-passwd")
+	t.Cleanup(func() { passwdPath = orig })
+	if err := changeShell("alice", "/bin/sh"); err == nil {
+		t.Error("changeShell with a missing passwd file must error")
+	}
+}
+
+// TestReadLinesEmptyFile verifies an empty passwd file yields no lines and no
+// error, exercising the trimmed-empty short-circuit.
+func TestReadLinesEmptyFile(t *testing.T) {
+	t.Parallel()
+	p := filepath.Join(t.TempDir(), "empty")
+	if err := os.WriteFile(p, []byte("\n\n"), 0o644); err != nil {
+		t.Fatal(err)
+	}
+	lines, err := readLines(p)
+	if err != nil {
+		t.Fatalf("readLines err = %v", err)
+	}
+	if lines != nil {
+		t.Errorf("readLines(empty) = %v, want nil", lines)
+	}
+}
+
+// TestWriteLinesCreateTempError verifies writeLines fails when the temp file
+// cannot be created because the target directory does not exist.
+func TestWriteLinesCreateTempError(t *testing.T) {
+	t.Parallel()
+	missing := filepath.Join(t.TempDir(), "no-such-dir", "passwd")
+	if err := writeLines(missing, []string{"x"}); err == nil {
+		t.Error("writeLines into a non-existent directory must error")
+	}
+}
+
 func TestChangeOtherUserWithFlag(t *testing.T) {
 	pw := setup(t)
 	if _, err := run(t, "", "-s", "/bin/bash", "alice"); err != nil {

@@ -53,6 +53,67 @@ func TestRun(t *testing.T) {
 	}
 }
 
+// TestEscapeExpansion drives every backslash escape branch of expandEscapes,
+// including octal/hex edge cases and malformed escapes.
+func TestEscapeExpansion(t *testing.T) {
+	t.Parallel()
+	tests := []struct {
+		name string
+		in   string
+		want string
+	}{
+		{"alert", `\a`, "\a\n"},
+		{"backspace", `\b`, "\b\n"},
+		{"formfeed", `\f`, "\f\n"},
+		{"carriage return", `\r`, "\r\n"},
+		{"vertical tab", `\v`, "\v\n"},
+		{"literal backslash", `\\`, "\\\n"},
+		{"newline", `\n`, "\n\n"},
+		{"unknown escape kept literal", `\q`, "\\q\n"},
+		{"trailing backslash kept", `end\`, "end\\\n"},
+		{"hex two digits", `\x4a`, "J\n"},
+		{"hex one digit", `\x9z`, "\tz\n"},
+		{"hex no digits kept literal", `\xz`, "\\xz\n"},
+		{"octal full", `\0101`, "A\n"},
+		{"octal short", `\007`, "\a\n"},
+		{"octal zero only", `\0`, "\x00\n"},
+		{"text around escape", `a\tb\tc`, "a\tb\tc\n"},
+	}
+	for _, tt := range tests {
+		tt := tt
+		t.Run(tt.name, func(t *testing.T) {
+			t.Parallel()
+			out, err := run(t, "-e", tt.in)
+			if err != nil {
+				t.Fatalf("Run error = %v", err)
+			}
+			if out != tt.want {
+				t.Errorf("out = %q, want %q", out, tt.want)
+			}
+		})
+	}
+}
+
+// TestEFlagThenEDisablesEscapes verifies -E after -e turns interpretation off.
+func TestEFlagThenEDisablesEscapes(t *testing.T) {
+	t.Parallel()
+	out, err := run(t, "-e", "-E", `a\tb`)
+	if err != nil {
+		t.Fatalf("Run error = %v", err)
+	}
+	if want := "a\\tb\n"; out != want {
+		t.Errorf("out = %q, want %q", out, want)
+	}
+}
+
+// TestSynopsis ensures the one-line description is reported.
+func TestSynopsis(t *testing.T) {
+	t.Parallel()
+	if s := echo.New().Synopsis(); s == "" {
+		t.Error("Synopsis() is empty")
+	}
+}
+
 // TestHelpAsFirstArg verifies that a leading --help prints usage rather than
 // echoing the literal text, matching GNU's standalone echo.
 func TestHelpAsFirstArg(t *testing.T) {
