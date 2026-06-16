@@ -77,6 +77,9 @@ func TestRunHelpAndVersion(t *testing.T) {
 	if !strings.Contains(out, "Usage: unexpand") {
 		t.Errorf("--help out = %q", out)
 	}
+	if !strings.Contains(out, "Examples:") || !strings.Contains(out, "Exit status:") {
+		t.Errorf("--help missing structured sections:\n%s", out)
+	}
 
 	out, _, err = runStdin(t, "", "--version")
 	if err != nil {

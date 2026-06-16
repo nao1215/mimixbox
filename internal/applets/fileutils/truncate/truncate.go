@@ -26,7 +26,16 @@ func (c *Command) Synopsis() string { return "Shrink or extend the size of a fil
 
 // Run executes truncate.
 func (c *Command) Run(_ context.Context, stdio command.IO, args []string) error {
-	fs := command.NewFlagSet(c.Name(), "-s SIZE FILE...", stdio.Err)
+	fs := command.NewFlagSet(c.Name(), "-s SIZE FILE...", stdio.Err).WithHelp(command.Help{
+		Description: "Shrink or extend the size of each FILE to SIZE. SIZE may carry a K, M, or G suffix; " +
+			"a leading + or - adjusts the size relative to its current value. A missing FILE is created, unless -c is given.",
+		Examples: []command.Example{
+			{Command: "truncate -s 1K data.bin", Explain: "Set the file size to exactly 1024 bytes."},
+			{Command: "truncate -s +10M log.txt", Explain: "Grow the file by 10 MiB."},
+			{Command: "truncate -c -s 0 existing.log", Explain: "Empty the file but do not create it if absent."},
+		},
+		ExitStatus: "0  all files were resized successfully.\n1  a size was invalid or a file could not be resized.",
+	})
 	sizeSpec := fs.StringP("size", "s", "", "set or adjust the file size by SIZE bytes")
 	noCreate := fs.BoolP("no-create", "c", false, "do not create any files")
 

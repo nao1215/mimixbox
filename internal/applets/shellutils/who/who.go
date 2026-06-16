@@ -70,7 +70,16 @@ type options struct {
 // Run executes who. With no options it reads the utmp database and prints one
 // line per logged-in user. An optional FILE operand overrides utmpFile.
 func (c *Command) Run(_ context.Context, stdio command.IO, args []string) error {
-	fs := command.NewFlagSet(c.Name(), "[OPTION]... [FILE]", stdio.Err)
+	fs := command.NewFlagSet(c.Name(), "[OPTION]... [FILE]", stdio.Err).WithHelp(command.Help{
+		Description: "Print information about users who are currently logged in, reading the login-record " +
+			"database (/var/run/utmp by default, or FILE if given), one line per user.",
+		Examples: []command.Example{
+			{Command: "who", Explain: "List the users currently logged in."},
+			{Command: "who -H", Explain: "List logged-in users with a column heading line."},
+			{Command: "who -q", Explain: "Print only the login names and a user count."},
+		},
+		ExitStatus: "0  the login records were printed.\n1  the login-record database could not be read.",
+	})
 	boot := fs.BoolP("boot", "b", false, "time of last system boot")
 	heading := fs.BoolP("heading", "H", false, "print line of column headings")
 	count := fs.BoolP("count", "q", false, "all login names and number of users logged on")

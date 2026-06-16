@@ -31,7 +31,15 @@ func (c *Command) Synopsis() string { return "Change LF to CRLF" }
 // reported on stderr and makes the command exit non-zero, but the remaining
 // files are still processed.
 func (c *Command) Run(_ context.Context, stdio command.IO, args []string) error {
-	fs := command.NewFlagSet(c.Name(), "[OPTION]... FILE...", stdio.Err)
+	fs := command.NewFlagSet(c.Name(), "[OPTION]... FILE...", stdio.Err).WithHelp(command.Help{
+		Description: "Convert the line endings of each FILE from Unix LF to DOS CRLF, editing the file in place. " +
+			"Lines that already end in CRLF are left unchanged.",
+		Examples: []command.Example{
+			{Command: "unix2dos notes.txt", Explain: "Rewrite notes.txt with CRLF line endings."},
+			{Command: "unix2dos a.txt b.txt", Explain: "Convert several files in one invocation."},
+		},
+		ExitStatus: "0  all files were converted successfully.\n1  a file was not a regular file or could not be read or written.",
+	})
 
 	proceed, err := fs.Parse(stdio, args)
 	if err != nil || !proceed {

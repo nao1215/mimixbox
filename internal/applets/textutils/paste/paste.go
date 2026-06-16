@@ -26,7 +26,16 @@ func (c *Command) Synopsis() string { return "Merge lines of files" }
 
 // Run executes paste.
 func (c *Command) Run(_ context.Context, stdio command.IO, args []string) error {
-	fs := command.NewFlagSet(c.Name(), "[OPTION]... [FILE]...", stdio.Err)
+	fs := command.NewFlagSet(c.Name(), "[OPTION]... [FILE]...", stdio.Err).WithHelp(command.Help{
+		Description: "Write lines consisting of the sequentially corresponding lines from each FILE, " +
+			"separated by TABs, to standard output. With no FILE, or when FILE is -, read standard input.",
+		Examples: []command.Example{
+			{Command: "paste a.txt b.txt", Explain: "Merge lines of a.txt and b.txt side by side."},
+			{Command: "paste -d , a.txt b.txt", Explain: "Use a comma instead of a TAB as the separator."},
+			{Command: "paste -s a.txt", Explain: "Join all lines of a.txt onto a single line."},
+		},
+		ExitStatus: "0  success.\n1  a file could not be opened or read.",
+	})
 	delims := fs.StringP("delimiters", "d", "\t", "reuse characters from LIST instead of TABs")
 	serial := fs.BoolP("serial", "s", false, "paste one file at a time instead of in parallel")
 

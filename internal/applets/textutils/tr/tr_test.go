@@ -95,4 +95,7 @@ func TestRunHelp(t *testing.T) {
 	if !strings.Contains(out, "Usage: tr") {
 		t.Errorf("--help out = %q", out)
 	}
+	if !strings.Contains(out, "Examples:") || !strings.Contains(out, "Exit status:") {
+		t.Errorf("--help missing structured sections:\n%s", out)
+	}
 }

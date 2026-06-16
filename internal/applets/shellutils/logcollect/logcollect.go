@@ -27,7 +27,14 @@ func (c *Command) Synopsis() string { return "Gather system log files into one d
 
 // Run executes log-collect.
 func (c *Command) Run(_ context.Context, stdio command.IO, args []string) error {
-	fs := command.NewFlagSet(c.Name(), "[OPTION]... [SOURCE]", stdio.Err)
+	fs := command.NewFlagSet(c.Name(), "[OPTION]... [SOURCE]", stdio.Err).WithHelp(command.Help{
+		Description: "Copy every readable regular file under SOURCE (default /var/log) into an output directory, recreating the directory layout, so the logs can be archived or inspected. Unreadable files are skipped; root is usually required to read everything under /var/log.",
+		Examples: []command.Example{
+			{Command: "log-collect", Explain: "Copy /var/log into ./collected-logs."},
+			{Command: "log-collect -o /tmp/logs /var/log/nginx", Explain: "Collect the nginx logs into /tmp/logs."},
+		},
+		ExitStatus: "0  the logs were collected.\n1  the source could not be read or the output directory could not be created.",
+	})
 	out := fs.StringP("output", "o", "collected-logs", "directory to copy the logs into")
 
 	proceed, err := fs.Parse(stdio, args)

@@ -28,7 +28,16 @@ func (c *Command) Synopsis() string { return "Apply a diff file to an original" 
 
 // Run executes patch.
 func (c *Command) Run(_ context.Context, stdio command.IO, args []string) error {
-	fs := command.NewFlagSet(c.Name(), "[OPTION]... [ORIGFILE]", stdio.Err)
+	fs := command.NewFlagSet(c.Name(), "[OPTION]... [ORIGFILE]", stdio.Err).WithHelp(command.Help{
+		Description: "Apply a unified diff (as produced by \"diff -u\") to the target files. The patch is " +
+			"read from the file given with -i, or from standard input when -i is omitted.",
+		Examples: []command.Example{
+			{Command: "patch -i changes.diff", Explain: "Apply the unified diff in changes.diff."},
+			{Command: "patch -p1 -i changes.diff", Explain: "Strip one leading path component from file names."},
+			{Command: "patch -R -i changes.diff", Explain: "Reverse a previously applied patch."},
+		},
+		ExitStatus: "0  all patches applied successfully.\n1  a patch could not be applied or the input was invalid.",
+	})
 	strip := fs.IntP("strip", "p", 0, "strip NUM leading components from file names")
 	input := fs.StringP("input", "i", "", "read patch from FILE instead of stdin")
 	reverse := fs.BoolP("reverse", "R", false, "assume patches were created with old and new swapped")

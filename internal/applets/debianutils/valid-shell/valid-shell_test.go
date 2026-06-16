@@ -2,12 +2,14 @@ package validShell_test
 
 import (
 	"bytes"
+	"context"
 	"os"
 	"path/filepath"
 	"strings"
 	"testing"
 
 	validShell "github.com/nao1215/mimixbox/internal/applets/debianutils/valid-shell"
+	"github.com/nao1215/mimixbox/internal/command"
 )
 
 func TestNew(t *testing.T) {
@@ -59,5 +61,19 @@ func TestValidateShellsInvalid(t *testing.T) {
 	}
 	if !strings.Contains(out.String(), "NG: /no/such/shell") {
 		t.Errorf("output = %q, want an NG line for the missing shell", out.String())
+	}
+}
+
+func TestHelpSections(t *testing.T) {
+	t.Parallel()
+	out := &bytes.Buffer{}
+	io := command.IO{In: strings.NewReader(""), Out: out, Err: &bytes.Buffer{}}
+	if err := validShell.New().Run(context.Background(), io, []string{"--help"}); err != nil {
+		t.Fatalf("help err = %v", err)
+	}
+	for _, want := range []string{"Examples:", "Exit status:"} {
+		if !strings.Contains(out.String(), want) {
+			t.Errorf("--help output missing %q:\n%s", want, out.String())
+		}
 	}
 }

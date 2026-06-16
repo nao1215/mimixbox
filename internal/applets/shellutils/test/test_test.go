@@ -93,3 +93,18 @@ func TestMalformedMessage(t *testing.T) {
 		t.Errorf("stderr = %q, want prefix %q", stderr, "test: ")
 	}
 }
+
+// TestHelpSections asserts `test --help` (sole argument) renders structured help.
+func TestHelpSections(t *testing.T) {
+	t.Parallel()
+	out := &bytes.Buffer{}
+	io := command.IO{In: strings.NewReader(""), Out: out, Err: &bytes.Buffer{}}
+	if err := testcmd.New().Run(context.Background(), io, []string{"--help"}); err != nil {
+		t.Fatalf("--help err = %v", err)
+	}
+	for _, want := range []string{"Usage: test", "Examples:", "Exit status:"} {
+		if !strings.Contains(out.String(), want) {
+			t.Errorf("--help missing %q: %q", want, out.String())
+		}
+	}
+}

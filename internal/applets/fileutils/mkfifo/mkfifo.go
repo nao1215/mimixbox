@@ -31,7 +31,14 @@ func (c *Command) Synopsis() string { return "Make FIFO (named pipe)" }
 
 // Run executes mkfifo.
 func (c *Command) Run(_ context.Context, stdio command.IO, args []string) error {
-	fs := command.NewFlagSet(c.Name(), "[OPTION]... NAME...", stdio.Err)
+	fs := command.NewFlagSet(c.Name(), "[OPTION]... NAME...", stdio.Err).WithHelp(command.Help{
+		Description: "Create each named FIFO (a named pipe) with permission 0644 minus umask, or with the mode given by -m. A FIFO lets two processes communicate without an intermediate file.",
+		Examples: []command.Example{
+			{Command: "mkfifo mypipe", Explain: "Create a FIFO named 'mypipe'."},
+			{Command: "mkfifo -m 600 /tmp/p", Explain: "Create /tmp/p readable and writable only by the owner."},
+		},
+		ExitStatus: "0  every FIFO was created.\n1  a FIFO could not be created (e.g. the path already exists).",
+	})
 	modeStr := fs.StringP("mode", "m", "", "set file permission bits to MODE, not a=rw - umask")
 
 	proceed, err := fs.Parse(stdio, args)

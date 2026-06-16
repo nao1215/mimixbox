@@ -38,7 +38,16 @@ type options struct {
 
 // Run executes xargs.
 func (c *Command) Run(ctx context.Context, stdio command.IO, args []string) error {
-	fs := command.NewFlagSet(c.Name(), "[OPTION]... [COMMAND [INITIAL-ARGS]...]", stdio.Err)
+	fs := command.NewFlagSet(c.Name(), "[OPTION]... [COMMAND [INITIAL-ARGS]...]", stdio.Err).WithHelp(command.Help{
+		Description: "Read items from standard input and run COMMAND (echo by default) once or more with " +
+			"those items appended as arguments. Items are separated by whitespace unless -0 or -d changes the delimiter.",
+		Examples: []command.Example{
+			{Command: "ls | xargs echo", Explain: "Print all file names on a single line."},
+			{Command: "find . -name '*.tmp' | xargs rm", Explain: "Delete every matching file."},
+			{Command: "xargs -n 1 -I {} echo {}", Explain: "Run the command once per input item."},
+		},
+		ExitStatus: "0  every command succeeded.\n1  the input could not be read or a command failed.",
+	})
 	maxArgs := fs.IntP("max-args", "n", 0, "use at most MAX-ARGS arguments per command line")
 	replace := fs.StringP("replace", "I", "", "replace occurrences of REPLACE-STR in the command with input")
 	null := fs.BoolP("null", "0", false, "input items are terminated by a null, not whitespace")

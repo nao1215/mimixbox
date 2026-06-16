@@ -192,7 +192,9 @@ func TestHelp(t *testing.T) {
 	if err != nil {
 		t.Fatalf("help err = %v", err)
 	}
-	if !strings.Contains(out, "Usage: rpm") {
-		t.Errorf("help = %q", out)
+	for _, want := range []string{"Usage: rpm", "Examples:", "Exit status:"} {
+		if !strings.Contains(out, want) {
+			t.Errorf("help missing %q\n%s", want, out)
+		}
 	}
 }

@@ -26,7 +26,20 @@ func (c *Command) Synopsis() string { return "Print a column of numbers" }
 
 // Run executes seq.
 func (c *Command) Run(_ context.Context, stdio command.IO, args []string) error {
-	fs := command.NewFlagSet(c.Name(), "[OPTION]... LAST | FIRST LAST | FIRST INCREMENT LAST", stdio.Err)
+	fs := command.NewFlagSet(c.Name(), "[OPTION]... LAST | FIRST LAST | FIRST INCREMENT LAST", stdio.Err).WithHelp(command.Help{
+		Description: "Print a column of numbers from FIRST to LAST, stepping by INCREMENT. FIRST and " +
+			"INCREMENT default to 1 when omitted, and a negative INCREMENT counts down. By default " +
+			"numbers are separated by a newline; -s sets a different separator, -w pads with " +
+			"leading zeroes so all numbers share the same width, and -f gives a printf-style " +
+			"floating-point format.",
+		Examples: []command.Example{
+			{Command: "seq 5", Explain: "Print 1 through 5, one per line."},
+			{Command: "seq 2 2 10", Explain: "Print the even numbers from 2 to 10."},
+			{Command: "seq -s , 1 5", Explain: "Print 1,2,3,4,5 separated by commas."},
+			{Command: "seq -w 1 10", Explain: "Print 01 through 10, zero-padded to equal width."},
+		},
+		ExitStatus: "0  the sequence was printed successfully.\n1  an operand was missing or not a valid number, or the increment was zero.",
+	})
 	separator := fs.StringP("separator", "s", "\n", "use STRING to separate numbers (default \\n)")
 	equalWidth := fs.BoolP("equal-width", "w", false, "equalize width by padding with leading zeroes")
 	format := fs.StringP("format", "f", "", "use printf style floating-point FORMAT")

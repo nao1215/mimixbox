@@ -35,7 +35,16 @@ type options struct {
 
 // Run executes uniq.
 func (c *Command) Run(_ context.Context, stdio command.IO, args []string) error {
-	fs := command.NewFlagSet(c.Name(), "[OPTION]... [INPUT [OUTPUT]]", stdio.Err)
+	fs := command.NewFlagSet(c.Name(), "[OPTION]... [INPUT [OUTPUT]]", stdio.Err).WithHelp(command.Help{
+		Description: "Filter adjacent matching lines from INPUT (or standard input), writing to OUTPUT (or standard output). " +
+			"Only consecutive duplicates are collapsed, so the input is usually sorted first.",
+		Examples: []command.Example{
+			{Command: "uniq names.txt", Explain: "Collapse adjacent duplicate lines."},
+			{Command: "uniq -c names.txt", Explain: "Prefix each line with its number of occurrences."},
+			{Command: "uniq -d names.txt", Explain: "Print only lines that were repeated."},
+		},
+		ExitStatus: "0  the lines were filtered successfully.\n1  an input or output file could not be opened or read.",
+	})
 	count := fs.BoolP("count", "c", false, "prefix lines by the number of occurrences")
 	repeated := fs.BoolP("repeated", "d", false, "only print duplicate lines, one for each group")
 	unique := fs.BoolP("unique", "u", false, "only print unique lines")

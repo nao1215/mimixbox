@@ -25,7 +25,13 @@ func (c *Command) Synopsis() string { return "Synchronize cached writes to persi
 // Run executes sync. In its basic form sync takes no operands; it flushes the
 // filesystem buffers via syscall.Sync().
 func (c *Command) Run(_ context.Context, stdio command.IO, args []string) error {
-	fs := command.NewFlagSet(c.Name(), "[OPTION]", stdio.Err)
+	fs := command.NewFlagSet(c.Name(), "[OPTION]", stdio.Err).WithHelp(command.Help{
+		Description: "Flush filesystem buffers so that cached writes are committed to persistent storage.",
+		Examples: []command.Example{
+			{Command: "sync", Explain: "Flush all pending filesystem writes to disk."},
+		},
+		ExitStatus: "0  success.\n1  an error occurred.",
+	})
 
 	proceed, err := fs.Parse(stdio, args)
 	if err != nil || !proceed {

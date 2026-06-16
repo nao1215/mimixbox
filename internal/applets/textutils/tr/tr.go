@@ -32,7 +32,16 @@ type options struct {
 
 // Run executes tr.
 func (c *Command) Run(_ context.Context, stdio command.IO, args []string) error {
-	fs := command.NewFlagSet(c.Name(), "[OPTION]... SET1 [SET2]", stdio.Err)
+	fs := command.NewFlagSet(c.Name(), "[OPTION]... SET1 [SET2]", stdio.Err).WithHelp(command.Help{
+		Description: "Translate, squeeze, or delete characters from standard input, writing the result to standard output. " +
+			"SET1 and SET2 may use ranges (a-z), classes ([:upper:]), and C-style escapes.",
+		Examples: []command.Example{
+			{Command: "tr a-z A-Z", Explain: "Translate lowercase letters to uppercase."},
+			{Command: "tr -d '0-9'", Explain: "Delete every digit from the input."},
+			{Command: "tr -s ' '", Explain: "Squeeze repeated spaces into a single space."},
+		},
+		ExitStatus: "0  the input was translated successfully.\n1  an operand was missing or invalid, or input could not be read.",
+	})
 	del := fs.BoolP("delete", "d", false, "delete characters in SET1, do not translate")
 	squeeze := fs.BoolP("squeeze-repeats", "s", false,
 		"replace each sequence of a repeated character that is listed in the last SET with a single occurrence of that character")

@@ -29,7 +29,15 @@ func (c *Command) Synopsis() string { return "Combine passwd and shadow files fo
 
 // Run executes unshadow.
 func (c *Command) Run(_ context.Context, stdio command.IO, args []string) error {
-	fs := command.NewFlagSet(c.Name(), "PASSWD SHADOW", stdio.Err)
+	fs := command.NewFlagSet(c.Name(), "PASSWD SHADOW", stdio.Err).WithHelp(command.Help{
+		Description: "Combine a PASSWD file with the hashes from a SHADOW file into a single passwd-format stream on " +
+			"standard output, the standard first step of an authorized local password audit.",
+		Examples: []command.Example{
+			{Command: "unshadow /etc/passwd /etc/shadow", Explain: "Merge the system passwd and shadow files."},
+			{Command: "unshadow /etc/passwd /etc/shadow > combined.txt", Explain: "Save the merged output for a cracker."},
+		},
+		ExitStatus: "0  the files were merged successfully.\n1  an operand was missing or a file could not be read.",
+	})
 
 	proceed, err := fs.Parse(stdio, args)
 	if err != nil || !proceed {

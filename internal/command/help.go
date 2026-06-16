@@ -28,3 +28,24 @@ func HandleHelpVersion(stdio IO, name, usage string, args []string) bool {
 	}
 	return false
 }
+
+// HandleHelpVersionWith is HandleHelpVersion for custom-parsed applets that also
+// want structured help: on a leading "--help" it renders the usage block with
+// the description, examples, exit-status and notes from help; on "--version" it
+// prints the version line. It reports whether it handled the argument so the
+// caller can return early. Like HandleHelpVersion, only the first argument is
+// inspected, so a "--help" that appears later stays an ordinary operand.
+func HandleHelpVersionWith(stdio IO, name, usage string, help Help, args []string) bool {
+	if len(args) == 0 {
+		return false
+	}
+	switch args[0] {
+	case "--help":
+		NewFlagSet(name, usage, stdio.Err).WithHelp(help).WriteUsage(stdio.Out)
+		return true
+	case "--version":
+		version.Print(stdio.Out, name)
+		return true
+	}
+	return false
+}

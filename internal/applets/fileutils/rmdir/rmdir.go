@@ -28,7 +28,18 @@ func (c *Command) Synopsis() string { return "Remove directory" }
 
 // Run executes rmdir.
 func (c *Command) Run(_ context.Context, stdio command.IO, args []string) error {
-	fs := command.NewFlagSet(c.Name(), "[OPTION]... DIRECTORY...", stdio.Err)
+	fs := command.NewFlagSet(c.Name(), "[OPTION]... DIRECTORY...", stdio.Err).WithHelp(command.Help{
+		Description: "Remove each empty DIRECTORY. With -p, also remove each now-empty ancestor of a " +
+			"DIRECTORY, so 'rmdir -p a/b/c' is like 'rmdir a/b/c a/b a'. A directory that is not " +
+			"empty, or an operand that is not a directory, is reported as an error and the exit " +
+			"status is non-zero.",
+		Examples: []command.Example{
+			{Command: "rmdir emptydir", Explain: "Remove the empty directory emptydir."},
+			{Command: "rmdir -p a/b/c", Explain: "Remove c, then b, then a if each becomes empty."},
+			{Command: "rmdir -v tmp", Explain: "Remove tmp and report what is being done."},
+		},
+		ExitStatus: "0  all directories were removed.\n1  a directory was not empty or could not be removed.",
+	})
 	parents := fs.BoolP("parents", "p", false, "remove DIRECTORY and its ancestors")
 	verbose := fs.BoolP("verbose", "v", false, "output a diagnostic for every directory processed")
 

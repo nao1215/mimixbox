@@ -33,7 +33,16 @@ type options struct {
 
 // Run executes zip.
 func (c *Command) Run(_ context.Context, stdio command.IO, args []string) error {
-	fs := command.NewFlagSet(c.Name(), "[OPTION]... ARCHIVE FILE...", stdio.Err)
+	fs := command.NewFlagSet(c.Name(), "[OPTION]... ARCHIVE FILE...", stdio.Err).WithHelp(command.Help{
+		Description: "Create the ZIP archive ARCHIVE containing the given FILE operands. Directories are " +
+			"skipped unless -r is given, in which case they are added recursively.",
+		Examples: []command.Example{
+			{Command: "zip archive.zip file1 file2", Explain: "Create archive.zip from two files."},
+			{Command: "zip -r archive.zip dir", Explain: "Recursively add a directory to the archive."},
+			{Command: "zip -v archive.zip file", Explain: "Create the archive, listing each entry as it is added."},
+		},
+		ExitStatus: "0  the archive was created.\n1  an input was missing or could not be read.",
+	})
 	recurse := fs.BoolP("recurse-paths", "r", false, "recurse into directories")
 	verbose := fs.BoolP("verbose", "v", false, "print each entry as it is added")
 

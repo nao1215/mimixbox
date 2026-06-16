@@ -39,7 +39,20 @@ type options struct {
 
 // Run executes serial.
 func (c *Command) Run(_ context.Context, stdio command.IO, args []string) error {
-	fs := command.NewFlagSet(c.Name(), "[OPTION]... DIRECTORY", stdio.Err)
+	fs := command.NewFlagSet(c.Name(), "[OPTION]... DIRECTORY", stdio.Err).WithHelp(command.Help{
+		Description: "Rename the files in DIRECTORY to names that carry a zero-padded serial number " +
+			"(a MimixBox-original command). The serial number is added as a prefix by default, or " +
+			"as a suffix with -s. With -n the renamed files share a common base name; -k keeps the " +
+			"original files by copying instead of renaming; -d prints the planned renames without " +
+			"changing anything; and -f overwrites existing files of the same name.",
+		Examples: []command.Example{
+			{Command: "serial ./photos", Explain: "Prefix every file in ./photos with a serial number."},
+			{Command: "serial -s ./photos", Explain: "Append the serial number as a suffix instead."},
+			{Command: "serial -n image ./photos", Explain: "Rename the files to image-style names with serial numbers."},
+			{Command: "serial -d ./photos", Explain: "Show the planned renames without touching the files."},
+		},
+		ExitStatus: "0  the files were renamed (or copied) successfully.\n1  the directory was missing or empty, or a file could not be renamed.",
+	})
 	dryRun := fs.BoolP("dry-run", "d", false, "Output the file renaming result to standard output (do not update the file)")
 	force := fs.BoolP("force", "f", false, "Forcibly overwrite and save even if a file with the same name exists")
 	keep := fs.BoolP("keep", "k", false, "Keep the file before renaming")

@@ -27,7 +27,14 @@ func (c *Command) Synopsis() string {
 
 // Run executes nl.
 func (c *Command) Run(_ context.Context, stdio command.IO, args []string) error {
-	fs := command.NewFlagSet(c.Name(), "[OPTION]... [FILE]...", stdio.Err)
+	fs := command.NewFlagSet(c.Name(), "[OPTION]... [FILE]...", stdio.Err).WithHelp(command.Help{
+		Description: "Write each FILE (or standard input when no FILE is given, or FILE is '-') to standard output with line numbers prepended. By default only non-blank lines are numbered; -b a numbers all lines and -b n numbers none.",
+		Examples: []command.Example{
+			{Command: "nl file.txt", Explain: "Number the non-blank lines of file.txt."},
+			{Command: "nl -b a -w 4 file.txt", Explain: "Number every line in a 4-column field."},
+		},
+		ExitStatus: "0  success.\n1  a file could not be read.",
+	})
 	body := fs.StringP("body-numbering", "b", "t", "use STYLE for numbering body lines (a, t, or n)")
 	separator := fs.StringP("number-separator", "s", "\t", "add STRING after possible line number")
 	width := fs.IntP("number-width", "w", 6, "use NUMBER columns for line numbers")

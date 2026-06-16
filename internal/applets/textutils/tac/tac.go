@@ -25,7 +25,15 @@ func (c *Command) Synopsis() string { return "Print the file contents from the e
 
 // Run executes tac.
 func (c *Command) Run(_ context.Context, stdio command.IO, args []string) error {
-	fs := command.NewFlagSet(c.Name(), "[OPTION]... [FILE]...", stdio.Err)
+	fs := command.NewFlagSet(c.Name(), "[OPTION]... [FILE]...", stdio.Err).WithHelp(command.Help{
+		Description: "Concatenate each FILE to standard output, writing the lines in reverse order " +
+			"(last line first). With no FILE, or when FILE is -, read standard input.",
+		Examples: []command.Example{
+			{Command: "tac file.txt", Explain: "Print the lines of file.txt from last to first."},
+			{Command: "tac -s , data.txt", Explain: "Reverse records separated by commas instead of newlines."},
+		},
+		ExitStatus: "0  success.\n1  an error occurred (e.g. a file could not be read).",
+	})
 	separator := fs.StringP("separator", "s", "\n", "use STRING as the record separator instead of newline")
 
 	proceed, err := fs.Parse(stdio, args)

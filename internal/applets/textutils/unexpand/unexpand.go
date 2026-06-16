@@ -31,7 +31,16 @@ type options struct {
 
 // Run executes unexpand.
 func (c *Command) Run(_ context.Context, stdio command.IO, args []string) error {
-	fs := command.NewFlagSet(c.Name(), "[OPTION]... [FILE]...", stdio.Err)
+	fs := command.NewFlagSet(c.Name(), "[OPTION]... [FILE]...", stdio.Err).WithHelp(command.Help{
+		Description: "Convert runs of blanks in each FILE (or standard input) into tabs, the inverse of expand. " +
+			"By default only leading blanks are converted; -a converts blanks everywhere.",
+		Examples: []command.Example{
+			{Command: "unexpand file.txt", Explain: "Convert leading spaces to tabs, writing to standard output."},
+			{Command: "unexpand -a file.txt", Explain: "Convert every run of blanks, not just the leading ones."},
+			{Command: "unexpand -t 4 file.txt", Explain: "Treat tab stops as 4 columns apart (implies -a)."},
+		},
+		ExitStatus: "0  all input was converted successfully.\n1  a file could not be opened or read.",
+	})
 	tabs := fs.IntP("tabs", "t", 8, "have tabs N characters apart instead of 8 (enables -a)")
 	all := fs.BoolP("all", "a", false, "convert all blanks, instead of just initial blanks")
 

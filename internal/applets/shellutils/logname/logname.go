@@ -28,7 +28,13 @@ var loginName = currentLogin
 
 // Run executes logname.
 func (c *Command) Run(_ context.Context, stdio command.IO, args []string) error {
-	fs := command.NewFlagSet(c.Name(), "", stdio.Err)
+	fs := command.NewFlagSet(c.Name(), "", stdio.Err).WithHelp(command.Help{
+		Description: "Print the login name of the current user, taken from the LOGNAME or USER environment variables, falling back to the current account name.",
+		Examples: []command.Example{
+			{Command: "logname", Explain: "Print the current login name, e.g. 'alice'."},
+		},
+		ExitStatus: "0  the login name was printed.\n1  no login name could be determined.",
+	})
 
 	proceed, err := fs.Parse(stdio, args)
 	if err != nil || !proceed {

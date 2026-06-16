@@ -120,7 +120,16 @@ func (c *Command) action(opts options) int {
 // Run executes halt/poweroff/reboot. It requires root; otherwise it prints a
 // permission message and returns a silent failure without touching rebootFn.
 func (c *Command) Run(_ context.Context, stdio command.IO, args []string) error {
-	fs := command.NewFlagSet(c.Name(), "[OPTION]", stdio.Err)
+	fs := command.NewFlagSet(c.Name(), "[OPTION]", stdio.Err).WithHelp(command.Help{
+		Description: "Halt, power off, or reboot the machine (this applet runs as " + c.Name() + "). It " +
+			"writes a wtmp shutdown record and then asks the kernel to stop or restart the system. " +
+			"Root privileges are required.",
+		Examples: []command.Example{
+			{Command: c.Name(), Explain: "Sync and " + c.Name() + " the system (requires root)."},
+			{Command: c.Name() + " -f", Explain: "Skip the sync and act immediately."},
+		},
+		ExitStatus: "0  the shutdown request was issued.\n1  not run as root, or the request failed.",
+	})
 	force := fs.BoolP("force", "f", false, "force immediate halt/power-off/reboot; do not sync")
 	noSync := fs.BoolP("no-sync", "n", false, "do not sync before halt or reboot")
 	wtmpOnly := fs.BoolP("wtmp-only", "w", false, "only write the wtmp shutdown record, do not stop the system")

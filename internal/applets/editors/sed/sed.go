@@ -30,7 +30,21 @@ func (c *Command) Synopsis() string { return "Stream editor for filtering and tr
 
 // Run executes sed.
 func (c *Command) Run(_ context.Context, stdio command.IO, args []string) error {
-	fs := command.NewFlagSet(c.Name(), "[OPTION]... {SCRIPT} [FILE]...", stdio.Err)
+	fs := command.NewFlagSet(c.Name(), "[OPTION]... {SCRIPT} [FILE]...", stdio.Err).WithHelp(command.Help{
+		Description: "A stream editor that applies a SCRIPT to each FILE (or to standard input) and " +
+			"writes the result to standard output. It supports a practical subset of GNU sed: the " +
+			"substitute command s/re/repl/flags, plus p (print), d (delete) and q (quit), each " +
+			"with an optional line-number, $ or /regexp/ address, given singly or as a range. The " +
+			"script is taken from -e/-f or from the first operand; -n suppresses automatic " +
+			"printing, -E/-r enable extended regular expressions, and -i edits files in place.",
+		Examples: []command.Example{
+			{Command: "sed 's/foo/bar/' file.txt", Explain: "Replace the first 'foo' on each line with 'bar'."},
+			{Command: "sed -n '2,4p' file.txt", Explain: "Print only lines 2 through 4."},
+			{Command: "sed '/^#/d' config", Explain: "Delete every comment line."},
+			{Command: "sed -i 's/old/new/g' file.txt", Explain: "Edit file.txt in place, replacing all 'old' with 'new'."},
+		},
+		ExitStatus: "0  the script ran successfully on all input.\n1  the script was invalid or a file could not be read.",
+	})
 	scripts := fs.StringArrayP("expression", "e", nil, "add the script to the commands to be executed")
 	scriptFile := fs.StringP("file", "f", "", "add the contents of FILE to the commands")
 	quiet := fs.BoolP("quiet", "n", false, "suppress automatic printing of pattern space")

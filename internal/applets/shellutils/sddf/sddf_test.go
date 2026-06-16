@@ -151,8 +151,10 @@ func TestHelpAndVersion(t *testing.T) {
 	if err != nil {
 		t.Fatalf("--help error = %v", err)
 	}
-	if !strings.Contains(out, "Usage: sddf") {
-		t.Errorf("--help out = %q", out)
+	for _, want := range []string{"Usage: sddf", "Examples:", "Exit status:"} {
+		if !strings.Contains(out, want) {
+			t.Errorf("--help out missing %q\n%s", want, out)
+		}
 	}
 
 	out, _, err = run(t, "", "--version")

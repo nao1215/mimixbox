@@ -42,7 +42,14 @@ var isTerminal = func(w io.Writer) bool {
 
 // Run executes nohup.
 func (c *Command) Run(_ context.Context, stdio command.IO, args []string) error {
-	fs := command.NewFlagSet(c.Name(), "COMMAND [ARG]...", stdio.Err)
+	fs := command.NewFlagSet(c.Name(), "COMMAND [ARG]...", stdio.Err).WithHelp(command.Help{
+		Description: "Run COMMAND with the hang-up signal (SIGHUP) ignored, so it keeps running after the controlling terminal is closed. When standard output is a terminal it is redirected, appending to nohup.out (or $HOME/nohup.out).",
+		Examples: []command.Example{
+			{Command: "nohup ./long-job.sh &", Explain: "Run long-job.sh so it survives logout, with output in nohup.out."},
+			{Command: "nohup make build", Explain: "Run 'make build' immune to hangups."},
+		},
+		ExitStatus: "0    COMMAND ran and exited 0.\n126  COMMAND was found but could not be run.\n127  COMMAND was not found.",
+	})
 	// Stop parsing options at the command name so its flags pass through.
 	fs.SetInterspersed(false)
 

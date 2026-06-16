@@ -87,3 +87,15 @@ func TestRunMissingOperand(t *testing.T) {
 		t.Errorf("stderr = %q, want missing file operand message", errOut)
 	}
 }
+
+func TestHelpSections(t *testing.T) {
+	t.Parallel()
+	out := &bytes.Buffer{}
+	io := command.IO{In: strings.NewReader(""), Out: out, Err: &bytes.Buffer{}}
+	if err := touch.New().Run(context.Background(), io, []string{"--help"}); err != nil {
+		t.Fatalf("Run --help error = %v", err)
+	}
+	if !strings.Contains(out.String(), "Examples:") || !strings.Contains(out.String(), "Exit status:") {
+		t.Errorf("--help missing structured sections:\n%s", out.String())
+	}
+}

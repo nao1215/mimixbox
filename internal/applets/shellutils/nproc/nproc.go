@@ -27,7 +27,14 @@ var cpuCount = runtime.NumCPU
 
 // Run executes nproc.
 func (c *Command) Run(_ context.Context, stdio command.IO, args []string) error {
-	fs := command.NewFlagSet(c.Name(), "[OPTION]...", stdio.Err)
+	fs := command.NewFlagSet(c.Name(), "[OPTION]...", stdio.Err).WithHelp(command.Help{
+		Description: "Print the number of processing units available to the current process. With --ignore=N, exclude up to N units, but never print fewer than one.",
+		Examples: []command.Example{
+			{Command: "nproc", Explain: "Print the number of available CPUs, e.g. '8'."},
+			{Command: "nproc --ignore=2", Explain: "Print the CPU count minus 2 (at least 1)."},
+		},
+		ExitStatus: "0  the count was printed.\n1  the count could not be written.",
+	})
 	ignore := fs.Uint("ignore", 0, "if possible, exclude N processing units")
 
 	proceed, err := fs.Parse(stdio, args)

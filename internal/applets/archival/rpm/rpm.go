@@ -28,7 +28,18 @@ func (c *Command) Synopsis() string { return "Query an RPM package file" }
 
 // Run executes rpm.
 func (c *Command) Run(_ context.Context, stdio command.IO, args []string) error {
-	fs := command.NewFlagSet(c.Name(), "-qp [-i] [-l] FILE.rpm", stdio.Err)
+	fs := command.NewFlagSet(c.Name(), "-qp [-i] [-l] FILE.rpm", stdio.Err).WithHelp(command.Help{
+		Description: "Query an RPM package file with -qp. By default the package identity is printed " +
+			"as name-version-release.arch; -i prints an information summary and -l lists the files " +
+			"contained in the package. Only package-file queries are supported: rpm does not " +
+			"install, remove, or query the system RPM database.",
+		Examples: []command.Example{
+			{Command: "rpm -qp pkg.rpm", Explain: "Print the package's name-version-release.arch."},
+			{Command: "rpm -qpi pkg.rpm", Explain: "Print a summary of the package information."},
+			{Command: "rpm -qpl pkg.rpm", Explain: "List the files contained in the package."},
+		},
+		ExitStatus: "0  the package file was queried successfully.\n1  the file could not be read or the query mode was not -qp.",
+	})
 	query := fs.BoolP("query", "q", false, "query mode")
 	pkgFile := fs.BoolP("package", "p", false, "query a package file")
 	info := fs.BoolP("info", "i", false, "display package information")

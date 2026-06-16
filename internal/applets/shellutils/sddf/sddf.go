@@ -65,7 +65,22 @@ type options struct {
 
 // Run executes sddf.
 func (c *Command) Run(_ context.Context, stdio command.IO, args []string) error {
-	fs := command.NewFlagSet(c.Name(), "[OPTION]... DIRECTORY...", stdio.Err)
+	fs := command.NewFlagSet(c.Name(), "[OPTION]... DIRECTORY...", stdio.Err).WithHelp(command.Help{
+		Description: "Search for and delete duplicated files (a MimixBox-original command). It walks " +
+			"each DIRECTORY, groups files whose byte content is identical, and by default writes " +
+			"the duplicate groups to a *.sddf report. With -d the duplicates are deleted in place, " +
+			"keeping the newest copy of each group; -n reports what would be deleted without " +
+			"removing anything, and -i prompts before each deletion. A previously written *.sddf " +
+			"report may be passed as an operand to delete the duplicates it records. System paths " +
+			"such as /bin and /etc are always excluded from the scan.",
+		Examples: []command.Example{
+			{Command: "sddf ~/Pictures", Explain: "Scan ~/Pictures and write a *.sddf report of duplicates."},
+			{Command: "sddf -d ~/Downloads", Explain: "Delete duplicates in ~/Downloads, keeping the newest copy."},
+			{Command: "sddf -n ~/Downloads", Explain: "Show which duplicates would be deleted, without removing them."},
+			{Command: "sddf duplicated-file.sddf", Explain: "Delete the duplicates recorded in a saved report."},
+		},
+		ExitStatus: "0  the scan or deletion completed successfully.\n1  a directory could not be scanned or a file could not be deleted, or no operand was given.",
+	})
 	output := fs.StringP("output", "o", "duplicated-file", "Change output file-name without extension")
 	del := fs.BoolP("delete", "d", false, "delete duplicated files in place, keeping the newest copy")
 	interactive := fs.BoolP("interactive", "i", false, "prompt before each deletion (with --delete)")

@@ -23,7 +23,14 @@ func (c *Command) Synopsis() string { return "Remove a single file by calling th
 
 // Run executes unlink.
 func (c *Command) Run(_ context.Context, stdio command.IO, args []string) error {
-	fs := command.NewFlagSet(c.Name(), "FILE", stdio.Err)
+	fs := command.NewFlagSet(c.Name(), "FILE", stdio.Err).WithHelp(command.Help{
+		Description: "Remove the single file FILE by calling the unlink function. " +
+			"Unlike rm, it takes exactly one operand and accepts no removal options.",
+		Examples: []command.Example{
+			{Command: "unlink stale.lock", Explain: "Remove the file stale.lock."},
+		},
+		ExitStatus: "0  the file was removed successfully.\n1  no file or more than one was given, or the file could not be removed.",
+	})
 
 	proceed, err := fs.Parse(stdio, args)
 	if err != nil || !proceed {

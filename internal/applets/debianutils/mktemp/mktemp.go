@@ -35,7 +35,14 @@ func (c *Command) Synopsis() string { return "Create a temporary file or directo
 
 // Run executes mktemp.
 func (c *Command) Run(_ context.Context, stdio command.IO, args []string) error {
-	fs := command.NewFlagSet(c.Name(), "[OPTION]... [TEMPLATE]", stdio.Err)
+	fs := command.NewFlagSet(c.Name(), "[OPTION]... [TEMPLATE]", stdio.Err).WithHelp(command.Help{
+		Description: "Create a uniquely-named temporary file (or, with -d, directory) by replacing the trailing run of at least three X's in TEMPLATE with random characters, then print its path. TEMPLATE defaults to tmp.XXXXXXXXXX.",
+		Examples: []command.Example{
+			{Command: "mktemp", Explain: "Create a temporary file and print its path, e.g. /tmp/tmp.aZ3kP9qLrt."},
+			{Command: "mktemp -d build.XXXXXX", Explain: "Create a temporary directory named build.<random> in the current directory."},
+		},
+		ExitStatus: "0  the file or directory was created and its name printed.\n1  the template was invalid or creation failed.",
+	})
 	directory := fs.BoolP("directory", "d", false, "create a directory, not a file")
 	dryRun := fs.BoolP("dry-run", "u", false, "do not create anything; merely print a name (unsafe)")
 	quiet := fs.BoolP("quiet", "q", false, "suppress diagnostics about file/dir-creation failure")

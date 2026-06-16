@@ -28,7 +28,15 @@ func (c *Command) Synopsis() string {
 
 // Run executes tee.
 func (c *Command) Run(_ context.Context, stdio command.IO, args []string) error {
-	fs := command.NewFlagSet(c.Name(), "[OPTION]... [FILE]...", stdio.Err)
+	fs := command.NewFlagSet(c.Name(), "[OPTION]... [FILE]...", stdio.Err).WithHelp(command.Help{
+		Description: "Copy standard input to standard output and to each FILE. By default each FILE is " +
+			"overwritten; with -a the input is appended instead.",
+		Examples: []command.Example{
+			{Command: "tee out.txt", Explain: "Write standard input to out.txt and to standard output."},
+			{Command: "tee -a log.txt", Explain: "Append standard input to log.txt instead of overwriting it."},
+		},
+		ExitStatus: "0  success.\n1  an error occurred (e.g. a file could not be written).",
+	})
 	appendMode := fs.BoolP("append", "a", false, "append to the given FILEs, do not overwrite")
 	// -i/--ignore-interrupts is accepted for GNU compatibility; in this
 	// in-memory model there is no SIGINT to ignore, so it is a no-op.

@@ -24,7 +24,18 @@ func (c *Command) Synopsis() string { return "Print the resolved absolute file n
 
 // Run executes realpath.
 func (c *Command) Run(_ context.Context, stdio command.IO, args []string) error {
-	fs := command.NewFlagSet(c.Name(), "[OPTION]... FILE...", stdio.Err)
+	fs := command.NewFlagSet(c.Name(), "[OPTION]... FILE...", stdio.Err).WithHelp(command.Help{
+		Description: "Print the resolved, absolute file name of each FILE, expanding all symbolic " +
+			"links and removing '.' and '..' components. By default every path component must " +
+			"exist; -m allows missing components, -s leaves symbolic links unexpanded, and -z " +
+			"separates results with a NUL byte instead of a newline.",
+		Examples: []command.Example{
+			{Command: "realpath ./foo/../bar", Explain: "Print the canonical absolute path of bar."},
+			{Command: "realpath -s /usr/bin/awk", Explain: "Resolve the path without expanding symlinks."},
+			{Command: "realpath -m /no/such/dir/file", Explain: "Resolve a path whose components need not exist."},
+		},
+		ExitStatus: "0  all paths were resolved successfully.\n1  a path could not be resolved or no operand was given.",
+	})
 	existing := fs.BoolP("canonicalize-existing", "e", false, "all components of the path must exist")
 	missing := fs.BoolP("canonicalize-missing", "m", false, "no path components need exist or be a directory")
 	noSymlinks := fs.BoolP("no-symlinks", "s", false, "don't expand symlinks")

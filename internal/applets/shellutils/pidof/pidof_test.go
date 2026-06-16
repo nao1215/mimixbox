@@ -117,3 +117,18 @@ func TestNameSynopsis(t *testing.T) {
 		t.Error("Synopsis() is empty")
 	}
 }
+
+func TestHelpSections(t *testing.T) {
+	out := &bytes.Buffer{}
+	io := command.IO{In: strings.NewReader(""), Out: out, Err: &bytes.Buffer{}}
+	if err := New().Run(context.Background(), io, []string{"--help"}); err != nil {
+		t.Fatalf("Run --help error = %v", err)
+	}
+	got := out.String()
+	if !strings.Contains(got, "Examples:") {
+		t.Errorf("--help missing Examples section:\n%s", got)
+	}
+	if !strings.Contains(got, "Exit status:") {
+		t.Errorf("--help missing Exit status section:\n%s", got)
+	}
+}

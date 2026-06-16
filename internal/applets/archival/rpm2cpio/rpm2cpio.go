@@ -27,7 +27,18 @@ func (c *Command) Synopsis() string { return "Extract the cpio payload from an R
 
 // Run executes rpm2cpio.
 func (c *Command) Run(_ context.Context, stdio command.IO, args []string) error {
-	fs := command.NewFlagSet(c.Name(), "[FILE.rpm]", stdio.Err)
+	fs := command.NewFlagSet(c.Name(), "[FILE.rpm]", stdio.Err).WithHelp(command.Help{
+		Description: "Extract the cpio payload from the RPM package FILE.rpm and write it, " +
+			"decompressed, to standard output. With no FILE, or when FILE is '-', the package is " +
+			"read from standard input. The result can be piped straight into cpio to unpack the " +
+			"package contents.",
+		Examples: []command.Example{
+			{Command: "rpm2cpio pkg.rpm | cpio -idmv", Explain: "Extract every file from pkg.rpm into the current directory."},
+			{Command: "rpm2cpio pkg.rpm > pkg.cpio", Explain: "Save the decompressed cpio payload to a file."},
+			{Command: "cat pkg.rpm | rpm2cpio", Explain: "Read the package from standard input."},
+		},
+		ExitStatus: "0  the payload was extracted successfully.\n1  the file could not be opened or is not a valid RPM package.",
+	})
 	proceed, err := fs.Parse(stdio, args)
 	if err != nil || !proceed {
 		return err

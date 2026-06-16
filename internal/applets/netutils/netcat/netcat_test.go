@@ -73,3 +73,18 @@ func TestDelegatesToNc(t *testing.T) {
 		t.Errorf("out = %q, want it to contain pong", out)
 	}
 }
+
+// TestHelpSections asserts `netcat --help` renders netcat-named structured help.
+func TestHelpSections(t *testing.T) {
+	t.Parallel()
+	out := &bytes.Buffer{}
+	io := command.IO{In: strings.NewReader(""), Out: out, Err: &bytes.Buffer{}}
+	if err := New().Run(context.Background(), io, []string{"--help"}); err != nil {
+		t.Fatalf("--help err = %v", err)
+	}
+	for _, want := range []string{"Usage: netcat", "Examples:", "Exit status:"} {
+		if !strings.Contains(out.String(), want) {
+			t.Errorf("--help missing %q: %q", want, out.String())
+		}
+	}
+}

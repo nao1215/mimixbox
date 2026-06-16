@@ -25,7 +25,15 @@ func (c *Command) Synopsis() string { return "Print Working Directory" }
 
 // Run executes pwd.
 func (c *Command) Run(_ context.Context, stdio command.IO, args []string) error {
-	fs := command.NewFlagSet(c.Name(), "[OPTION]", stdio.Err)
+	fs := command.NewFlagSet(c.Name(), "[OPTION]", stdio.Err).WithHelp(command.Help{
+		Description: "Print the full filename of the current working directory. By default the logical path " +
+			"is printed, honoring $PWD; with -P all symbolic links are resolved.",
+		Examples: []command.Example{
+			{Command: "pwd", Explain: "Print the current working directory."},
+			{Command: "pwd -P", Explain: "Print the physical directory with all symlinks resolved."},
+		},
+		ExitStatus: "0  success.\n1  the working directory could not be determined.",
+	})
 	logical := fs.BoolP("logical", "L", false, "use PWD from environment, even if it contains symlinks")
 	physical := fs.BoolP("physical", "P", false, "avoid all symlinks")
 

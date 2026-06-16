@@ -33,7 +33,16 @@ const clearScreen = "\033[H\033[2J"
 // Run executes watch. It renders once immediately and then again every
 // interval until the context is cancelled (for example by Ctrl-C).
 func (c *Command) Run(ctx context.Context, stdio command.IO, args []string) error {
-	fs := command.NewFlagSet(c.Name(), "[OPTION]... COMMAND [ARG]...", stdio.Err)
+	fs := command.NewFlagSet(c.Name(), "[OPTION]... COMMAND [ARG]...", stdio.Err).WithHelp(command.Help{
+		Description: "Run COMMAND periodically, clearing the screen and showing its output on each run " +
+			"so changes are easy to see. By default it refreshes every two seconds until interrupted.",
+		Examples: []command.Example{
+			{Command: "watch date", Explain: "Show the current date and time, refreshing every two seconds."},
+			{Command: "watch -n 5 df -h", Explain: "Refresh disk usage every five seconds."},
+			{Command: "watch -t ls -l", Explain: "Watch a directory listing without the header line."},
+		},
+		ExitStatus: "0  watch was interrupted normally.\n1  COMMAND was missing or an error occurred.",
+	})
 	// Stop parsing options at the command name so its flags pass through.
 	fs.SetInterspersed(false)
 	interval := fs.Float64P("interval", "n", 2.0, "seconds to wait between updates")

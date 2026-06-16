@@ -58,7 +58,13 @@ func Frame(trail int) string {
 
 // Run executes nyancat.
 func (c *Command) Run(ctx context.Context, stdio command.IO, args []string) error {
-	fs := command.NewFlagSet(c.Name(), "[OPTION]", stdio.Err)
+	fs := command.NewFlagSet(c.Name(), "[OPTION]", stdio.Err).WithHelp(command.Help{
+		Description: "Animate the Nyan Cat trailing a rainbow across the terminal until interrupted. The animation needs a real terminal; without one (for example in a pipe or on CI) it exits immediately without drawing.",
+		Examples: []command.Example{
+			{Command: "nyancat", Explain: "Run the Nyan Cat animation until you press Ctrl-C."},
+		},
+		ExitStatus: "0  the animation ran (or was skipped for lack of a terminal) and exited cleanly.",
+	})
 
 	proceed, err := fs.Parse(stdio, args)
 	if err != nil || !proceed {

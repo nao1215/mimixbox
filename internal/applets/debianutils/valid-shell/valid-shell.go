@@ -47,7 +47,15 @@ func (c *Command) Synopsis() string { return "Verify if /etc/shells is valid" }
 
 // Run executes valid-shell.
 func (c *Command) Run(_ context.Context, stdio command.IO, args []string) error {
-	fs := command.NewFlagSet(c.Name(), "[FILE]", stdio.Err)
+	fs := command.NewFlagSet(c.Name(), "[FILE]", stdio.Err).WithHelp(command.Help{
+		Description: "Check that every shell listed in /etc/shells (or FILE, if given) exists and is " +
+			"executable, printing an \"OK:\" or \"NG:\" line for each entry. Comment and blank lines are ignored.",
+		Examples: []command.Example{
+			{Command: "valid-shell", Explain: "Validate the shells listed in /etc/shells."},
+			{Command: "valid-shell /etc/shells", Explain: "Validate the named shells file."},
+		},
+		ExitStatus: "0  every listed shell exists and is executable.\n1  a shell is missing or the file could not be read.",
+	})
 
 	proceed, err := fs.Parse(stdio, args)
 	if err != nil || !proceed {

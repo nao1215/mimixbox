@@ -56,7 +56,14 @@ type options struct {
 
 // Run executes mv.
 func (c *Command) Run(_ context.Context, stdio command.IO, args []string) error {
-	fs := command.NewFlagSet(c.Name(), "[OPTION]... SOURCE... DEST", stdio.Err)
+	fs := command.NewFlagSet(c.Name(), "[OPTION]... SOURCE... DEST", stdio.Err).WithHelp(command.Help{
+		Description: "Rename SOURCE to DEST, or move one or more SOURCEs into the directory DEST. Moves across file systems fall back to a copy followed by a delete. Use -i to prompt before overwriting, -n to never overwrite, -f to overwrite without prompting, and -b to back up an existing destination.",
+		Examples: []command.Example{
+			{Command: "mv old.txt new.txt", Explain: "Rename old.txt to new.txt."},
+			{Command: "mv a.txt b.txt dir/", Explain: "Move a.txt and b.txt into the directory 'dir'."},
+		},
+		ExitStatus: "0  every move succeeded.\n1  a source was missing or could not be moved.",
+	})
 	backup := fs.BoolP("backup", "b", false, "make a backup of each existing destination file")
 	force := fs.BoolP("force", "f", false, "do not prompt before overwriting")
 	interactive := fs.BoolP("interactive", "i", false, "prompt before overwrite")

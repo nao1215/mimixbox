@@ -28,7 +28,15 @@ func (c *Command) Synopsis() string { return "Display file or file system status
 
 // Run executes stat.
 func (c *Command) Run(_ context.Context, stdio command.IO, args []string) error {
-	fs := command.NewFlagSet(c.Name(), "[OPTION]... FILE...", stdio.Err)
+	fs := command.NewFlagSet(c.Name(), "[OPTION]... FILE...", stdio.Err).WithHelp(command.Help{
+		Description: "Display the status of each FILE: its size, permissions, ownership, and timestamps. " +
+			"With -c, print only the fields named by the FORMAT string.",
+		Examples: []command.Example{
+			{Command: "stat file.txt", Explain: "Show the full status of file.txt."},
+			{Command: "stat -c %s file.txt", Explain: "Print only the size of file.txt in bytes."},
+		},
+		ExitStatus: "0  success.\n1  an error occurred (e.g. a file could not be stat'd).",
+	})
 	format := fs.StringP("format", "c", "", "use the specified FORMAT instead of the default")
 	deref := fs.BoolP("dereference", "L", false, "follow links")
 

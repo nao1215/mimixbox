@@ -48,7 +48,14 @@ var asnLookup = cymruLookup
 
 // Run executes whris.
 func (c *Command) Run(_ context.Context, stdio command.IO, args []string) error {
-	fs := command.NewFlagSet(c.Name(), "DOMAIN", stdio.Err)
+	fs := command.NewFlagSet(c.Name(), "DOMAIN", stdio.Err).WithHelp(command.Help{
+		Description: "Resolve DOMAIN to its IPv4 addresses and print the AS number and owning " +
+			"organization for each, looked up through the Team Cymru WHOIS service.",
+		Examples: []command.Example{
+			{Command: "whris example.com", Explain: "Show the AS number and owner for example.com's IP addresses."},
+		},
+		ExitStatus: "0  the management information was printed.\n1  the domain could not be resolved or no domain was given.",
+	})
 
 	proceed, err := fs.Parse(stdio, args)
 	if err != nil || !proceed {

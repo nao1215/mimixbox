@@ -41,7 +41,17 @@ type options struct {
 
 // Run executes tar.
 func (c *Command) Run(_ context.Context, stdio command.IO, args []string) error {
-	fs := command.NewFlagSet(c.Name(), "[-c|-x|-t] [-z] [-f ARCHIVE] [FILE]...", stdio.Err)
+	fs := command.NewFlagSet(c.Name(), "[-c|-x|-t] [-z] [-f ARCHIVE] [FILE]...", stdio.Err).WithHelp(command.Help{
+		Description: "Create, list, or extract a tar archive. Exactly one of -c (create), -x (extract), " +
+			"or -t (list) selects the operation, and -z filters the archive through gzip.",
+		Examples: []command.Example{
+			{Command: "tar -cf archive.tar dir", Explain: "Create archive.tar from the contents of dir."},
+			{Command: "tar -czf archive.tar.gz dir", Explain: "Create a gzip-compressed archive of dir."},
+			{Command: "tar -xf archive.tar", Explain: "Extract the files from archive.tar."},
+			{Command: "tar -tf archive.tar", Explain: "List the contents of archive.tar."},
+		},
+		ExitStatus: "0  success.\n1  an error occurred (e.g. the archive could not be read or written).",
+	})
 	create := fs.BoolP("create", "c", false, "create a new archive")
 	extract := fs.BoolP("extract", "x", false, "extract files from an archive")
 	list := fs.BoolP("list", "t", false, "list the contents of an archive")

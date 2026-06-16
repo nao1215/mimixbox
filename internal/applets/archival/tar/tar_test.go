@@ -160,4 +160,9 @@ func TestHelp(t *testing.T) {
 	if !strings.Contains(out, "Usage: tar") {
 		t.Errorf("help = %q", out)
 	}
+	for _, want := range []string{"Examples:", "Exit status:"} {
+		if !strings.Contains(out, want) {
+			t.Errorf("--help missing %q section:\n%s", want, out)
+		}
+	}
 }

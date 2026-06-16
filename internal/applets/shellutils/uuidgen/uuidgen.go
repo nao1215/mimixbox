@@ -42,7 +42,14 @@ func (c *Command) Synopsis() string { return "Print UUID (Universally Unique IDe
 // Run executes uuidgen. It generates a random (version 4) UUID and prints it
 // lowercase, followed by a newline, to stdio.Out.
 func (c *Command) Run(_ context.Context, stdio command.IO, args []string) error {
-	fs := command.NewFlagSet(c.Name(), "[OPTION]", stdio.Err)
+	fs := command.NewFlagSet(c.Name(), "[OPTION]", stdio.Err).WithHelp(command.Help{
+		Description: "Print a new random (version 4) UUID in the canonical 8-4-4-4-12 lowercase " +
+			"hexadecimal form. Each invocation prints one UUID followed by a newline.",
+		Examples: []command.Example{
+			{Command: "uuidgen", Explain: "Print a random version 4 UUID."},
+		},
+		ExitStatus: "0  a UUID was printed.\n1  a UUID could not be generated.",
+	})
 
 	proceed, err := fs.Parse(stdio, args)
 	if err != nil || !proceed {

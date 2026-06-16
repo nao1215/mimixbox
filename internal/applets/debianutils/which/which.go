@@ -33,7 +33,15 @@ func (c *Command) Synopsis() string {
 // the exit status is 1, matching the Debian which behavior: nothing is written
 // for a name that cannot be resolved.
 func (c *Command) Run(_ context.Context, stdio command.IO, args []string) error {
-	fs := command.NewFlagSet(c.Name(), "[OPTION]... COMMAND...", stdio.Err)
+	fs := command.NewFlagSet(c.Name(), "[OPTION]... COMMAND...", stdio.Err).WithHelp(command.Help{
+		Description: "For each COMMAND, print the absolute path that would be executed for it on the " +
+			"current $PATH. With -a, print every matching path instead of only the first.",
+		Examples: []command.Example{
+			{Command: "which ls", Explain: "Print the path of the ls command."},
+			{Command: "which -a python", Explain: "Print every python found on $PATH."},
+		},
+		ExitStatus: "0  every COMMAND was found.\n1  a COMMAND was not found, or none was given.",
+	})
 	all := fs.BoolP("all", "a", false, "print all matching pathnames of each argument")
 
 	proceed, err := fs.Parse(stdio, args)

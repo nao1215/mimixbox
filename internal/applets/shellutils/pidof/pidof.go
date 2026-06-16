@@ -36,7 +36,16 @@ var listProcesses = procFromProcfs
 
 // Run executes pidof.
 func (c *Command) Run(_ context.Context, stdio command.IO, args []string) error {
-	fs := command.NewFlagSet(c.Name(), "[OPTION]... PROGRAM...", stdio.Err)
+	fs := command.NewFlagSet(c.Name(), "[OPTION]... PROGRAM...", stdio.Err).WithHelp(command.Help{
+		Description: "Find the process IDs of the named running programs and print them, newest first, " +
+			"on a single line separated by spaces.",
+		Examples: []command.Example{
+			{Command: "pidof sshd", Explain: "Print the PIDs of all running sshd processes."},
+			{Command: "pidof -s nginx", Explain: "Print only one PID for nginx."},
+			{Command: "pidof bash zsh", Explain: "Print the PIDs of bash and zsh processes."},
+		},
+		ExitStatus: "0  at least one matching process was found.\n1  no matching process was found, or an error occurred.",
+	})
 	single := fs.BoolP("single-shot", "s", false, "return only one PID")
 
 	proceed, err := fs.Parse(stdio, args)

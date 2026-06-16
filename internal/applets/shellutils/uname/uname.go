@@ -38,7 +38,16 @@ var sysInfo = uts
 
 // Run executes uname.
 func (c *Command) Run(_ context.Context, stdio command.IO, args []string) error {
-	fs := command.NewFlagSet(c.Name(), "[OPTION]...", stdio.Err)
+	fs := command.NewFlagSet(c.Name(), "[OPTION]...", stdio.Err).WithHelp(command.Help{
+		Description: "Print system information. With no option, print the kernel name. " +
+			"With -a, print everything; the other options select individual fields.",
+		Examples: []command.Example{
+			{Command: "uname", Explain: "Print the kernel name, e.g. Linux."},
+			{Command: "uname -a", Explain: "Print all available system information."},
+			{Command: "uname -sr", Explain: "Print the kernel name and release together."},
+		},
+		ExitStatus: "0  the information was printed successfully.\n1  the system information could not be obtained.",
+	})
 	all := fs.BoolP("all", "a", false, "print all information")
 	sysname := fs.BoolP("kernel-name", "s", false, "print the kernel name")
 	nodename := fs.BoolP("nodename", "n", false, "print the network node hostname")

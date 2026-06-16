@@ -26,7 +26,16 @@ func (c *Command) Synopsis() string { return "Print resolved symbolic links or c
 
 // Run executes readlink.
 func (c *Command) Run(_ context.Context, stdio command.IO, args []string) error {
-	fs := command.NewFlagSet(c.Name(), "[OPTION]... FILE...", stdio.Err)
+	fs := command.NewFlagSet(c.Name(), "[OPTION]... FILE...", stdio.Err).WithHelp(command.Help{
+		Description: "Print the target of each symbolic link FILE. With -f, print the canonicalized " +
+			"absolute path, following every symlink in the chain.",
+		Examples: []command.Example{
+			{Command: "readlink /usr/bin/vi", Explain: "Print the immediate target of the symlink."},
+			{Command: "readlink -f /usr/bin/vi", Explain: "Print the fully resolved canonical path."},
+			{Command: "readlink -n link", Explain: "Print the target without a trailing newline."},
+		},
+		ExitStatus: "0  every operand was resolved.\n1  an operand was not a symlink or could not be resolved.",
+	})
 	canon := fs.BoolP("canonicalize", "f", false, "canonicalize by following every symlink")
 	quiet := fs.BoolP("no-newline", "n", false, "do not output the trailing newline")
 

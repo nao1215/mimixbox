@@ -48,3 +48,17 @@ func TestRunUnique(t *testing.T) {
 		t.Errorf("two runs produced the same UUID: %q", strings.TrimSpace(first))
 	}
 }
+
+func TestHelpSections(t *testing.T) {
+	t.Parallel()
+	out := &bytes.Buffer{}
+	io := command.IO{In: strings.NewReader(""), Out: out, Err: &bytes.Buffer{}}
+	if err := uuidgen.New().Run(context.Background(), io, []string{"--help"}); err != nil {
+		t.Fatalf("help err = %v", err)
+	}
+	for _, want := range []string{"Examples:", "Exit status:"} {
+		if !strings.Contains(out.String(), want) {
+			t.Errorf("--help output missing %q:\n%s", want, out.String())
+		}
+	}
+}

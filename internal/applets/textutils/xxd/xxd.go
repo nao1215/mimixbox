@@ -29,7 +29,15 @@ const bytesPerLine = 16
 
 // Run executes xxd.
 func (c *Command) Run(_ context.Context, stdio command.IO, args []string) error {
-	fs := command.NewFlagSet(c.Name(), "[OPTION]... [FILE]", stdio.Err)
+	fs := command.NewFlagSet(c.Name(), "[OPTION]... [FILE]", stdio.Err).WithHelp(command.Help{
+		Description: "Make a hex dump of FILE (or standard input), or with -r convert a hex dump back into " +
+			"binary. Each output line shows an offset, the bytes in hex, and their printable rendering.",
+		Examples: []command.Example{
+			{Command: "xxd file.bin", Explain: "Print a hex dump of file.bin."},
+			{Command: "xxd -r dump.txt", Explain: "Convert a hex dump back into binary."},
+		},
+		ExitStatus: "0  the dump or conversion completed.\n1  the input could not be read or the hex dump was invalid.",
+	})
 	reverse := fs.BoolP("revert", "r", false, "reverse operation: convert a hex dump into binary")
 
 	proceed, err := fs.Parse(stdio, args)

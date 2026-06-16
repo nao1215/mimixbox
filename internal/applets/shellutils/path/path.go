@@ -25,7 +25,17 @@ func (c *Command) Synopsis() string { return "Manipulate filename path" }
 
 // Run executes path.
 func (c *Command) Run(_ context.Context, stdio command.IO, args []string) error {
-	fs := command.NewFlagSet(c.Name(), "[OPTION]... PATH...", stdio.Err)
+	fs := command.NewFlagSet(c.Name(), "[OPTION]... PATH...", stdio.Err).WithHelp(command.Help{
+		Description: "Manipulate a filename PATH, printing its directory, basename, extension, " +
+			"absolute form, or canonical form. With no option, the canonical (cleaned) path is printed.",
+		Examples: []command.Example{
+			{Command: "path /usr/local/bin/mimixbox", Explain: "Print the canonical (cleaned) path."},
+			{Command: "path -b /usr/local/bin/mimixbox", Explain: "Print the basename (mimixbox)."},
+			{Command: "path -d /usr/local/bin/mimixbox", Explain: "Print the directory (/usr/local/bin)."},
+			{Command: "path -e archive.tar.gz", Explain: "Print the file extension (.gz)."},
+		},
+		ExitStatus: "0  success.\n1  no operand was given or the absolute path could not be resolved.",
+	})
 	abs := fs.BoolP("absolute", "a", false, "Print absolute path")
 	base := fs.BoolP("basename", "b", false, "Print basename (filename)")
 	canonical := fs.BoolP("canonical", "c", false, "Print canonical path (default)")

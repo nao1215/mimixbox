@@ -48,7 +48,16 @@ type options struct {
 
 // Run executes sort.
 func (c *Command) Run(_ context.Context, stdio command.IO, args []string) error {
-	fs := command.NewFlagSet(c.Name(), "[OPTION]... [FILE]...", stdio.Err)
+	fs := command.NewFlagSet(c.Name(), "[OPTION]... [FILE]...", stdio.Err).WithHelp(command.Help{
+		Description: "Write the sorted concatenation of all FILE(s) to standard output. " +
+			"With no FILE, or when FILE is -, read standard input.",
+		Examples: []command.Example{
+			{Command: "sort file.txt", Explain: "Sort the lines of file.txt and print them."},
+			{Command: "sort -u file.txt", Explain: "Sort lines and drop duplicates."},
+			{Command: "sort -n -k 2 file.txt", Explain: "Sort numerically on the second field."},
+		},
+		ExitStatus: "0  success.\n1  the input was not sorted (with --check).\n2  an error occurred.",
+	})
 	reverse := fs.BoolP("reverse", "r", false, "reverse the result of comparisons")
 	numeric := fs.BoolP("numeric-sort", "n", false, "compare according to string numerical value")
 	unique := fs.BoolP("unique", "u", false, "output only the first of an equal run")

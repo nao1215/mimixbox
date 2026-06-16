@@ -252,7 +252,9 @@ func TestHelp(t *testing.T) {
 	if err != nil {
 		t.Fatalf("help err = %v", err)
 	}
-	if !strings.Contains(out, "Usage: sed") {
-		t.Errorf("help = %q", out)
+	for _, want := range []string{"Usage: sed", "Examples:", "Exit status:"} {
+		if !strings.Contains(out, want) {
+			t.Errorf("help missing %q\n%s", want, out)
+		}
 	}
 }

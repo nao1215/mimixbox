@@ -163,3 +163,17 @@ func TestWhoHelp(t *testing.T) {
 		t.Errorf("--help out = %q", out)
 	}
 }
+
+func TestHelpSections(t *testing.T) {
+	t.Parallel()
+	out := &bytes.Buffer{}
+	io := command.IO{In: strings.NewReader(""), Out: out, Err: &bytes.Buffer{}}
+	if err := who.New().Run(context.Background(), io, []string{"--help"}); err != nil {
+		t.Fatalf("help err = %v", err)
+	}
+	for _, want := range []string{"Examples:", "Exit status:"} {
+		if !strings.Contains(out.String(), want) {
+			t.Errorf("--help output missing %q:\n%s", want, out.String())
+		}
+	}
+}
