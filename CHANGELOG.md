@@ -7,6 +7,76 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## [Unreleased]
 
+## [0.41.0] - 2026-06-16
+
+A large compatibility, usability, and quality release across the 449-command
+tree. It clears the entire 2026-06-15 whole-project review backlog (roadmap
+#494): GNU-flag parity, self-describing help for every applet, top-level CLI
+ergonomics, a broad refactor of multi-applet packages into shared backends, and
+a major test-coverage and integration-helper expansion.
+
+### Added
+
+- **GNU-compatible flags** across the core utilities, each with unit and
+  ShellSpec coverage and unchanged default behavior:
+  - cat `--show-all`/`-A`, `--show-nonprinting`/`-v`; head/tail
+    `--zero-terminated`/`-z`; cut `--complement`, `-z`; tee
+    `--output-error`; tr `--truncate-set1`; comm `--output-delimiter`,
+    `--zero-terminated`, `--check-order`; cmp `--bytes`, `--ignore-initial`,
+    `--print-bytes`; nl `--header-numbering`/`--footer-numbering`/
+    `--join-blank-lines`; wc `--files0-from`, `--total`.
+  - ls `--color`, `--file-type`/`--indicator-style`, `--sort`/`--time`/
+    `--group-directories-first`, `--hide`/`--ignore`, `--inode`/`--block-size`/
+    `--kibibytes`; cp/ln/mv `--target-directory`/`--no-target-directory`
+    (plus cp `--parents`/`--update`/`--backup`/`--suffix`, ln `--relative`,
+    mv `--update`).
+  - grep `-A`/`-B`/`-C` context, `--include`/`--exclude`/`--exclude-dir`,
+    `--color`/`--byte-offset`/`--files-without-match`; rm `--preserve-root`/
+    `--no-preserve-root`/`--one-file-system`; touch `--reference`/`--date`/
+    `--time`/`--no-dereference`; readlink `--canonicalize-*`/`--zero`; stat
+    `--printf`/`--format`/`--terse`; split `--numeric-suffixes`/
+    `--additional-suffix`/`--suffix-length`.
+  - xargs `--max-lines`/`--max-chars`/`--max-procs`; sort `--stable`/
+    `--version-sort`/`--general-numeric-sort`/`--human-numeric-sort`/
+    `--zero-terminated`/`--merge`; tail `--pid` and `--follow=name|descriptor`;
+    du `--max-depth`/`--one-file-system`/`--apparent-size`/`--exclude`; df
+    `--all`/`--output`/`--type`/`--total`/`--block-size`; install `--owner`/
+    `--group`/`--strip`/`--backup`/`--suffix`; env `--chdir`/`--split-string`/
+    `--ignore-signal`; realpath `--relative-to`/`--relative-base`/`--logical`/
+    `--physical`.
+- **Self-describing help**: every applet's `--help` now renders a purpose
+  paragraph, an `Examples:` section, and an `Exit status:` section (with `Notes:`
+  where behavior is gated, partial, or Linux-only), enforced registry-wide by a
+  conformance test. `find` gained a GNU-style `Options:` block.
+- **Top-level CLI** (#781-#784): `mimixbox --list --json` machine-readable
+  inventory, `--list` prefix/subsystem filtering, nearest-applet suggestions for
+  unknown commands, and subsystem/stability metadata in the applet registry.
+
+### Changed
+
+- Refactored multi-applet packages into shared backends + per-applet surfaces
+  without changing behavior: selinux, modutils, halt, script/scriptreplay,
+  netctl, the `ip` family, linkadmin, probe tools, tcpsvd/udpsvd, ftpget/ftpput,
+  ifupdown, sslutil, the checksum (`*sum`) CLI, the compressor/decompressor
+  frontend, the pager core, shell/grep alias tables, the pgrep/pkill/pidof
+  matcher, and a reusable plan-and-gate helper.
+- `stty` now honors `--version`, so the whole registry satisfies the
+  `--help`/`--version` contract with no exemptions.
+
+### Fixed
+
+- `gunzip` no longer leaves a partial/empty output file behind when
+  decompression fails on a corrupt input.
+
+### Tests
+
+- Raised unit-test coverage across the core packages and every applet's
+  low-coverage helper paths, and added registry-wide conformance, help-shape,
+  alias-parity, gated-plan, script round-trip, and installer smoke tests.
+- Added dedicated `test/it/<subsystem>/<command>_test.sh` integration helpers
+  for the remaining 170 command surfaces, completing the post-spec helper
+  backlog (#489). The ShellSpec suite now runs 2079 hermetic examples.
+
 ## [0.40.1] - 2026-06-16
 
 This is an internal test- and library-hardening release on top of the 451-command
