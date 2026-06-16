@@ -48,6 +48,10 @@ func (c *Command) Run(ctx context.Context, stdio command.IO, args []string) erro
 			{Command: "crond -f", Explain: "Run the cron daemon in the foreground."},
 		},
 		ExitStatus: "0  the daemon stopped cleanly.\n1  -f was not given.",
+		Notes: []string{
+			"Only foreground mode (-f) is supported; MimixBox does not background itself or write a PID file.",
+			"Use crontab to edit the schedules that crond runs.",
+		},
 	})
 	foreground := fs.BoolP("foreground", "f", false, "run in the foreground (the only supported mode)")
 

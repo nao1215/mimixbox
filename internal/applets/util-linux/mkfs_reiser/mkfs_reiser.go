@@ -33,6 +33,9 @@ func (c *Command) Run(_ context.Context, stdio command.IO, args []string) error 
 			{Command: "mkfs.reiser disk.img", Explain: "Reports that ReiserFS is unsupported."},
 		},
 		ExitStatus: "1  always: ReiserFS creation is not supported by this build.",
+		Notes: []string{
+			"ReiserFS is deprecated and slated for removal from the Linux kernel; create a supported filesystem (such as ext4) instead.",
+		},
 	})
 	proceed, err := fs.Parse(stdio, args)
 	if err != nil || !proceed {
