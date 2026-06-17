@@ -4,20 +4,21 @@ import (
 	"bytes"
 	"context"
 	"os"
-	"os/exec"
 	"path/filepath"
 	"strings"
 	"testing"
 	"time"
 
 	"github.com/nao1215/mimixbox/internal/command"
+	"github.com/nao1215/mimixbox/internal/testutil/fakecmd"
 )
 
+// requireSh installs a repo-local fake sh at the front of PATH so script's
+// "sh -c COMMAND" exec path runs deterministically. The fake understands the
+// small command set these tests use (printf, exit); see fakecmd's doSh.
 func requireSh(t *testing.T) {
 	t.Helper()
-	if _, err := exec.LookPath("sh"); err != nil {
-		t.Skipf("sh not on PATH: %v", err)
-	}
+	fakecmd.Use(t, "sh")
 }
 
 func TestScriptRecords(t *testing.T) {

@@ -3,19 +3,19 @@ package taskset
 import (
 	"bytes"
 	"context"
-	"os/exec"
 	"strings"
 	"testing"
 
 	"github.com/nao1215/mimixbox/internal/command"
+	"github.com/nao1215/mimixbox/internal/testutil/fakecmd"
 	"golang.org/x/sys/unix"
 )
 
+// requireEcho installs a repo-local fake echo on PATH so the exec path runs
+// deterministically without depending on a host /bin/echo.
 func requireEcho(t *testing.T) {
 	t.Helper()
-	if _, err := exec.LookPath("echo"); err != nil {
-		t.Skipf("echo not on PATH: %v", err)
-	}
+	fakecmd.UseOnly(t, "echo")
 }
 
 // withStubs makes getAffinity report `have` and captures whatever setAffinity is

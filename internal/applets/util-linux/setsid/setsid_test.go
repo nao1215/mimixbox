@@ -3,17 +3,15 @@ package setsid
 import (
 	"bytes"
 	"context"
-	"os/exec"
 	"strings"
 	"testing"
 
 	"github.com/nao1215/mimixbox/internal/command"
+	"github.com/nao1215/mimixbox/internal/testutil/fakecmd"
 )
 
 func TestSetsidRunsProgram(t *testing.T) {
-	if _, err := exec.LookPath("echo"); err != nil {
-		t.Skipf("echo not on PATH: %v", err)
-	}
+	fakecmd.UseOnly(t, "echo")
 	out := &bytes.Buffer{}
 	io := command.IO{In: strings.NewReader(""), Out: out, Err: &bytes.Buffer{}}
 	if err := New().Run(context.Background(), io, []string{"echo", "hello"}); err != nil {
@@ -25,9 +23,7 @@ func TestSetsidRunsProgram(t *testing.T) {
 }
 
 func TestSetsidPropagatesExit(t *testing.T) {
-	if _, err := exec.LookPath("false"); err != nil {
-		t.Skipf("false not on PATH: %v", err)
-	}
+	fakecmd.UseOnly(t, "false")
 	io := command.IO{In: strings.NewReader(""), Out: &bytes.Buffer{}, Err: &bytes.Buffer{}}
 	err := New().Run(context.Background(), io, []string{"false"})
 	var ee *command.ExitError
