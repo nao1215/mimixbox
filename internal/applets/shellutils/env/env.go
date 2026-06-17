@@ -8,12 +8,12 @@ import (
 	"fmt"
 	"os"
 	"os/exec"
-	"os/signal"
 	"strconv"
 	"strings"
 	"syscall"
 
 	"github.com/nao1215/mimixbox/internal/command"
+	"github.com/nao1215/mimixbox/internal/signal"
 )
 
 // Command is the env applet.
@@ -194,27 +194,25 @@ func runCommand(ctx context.Context, stdio command.IO, environ, argv []string, c
 
 	// Ignore the requested signals for the duration of the child so the child,
 	// which inherits the disposition, runs with those signals set to SIG_IGN.
-	// Reset afterwards so env's own process state is left unchanged (keeps
-	// repeated in-process runs deterministic and testable).
-	if len(ignoreSignals) > 0 {
-		signal.Ignore(ignoreSignals...)
-		defer signal.Reset(ignoreSignals...)
-	}
+	// The prior disposition is restored afterwards so env's own process state
+	// is left unchanged (keeps repeated in-process runs deterministic and
+	// testable).
+	return signal.IgnoreDuring(ignoreSignals, func() error {
+		err := cmd.Run()
+		if err == nil {
+			return nil
+		}
 
-	err := cmd.Run()
-	if err == nil {
-		return nil
-	}
+		var exitErr *exec.ExitError
+		if errors.As(err, &exitErr) {
+			return &command.ExitError{Code: exitErr.ExitCode()}
+		}
 
-	var exitErr *exec.ExitError
-	if errors.As(err, &exitErr) {
-		return &command.ExitError{Code: exitErr.ExitCode()}
-	}
-
-	// Anything else (most commonly "executable file not found") means the
-	// command could not be started.
-	_, _ = fmt.Fprintf(stdio.Err, "env: '%s': No such file or directory\n", argv[0])
-	return &command.ExitError{Code: 127}
+		// Anything else (most commonly "executable file not found") means the
+		// command could not be started.
+		_, _ = fmt.Fprintf(stdio.Err, "env: '%s': No such file or directory\n", argv[0])
+		return &command.ExitError{Code: 127}
+	})
 }
 
 // allSignalsSentinel is the value the ignore-signal flag takes when it is given
