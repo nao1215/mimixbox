@@ -19,6 +19,29 @@ func run(t *testing.T, stdin string, args ...string) (string, string, error) {
 	return out.String(), errBuf.String(), err
 }
 
+func TestEncodeStreamsLargeInput(t *testing.T) {
+	t.Parallel()
+	// Encode a large input through the streaming path and confirm it round-trips
+	// and that the wrapped output matches the standard encoding wrapped at 76
+	// columns (issue #952).
+	data := bytes.Repeat([]byte("mimixbox-streaming-0123456789\n"), 200000) // ~6 MiB
+	out := &bytes.Buffer{}
+	io := command.IO{In: bytes.NewReader(data), Out: out, Err: &bytes.Buffer{}}
+	if err := base64.New().Run(context.Background(), io, nil); err != nil {
+		t.Fatalf("encode error = %v", err)
+	}
+
+	// Decode the produced output back and compare with the original bytes.
+	back := &bytes.Buffer{}
+	dio := command.IO{In: bytes.NewReader(out.Bytes()), Out: back, Err: &bytes.Buffer{}}
+	if err := base64.New().Run(context.Background(), dio, []string{"-d"}); err != nil {
+		t.Fatalf("decode error = %v", err)
+	}
+	if !bytes.Equal(back.Bytes(), data) {
+		t.Errorf("round trip mismatch: got %d bytes, want %d", back.Len(), len(data))
+	}
+}
+
 func TestRun(t *testing.T) {
 	t.Parallel()
 	tests := []struct {

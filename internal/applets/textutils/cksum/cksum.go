@@ -59,11 +59,10 @@ func (c *Command) Run(_ context.Context, stdio command.IO, args []string) error 
 
 // sumStdin checksums standard input and prints "crc bytes".
 func (c *Command) sumStdin(stdio command.IO) error {
-	data, err := io.ReadAll(stdio.In)
+	crc, n, err := checksumReader(stdio.In)
 	if err != nil {
 		return command.Failure(err)
 	}
-	crc, n := checksum(data)
 	_, err = fmt.Fprintf(stdio.Out, "%d %d\n", crc, n)
 	return err
 }
@@ -76,11 +75,10 @@ func (c *Command) sumFile(stdio command.IO, name string) error {
 	}
 	defer func() { _ = r.Close() }()
 
-	data, err := io.ReadAll(r)
+	crc, n, err := checksumReader(r)
 	if err != nil {
 		return err
 	}
-	crc, n := checksum(data)
 	_, err = fmt.Fprintf(stdio.Out, "%d %d %s\n", crc, n, name)
 	return err
 }
@@ -105,16 +103,30 @@ var crcTable = func() [256]uint32 {
 	return t
 }()
 
-// checksum returns the POSIX CRC checksum of data and its length in bytes. The
-// length is folded into the CRC the way POSIX cksum specifies, so the result
-// matches GNU coreutils' cksum.
-func checksum(data []byte) (uint32, int) {
+// checksumReader streams r through the POSIX CRC and returns the checksum and
+// the number of bytes read. It reads incrementally rather than buffering the
+// whole input, so cksum works on arbitrarily large files and long-lived pipes
+// in constant memory (issue #952). The length is folded into the CRC the way
+// POSIX cksum specifies, so the result matches GNU coreutils' cksum.
+func checksumReader(r io.Reader) (uint32, int64, error) {
 	var crc uint32
-	for _, b := range data {
-		crc = (crc << 8) ^ crcTable[byte(crc>>24)^b]
+	var total int64
+	buf := make([]byte, 64*1024)
+	for {
+		nr, err := r.Read(buf)
+		for _, b := range buf[:nr] {
+			crc = (crc << 8) ^ crcTable[byte(crc>>24)^b]
+		}
+		total += int64(nr)
+		if err != nil {
+			if err == io.EOF {
+				break
+			}
+			return 0, 0, err
+		}
 	}
-	for n := len(data); n != 0; n >>= 8 {
+	for n := total; n != 0; n >>= 8 {
 		crc = (crc << 8) ^ crcTable[byte(crc>>24)^byte(n)]
 	}
-	return ^crc, len(data)
+	return ^crc, total, nil
 }

@@ -56,16 +56,17 @@ func (c *Command) Run(_ context.Context, stdio command.IO, args []string) error 
 	}
 	defer func() { _ = r.Close() }()
 
-	input, err := io.ReadAll(r)
-	if err != nil {
-		_, _ = fmt.Fprintf(stdio.Err, "base64: %s\n", command.FileError(name, err))
-		return command.SilentFailure()
-	}
-
 	if *decode {
+		// Decoding stays buffered so an invalid payload produces no partial
+		// output: the result is written only after the whole input validates.
+		input, err := io.ReadAll(r)
+		if err != nil {
+			_, _ = fmt.Fprintf(stdio.Err, "base64: %s\n", command.FileError(name, err))
+			return command.SilentFailure()
+		}
 		return c.decode(stdio, input, *ignoreGarbage)
 	}
-	return c.encode(stdio, input, *wrap)
+	return c.encode(stdio, name, r, *wrap)
 }
 
 // operand returns the single FILE operand, defaulting to "-" (standard input)
@@ -77,16 +78,22 @@ func operand(args []string) string {
 	return args[0]
 }
 
-// encode writes the base64 encoding of input to stdout, wrapping lines after
-// wrap characters. A wrap of 0 disables wrapping. The output always ends with a
-// trailing newline, matching GNU base64.
-func (c *Command) encode(stdio command.IO, input []byte, wrap int) error {
-	encoded := stdbase64.StdEncoding.EncodeToString(input)
-	_, err := io.WriteString(stdio.Out, wrapLines(encoded, wrap))
-	if err != nil {
+// encode streams the base64 encoding of r to stdout, wrapping lines after wrap
+// characters. A wrap of 0 disables wrapping. The output always ends with a
+// trailing newline, matching GNU base64. Input is consumed incrementally so the
+// whole file is never held in memory (issue #952).
+func (c *Command) encode(stdio command.IO, name string, r io.Reader, wrap int) error {
+	ww := &wrapWriter{w: stdio.Out, cols: wrap}
+	enc := stdbase64.NewEncoder(stdbase64.StdEncoding, ww)
+	if _, err := io.Copy(enc, r); err != nil {
+		_ = enc.Close()
+		_, _ = fmt.Fprintf(stdio.Err, "base64: %s\n", command.FileError(name, err))
+		return command.SilentFailure()
+	}
+	if err := enc.Close(); err != nil {
 		return command.Failure(err)
 	}
-	return nil
+	return ww.finish()
 }
 
 // decode writes the base64 decoding of input to stdout. When ignoreGarbage is
@@ -113,22 +120,46 @@ func (c *Command) decode(stdio command.IO, input []byte, ignoreGarbage bool) err
 	return nil
 }
 
-// wrapLines inserts a newline every cols characters and appends a trailing
-// newline. A cols of 0 (or negative) produces a single line followed by one
-// newline.
-func wrapLines(s string, cols int) string {
-	if cols <= 0 {
-		return s + "\n"
+// wrapWriter inserts a newline after every cols bytes written to w, letting the
+// encoder stream while still wrapping output the way GNU base64 does. A cols of
+// 0 (or negative) disables wrapping. finish appends the trailing newline.
+type wrapWriter struct {
+	w    io.Writer
+	cols int
+	col  int
+}
+
+func (ww *wrapWriter) Write(p []byte) (int, error) {
+	if ww.cols <= 0 {
+		return ww.w.Write(p)
 	}
-	var b strings.Builder
-	for len(s) > cols {
-		b.WriteString(s[:cols])
-		b.WriteByte('\n')
-		s = s[cols:]
+	total := 0
+	for len(p) > 0 {
+		if ww.col == ww.cols {
+			if _, err := io.WriteString(ww.w, "\n"); err != nil {
+				return total, err
+			}
+			ww.col = 0
+		}
+		n := ww.cols - ww.col
+		if n > len(p) {
+			n = len(p)
+		}
+		m, err := ww.w.Write(p[:n])
+		total += m
+		ww.col += m
+		if err != nil {
+			return total, err
+		}
+		p = p[n:]
 	}
-	b.WriteString(s)
-	b.WriteByte('\n')
-	return b.String()
+	return total, nil
+}
+
+// finish writes the single trailing newline that GNU base64 always appends.
+func (ww *wrapWriter) finish() error {
+	_, err := io.WriteString(ww.w, "\n")
+	return err
 }
 
 // stripWhitespace removes ASCII whitespace, which is never part of a base64
