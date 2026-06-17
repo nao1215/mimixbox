@@ -79,16 +79,17 @@ func TestResolveSelfFallsBackToArgv0(t *testing.T) {
 	}
 }
 
-func TestInstallReplacesExistingSymlink(t *testing.T) {
-	// When a stale symlink already occupies an applet's name, full-install must
-	// delete it and recreate it, reporting both actions.
+func TestFullInstallRefreshesOwnSymlink(t *testing.T) {
+	// When a symlink already owned by this MimixBox occupies an applet's name,
+	// --full-install refreshes it: it deletes and recreates the link, reporting
+	// both actions. (A foreign symlink, by contrast, must be left alone.)
 	dir := t.TempDir()
-	stale := filepath.Join(dir, "cat")
-	if err := os.Symlink("/some/old/target", stale); err != nil {
+	const wantTarget = "/fresh/mimixbox"
+	own := filepath.Join(dir, "cat")
+	if err := os.Symlink(wantTarget, own); err != nil {
 		t.Fatal(err)
 	}
 
-	const wantTarget = "/fresh/mimixbox"
 	orig := osExecutable
 	osExecutable = func() (string, error) { return wantTarget, nil }
 	t.Cleanup(func() { osExecutable = orig })
@@ -97,10 +98,10 @@ func TestInstallReplacesExistingSymlink(t *testing.T) {
 	if code := run([]string{"mimixbox", "--full-install", dir}, io); code != command.ExitSuccess {
 		t.Fatalf("full-install exit = %d (stderr: %s)", code, errBuf.String())
 	}
-	if !strings.Contains(out.String(), "Delete              : "+stale) {
-		t.Errorf("stdout should report deleting the stale symlink, got %q", out.String())
+	if !strings.Contains(out.String(), "Delete              : "+own) {
+		t.Errorf("stdout should report refreshing our own symlink, got %q", out.String())
 	}
-	target, err := os.Readlink(stale)
+	target, err := os.Readlink(own)
 	if err != nil {
 		t.Fatal(err)
 	}
@@ -109,22 +110,28 @@ func TestInstallReplacesExistingSymlink(t *testing.T) {
 	}
 }
 
-func TestPlainInstallSkipsExistingSystemCommand(t *testing.T) {
-	// With -i/--install (full=false), an applet whose name collides with a
-	// command already on the system is skipped with a warning, and no symlink is
-	// created for it. "ls" is essentially always present on the test host.
-	if _, err := os.Stat("/bin/ls"); err != nil {
-		if _, err2 := os.Stat("/usr/bin/ls"); err2 != nil {
-			t.Skip("ls not found on this host; cannot exercise the skip-existing branch")
-		}
-	}
+func TestPlainInstallSkipsForeignEntry(t *testing.T) {
+	// With -i/--install, an applet name already occupied by something not owned
+	// by MimixBox is skipped with a warning, and the foreign entry is left in
+	// place. The decision is based on the target directory, not the host PATH.
 	dir := t.TempDir()
+	foreign := filepath.Join(dir, "cat")
+	if err := os.Symlink("/bin/true", foreign); err != nil {
+		t.Fatal(err)
+	}
+	orig := osExecutable
+	osExecutable = func() (string, error) { return "/fresh/mimixbox", nil }
+	t.Cleanup(func() { osExecutable = orig })
+
 	io, _, errBuf := newIO()
 	if code := run([]string{"mimixbox", "--install", dir}, io); code != command.ExitSuccess {
 		t.Fatalf("install exit = %d (stderr: %s)", code, errBuf.String())
 	}
-	if !strings.Contains(errBuf.String(), "already exists. Not create symbolic link.") {
-		t.Errorf("stderr should warn about at least one existing command, got %q", errBuf.String())
+	if !strings.Contains(errBuf.String(), "not owned by MimixBox") {
+		t.Errorf("stderr should warn about the foreign entry, got %q", errBuf.String())
+	}
+	if got, _ := os.Readlink(foreign); got != "/bin/true" {
+		t.Errorf("foreign symlink target = %q, want it left as /bin/true", got)
 	}
 }
 
