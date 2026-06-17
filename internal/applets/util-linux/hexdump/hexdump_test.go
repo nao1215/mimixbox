@@ -3,6 +3,7 @@ package hexdump
 import (
 	"bytes"
 	"context"
+	"io"
 	"strings"
 	"testing"
 
@@ -17,6 +18,48 @@ func run(t *testing.T, c *Command, in string, args ...string) (string, string) {
 		t.Fatalf("Run error = %v (stderr=%q)", err, errBuf.String())
 	}
 	return out.String(), errBuf.String()
+}
+
+// dripReader returns its data one byte per Read call so rows are assembled
+// across read boundaries.
+type dripReader struct {
+	data []byte
+	pos  int
+}
+
+func (d *dripReader) Read(p []byte) (int, error) {
+	if d.pos >= len(d.data) {
+		return 0, io.EOF
+	}
+	p[0] = d.data[d.pos]
+	d.pos++
+	return 1, nil
+}
+
+func TestStreamingMatchesSingleRead(t *testing.T) {
+	t.Parallel()
+	// Streaming a large input one byte at a time must match a single read, for
+	// both the canonical and default layouts (issue #952).
+	data := bytes.Repeat([]byte{0x00, 0x41, 0xff, 0x7f, 0x10, '\n'}, 5000) // ~30 KiB
+	for _, canonical := range []bool{false, true} {
+		var args []string
+		if canonical {
+			args = []string{"-C"}
+		}
+		whole := &bytes.Buffer{}
+		io1 := command.IO{In: bytes.NewReader(data), Out: whole, Err: &bytes.Buffer{}}
+		if err := NewHexdump().Run(context.Background(), io1, args); err != nil {
+			t.Fatalf("whole run error = %v", err)
+		}
+		drip := &bytes.Buffer{}
+		io2 := command.IO{In: &dripReader{data: data}, Out: drip, Err: &bytes.Buffer{}}
+		if err := NewHexdump().Run(context.Background(), io2, args); err != nil {
+			t.Fatalf("drip run error = %v", err)
+		}
+		if whole.String() != drip.String() {
+			t.Errorf("canonical=%v: streaming output differs from single read", canonical)
+		}
+	}
 }
 
 // These golden strings were verified byte-for-byte against util-linux hd /

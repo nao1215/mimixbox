@@ -63,71 +63,120 @@ func runUuencode(stdio command.IO, args []string) error {
 	}
 
 	operands := fs.Args()
-	var data []byte
+	var src io.Reader
 	var name string
 	switch len(operands) {
 	case 1:
 		name = operands[0]
-		data, err = io.ReadAll(stdio.In)
+		src = stdio.In
 	case 2:
 		name = operands[1]
-		data, err = os.ReadFile(operands[0]) //nolint:gosec // user-named file
+		f, oerr := os.Open(operands[0]) //nolint:gosec // user-named file
+		if oerr != nil {
+			_, _ = fmt.Fprintf(stdio.Err, "uuencode: %v\n", oerr)
+			return command.SilentFailure()
+		}
+		defer func() { _ = f.Close() }()
+		src = f
 	default:
 		_, _ = fmt.Fprintln(stdio.Err, "uuencode: usage: uuencode [-m] [FILE] NAME")
 		return command.SilentFailure()
 	}
-	if err != nil {
-		_, _ = fmt.Fprintf(stdio.Err, "uuencode: %v\n", err)
-		return command.SilentFailure()
-	}
 
+	// The input is consumed incrementally (issue #952): the historical encoder
+	// reads it in 45-byte lines and the base64 encoder streams through, so the
+	// whole file is never held in memory.
+	var werr error
 	if *useBase64 {
-		writeBase64(stdio.Out, name, data)
+		werr = writeBase64(stdio.Out, name, src)
 	} else {
-		writeUU(stdio.Out, name, data)
+		werr = writeUU(stdio.Out, name, src)
+	}
+	if werr != nil {
+		_, _ = fmt.Fprintf(stdio.Err, "uuencode: %v\n", werr)
+		return command.SilentFailure()
 	}
 	return nil
 }
 
-func writeUU(w io.Writer, name string, data []byte) {
-	var b strings.Builder
-	fmt.Fprintf(&b, "begin 644 %s\n", name)
-	for off := 0; off < len(data); off += 45 {
-		end := off + 45
-		if end > len(data) {
-			end = len(data)
+func writeUU(w io.Writer, name string, r io.Reader) error {
+	bw := bufio.NewWriter(w)
+	_, _ = fmt.Fprintf(bw, "begin 644 %s\n", name)
+	buf := make([]byte, 45)
+	for {
+		n, err := io.ReadFull(r, buf)
+		if n > 0 {
+			line := buf[:n]
+			_ = bw.WriteByte(enc(byte(len(line))))
+			for i := 0; i < len(line); i += 3 {
+				var g [3]byte
+				copy(g[:], line[i:])
+				_ = bw.WriteByte(enc(g[0] >> 2))
+				_ = bw.WriteByte(enc((g[0]<<4 | g[1]>>4) & 0x3f))
+				_ = bw.WriteByte(enc((g[1]<<2 | g[2]>>6) & 0x3f))
+				_ = bw.WriteByte(enc(g[2] & 0x3f))
+			}
+			_ = bw.WriteByte('\n')
 		}
-		line := data[off:end]
-		b.WriteByte(enc(byte(len(line))))
-		for i := 0; i < len(line); i += 3 {
-			var g [3]byte
-			copy(g[:], line[i:])
-			b.WriteByte(enc(g[0] >> 2))
-			b.WriteByte(enc((g[0]<<4 | g[1]>>4) & 0x3f))
-			b.WriteByte(enc((g[1]<<2 | g[2]>>6) & 0x3f))
-			b.WriteByte(enc(g[2] & 0x3f))
+		if err == io.EOF || err == io.ErrUnexpectedEOF {
+			break
 		}
-		b.WriteByte('\n')
+		if err != nil {
+			return err
+		}
 	}
-	b.WriteByte(enc(0))
-	b.WriteString("\nend\n")
-	_, _ = io.WriteString(w, b.String())
+	_ = bw.WriteByte(enc(0))
+	_, _ = bw.WriteString("\nend\n")
+	return bw.Flush()
 }
 
-func writeBase64(w io.Writer, name string, data []byte) {
-	var b strings.Builder
-	fmt.Fprintf(&b, "begin-base64 644 %s\n", name)
-	encoded := base64.StdEncoding.EncodeToString(data)
-	for off := 0; off < len(encoded); off += 60 {
-		end := off + 60
-		if end > len(encoded) {
-			end = len(encoded)
-		}
-		b.WriteString(encoded[off:end])
-		b.WriteByte('\n')
+func writeBase64(w io.Writer, name string, r io.Reader) error {
+	bw := bufio.NewWriter(w)
+	_, _ = fmt.Fprintf(bw, "begin-base64 644 %s\n", name)
+	lw := &lineWrapper{w: bw, cols: 60}
+	enc := base64.NewEncoder(base64.StdEncoding, lw)
+	if _, err := io.Copy(enc, r); err != nil {
+		_ = enc.Close()
+		return err
 	}
-	b.WriteString("====\n")
-	_, _ = io.WriteString(w, b.String())
+	if err := enc.Close(); err != nil {
+		return err
+	}
+	lw.finish()
+	_, _ = bw.WriteString("====\n")
+	return bw.Flush()
+}
+
+// lineWrapper writes a newline after every cols bytes, terminating each full or
+// final partial line, so base64 output is wrapped while streaming. finish ends a
+// trailing partial line; an empty stream produces no line at all.
+type lineWrapper struct {
+	w    *bufio.Writer
+	cols int
+	col  int
+}
+
+func (lw *lineWrapper) Write(p []byte) (int, error) {
+	for _, b := range p {
+		if err := lw.w.WriteByte(b); err != nil {
+			return 0, err
+		}
+		lw.col++
+		if lw.col == lw.cols {
+			if err := lw.w.WriteByte('\n'); err != nil {
+				return 0, err
+			}
+			lw.col = 0
+		}
+	}
+	return len(p), nil
+}
+
+func (lw *lineWrapper) finish() {
+	if lw.col > 0 {
+		_ = lw.w.WriteByte('\n')
+		lw.col = 0
+	}
 }
 
 // enc encodes a 6-bit value as a uuencode character (0 becomes '`').

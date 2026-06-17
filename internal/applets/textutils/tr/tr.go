@@ -4,6 +4,7 @@
 package tr
 
 import (
+	"bufio"
 	"context"
 	"fmt"
 	"io"
@@ -90,14 +91,8 @@ func (c *Command) Run(_ context.Context, stdio command.IO, args []string) error 
 		set1 = set1[:len(set2)]
 	}
 
-	data, readErr := io.ReadAll(stdio.In)
-	if readErr != nil {
-		return command.Failuref("%v", readErr)
-	}
-
-	result := transform(data, set1, set2, opts)
-	if _, err := stdio.Out.Write(result); err != nil {
-		return command.Failure(err)
+	if err := streamTransform(stdio.In, stdio.Out, set1, set2, opts); err != nil {
+		return command.Failuref("%v", err)
 	}
 	return nil
 }
@@ -158,51 +153,183 @@ func appendCell(out []byte, c cell) []byte {
 	return utf8.AppendRune(out, c.r)
 }
 
-func appendCells(out []byte, cells []cell) []byte {
+// streamTransform reads from r, applies the tr operation, and writes the result
+// to w, processing the input in chunks so the whole input is never buffered
+// (issue #952). Multi-byte UTF-8 sequences that straddle a chunk boundary are
+// carried to the next read, and the squeeze run state is preserved across
+// chunks, so the output is identical to processing the whole input at once.
+func streamTransform(r io.Reader, w io.Writer, set1, set2 []rune, opts options) error {
+	p := newProcessor(set1, set2, opts)
+	bw := bufio.NewWriter(w)
+	buf := make([]byte, 64*1024)
+	out := make([]byte, 0, 64*1024)
+	var carry []byte
+	for {
+		n, rerr := r.Read(buf)
+		atEOF := rerr != nil
+
+		chunk := buf[:n]
+		if len(carry) > 0 {
+			chunk = append(carry, chunk...)
+		}
+
+		proc := len(chunk)
+		if !atEOF {
+			// Hold back an incomplete trailing UTF-8 sequence; at EOF it is
+			// flushed and decoded as raw bytes, matching whole-buffer decoding.
+			proc = completeRuneLen(chunk)
+		}
+		out = p.process(out[:0], decodeCells(chunk[:proc]))
+		if len(out) > 0 {
+			if _, werr := bw.Write(out); werr != nil {
+				return werr
+			}
+		}
+		if !atEOF {
+			carry = append([]byte(nil), chunk[proc:]...)
+		}
+
+		if atEOF {
+			if rerr == io.EOF {
+				break
+			}
+			return rerr
+		}
+	}
+	return bw.Flush()
+}
+
+// completeRuneLen returns the length of the longest prefix of b that does not
+// end in the middle of a multi-byte UTF-8 sequence. An invalid byte counts as a
+// complete (width-1) symbol, matching utf8.FullRune.
+func completeRuneLen(b []byte) int {
+	for i := 1; i <= utf8.UTFMax && i <= len(b); i++ {
+		start := len(b) - i
+		if utf8.RuneStart(b[start]) {
+			if utf8.FullRune(b[start:]) {
+				return len(b)
+			}
+			return start
+		}
+	}
+	return len(b)
+}
+
+// processor applies the tr operation to a stream of cells. The only state it
+// carries between chunks is the squeeze run (prev rune); a buffering version
+// kept this implicitly while walking the whole input.
+type processor struct {
+	opts   options
+	set2   []rune
+	inSet1 func(rune) bool
+	inSet2 func(rune) bool
+
+	translate  bool
+	transMap   map[rune]rune
+	transComp  map[rune]struct{}
+	transLast  rune
+	complement bool
+
+	prev     rune
+	havePrev bool
+}
+
+// newProcessor precomputes the membership predicates and translation table for
+// the requested operation.
+func newProcessor(set1, set2 []rune, opts options) *processor {
+	p := &processor{
+		opts:       opts,
+		set2:       set2,
+		inSet1:     membership(set1, opts.complement),
+		complement: opts.complement,
+	}
+	switch {
+	case opts.delete:
+		if opts.squeeze && len(set2) > 0 {
+			p.inSet2 = membership(set2, false)
+		}
+	case opts.squeeze && len(set2) == 0:
+		// squeeze-only collapses runs of SET1 directly via inSet1.
+	default:
+		if len(set2) > 0 {
+			p.translate = true
+			if opts.complement {
+				p.transComp = make(map[rune]struct{}, len(set1))
+				for _, r := range set1 {
+					p.transComp[r] = struct{}{}
+				}
+				p.transLast = set2[len(set2)-1]
+			} else {
+				p.transMap = make(map[rune]rune, len(set1))
+				for i, r := range set1 {
+					if i < len(set2) {
+						p.transMap[r] = set2[i]
+					} else {
+						p.transMap[r] = set2[len(set2)-1]
+					}
+				}
+			}
+		}
+		if opts.squeeze {
+			p.inSet2 = membership(set2, false)
+		}
+	}
+	return p
+}
+
+// process applies the operation to cells, appending output to out.
+func (p *processor) process(out []byte, cells []cell) []byte {
 	for _, c := range cells {
-		out = appendCell(out, c)
+		switch {
+		case p.opts.delete:
+			if p.inSet1(c.r) {
+				continue
+			}
+			if p.opts.squeeze && len(p.set2) > 0 {
+				out = p.squeezeEmit(out, c, p.inSet2)
+			} else {
+				out = appendCell(out, c)
+			}
+		case p.opts.squeeze && len(p.set2) == 0:
+			out = p.squeezeEmit(out, c, p.inSet1)
+		default:
+			c = p.translateCell(c)
+			if p.opts.squeeze {
+				out = p.squeezeEmit(out, c, p.inSet2)
+			} else {
+				out = appendCell(out, c)
+			}
+		}
 	}
 	return out
 }
 
-// transform applies the requested operation (delete, squeeze, translate, or a
-// combination) to data and returns the result.
-func transform(data []byte, set1, set2 []rune, opts options) []byte {
-	in := decodeCells(data)
-
-	// Resolve which runes SET1 selects, honoring -c/-C complement.
-	inSet1 := membership(set1, opts.complement)
-
-	out := make([]byte, 0, len(data))
-
-	switch {
-	case opts.delete:
-		// Delete chars in SET1, then optionally squeeze repeats from SET2.
-		kept := make([]cell, 0, len(in))
-		for _, c := range in {
-			if !inSet1(c.r) {
-				kept = append(kept, c)
-			}
-		}
-		if opts.squeeze && len(set2) > 0 {
-			inSet2 := membership(set2, false)
-			out = writeSqueezed(out, kept, inSet2)
-		} else {
-			out = appendCells(out, kept)
-		}
-	case opts.squeeze && len(set2) == 0:
-		// Squeeze only: collapse runs of characters in SET1.
-		out = writeSqueezed(out, in, inSet1)
-	default:
-		// Translate SET1 -> SET2, then optionally squeeze repeats from SET2.
-		mapped := translateCells(in, set1, set2, opts.complement)
-		if opts.squeeze {
-			inSet2 := membership(set2, false)
-			out = writeSqueezed(out, mapped, inSet2)
-		} else {
-			out = appendCells(out, mapped)
-		}
+// translateCell maps one cell according to SET1 -> SET2.
+func (p *processor) translateCell(c cell) cell {
+	if !p.translate {
+		return c
 	}
+	if p.complement {
+		if _, ok := p.transComp[c.r]; ok {
+			return c
+		}
+		return c.mapped(p.transLast)
+	}
+	if to, ok := p.transMap[c.r]; ok {
+		return c.mapped(to)
+	}
+	return c
+}
+
+// squeezeEmit appends c unless it repeats the previous selected character, in
+// which case it is collapsed away. The run state persists across chunks.
+func (p *processor) squeezeEmit(out []byte, c cell, selected func(rune) bool) []byte {
+	if p.havePrev && c.r == p.prev && selected(c.r) {
+		return out
+	}
+	out = appendCell(out, c)
+	p.prev = c.r
+	p.havePrev = true
 	return out
 }
 
@@ -211,49 +338,6 @@ func transform(data []byte, set1, set2 []rune, opts options) []byte {
 // written as a byte, not as multi-byte UTF-8).
 func (c cell) mapped(to rune) cell {
 	return cell{r: to, raw: c.raw && to <= 0xFF}
-}
-
-// translateCells maps each cell of in according to SET1 -> SET2. With the
-// complement flag, every cell not in SET1 maps to the last rune of SET2 (GNU
-// behavior). Otherwise the i-th rune of SET1 maps to the i-th rune of SET2; when
-// SET2 is shorter, its last rune is repeated to pad it.
-func translateCells(in []cell, set1, set2 []rune, complement bool) []cell {
-	if len(set2) == 0 {
-		return in
-	}
-	out := make([]cell, 0, len(in))
-	if complement {
-		inSet1 := make(map[rune]struct{}, len(set1))
-		for _, r := range set1 {
-			inSet1[r] = struct{}{}
-		}
-		last := set2[len(set2)-1]
-		for _, c := range in {
-			if _, ok := inSet1[c.r]; ok {
-				out = append(out, c)
-			} else {
-				out = append(out, c.mapped(last))
-			}
-		}
-		return out
-	}
-
-	m := make(map[rune]rune, len(set1))
-	for i, r := range set1 {
-		if i < len(set2) {
-			m[r] = set2[i]
-		} else {
-			m[r] = set2[len(set2)-1]
-		}
-	}
-	for _, c := range in {
-		if to, ok := m[c.r]; ok {
-			out = append(out, c.mapped(to))
-		} else {
-			out = append(out, c)
-		}
-	}
-	return out
 }
 
 // membership returns a predicate reporting whether a rune is selected by set.
@@ -270,22 +354,6 @@ func membership(set []rune, complement bool) func(rune) bool {
 		}
 		return ok
 	}
-}
-
-// writeSqueezed appends cells to out, collapsing each run of repeated characters
-// for which selected reports true into a single occurrence.
-func writeSqueezed(out []byte, in []cell, selected func(rune) bool) []byte {
-	var prev rune
-	havePrev := false
-	for _, c := range in {
-		if havePrev && c.r == prev && selected(c.r) {
-			continue
-		}
-		out = appendCell(out, c)
-		prev = c.r
-		havePrev = true
-	}
-	return out
 }
 
 // expandSet expands a tr SET specification into its sequence of runes,

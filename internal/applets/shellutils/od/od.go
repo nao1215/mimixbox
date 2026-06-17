@@ -5,6 +5,7 @@
 package od
 
 import (
+	"bufio"
 	"context"
 	"fmt"
 	"io"
@@ -66,11 +67,7 @@ func (c *Command) Run(_ context.Context, stdio command.IO, args []string) error 
 		return command.Failure(ferr)
 	}
 
-	data, readErr := readAll(stdio, fs.Args())
-	if _, werr := io.WriteString(stdio.Out, dump(data, radix, ft)); werr != nil {
-		return command.Failure(werr)
-	}
-	return readErr
+	return dumpStream(stdio, fs.Args(), radix, ft)
 }
 
 // selectFormat resolves the effective output type. An explicit -t wins;
@@ -95,32 +92,81 @@ func selectFormat(typ string, b, c, x, o, d bool) string {
 	}
 }
 
-// readAll reads every operand (defaulting to standard input when there are
-// none) and returns the concatenated bytes. A failed open or read is reported
-// on stderr but does not stop the remaining files; the returned error only sets
-// the exit code, because its message was already printed.
-func readAll(stdio command.IO, files []string) ([]byte, error) {
+// dumpStream dumps every operand (defaulting to standard input when there are
+// none) row by row without buffering the whole input (issue #952). Offsets run
+// continuously across the concatenated operands, exactly as the previous
+// read-everything implementation produced. A failed open or read is reported on
+// stderr but does not stop the remaining files; the returned error only sets the
+// exit code, because its message was already printed.
+func dumpStream(stdio command.IO, files []string, r radix, ft formatType) error {
 	if len(files) == 0 {
 		files = []string{"-"}
 	}
-	var data []byte
+	bw := bufio.NewWriter(stdio.Out)
+	d := &rowDumper{w: bw, radix: r, ft: ft}
+
 	var firstErr error
 	for _, name := range files {
-		r, err := command.Open(stdio, name)
+		rc, err := command.Open(stdio, name)
 		if err != nil {
 			_, _ = fmt.Fprintf(stdio.Err, "od: %s\n", command.FileError(name, err))
 			firstErr = keep(firstErr)
 			continue
 		}
-		b, err := io.ReadAll(r)
-		_ = r.Close()
-		data = append(data, b...)
-		if err != nil {
-			_, _ = fmt.Fprintf(stdio.Err, "od: %s\n", command.FileError(name, err))
+		_, cerr := io.Copy(d, rc)
+		_ = rc.Close()
+		if cerr != nil {
+			_, _ = fmt.Fprintf(stdio.Err, "od: %s\n", command.FileError(name, cerr))
 			firstErr = keep(firstErr)
 		}
 	}
-	return data, firstErr
+	d.finish()
+	if err := bw.Flush(); err != nil && firstErr == nil {
+		return command.Failure(err)
+	}
+	return firstErr
+}
+
+// rowDumper formats input into fixed-width od rows as bytes stream in, holding
+// at most one partial row in memory. The final total-length address line is
+// emitted by finish.
+type rowDumper struct {
+	w     *bufio.Writer
+	radix radix
+	ft    formatType
+	buf   [bytesPerLine]byte
+	n     int // bytes currently buffered for the in-progress row
+	off   int // file offset of the first byte in buf
+	total int // total bytes seen
+}
+
+func (d *rowDumper) Write(p []byte) (int, error) {
+	for _, b := range p {
+		d.buf[d.n] = b
+		d.n++
+		d.total++
+		if d.n == bytesPerLine {
+			d.flushRow()
+			d.off += bytesPerLine
+			d.n = 0
+		}
+	}
+	return len(p), nil
+}
+
+func (d *rowDumper) flushRow() {
+	_, _ = d.w.WriteString(line(d.buf[:d.n], d.off, d.radix, d.ft))
+	_ = d.w.WriteByte('\n')
+}
+
+func (d *rowDumper) finish() {
+	if d.n > 0 {
+		d.flushRow()
+	}
+	if addr := address(d.total, d.radix); addr != "" {
+		_, _ = d.w.WriteString(addr)
+		_ = d.w.WriteByte('\n')
+	}
 }
 
 func keep(existing error) error {
@@ -305,23 +351,6 @@ func namedUnit(b []byte) string {
 // address column (unless the radix is none) followed by space-prefixed,
 // right-justified value fields, then a final line giving the total length in
 // the address radix.
-func dump(data []byte, r radix, ft formatType) string {
-	var b strings.Builder
-	for off := 0; off < len(data); off += bytesPerLine {
-		end := off + bytesPerLine
-		if end > len(data) {
-			end = len(data)
-		}
-		b.WriteString(line(data[off:end], off, r, ft))
-		b.WriteByte('\n')
-	}
-	if addr := address(len(data), r); addr != "" {
-		b.WriteString(addr)
-		b.WriteByte('\n')
-	}
-	return b.String()
-}
-
 // line renders a single output line: the address for offset (when shown)
 // followed by the formatted units for the (already sliced) chunk of bytes.
 func line(chunk []byte, offset int, r radix, ft formatType) string {

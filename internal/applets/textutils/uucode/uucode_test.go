@@ -55,6 +55,24 @@ func TestRoundTrip(t *testing.T) {
 	}
 }
 
+func TestStreamsLargeInputRoundTrip(t *testing.T) {
+	t.Parallel()
+	// A large payload exercises the streaming encoders (45-byte UU lines and the
+	// streaming base64 wrapper) and must round-trip unchanged (issue #961).
+	payload := bytes.Repeat([]byte{0x00, 0x01, 0xfe, 0xff, 'a', '\n'}, 100000) // ~600 KiB
+	for _, mode := range []string{"uu", "base64"} {
+		var enc string
+		if mode == "base64" {
+			enc = encode(t, payload, "-m", "name")
+		} else {
+			enc = encode(t, payload, "name")
+		}
+		if got := decodeToStdout(t, enc); !bytes.Equal(got, payload) {
+			t.Errorf("%s large round-trip mismatch: got %d bytes, want %d", mode, len(got), len(payload))
+		}
+	}
+}
+
 func TestHeaderName(t *testing.T) {
 	t.Parallel()
 	enc := encode(t, []byte("x"), "myfile.bin")
