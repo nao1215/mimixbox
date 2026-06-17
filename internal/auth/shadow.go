@@ -1,6 +1,4 @@
-//go:build !pam
-
-// Package auth's default backend: verify a password against the crypt(3) hash
+// Package auth's only backend: verify a password against the crypt(3) hash
 // stored in /etc/shadow. It needs no cgo, so it works in the default static
 // build and on any Linux system without PAM.
 package auth
