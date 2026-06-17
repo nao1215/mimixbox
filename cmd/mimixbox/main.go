@@ -246,42 +246,89 @@ Run "mimixbox APPLET --help" for an applet's description, options, and examples.
 `)
 }
 
+// slot classifies what currently occupies an applet name in the target
+// directory, so install() can decide what to do without ever consulting the
+// host PATH.
+type slot int
+
+const (
+	slotFree    slot = iota // nothing occupies the name; safe to create
+	slotOwned               // a symlink that already points at this MimixBox
+	slotForeign             // a real file, or a symlink owned by something else
+)
+
+// classifySlot reports the state of path relative to the running binary self.
+// Anything that is not provably ours (a real file, a foreign symlink, or an
+// entry we cannot inspect) is treated as foreign so it is never removed.
+func classifySlot(path, self string) slot {
+	fi, err := os.Lstat(path)
+	if err != nil {
+		if os.IsNotExist(err) {
+			return slotFree
+		}
+		return slotForeign
+	}
+	if fi.Mode()&os.ModeSymlink == 0 {
+		return slotForeign // a real file or directory occupies the name
+	}
+	target, err := os.Readlink(path)
+	if err != nil {
+		return slotForeign
+	}
+	if ownedBySelf(target, self) {
+		return slotOwned
+	}
+	return slotForeign
+}
+
 func install(mimixboxPath string, installPath string, full bool, stdio command.IO) error {
 	targetPath := os.ExpandEnv(installPath)
 	if !mb.IsDir(targetPath) {
 		return errors.New(targetPath + ": no such directory")
 	}
 
-	mimixboxAbsPath, err := resolveSelf(mimixboxPath)
+	self, err := resolveSelf(mimixboxPath)
 	if err != nil {
 		return err
 	}
 
 	for _, applet := range applets.SortApplet() {
-		if !full && mb.ExistCmd(applet) {
-			_, _ = fmt.Fprintf(stdio.Err, "Same name command(%s) already exists. Not create symbolic link.\n", applet)
-			continue // if same name command already exists, not install for safety.
-		}
-
-		// If a symbolic link with the same name already exists, delete it. If a
-		// real binary has the same name, leave it: the former is likely ours,
-		// the latter probably belongs to another package.
 		newPath := filepath.Join(targetPath, applet)
-		if mb.IsSymlink(newPath) {
-			if err := os.Remove(newPath); err != nil {
-				_, _ = fmt.Fprintln(stdio.Err, err)
-				continue
+		// The decision depends only on the target directory and explicit
+		// ownership, never on whether a same-named command exists somewhere on
+		// the host PATH (issue #948).
+		switch classifySlot(newPath, self) {
+		case slotFree:
+			createLink(self, newPath, stdio)
+		case slotOwned:
+			// Already an up-to-date MimixBox symlink. Plain --install leaves it
+			// alone; --full-install refreshes it so its target is corrected if
+			// the binary moved.
+			if full {
+				if err := os.Remove(newPath); err != nil {
+					_, _ = fmt.Fprintln(stdio.Err, err)
+					continue
+				}
+				_, _ = fmt.Fprintf(stdio.Out, "Delete              : %s\n", newPath)
+				createLink(self, newPath, stdio)
 			}
-			_, _ = fmt.Fprintf(stdio.Out, "Delete              : %s\n", newPath)
+		case slotForeign:
+			// A real file or a symlink owned by another package occupies this
+			// name. Never remove it; both install modes skip it for safety.
+			_, _ = fmt.Fprintf(stdio.Err, "%s already exists and is not owned by MimixBox. Not creating symbolic link.\n", newPath)
 		}
-
-		if err := os.Symlink(mimixboxAbsPath, newPath); err != nil {
-			_, _ = fmt.Fprintln(stdio.Err, err)
-			continue
-		}
-		_, _ = fmt.Fprintf(stdio.Out, "Create symbolic link: %s\n", newPath)
 	}
 	return nil
+}
+
+// createLink creates a DIR/applet symlink pointing at the running binary and
+// reports the action, or the error if it fails.
+func createLink(self, newPath string, stdio command.IO) {
+	if err := os.Symlink(self, newPath); err != nil {
+		_, _ = fmt.Fprintln(stdio.Err, err)
+		return
+	}
+	_, _ = fmt.Fprintf(stdio.Out, "Create symbolic link: %s\n", newPath)
 }
 
 // osExecutable is os.Executable, indirected so tests can substitute it.
