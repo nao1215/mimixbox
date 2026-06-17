@@ -9,10 +9,10 @@ import (
 	"io"
 	"os"
 	"os/exec"
-	"os/signal"
 	"syscall"
 
 	"github.com/nao1215/mimixbox/internal/command"
+	"github.com/nao1215/mimixbox/internal/signal"
 	"golang.org/x/term"
 )
 
@@ -69,28 +69,28 @@ func (c *Command) Run(_ context.Context, stdio command.IO, args []string) error 
 	}
 	defer cleanup()
 
-	// Ignore SIGHUP for the duration so a terminal hang-up does not kill us
-	// (and, via inheritance, the child) before the command finishes.
-	signal.Ignore(syscall.SIGHUP)
-	defer signal.Reset(syscall.SIGHUP)
-
 	cmd := exec.Command(rest[0], rest[1:]...) //nolint:gosec // running a user-named command is the point
 	cmd.Stdin = stdio.In
 	cmd.Stdout = out
 	cmd.Stderr = out
 
-	if err := cmd.Run(); err != nil {
-		var ee *exec.ExitError
-		switch {
-		case errors.Is(err, exec.ErrNotFound):
-			return &command.ExitError{Code: exitNotFound, Err: fmt.Errorf("%s: command not found", rest[0])}
-		case errors.As(err, &ee):
-			return &command.ExitError{Code: ee.ExitCode()}
-		default:
-			return &command.ExitError{Code: exitCannotRun, Err: fmt.Errorf("%s: %v", rest[0], err)}
+	// Ignore SIGHUP for the duration so a terminal hang-up does not kill us
+	// (and, via inheritance, the child) before the command finishes; the prior
+	// disposition is restored once the command returns.
+	return signal.IgnoreDuring([]os.Signal{syscall.SIGHUP}, func() error {
+		if err := cmd.Run(); err != nil {
+			var ee *exec.ExitError
+			switch {
+			case errors.Is(err, exec.ErrNotFound):
+				return &command.ExitError{Code: exitNotFound, Err: fmt.Errorf("%s: command not found", rest[0])}
+			case errors.As(err, &ee):
+				return &command.ExitError{Code: ee.ExitCode()}
+			default:
+				return &command.ExitError{Code: exitCannotRun, Err: fmt.Errorf("%s: %v", rest[0], err)}
+			}
 		}
-	}
-	return nil
+		return nil
+	})
 }
 
 // outputWriter returns where the command's output should go. When stdout is a
