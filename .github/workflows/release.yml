@@ -19,6 +19,13 @@ jobs:
         uses: actions/setup-go@v6
         with:
           go-version-file: go.mod
+      - name: Generate dependency licenses
+        # Produce the licenses/ directory bundled into the release archives.
+        # Uses the same invocation as the Makefile "licenses" target so local
+        # and release output stay in sync.
+        run: |
+          go install github.com/google/go-licenses@latest
+          go-licenses save ./cmd/mimixbox --force --save_path "licenses/"
       - name: Run GoReleaser
         uses: goreleaser/goreleaser-action@v7
         with:
@@ -26,3 +33,5 @@ jobs:
           args: release --clean
         env:
           GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+      - name: Verify release archives bundle every installer-required file
+        run: scripts/check_release_archive.sh dist
