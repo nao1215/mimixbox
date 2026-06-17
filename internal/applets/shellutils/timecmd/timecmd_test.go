@@ -4,12 +4,12 @@ import (
 	"bytes"
 	"context"
 	"errors"
-	"os/exec"
 	"strings"
 	"testing"
 	"time"
 
 	"github.com/nao1215/mimixbox/internal/command"
+	"github.com/nao1215/mimixbox/internal/testutil/fakecmd"
 )
 
 // fakeClock makes now return base, then base+elapsed on subsequent calls.
@@ -29,11 +29,11 @@ func fakeClock(t *testing.T, elapsed time.Duration) func() {
 	return func() { now = orig }
 }
 
+// requireCmd installs a repo-local fake of name on PATH so timecmd's exec path
+// runs deterministically without depending on host /bin/true, /bin/false, etc.
 func requireCmd(t *testing.T, name string) {
 	t.Helper()
-	if _, err := exec.LookPath(name); err != nil {
-		t.Skipf("%s not on PATH: %v", name, err)
-	}
+	fakecmd.UseOnly(t, name)
 }
 
 func TestTimeReportsReal(t *testing.T) {

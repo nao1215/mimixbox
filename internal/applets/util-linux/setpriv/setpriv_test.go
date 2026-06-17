@@ -3,11 +3,11 @@ package setpriv
 import (
 	"bytes"
 	"context"
-	"os/exec"
 	"strings"
 	"testing"
 
 	"github.com/nao1215/mimixbox/internal/command"
+	"github.com/nao1215/mimixbox/internal/testutil/fakecmd"
 )
 
 func withStubs(t *testing.T) {
@@ -45,9 +45,7 @@ func TestDump(t *testing.T) {
 }
 
 func TestRunCommand(t *testing.T) {
-	if _, err := exec.LookPath("echo"); err != nil {
-		t.Skipf("echo not on PATH: %v", err)
-	}
+	fakecmd.UseOnly(t, "echo")
 	withStubs(t)
 	out, err := run(t, "--no-new-privs", "--", "echo", "hi")
 	if err != nil {

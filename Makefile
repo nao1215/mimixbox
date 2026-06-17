@@ -90,7 +90,9 @@ licenses: ## Get licenses for dependent libraries
 	# Generate dependency-license output. If go-licenses is installed, a failure
 	# is fatal so broken release artifacts (missing/partial licenses) are caught.
 	# If the tool is absent, warn and continue so developers without it can still
-	# build; release builds run go-licenses in CI/GoReleaser where it is present.
+	# build; the release workflow (.github/workflows/release.yml) installs and
+	# runs go-licenses with this exact invocation before GoReleaser packages the
+	# licenses/ directory into the shipped archives.
 	@if command -v go-licenses >/dev/null 2>&1; then \
 		go-licenses save ./cmd/mimixbox --force --save_path "licenses/"; \
 	else \

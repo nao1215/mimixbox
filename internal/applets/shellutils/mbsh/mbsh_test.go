@@ -4,13 +4,13 @@ import (
 	"bytes"
 	"context"
 	"os"
-	"os/exec"
 	"path/filepath"
 	"strings"
 	"testing"
 
 	"github.com/nao1215/mimixbox/internal/applets/shellutils/mbsh"
 	"github.com/nao1215/mimixbox/internal/command"
+	"github.com/nao1215/mimixbox/internal/testutil/fakecmd"
 )
 
 // run drives the REPL with script delivered through an os.Pipe, so stdio.In is
@@ -301,11 +301,12 @@ func TestStatusTwoAfterSyntaxError(t *testing.T) {
 	}
 }
 
+// requireCmd installs a repo-local fake of name at the front of PATH so the
+// shell's exec path runs deterministically without depending on host
+// /bin/echo, /bin/cat, etc.
 func requireCmd(t *testing.T, name string) {
 	t.Helper()
-	if _, err := exec.LookPath(name); err != nil {
-		t.Skipf("%s not on PATH: %v", name, err)
-	}
+	fakecmd.Use(t, name)
 }
 
 func TestCatConsumesRemainingScriptInput(t *testing.T) {
