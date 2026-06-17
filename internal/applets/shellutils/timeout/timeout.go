@@ -91,6 +91,11 @@ func (c *Command) runWithTimeout(stdio command.IO, dur, killGrace time.Duration,
 	cmd.Stdin = stdio.In
 	cmd.Stdout = stdio.Out
 	cmd.Stderr = stdio.Err
+	// Run the command in its own process group so that, on timeout, the whole
+	// group can be signalled instead of only the direct child. Otherwise a
+	// wrapper that backgrounds work (e.g. a shell script) would leak its
+	// descendants after timeout returns (issue #951).
+	cmd.SysProcAttr = &syscall.SysProcAttr{Setpgid: true}
 
 	if err := cmd.Start(); err != nil {
 		if errors.Is(err, exec.ErrNotFound) {
@@ -107,12 +112,12 @@ func (c *Command) runWithTimeout(stdio command.IO, dur, killGrace time.Duration,
 
 	select {
 	case <-timer.C:
-		_ = cmd.Process.Signal(sig)
+		signalGroup(cmd.Process.Pid, sig)
 		if killGrace > 0 {
 			select {
 			case <-done:
 			case <-time.After(killGrace):
-				_ = cmd.Process.Kill()
+				signalGroup(cmd.Process.Pid, syscall.SIGKILL)
 				<-done
 			}
 		} else {
@@ -128,6 +133,17 @@ func (c *Command) runWithTimeout(stdio command.IO, dur, killGrace time.Duration,
 			return &command.ExitError{Code: ee.ExitCode()}
 		}
 		return &command.ExitError{Code: exitCannotRun, Err: err}
+	}
+}
+
+// signalGroup sends sig to the entire process group led by pid. The child is
+// started with Setpgid, so its PID is also its process-group ID; a negative
+// PID addresses the whole group (see kill(2)). If the group is already gone the
+// resulting ESRCH is ignored. As a safety net, the direct child is signalled
+// too in case the group could not be addressed.
+func signalGroup(pid int, sig syscall.Signal) {
+	if err := syscall.Kill(-pid, sig); err != nil {
+		_ = syscall.Kill(pid, sig)
 	}
 }
 
