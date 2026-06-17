@@ -5,12 +5,11 @@ import (
 	"context"
 	"io"
 	"net"
-	"strconv"
 	"strings"
 	"sync"
 	"testing"
-	"time"
 
+	"github.com/nao1215/mimixbox/internal/applets/netutils/internal/memnet"
 	"github.com/nao1215/mimixbox/internal/command"
 )
 
@@ -54,17 +53,13 @@ func TestParseConfigErrors(t *testing.T) {
 	}
 }
 
-func TestServeWithInjectedRunner(t *testing.T) {
+func TestAcceptLoopWithInjectedRunner(t *testing.T) {
 	t.Parallel()
-	// Pick a free port deterministically.
-	probe, err := net.Listen("tcp", "127.0.0.1:0")
-	if err != nil {
-		t.Skipf("loopback listen unavailable: %v", err)
-	}
-	port := probe.Addr().(*net.TCPAddr).Port
-	_ = probe.Close()
-
-	svcs := []Service{{Port: port, Socket: "stream", Protocol: "tcp", Wait: false, User: "root", Program: "echo"}}
+	// Drive the accept loop over an in-memory listener: no real socket and no
+	// forked process. Serve itself binds real sockets, so the dispatch behavior
+	// is exercised here through its acceptLoop helper instead.
+	ln := memnet.NewPipeListener()
+	svc := Service{Port: 7000, Socket: "stream", Protocol: "tcp", Wait: false, User: "root", Program: "echo"}
 
 	// Injected runner: an upper-casing echo, no real process.
 	runner := func(_ context.Context, _ Service, conn net.Conn) error {
@@ -75,30 +70,26 @@ func TestServeWithInjectedRunner(t *testing.T) {
 
 	ctx, cancel := context.WithCancel(context.Background())
 	defer cancel()
-	stdio := command.IO{In: bytes.NewReader(nil), Out: &bytes.Buffer{}, Err: &bytes.Buffer{}}
+	// acceptLoop relies on its caller (Serve) to close the listener on
+	// cancellation; mirror that so the blocked Accept unblocks on shutdown.
+	go func() {
+		<-ctx.Done()
+		_ = ln.Close()
+	}()
 
 	var wg sync.WaitGroup
 	wg.Add(1)
 	go func() {
 		defer wg.Done()
-		_ = Serve(ctx, stdio, svcs, runner)
+		_ = acceptLoop(ctx, ln, svc, runner)
 	}()
 
-	// Allow the listener to come up.
-	var conn net.Conn
-	deadline := time.Now().Add(2 * time.Second)
-	for time.Now().Before(deadline) {
-		conn, err = net.Dial("tcp", net.JoinHostPort("127.0.0.1", strconv.Itoa(port)))
-		if err == nil {
-			break
-		}
-		time.Sleep(10 * time.Millisecond)
-	}
-	if conn == nil {
-		t.Fatalf("could not connect: %v", err)
+	conn, err := ln.Dial()
+	if err != nil {
+		t.Fatalf("dial: %v", err)
 	}
 	_, _ = conn.Write([]byte("hi"))
-	_ = conn.(*net.TCPConn).CloseWrite()
+	_ = conn.(memnet.HalfCloseConn).CloseWrite()
 	got, _ := io.ReadAll(conn)
 	_ = conn.Close()
 	if string(got) != "HI" {

@@ -102,11 +102,11 @@ func Serve(ctx context.Context, ln net.Listener, root string) error {
 
 // session holds the per-connection FTP state.
 type session struct {
-	conn    net.Conn
-	root    string // absolute server root
-	cwd     string // virtual cwd, always starts with "/"
-	dataLn  net.Listener
-	binary  bool
+	conn   net.Conn
+	root   string // absolute server root
+	cwd    string // virtual cwd, always starts with "/"
+	dataLn net.Listener
+	binary bool
 }
 
 func newSession(conn net.Conn, root string) *session {
@@ -167,9 +167,21 @@ func (s *session) dispatch(verb, arg string) (quit bool) {
 	return false
 }
 
-// handlePASV opens a loopback data listener and announces it in PASV format.
+// newDataListener opens a passive-mode data listener and reports the port to
+// advertise in the PASV reply. It is a package-level seam so tests can supply an
+// in-memory listener (and learn its dial handle) instead of binding a loopback
+// socket. Production binds 127.0.0.1:0.
+var newDataListener = func() (ln net.Listener, port int, err error) {
+	l, err := net.Listen("tcp", "127.0.0.1:0")
+	if err != nil {
+		return nil, 0, err
+	}
+	return l, l.Addr().(*net.TCPAddr).Port, nil
+}
+
+// handlePASV opens a data listener and announces it in PASV format.
 func (s *session) handlePASV() {
-	ln, err := net.Listen("tcp", "127.0.0.1:0")
+	ln, p, err := newDataListener()
 	if err != nil {
 		s.reply(425, "cannot open data connection")
 		return
@@ -178,8 +190,6 @@ func (s *session) handlePASV() {
 		_ = s.dataLn.Close()
 	}
 	s.dataLn = ln
-	addr := ln.Addr().(*net.TCPAddr)
-	p := addr.Port
 	s.reply(227, fmt.Sprintf("Entering Passive Mode (127,0,0,1,%d,%d)", p>>8, p&0xff))
 }
 

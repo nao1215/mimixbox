@@ -10,6 +10,7 @@ import (
 	"crypto/x509"
 	"crypto/x509/pkix"
 	"encoding/pem"
+	"io"
 	"math/big"
 	"net"
 	"os"
@@ -19,6 +20,7 @@ import (
 	"testing"
 	"time"
 
+	"github.com/nao1215/mimixbox/internal/applets/netutils/internal/memnet"
 	"github.com/nao1215/mimixbox/internal/command"
 )
 
@@ -45,12 +47,42 @@ func selfSigned(t *testing.T) tls.Certificate {
 	return tls.Certificate{Certificate: [][]byte{der}, PrivateKey: key}
 }
 
+// pipeTLSListener is a one-shot net.Listener that returns a single TLS server
+// connection layered over an in-memory pipe. It lets ServeTLS run a real TLS
+// handshake without any loopback socket. The paired client pipe end is exposed
+// so the test can wrap it with tls.Client.
+type pipeTLSListener struct {
+	conn   memnet.HalfCloseConn
+	cfg    *tls.Config
+	served bool
+	closed chan struct{}
+	once   sync.Once
+}
+
+func (l *pipeTLSListener) Accept() (net.Conn, error) {
+	if l.served {
+		<-l.closed
+		return nil, net.ErrClosed
+	}
+	l.served = true
+	return tls.Server(l.conn, l.cfg), nil
+}
+
+func (l *pipeTLSListener) Close() error {
+	l.once.Do(func() { close(l.closed) })
+	return nil
+}
+
+func (l *pipeTLSListener) Addr() net.Addr { return l.conn.LocalAddr() }
+
 func TestLocalTLSHandshakeEcho(t *testing.T) {
 	t.Parallel()
 	cert := selfSigned(t)
-	ln, err := tls.Listen("tcp", "127.0.0.1:0", &tls.Config{Certificates: []tls.Certificate{cert}})
-	if err != nil {
-		t.Skipf("loopback TLS listen unavailable: %v", err)
+	serverConn, clientConn := memnet.BufferedConn()
+	ln := &pipeTLSListener{
+		conn:   serverConn,
+		cfg:    &tls.Config{Certificates: []tls.Certificate{cert}},
+		closed: make(chan struct{}),
 	}
 
 	var wg sync.WaitGroup
@@ -60,9 +92,20 @@ func TestLocalTLSHandshakeEcho(t *testing.T) {
 		_ = ServeTLS(ln, EchoHandler)
 	}()
 
+	// Inject a dialer that wraps the paired pipe end with tls.Client, so
+	// DialAndPipe drives a real handshake over the in-memory pipe.
+	orig := dialTLS
+	dialTLS = func(_ string, cfg *tls.Config) (interface {
+		io.ReadWriteCloser
+		CloseWrite() error
+	}, error) {
+		return tls.Client(clientConn, cfg), nil
+	}
+	t.Cleanup(func() { dialTLS = orig })
+
 	out := &bytes.Buffer{}
 	clientCfg := &tls.Config{InsecureSkipVerify: true} //nolint:gosec // self-signed test cert
-	if err := DialAndPipe(ln.Addr().String(), clientCfg, strings.NewReader("secret payload"), out); err != nil {
+	if err := DialAndPipe("fixture.test:443", clientCfg, strings.NewReader("secret payload"), out); err != nil {
 		t.Fatalf("DialAndPipe error: %v", err)
 	}
 	if out.String() != "secret payload" {

@@ -34,26 +34,22 @@ func TestHostPort(t *testing.T) {
 	}
 }
 
-func TestSessionAgainstLoopback(t *testing.T) {
-	ln, err := net.Listen("tcp", "127.0.0.1:0")
-	if err != nil {
-		t.Skipf("loopback TCP listen unavailable: %v", err)
-	}
-	defer func() { _ = ln.Close() }()
+func TestSessionAgainstFixture(t *testing.T) {
+	// Inject an in-memory dialer: the client side is handed to telnet and the
+	// server side runs an echo fixture. No loopback socket is involved.
+	server, client := net.Pipe()
+	orig := dial
+	dial = func(string) (net.Conn, error) { return client, nil }
+	t.Cleanup(func() { dial = orig })
 
 	go func() {
-		conn, err := ln.Accept()
-		if err != nil {
-			return
-		}
-		defer func() { _ = conn.Close() }()
+		defer func() { _ = server.Close() }()
 		buf := make([]byte, 64)
-		n, _ := conn.Read(buf)
-		_, _ = conn.Write([]byte("echo:" + string(buf[:n])))
+		n, _ := server.Read(buf)
+		_, _ = server.Write([]byte("echo:" + string(buf[:n])))
 	}()
 
-	host, port, _ := net.SplitHostPort(ln.Addr().String())
-	out, _, err := run(t, "hello\n", host, port)
+	out, _, err := run(t, "hello\n", "fixture.test", "23")
 	if err != nil {
 		t.Fatalf("Run error = %v", err)
 	}

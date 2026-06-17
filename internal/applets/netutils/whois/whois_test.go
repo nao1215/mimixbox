@@ -79,27 +79,23 @@ func TestBadArgs(t *testing.T) {
 	}
 }
 
-// TestTCPQueryAgainstLocalServer exercises the real protocol path against a
-// loopback stub so the wire format is covered without the public internet.
-func TestTCPQueryAgainstLocalServer(t *testing.T) {
-	ln, err := net.Listen("tcp", "127.0.0.1:0")
-	if err != nil {
-		t.Skipf("loopback TCP listen unavailable: %v", err)
-	}
-	defer func() { _ = ln.Close() }()
+// TestTCPQueryAgainstFixture exercises the real protocol path (tcpQuery) over an
+// in-memory pipe so the wire format is covered without a loopback socket or the
+// public internet.
+func TestTCPQueryAgainstFixture(t *testing.T) {
+	clientConn, serverConn := net.Pipe()
+	orig := dialWhois
+	dialWhois = func(string) (net.Conn, error) { return clientConn, nil }
+	t.Cleanup(func() { dialWhois = orig })
 
 	go func() {
-		conn, err := ln.Accept()
-		if err != nil {
-			return
-		}
-		defer func() { _ = conn.Close() }()
+		defer func() { _ = serverConn.Close() }()
 		buf := make([]byte, 128)
-		_, _ = conn.Read(buf)
-		_, _ = conn.Write([]byte("Domain Name: EXAMPLE.TEST\nRegistrar: Test\n"))
+		_, _ = serverConn.Read(buf)
+		_, _ = serverConn.Write([]byte("Domain Name: EXAMPLE.TEST\nRegistrar: Test\n"))
 	}()
 
-	resp, err := tcpQuery(ln.Addr().String(), "example.test")
+	resp, err := tcpQuery("whois.example.test", "example.test")
 	if err != nil {
 		t.Fatalf("tcpQuery error = %v", err)
 	}

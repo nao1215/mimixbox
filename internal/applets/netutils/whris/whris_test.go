@@ -107,32 +107,23 @@ func TestParseCymruNoData(t *testing.T) {
 	}
 }
 
-func TestCymruLookupAgainstLocalServer(t *testing.T) {
-	// Not parallel: this test mutates the shared cymruServer global, so running it
-	// alongside another cymruServer-mutating test would race and could reach the
-	// real Cymru server.
-	ln, err := net.Listen("tcp", "127.0.0.1:0")
-	if err != nil {
-		t.Skipf("loopback TCP/UDP listen unavailable: %v", err)
-	}
-	defer func() { _ = ln.Close() }()
+func TestCymruLookupAgainstFixture(t *testing.T) {
+	// Not parallel: this test mutates the shared dialCymru global, so running it
+	// alongside another dialCymru-mutating test would race and could reach the
+	// real Cymru server. The transport is an in-memory pipe: no loopback socket.
+	clientConn, serverConn := net.Pipe()
+	orig := dialCymru
+	dialCymru = func(string) (net.Conn, error) { return clientConn, nil }
+	t.Cleanup(func() { dialCymru = orig })
 
 	go func() {
-		conn, err := ln.Accept()
-		if err != nil {
-			return
-		}
-		defer func() { _ = conn.Close() }()
+		defer func() { _ = serverConn.Close() }()
 		buf := make([]byte, 128)
-		_, _ = conn.Read(buf)
-		_, _ = conn.Write([]byte(
+		_, _ = serverConn.Read(buf)
+		_, _ = serverConn.Write([]byte(
 			"AS | IP | BGP Prefix | CC | Registry | Allocated | AS Name\n" +
 				"13335 | 1.1.1.1 | 1.1.1.0/24 | US | arin | 2010-07-14 | CLOUDFLARENET, US\n"))
 	}()
-
-	orig := cymruServer
-	cymruServer = ln.Addr().String()
-	t.Cleanup(func() { cymruServer = orig })
 
 	asn, owner, err := cymruLookup("1.1.1.1")
 	if err != nil {
@@ -144,10 +135,10 @@ func TestCymruLookupAgainstLocalServer(t *testing.T) {
 }
 
 func TestCymruLookupDialError(t *testing.T) {
-	// Not parallel: mutates the shared cymruServer global (see above).
-	orig := cymruServer
-	cymruServer = "127.0.0.1:1" // closed port
-	t.Cleanup(func() { cymruServer = orig })
+	// Not parallel: mutates the shared dialCymru global (see above).
+	orig := dialCymru
+	dialCymru = func(string) (net.Conn, error) { return nil, errors.New("dial refused") }
+	t.Cleanup(func() { dialCymru = orig })
 	if _, _, err := cymruLookup("8.8.8.8"); err == nil {
 		t.Error("expected a dial error")
 	}

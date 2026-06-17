@@ -56,6 +56,12 @@ var (
 	writeLocal = os.WriteFile
 )
 
+// dialTCP opens a TCP connection to address. It is a package-level seam used for
+// both the control connection and each PASV data connection, so tests can serve
+// FTP over in-memory pipes (returning the right pipe end for the control versus
+// data address) without binding loopback sockets. Production dials TCP.
+var dialTCP = func(address string) (net.Conn, error) { return net.DialTimeout("tcp", address, 5*time.Second) }
+
 // Run parses the shared CLI surface and drives a transfer in the applet's
 // direction. ftpget and ftpput share this entry point and the transport below;
 // only the verb wording and the get/put branch differ.
@@ -141,7 +147,7 @@ type client struct {
 
 // dialControl connects to the FTP control port and reads the greeting.
 func dialControl(address string) (*client, error) {
-	conn, err := net.DialTimeout("tcp", address, 5*time.Second)
+	conn, err := dialTCP(address)
 	if err != nil {
 		return nil, err
 	}
@@ -242,7 +248,7 @@ func (c *client) retrieve(remote string) ([]byte, error) {
 	if err != nil {
 		return nil, err
 	}
-	dconn, err := net.DialTimeout("tcp", dataAddr, 5*time.Second)
+	dconn, err := dialTCP(dataAddr)
 	if err != nil {
 		return nil, err
 	}
@@ -272,7 +278,7 @@ func (c *client) store(remote string, data []byte) error {
 	if err != nil {
 		return err
 	}
-	dconn, err := net.DialTimeout("tcp", dataAddr, 5*time.Second)
+	dconn, err := dialTCP(dataAddr)
 	if err != nil {
 		return err
 	}

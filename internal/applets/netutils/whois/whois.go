@@ -33,6 +33,11 @@ const defaultServer = "whois.iana.org"
 // response. Tests replace it with a stub that answers from memory.
 var query = tcpQuery
 
+// dialWhois opens the WHOIS transport. It is a package-level seam so tests can
+// exercise the real protocol path (tcpQuery) over an in-memory pipe instead of
+// binding a loopback socket. Production dials TCP with a timeout.
+var dialWhois = func(addr string) (net.Conn, error) { return net.DialTimeout("tcp", addr, 5*time.Second) }
+
 // Run executes whois.
 func (c *Command) Run(_ context.Context, stdio command.IO, args []string) error {
 	fs := command.NewFlagSet(c.Name(), "[-h SERVER] OBJECT", stdio.Err).WithHelp(command.Help{
@@ -74,7 +79,7 @@ func tcpQuery(server, object string) (string, error) {
 	if _, _, err := net.SplitHostPort(server); err != nil {
 		addr = net.JoinHostPort(server, "43")
 	}
-	conn, err := net.DialTimeout("tcp", addr, 5*time.Second)
+	conn, err := dialWhois(addr)
 	if err != nil {
 		return "", err
 	}

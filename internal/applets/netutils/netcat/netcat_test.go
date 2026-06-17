@@ -41,10 +41,18 @@ func TestMissingOperands(t *testing.T) {
 
 // TestDelegatesToNc connects netcat to a loopback TCP echo and confirms the
 // payload is shuttled through the nc backend.
+//
+// INTEGRATION SUBSET: this is the one netutils test that still requires a real
+// loopback socket. netcat is a thin alias that forwards to the nc applet, whose
+// network seams (dial/listen/listenPacket) are unexported, so they cannot be
+// injected from this package. The byte-shuttling logic itself is covered fully
+// in-memory by the nc package's own tests (see internal/.../nc/nc_test.go);
+// here we only assert that netcat delegates to that path end to end, which is
+// why a genuine socket is used. It skips when loopback is unavailable.
 func TestDelegatesToNc(t *testing.T) {
 	ln, err := net.Listen("tcp", "127.0.0.1:0")
 	if err != nil {
-		t.Skipf("loopback TCP listen unavailable: %v", err)
+		t.Skipf("integration subset: loopback TCP listen unavailable: %v", err)
 	}
 	defer func() { _ = ln.Close() }()
 

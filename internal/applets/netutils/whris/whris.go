@@ -100,9 +100,13 @@ func collect(ips []net.IP) []info {
 // cymruServer is the Team Cymru WHOIS endpoint; tests point it at a local stub.
 var cymruServer = "whois.cymru.com:43"
 
+// dialCymru opens the Cymru WHOIS transport. It is a package-level seam so tests
+// can drive cymruLookup over an in-memory pipe instead of a loopback socket.
+var dialCymru = func(addr string) (net.Conn, error) { return net.DialTimeout("tcp", addr, 5*time.Second) }
+
 // cymruLookup queries whois.cymru.com for the AS number and owner of ip.
 func cymruLookup(ip string) (asn, owner string, err error) {
-	conn, err := net.DialTimeout("tcp", cymruServer, 5*time.Second)
+	conn, err := dialCymru(cymruServer)
 	if err != nil {
 		return "", "", err
 	}

@@ -4,12 +4,12 @@ import (
 	"bufio"
 	"bytes"
 	"context"
-	"net"
 	"strings"
 	"sync"
 	"testing"
 	"time"
 
+	"github.com/nao1215/mimixbox/internal/applets/netutils/internal/memnet"
 	"github.com/nao1215/mimixbox/internal/command"
 )
 
@@ -33,10 +33,8 @@ func TestReply(t *testing.T) {
 
 func TestServeAnswersQuery(t *testing.T) {
 	t.Parallel()
-	ln, err := net.Listen("tcp", "127.0.0.1:0")
-	if err != nil {
-		t.Skipf("loopback listen unavailable: %v", err)
-	}
+	// In-memory listener: Serve's accept loop runs without a real socket.
+	ln := memnet.NewPipeListener()
 	ctx, cancel := context.WithCancel(context.Background())
 	defer cancel()
 
@@ -47,7 +45,7 @@ func TestServeAnswersQuery(t *testing.T) {
 		_ = Serve(ctx, ln, "carol")
 	}()
 
-	conn, err := net.Dial("tcp", ln.Addr().String())
+	conn, err := ln.Dial()
 	if err != nil {
 		t.Fatalf("dial: %v", err)
 	}

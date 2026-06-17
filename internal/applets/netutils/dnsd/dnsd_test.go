@@ -10,6 +10,7 @@ import (
 	"testing"
 	"time"
 
+	"github.com/nao1215/mimixbox/internal/applets/netutils/internal/memnet"
 	"github.com/nao1215/mimixbox/internal/command"
 )
 
@@ -82,12 +83,10 @@ func TestBuildResponseUnknownName(t *testing.T) {
 	}
 }
 
-func TestServeOverLoopback(t *testing.T) {
+func TestServeOverPacketPipe(t *testing.T) {
 	t.Parallel()
-	pc, err := net.ListenUDP("udp", &net.UDPAddr{IP: net.ParseIP("127.0.0.1"), Port: 0})
-	if err != nil {
-		t.Skipf("loopback UDP unavailable: %v", err)
-	}
+	// Drive the serve loop over an in-memory packet pipe: no real UDP socket.
+	server, client := memnet.NewPacketPipe()
 	zone := map[string]net.IP{"host.local": net.ParseIP("127.0.0.99").To4()}
 
 	ctx, cancel := context.WithCancel(context.Background())
@@ -96,18 +95,15 @@ func TestServeOverLoopback(t *testing.T) {
 	wg.Add(1)
 	go func() {
 		defer wg.Done()
-		_ = Serve(ctx, pc, zone)
+		_ = Serve(ctx, server, zone)
 	}()
 
-	client, err := net.DialUDP("udp", nil, pc.LocalAddr().(*net.UDPAddr))
-	if err != nil {
-		t.Fatalf("dial: %v", err)
+	if _, err := client.WriteTo(buildQuery(7, "host.local"), client.PeerAddr()); err != nil {
+		t.Fatalf("write: %v", err)
 	}
-	defer func() { _ = client.Close() }()
-	_, _ = client.Write(buildQuery(7, "host.local"))
 	_ = client.SetReadDeadline(time.Now().Add(2 * time.Second))
 	buf := make([]byte, 512)
-	n, _, err := client.ReadFromUDP(buf)
+	n, _, err := client.ReadFrom(buf)
 	if err != nil {
 		t.Fatalf("read: %v", err)
 	}
@@ -115,6 +111,35 @@ func TestServeOverLoopback(t *testing.T) {
 		t.Errorf("answer = %v", buf[n-4:n])
 	}
 
+	cancel()
+	wg.Wait()
+}
+
+func TestServeUnknownNameOverPacketPipe(t *testing.T) {
+	t.Parallel()
+	server, client := memnet.NewPacketPipe()
+	ctx, cancel := context.WithCancel(context.Background())
+	defer cancel()
+	var wg sync.WaitGroup
+	wg.Add(1)
+	go func() {
+		defer wg.Done()
+		_ = Serve(ctx, server, map[string]net.IP{})
+	}()
+
+	if _, err := client.WriteTo(buildQuery(9, "absent.local"), client.PeerAddr()); err != nil {
+		t.Fatalf("write: %v", err)
+	}
+	_ = client.SetReadDeadline(time.Now().Add(2 * time.Second))
+	buf := make([]byte, 512)
+	n, _, err := client.ReadFrom(buf)
+	if err != nil {
+		t.Fatalf("read: %v", err)
+	}
+	if buf[3]&0x0f != 3 {
+		t.Errorf("rcode = %d, want 3 (NXDOMAIN)", buf[3]&0x0f)
+	}
+	_ = n
 	cancel()
 	wg.Wait()
 }

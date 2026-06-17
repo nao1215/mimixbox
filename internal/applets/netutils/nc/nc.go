@@ -16,6 +16,16 @@ import (
 	"github.com/nao1215/mimixbox/internal/command"
 )
 
+// Network seams. These are package-level variables so tests can replace them
+// with in-memory primitives (net.Pipe / fake packet conns) and exercise the
+// connect/serve logic without binding real loopback sockets. Production wiring
+// dials and listens for real.
+var (
+	dial         = func(network, address string) (net.Conn, error) { return net.Dial(network, address) }
+	listen       = func(network, address string) (net.Listener, error) { return net.Listen(network, address) }
+	listenPacket = func(network, address string) (net.PacketConn, error) { return net.ListenPacket(network, address) }
+)
+
 // Command is the nc applet.
 type Command struct{}
 
@@ -101,7 +111,7 @@ func dialAddr(portFlag string, operands []string) (string, string, error) {
 // connect dials address and shuttles data between the connection and the
 // command's standard streams until either side closes.
 func (c *Command) connect(stdio command.IO, network, address string) error {
-	conn, err := net.Dial(network, address)
+	conn, err := dial(network, address)
 	if err != nil {
 		return command.Failuref("%v", err)
 	}
@@ -114,7 +124,7 @@ func (c *Command) serve(stdio command.IO, network, address string) error {
 	if network == "udp" {
 		return c.serveUDP(stdio, address)
 	}
-	ln, err := net.Listen(network, address)
+	ln, err := listen(network, address)
 	if err != nil {
 		return command.Failuref("%v", err)
 	}
@@ -130,7 +140,7 @@ func (c *Command) serve(stdio command.IO, network, address string) error {
 
 // serveUDP receives the first UDP payload and writes it to stdout.
 func (c *Command) serveUDP(stdio command.IO, address string) error {
-	pc, err := net.ListenPacket("udp", address)
+	pc, err := listenPacket("udp", address)
 	if err != nil {
 		return command.Failuref("%v", err)
 	}
