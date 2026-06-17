@@ -30,12 +30,30 @@ type dripReader struct {
 }
 
 func (d *dripReader) Read(p []byte) (int, error) {
+	if len(p) == 0 {
+		return 0, nil
+	}
 	if d.pos >= len(d.data) {
 		return 0, io.EOF
 	}
 	p[0] = d.data[d.pos]
 	d.pos++
 	return 1, nil
+}
+
+// failWriter fails every write, modeling a closed downstream pipe.
+type failWriter struct{}
+
+func (failWriter) Write([]byte) (int, error) { return 0, io.ErrClosedPipe }
+
+func TestWriteErrorIsReported(t *testing.T) {
+	t.Parallel()
+	// A failing output stream must surface an error rather than silently
+	// draining the input and exiting 0.
+	io1 := command.IO{In: bytes.NewReader(bytes.Repeat([]byte("x"), 200000)), Out: failWriter{}, Err: &bytes.Buffer{}}
+	if err := od.New().Run(context.Background(), io1, nil); err == nil {
+		t.Error("od must report a write error to stdout")
+	}
 }
 
 func TestStreamingMatchesSingleRead(t *testing.T) {

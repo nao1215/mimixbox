@@ -38,6 +38,9 @@ type dripReader struct {
 }
 
 func (d *dripReader) Read(p []byte) (int, error) {
+	if len(p) == 0 {
+		return 0, nil
+	}
 	if d.pos >= len(d.data) {
 		return 0, io.EOF
 	}
