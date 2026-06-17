@@ -4,12 +4,12 @@ import (
 	"bytes"
 	"context"
 	"os"
-	"os/exec"
 	"path/filepath"
 	"strings"
 	"testing"
 
 	"github.com/nao1215/mimixbox/internal/command"
+	"github.com/nao1215/mimixbox/internal/testutil/fakecmd"
 )
 
 func run(t *testing.T, c *Command, in string, args ...string) (string, string) {
@@ -29,11 +29,12 @@ func run(t *testing.T, c *Command, in string, args ...string) (string, string) {
 	return out.String(), errBuf.String()
 }
 
+// requireCmd installs a repo-local fake of name at the front of PATH so the
+// shell front-end's exec path runs deterministically without depending on a
+// host /bin/echo.
 func requireCmd(t *testing.T, name string) {
 	t.Helper()
-	if _, err := exec.LookPath(name); err != nil {
-		t.Skipf("%s not on PATH: %v", name, err)
-	}
+	fakecmd.Use(t, name)
 }
 
 func TestDashCRunsCommand(t *testing.T) {

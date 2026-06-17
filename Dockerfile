@@ -15,7 +15,7 @@ RUN echo 'root:password' | chpasswd
 RUN useradd mimixbox -m -s /bin/bash &&\
     echo 'mimixbox:password' |chpasswd
 RUN apt-get update && \
-    apt-get -y install --no-install-recommends sudo file libpam0g-dev && \
+    apt-get -y install --no-install-recommends sudo file && \
     rm -rf /var/lib/apt/lists/*
 
 # Install ShellSpec (pinned tag) for the integration tests.

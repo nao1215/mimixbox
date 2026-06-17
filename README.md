@@ -566,12 +566,11 @@ The table below shows the tools used when developing commands in the MimixBox pr
 | debootstrap | Test MimixBox inside a jail environment |
 | shellspec | End-to-end test |
 | golangci-lint | Lint Go code |
-| libpam0g-dev (pam-devel) | PAM (Pluggable Authentication Modules) library |
 
 On a Debian-based distribution (e.g. Debian／Ubuntu／Kali Linux／Raspberry Pi OS), install the tools with:
 
 ```shell
-$ sudo apt install build-essential curl git docker.io debootstrap libpam0g-dev
+$ sudo apt install build-essential curl git docker.io debootstrap
 $ go install github.com/google/go-licenses@latest
 $ curl -fsSL https://github.com/shellspec/shellspec/raw/master/install.sh | sh -s -- --yes
 ```
