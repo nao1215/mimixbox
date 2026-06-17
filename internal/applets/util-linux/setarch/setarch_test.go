@@ -3,11 +3,11 @@ package setarch
 import (
 	"bytes"
 	"context"
-	"os/exec"
 	"strings"
 	"testing"
 
 	"github.com/nao1215/mimixbox/internal/command"
+	"github.com/nao1215/mimixbox/internal/testutil/fakecmd"
 )
 
 // withStub captures the personality passed to setPersonality without touching
@@ -29,11 +29,12 @@ func run(t *testing.T, c *Command, args ...string) (string, error) {
 	return out.String(), err
 }
 
+// requireEcho installs a repo-local fake echo and points PATH at it so the
+// test exercises the exec path deterministically without relying on a host
+// /bin/echo being present.
 func requireEcho(t *testing.T) {
 	t.Helper()
-	if _, err := exec.LookPath("echo"); err != nil {
-		t.Skipf("echo not on PATH: %v", err)
-	}
+	fakecmd.UseOnly(t, "echo")
 }
 
 func TestLinux32Personality(t *testing.T) {

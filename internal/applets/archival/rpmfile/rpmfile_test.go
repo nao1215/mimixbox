@@ -8,7 +8,9 @@ import (
 	"io"
 	"testing"
 
+	"github.com/klauspost/compress/zstd"
 	"github.com/nao1215/mimixbox/internal/applets/archival/rpmfile"
+	"github.com/ulikunitz/xz"
 )
 
 // tagval is one header entry for the fixture builder.
@@ -85,6 +87,38 @@ func gz(data string) []byte {
 	return b.Bytes()
 }
 
+func xzc(t *testing.T, data string) []byte {
+	t.Helper()
+	var b bytes.Buffer
+	w, err := xz.NewWriter(&b)
+	if err != nil {
+		t.Fatalf("xz.NewWriter error = %v", err)
+	}
+	if _, err := w.Write([]byte(data)); err != nil {
+		t.Fatalf("xz write error = %v", err)
+	}
+	if err := w.Close(); err != nil {
+		t.Fatalf("xz close error = %v", err)
+	}
+	return b.Bytes()
+}
+
+func zstdc(t *testing.T, data string) []byte {
+	t.Helper()
+	var b bytes.Buffer
+	w, err := zstd.NewWriter(&b)
+	if err != nil {
+		t.Fatalf("zstd.NewWriter error = %v", err)
+	}
+	if _, err := w.Write([]byte(data)); err != nil {
+		t.Fatalf("zstd write error = %v", err)
+	}
+	if err := w.Close(); err != nil {
+		t.Fatalf("zstd close error = %v", err)
+	}
+	return b.Bytes()
+}
+
 func TestParseAndPayloadGzip(t *testing.T) {
 	t.Parallel()
 	rpmBytes := buildRPM(
@@ -108,29 +142,41 @@ func TestParseAndPayloadGzip(t *testing.T) {
 	}
 }
 
-func TestPayloadXzUnsupported(t *testing.T) {
+func TestPayloadXz(t *testing.T) {
 	t.Parallel()
-	// xz magic: FD 37 7A 58 5A 00
-	xzMagic := []byte{0xfd, '7', 'z', 'X', 'Z', 0x00, 0x00, 0x00}
-	f, err := rpmfile.Open(bytes.NewReader(buildRPM(nil, xzMagic)))
+	f, err := rpmfile.Open(bytes.NewReader(buildRPM(nil, xzc(t, "CPIO-XZ-PAYLOAD"))))
 	if err != nil {
 		t.Fatal(err)
 	}
-	if _, err := f.Payload(); err == nil {
-		t.Error("expected xz payload to be reported as unsupported")
+	p, err := f.Payload()
+	if err != nil {
+		t.Fatalf("Payload error = %v", err)
+	}
+	data, err := io.ReadAll(p)
+	if err != nil {
+		t.Fatalf("read error = %v", err)
+	}
+	if string(data) != "CPIO-XZ-PAYLOAD" {
+		t.Errorf("payload = %q, want CPIO-XZ-PAYLOAD", data)
 	}
 }
 
-func TestPayloadZstdUnsupported(t *testing.T) {
+func TestPayloadZstd(t *testing.T) {
 	t.Parallel()
-	// zstd magic: 28 B5 2F FD
-	zMagic := []byte{0x28, 0xb5, 0x2f, 0xfd, 0x00, 0x00}
-	f, err := rpmfile.Open(bytes.NewReader(buildRPM(nil, zMagic)))
+	f, err := rpmfile.Open(bytes.NewReader(buildRPM(nil, zstdc(t, "CPIO-ZSTD-PAYLOAD"))))
 	if err != nil {
 		t.Fatal(err)
 	}
-	if _, err := f.Payload(); err == nil {
-		t.Error("expected zstd payload to be reported as unsupported")
+	p, err := f.Payload()
+	if err != nil {
+		t.Fatalf("Payload error = %v", err)
+	}
+	data, err := io.ReadAll(p)
+	if err != nil {
+		t.Fatalf("read error = %v", err)
+	}
+	if string(data) != "CPIO-ZSTD-PAYLOAD" {
+		t.Errorf("payload = %q, want CPIO-ZSTD-PAYLOAD", data)
 	}
 }
 

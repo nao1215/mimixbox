@@ -10,6 +10,7 @@ import (
 
 	"github.com/nao1215/mimixbox/internal/applets/shellutils/env"
 	"github.com/nao1215/mimixbox/internal/command"
+	"github.com/nao1215/mimixbox/internal/testutil/fakecmd"
 )
 
 func run(t *testing.T, stdin string, args ...string) (string, string, error) {
@@ -83,9 +84,10 @@ func TestRunNullSeparator(t *testing.T) {
 }
 
 func TestRunCommand(t *testing.T) {
+	fakecmd.UseOnly(t, "echo")
 	echo, err := exec.LookPath("echo")
 	if err != nil {
-		t.Skipf("echo not found: %v", err)
+		t.Fatalf("fake echo not found: %v", err)
 	}
 	out, _, runErr := run(t, "", echo, "hello")
 	if runErr != nil {
@@ -97,9 +99,10 @@ func TestRunCommand(t *testing.T) {
 }
 
 func TestRunCommandSeesModifiedEnv(t *testing.T) {
+	fakecmd.UseOnly(t, "sh")
 	sh, err := exec.LookPath("sh")
 	if err != nil {
-		t.Skipf("sh not found: %v", err)
+		t.Fatalf("fake sh not found: %v", err)
 	}
 	out, _, runErr := run(t, "", "GREETING=hi", sh, "-c", "printf %s \"$GREETING\"")
 	if runErr != nil {
@@ -111,9 +114,10 @@ func TestRunCommandSeesModifiedEnv(t *testing.T) {
 }
 
 func TestRunCommandExitStatus(t *testing.T) {
+	fakecmd.UseOnly(t, "sh")
 	sh, err := exec.LookPath("sh")
 	if err != nil {
-		t.Skipf("sh not found: %v", err)
+		t.Fatalf("fake sh not found: %v", err)
 	}
 	_, _, runErr := run(t, "", sh, "-c", "exit 3")
 	exitErr, ok := runErr.(*command.ExitError)
@@ -145,9 +149,10 @@ func TestRunCommandNotFound(t *testing.T) {
 // TestRunChdir confirms --chdir makes the launched command run in DIR: pwd
 // (via the shell's built-in) reports the requested directory.
 func TestRunChdir(t *testing.T) {
+	fakecmd.UseOnly(t, "sh")
 	sh, err := exec.LookPath("sh")
 	if err != nil {
-		t.Skipf("sh not found: %v", err)
+		t.Fatalf("fake sh not found: %v", err)
 	}
 	dir := t.TempDir()
 	// Resolve symlinks so the comparison survives /tmp -> /private/tmp etc.
@@ -166,9 +171,10 @@ func TestRunChdir(t *testing.T) {
 
 // TestRunChdirShortFlag exercises the -C spelling with a separate argument.
 func TestRunChdirShortFlag(t *testing.T) {
+	fakecmd.UseOnly(t, "sh")
 	sh, err := exec.LookPath("sh")
 	if err != nil {
-		t.Skipf("sh not found: %v", err)
+		t.Fatalf("fake sh not found: %v", err)
 	}
 	dir := t.TempDir()
 	want, err := filepath.EvalSymlinks(dir)
@@ -204,9 +210,10 @@ func TestRunChdirNonexistent(t *testing.T) {
 // TestRunSplitStringExpandsArgv shows a single -S string is split into several
 // argv entries: the command is the first token and the rest are its arguments.
 func TestRunSplitStringExpandsArgv(t *testing.T) {
+	fakecmd.UseOnly(t, "printf")
 	printf, err := exec.LookPath("printf")
 	if err != nil {
-		t.Skipf("printf not found: %v", err)
+		t.Fatalf("fake printf not found: %v", err)
 	}
 	// "-S" carries the command and two of its arguments in one string.
 	out, _, runErr := run(t, "", "-S", printf+" %s-%s a b")
@@ -221,9 +228,10 @@ func TestRunSplitStringExpandsArgv(t *testing.T) {
 // TestRunSplitStringEscapes verifies the \_ (space) escape keeps a word
 // together so it reaches the command as a single argument.
 func TestRunSplitStringEscapes(t *testing.T) {
+	fakecmd.UseOnly(t, "sh")
 	sh, err := exec.LookPath("sh")
 	if err != nil {
-		t.Skipf("sh not found: %v", err)
+		t.Fatalf("fake sh not found: %v", err)
 	}
 	// The \_ produces a literal space inside the final argument, which the
 	// shell receives as $0 of "printf %s \"$0\"".
@@ -254,9 +262,10 @@ func TestRunIgnoreSignalRejectsBadName(t *testing.T) {
 
 // TestRunIgnoreSignalValidNames accepts good names and still runs the command.
 func TestRunIgnoreSignalValidNames(t *testing.T) {
+	fakecmd.UseOnly(t, "echo")
 	echo, err := exec.LookPath("echo")
 	if err != nil {
-		t.Skipf("echo not found: %v", err)
+		t.Fatalf("fake echo not found: %v", err)
 	}
 	out, _, runErr := run(t, "", "--ignore-signal=INT,TERM", echo, "ok")
 	if runErr != nil {
