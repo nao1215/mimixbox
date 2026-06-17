@@ -213,7 +213,7 @@ func BufferedConn() (HalfCloseConn, HalfCloseConn) {
 }
 
 // byteChan is an unbounded, closable in-memory byte stream protected by a mutex
-// and signalled by a condition variable.
+// and signaled by a condition variable.
 type byteChan struct {
 	mu     sync.Mutex
 	cond   *sync.Cond
