@@ -4,6 +4,9 @@ import (
 	"bytes"
 	"context"
 	"errors"
+	"os"
+	"path/filepath"
+	"strconv"
 	"strings"
 	"syscall"
 	"testing"
@@ -46,6 +49,60 @@ func TestTimesOut(t *testing.T) {
 	if code := exitCode(err); code != exitTimedOut {
 		t.Errorf("exit code = %d, want %d", code, exitTimedOut)
 	}
+}
+
+// processAlive reports whether pid is still a live process. Signal 0 performs
+// only the existence/permission check without delivering a signal.
+func processAlive(pid int) bool {
+	return syscall.Kill(pid, 0) == nil
+}
+
+func TestKillsDescendantProcesses(t *testing.T) {
+	// A wrapped script backgrounds a child, records its PID, then sleeps. When
+	// the timeout fires the whole process group must be terminated, so the
+	// backgrounded descendant must not be left running (issue #951).
+	dir := t.TempDir()
+	pidFile := filepath.Join(dir, "pid")
+	script := filepath.Join(dir, "child.sh")
+	content := "#!/bin/sh\nsleep 30 &\necho $! > \"" + pidFile + "\"\nsleep 30\n"
+	if err := os.WriteFile(script, []byte(content), 0o755); err != nil {
+		t.Fatal(err)
+	}
+
+	// Back the child's stdio with real files (not in-memory buffers). With a
+	// pipe-backed buffer, exec's copy goroutines keep cmd.Wait() blocked until
+	// the inherited pipe write end is closed by the descendant, which would
+	// mask the leak; a real file makes Wait return as soon as the direct child
+	// is signalled, exactly as a terminal does in the bug report.
+	devnull, derr := os.OpenFile(os.DevNull, os.O_RDWR, 0)
+	if derr != nil {
+		t.Fatal(derr)
+	}
+	defer func() { _ = devnull.Close() }()
+	io := command.IO{In: devnull, Out: devnull, Err: devnull}
+	err := New().Run(context.Background(), io, []string{"0.3", "sh", script})
+	if code := exitCode(err); code != exitTimedOut {
+		t.Fatalf("exit code = %d, want %d", code, exitTimedOut)
+	}
+
+	data, rerr := os.ReadFile(pidFile)
+	if rerr != nil {
+		t.Fatalf("read pid file: %v", rerr)
+	}
+	pid, perr := strconv.Atoi(strings.TrimSpace(string(data)))
+	if perr != nil || pid <= 0 {
+		t.Fatalf("bad pid %q: %v", data, perr)
+	}
+
+	// The kill is asynchronous; poll briefly for the descendant to disappear.
+	deadline := time.Now().Add(3 * time.Second)
+	for time.Now().Before(deadline) {
+		if !processAlive(pid) {
+			return
+		}
+		time.Sleep(20 * time.Millisecond)
+	}
+	t.Errorf("descendant pid %d still alive after timeout (process group not killed)", pid)
 }
 
 func TestCommandNotFound(t *testing.T) {
