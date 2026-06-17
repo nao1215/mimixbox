@@ -19,6 +19,54 @@ func run(t *testing.T, stdin string, args ...string) (string, string, error) {
 	return out.String(), errBuf.String(), err
 }
 
+// runBytes drives tr with raw byte input/output so non-UTF-8 data can be
+// exercised without lossy string conversion.
+func runBytes(t *testing.T, stdin []byte, args ...string) ([]byte, error) {
+	t.Helper()
+	out := &bytes.Buffer{}
+	io := command.IO{In: bytes.NewReader(stdin), Out: out, Err: &bytes.Buffer{}}
+	err := tr.New().Run(context.Background(), io, args)
+	return out.Bytes(), err
+}
+
+func TestTranslatesRawByteMatchingOctalSet(t *testing.T) {
+	// tr '\377' X on a lone 0xFF byte must translate it like GNU tr (byte
+	// oriented), not corrupt it into the UTF-8 replacement character (issue
+	// #953).
+	got, err := runBytes(t, []byte{0xFF, '\n'}, `\377`, "X")
+	if err != nil {
+		t.Fatal(err)
+	}
+	want := []byte{'X', '\n'}
+	if !bytes.Equal(got, want) {
+		t.Errorf("tr output = % x, want % x", got, want)
+	}
+}
+
+func TestPreservesUntranslatedBinaryBytes(t *testing.T) {
+	// tr A Z must leave unrelated non-UTF-8 bytes untouched (issue #953).
+	got, err := runBytes(t, []byte{0xFF, 'A', 0xFE, '\n'}, "A", "Z")
+	if err != nil {
+		t.Fatal(err)
+	}
+	want := []byte{0xFF, 'Z', 0xFE, '\n'}
+	if !bytes.Equal(got, want) {
+		t.Errorf("tr output = % x, want % x", got, want)
+	}
+}
+
+func TestDeletesRawBinaryBytes(t *testing.T) {
+	// Deleting a raw byte by its octal value must work on binary input.
+	got, err := runBytes(t, []byte{0xFF, 'a', 0xFF, 'b'}, "-d", `\377`)
+	if err != nil {
+		t.Fatal(err)
+	}
+	want := []byte{'a', 'b'}
+	if !bytes.Equal(got, want) {
+		t.Errorf("tr output = % x, want % x", got, want)
+	}
+}
+
 func TestRun(t *testing.T) {
 	t.Parallel()
 	tests := []struct {
