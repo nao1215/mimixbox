@@ -3,6 +3,7 @@ package logger
 import (
 	"bytes"
 	"context"
+	"errors"
 	"log/syslog"
 	"strings"
 	"testing"
@@ -64,6 +65,21 @@ func TestMessageFromStdin(t *testing.T) {
 	}
 	if got.msg != "from stdin" {
 		t.Errorf("stdin msg = %q", got.msg)
+	}
+}
+
+// errReader fails on the first read, modeling an unreadable stdin.
+type errReader struct{}
+
+func (errReader) Read([]byte) (int, error) { return 0, errors.New("is a directory") }
+
+func TestStdinReadErrorIsReported(t *testing.T) {
+	withStub(t)
+	io := command.IO{In: errReader{}, Out: &bytes.Buffer{}, Err: &bytes.Buffer{}}
+	// No message operand: logger reads the message from stdin. An unreadable
+	// stdin must fail instead of logging an empty message.
+	if err := New().Run(context.Background(), io, []string{"-t", "x"}); err == nil {
+		t.Fatal("logger must report an unreadable stdin instead of treating it as empty")
 	}
 }
 

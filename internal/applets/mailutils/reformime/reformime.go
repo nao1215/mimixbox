@@ -89,8 +89,12 @@ func parse(r io.Reader) ([]part, error) {
 	}
 	mediatype, params, err := mime.ParseMediaType(ctype)
 	if err != nil {
-		// Treat an unparseable Content-Type as a single opaque part.
-		body, _ := io.ReadAll(msg.Body)
+		// Treat an unparseable Content-Type as a single opaque part, but still
+		// surface a body read error instead of returning an empty part.
+		body, rerr := io.ReadAll(msg.Body)
+		if rerr != nil {
+			return nil, rerr
+		}
 		return []part{{contentType: ctype, body: body}}, nil
 	}
 

@@ -69,10 +69,15 @@ func (c *Command) Run(_ context.Context, stdio command.IO, args []string) error 
 
 	ed := newEditor(filename, content)
 
+	var runErr error
 	if isTerminal(stdio.In) {
-		runInteractive(stdio, ed)
+		runErr = runInteractive(stdio, ed)
 	} else {
-		runBatch(stdio, ed)
+		runErr = runBatch(stdio, ed)
+	}
+	if runErr != nil {
+		_, _ = fmt.Fprintf(stdio.Err, "vi: %v\n", runErr)
+		return command.SilentFailure()
 	}
 
 	if ed.save {
@@ -88,10 +93,16 @@ func (c *Command) Run(_ context.Context, stdio command.IO, args []string) error 
 	return nil
 }
 
-// runBatch feeds all input bytes to the editor as a keystroke script.
-func runBatch(stdio command.IO, ed *editor) {
-	data, _ := io.ReadAll(stdio.In)
+// runBatch feeds all input bytes to the editor as a keystroke script. It
+// returns any error encountered while reading standard input so the caller can
+// surface an unreadable stdin instead of silently editing an empty buffer.
+func runBatch(stdio command.IO, ed *editor) error {
+	data, err := io.ReadAll(stdio.In)
+	if err != nil {
+		return err
+	}
 	ed.feedString(string(data))
+	return nil
 }
 
 // isTerminal reports whether r is a character device (a real terminal).
@@ -108,25 +119,23 @@ func isTerminal(r io.Reader) bool {
 }
 
 // runInteractive drives the editor in raw mode, redrawing the screen after each
-// keystroke until the editor asks to quit.
-func runInteractive(stdio command.IO, ed *editor) {
+// keystroke until the editor asks to quit. When standard input is not a real
+// terminal it falls back to batch mode and propagates any read error.
+func runInteractive(stdio command.IO, ed *editor) error {
 	f, ok := stdio.In.(*os.File)
 	if !ok {
-		runBatch(stdio, ed)
-		return
+		return runBatch(stdio, ed)
 	}
 	fd := int(f.Fd())
 	old, err := unix.IoctlGetTermios(fd, unix.TCGETS)
 	if err != nil {
-		runBatch(stdio, ed)
-		return
+		return runBatch(stdio, ed)
 	}
 	raw := *old
 	raw.Lflag &^= unix.ECHO | unix.ICANON | unix.ISIG | unix.IEXTEN
 	raw.Iflag &^= unix.IXON | unix.ICRNL | unix.BRKINT | unix.INPCK | unix.ISTRIP
 	if err := unix.IoctlSetTermios(fd, unix.TCSETS, &raw); err != nil {
-		runBatch(stdio, ed)
-		return
+		return runBatch(stdio, ed)
 	}
 	defer func() { _ = unix.IoctlSetTermios(fd, unix.TCSETS, old) }()
 
@@ -135,12 +144,13 @@ func runInteractive(stdio command.IO, ed *editor) {
 		redraw(stdio.Out, ed)
 		n, err := f.Read(buf)
 		if err != nil || n == 0 {
-			return
+			return nil
 		}
 		ed.feed(buf[0])
 	}
 	ed.flush()
 	redraw(stdio.Out, ed)
+	return nil
 }
 
 // redraw clears the screen and paints the buffer, a status line and the cursor.

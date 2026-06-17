@@ -3,6 +3,7 @@ package reformime
 import (
 	"bytes"
 	"context"
+	"errors"
 	"strings"
 	"testing"
 
@@ -35,6 +36,31 @@ func run(t *testing.T, input string, args ...string) (string, error) {
 	io := command.IO{In: strings.NewReader(input), Out: out, Err: &bytes.Buffer{}}
 	err := New().Run(context.Background(), io, args)
 	return out.String(), err
+}
+
+// headerThenErr yields the message header on its first read and then fails,
+// modeling a body that becomes unreadable after the header is parsed.
+type headerThenErr struct {
+	header []byte
+	done   bool
+}
+
+func (r *headerThenErr) Read(p []byte) (int, error) {
+	if !r.done {
+		r.done = true
+		return copy(p, r.header), nil
+	}
+	return 0, errors.New("body read failed")
+}
+
+func TestParseUnparseableContentTypeSurfacesBodyError(t *testing.T) {
+	// "text/plain; x" is a non-empty but unparseable Content-Type, so parse()
+	// takes the opaque-fallback path. A failing body read must be reported, not
+	// swallowed into an empty part.
+	hdr := "Content-Type: text/plain; x\r\n\r\n"
+	if _, err := parse(&headerThenErr{header: []byte(hdr)}); err == nil {
+		t.Fatal("parse must surface a body read error on the invalid Content-Type path")
+	}
 }
 
 func TestListSingle(t *testing.T) {

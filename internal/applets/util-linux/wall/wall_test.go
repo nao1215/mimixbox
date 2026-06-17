@@ -4,6 +4,7 @@ import (
 	"bytes"
 	"context"
 	"encoding/binary"
+	"errors"
 	"os"
 	"path/filepath"
 	"strings"
@@ -49,6 +50,22 @@ func runWall(t *testing.T, in string, args ...string) {
 	io := command.IO{In: strings.NewReader(in), Out: &bytes.Buffer{}, Err: &bytes.Buffer{}}
 	if err := New().Run(context.Background(), io, args); err != nil {
 		t.Fatalf("Run error = %v", err)
+	}
+}
+
+// errReader fails on the first read, modeling an unreadable stdin.
+type errReader struct{}
+
+func (errReader) Read([]byte) (int, error) { return 0, errors.New("is a directory") }
+
+func TestStdinReadErrorIsReported(t *testing.T) {
+	setup(t, "pts/0")
+	errBuf := &bytes.Buffer{}
+	io := command.IO{In: errReader{}, Out: &bytes.Buffer{}, Err: errBuf}
+	// No message operand: wall reads the broadcast text from stdin. An
+	// unreadable stdin must fail instead of broadcasting an empty message.
+	if err := New().Run(context.Background(), io, nil); err == nil {
+		t.Fatal("wall must report an unreadable stdin instead of treating it as empty")
 	}
 }
 
