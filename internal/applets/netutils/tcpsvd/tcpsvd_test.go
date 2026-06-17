@@ -9,15 +9,14 @@ import (
 	"testing"
 	"time"
 
+	"github.com/nao1215/mimixbox/internal/applets/netutils/internal/memnet"
 	"github.com/nao1215/mimixbox/internal/command"
 )
 
 func TestServeTCPDispatchesConnections(t *testing.T) {
 	t.Parallel()
-	ln, err := net.Listen("tcp", "127.0.0.1:0")
-	if err != nil {
-		t.Skipf("loopback listen unavailable: %v", err)
-	}
+	// In-memory listener: the TCP accept loop runs without a real socket.
+	ln := memnet.NewPipeListener()
 
 	ctx, cancel := context.WithCancel(context.Background())
 	defer cancel()
@@ -37,12 +36,12 @@ func TestServeTCPDispatchesConnections(t *testing.T) {
 		_ = ServeTCP(ctx, ln, stdio, true, handler)
 	}()
 
-	conn, err := net.Dial("tcp", ln.Addr().String())
+	conn, err := ln.Dial()
 	if err != nil {
 		t.Fatalf("dial: %v", err)
 	}
 	_, _ = conn.Write([]byte("hello"))
-	_ = conn.(*net.TCPConn).CloseWrite()
+	_ = conn.(memnet.HalfCloseConn).CloseWrite()
 	got, _ := io.ReadAll(conn)
 	_ = conn.Close()
 	if string(got) != "hello" {
@@ -55,10 +54,8 @@ func TestServeTCPDispatchesConnections(t *testing.T) {
 
 func TestServeUDPDispatchesDatagrams(t *testing.T) {
 	t.Parallel()
-	pc, err := net.ListenUDP("udp", &net.UDPAddr{IP: net.ParseIP("127.0.0.1"), Port: 0})
-	if err != nil {
-		t.Skipf("loopback UDP unavailable: %v", err)
-	}
+	// In-memory packet pipe: the UDP receive loop runs without a real socket.
+	server, client := memnet.NewPacketPipe()
 
 	ctx, cancel := context.WithCancel(context.Background())
 	defer cancel()
@@ -74,19 +71,16 @@ func TestServeUDPDispatchesDatagrams(t *testing.T) {
 	wg.Add(1)
 	go func() {
 		defer wg.Done()
-		_ = ServeUDP(ctx, pc, stdio, false, handler)
+		_ = ServeUDP(ctx, server, stdio, false, handler)
 	}()
 
-	client, err := net.DialUDP("udp", nil, pc.LocalAddr().(*net.UDPAddr))
-	if err != nil {
-		t.Fatalf("dial udp: %v", err)
+	if _, err := client.WriteTo([]byte("ping"), client.PeerAddr()); err != nil {
+		t.Fatalf("write udp: %v", err)
 	}
-	defer func() { _ = client.Close() }()
-	_, _ = client.Write([]byte("ping"))
 
 	_ = client.SetReadDeadline(time.Now().Add(2 * time.Second))
 	buf := make([]byte, 64)
-	n, _, err := client.ReadFromUDP(buf)
+	n, _, err := client.ReadFrom(buf)
 	if err != nil {
 		t.Fatalf("read reply: %v", err)
 	}

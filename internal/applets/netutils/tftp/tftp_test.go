@@ -42,40 +42,42 @@ func TestPacketHelpers(t *testing.T) {
 	}
 }
 
-// startServer runs a tiny single-transfer TFTP server on loopback. mode "get"
-// serves content for an RRQ; mode "put" stores into *stored for a WRQ. The
-// returned channel is closed once the server goroutine has finished (and, for
-// "put", after *stored has been assigned), giving callers a happens-before edge
-// so they can read *stored without racing the goroutine.
-func startServer(t *testing.T, mode string, content []byte, stored *[]byte) (string, <-chan struct{}) {
+// startServer runs a tiny single-transfer TFTP server over an in-memory pipe
+// (no real UDP socket). mode "get" serves content for an RRQ; mode "put" stores
+// into *stored for a WRQ. It installs a dialTransport seam so the applet's
+// client gets one end of the pipe. The returned channel is closed once the
+// server goroutine has finished (and, for "put", after *stored has been
+// assigned), giving callers a happens-before edge so they can read *stored
+// without racing the goroutine.
+func startServer(t *testing.T, mode string, content []byte, stored *[]byte) <-chan struct{} {
 	t.Helper()
-	pc, err := net.ListenPacket("udp", "127.0.0.1:0")
-	if err != nil {
-		t.Skipf("loopback UDP unavailable: %v", err)
-	}
-	t.Cleanup(func() { _ = pc.Close() })
+	clientConn, serverConn := net.Pipe()
+	orig := dialTransport
+	dialTransport = func(string) (net.Conn, error) { return clientConn, nil }
+	t.Cleanup(func() { dialTransport = orig })
+	t.Cleanup(func() { _ = serverConn.Close() })
 
 	done := make(chan struct{})
 	go func() {
 		defer close(done)
 		buf := make([]byte, 4+blockSize)
-		n, client, err := pc.ReadFrom(buf)
+		n, err := serverConn.Read(buf)
 		if err != nil {
 			return
 		}
 		op := int(binary.BigEndian.Uint16(buf[0:2]))
 		switch {
 		case mode == "get" && op == opRRQ:
-			serveGet(pc, client, content)
+			serveGet(serverConn, content)
 		case mode == "put" && op == opWRQ:
-			servePut(t, pc, client, stored)
+			servePut(t, serverConn, stored)
 		}
 		_ = n
 	}()
-	return pc.LocalAddr().String(), done
+	return done
 }
 
-func serveGet(pc net.PacketConn, client net.Addr, content []byte) {
+func serveGet(conn net.Conn, content []byte) {
 	block := uint16(1)
 	for off := 0; ; off += blockSize {
 		end := off + blockSize
@@ -83,10 +85,10 @@ func serveGet(pc net.PacketConn, client net.Addr, content []byte) {
 			end = len(content)
 		}
 		chunk := content[off:end]
-		_, _ = pc.WriteTo(dataPacket(block, chunk), client)
+		_, _ = conn.Write(dataPacket(block, chunk))
 		// Wait for the ACK.
 		ackBuf := make([]byte, 4)
-		_, _, _ = pc.ReadFrom(ackBuf)
+		_, _ = conn.Read(ackBuf)
 		block++
 		if len(chunk) < blockSize {
 			return
@@ -94,14 +96,14 @@ func serveGet(pc net.PacketConn, client net.Addr, content []byte) {
 	}
 }
 
-func servePut(t *testing.T, pc net.PacketConn, client net.Addr, stored *[]byte) {
+func servePut(t *testing.T, conn net.Conn, stored *[]byte) {
 	t.Helper()
 	// ACK 0 to start.
-	_, _ = pc.WriteTo(ack(0), client)
+	_, _ = conn.Write(ack(0))
 	var got bytes.Buffer
 	for {
 		buf := make([]byte, 4+blockSize)
-		n, _, err := pc.ReadFrom(buf)
+		n, err := conn.Read(buf)
 		if err != nil {
 			return
 		}
@@ -110,7 +112,7 @@ func servePut(t *testing.T, pc net.PacketConn, client net.Addr, stored *[]byte) 
 			return
 		}
 		got.Write(payload)
-		_, _ = pc.WriteTo(ack(block), client)
+		_, _ = conn.Write(ack(block))
 		if len(payload) < blockSize {
 			*stored = got.Bytes()
 			return
@@ -120,15 +122,14 @@ func servePut(t *testing.T, pc net.PacketConn, client net.Addr, stored *[]byte) 
 
 func TestGet(t *testing.T) {
 	content := bytes.Repeat([]byte("A"), 700) // spans two blocks
-	addr, _ := startServer(t, "get", content, nil)
-	host, port, _ := net.SplitHostPort(addr)
+	_ = startServer(t, "get", content, nil)
 
 	var written []byte
 	orig := writeLocal
 	writeLocal = func(_ string, data []byte, _ os.FileMode) error { written = data; return nil }
 	t.Cleanup(func() { writeLocal = orig })
 
-	out, _, err := run(t, "-g", "-l", "out.bin", "-r", "file.bin", host, port)
+	out, _, err := run(t, "-g", "-l", "out.bin", "-r", "file.bin", "127.0.0.1", "69")
 	if err != nil {
 		t.Fatalf("Run error = %v", err)
 	}
@@ -143,14 +144,13 @@ func TestGet(t *testing.T) {
 func TestPut(t *testing.T) {
 	content := bytes.Repeat([]byte("B"), 512) // exactly one full block then empty
 	var stored []byte
-	addr, done := startServer(t, "put", nil, &stored)
-	host, port, _ := net.SplitHostPort(addr)
+	done := startServer(t, "put", nil, &stored)
 
 	origR := readLocal
 	readLocal = func(string) ([]byte, error) { return content, nil }
 	t.Cleanup(func() { readLocal = origR })
 
-	out, _, err := run(t, "-p", "-l", "in.bin", "-r", "file.bin", host, port)
+	out, _, err := run(t, "-p", "-l", "in.bin", "-r", "file.bin", "127.0.0.1", "69")
 	if err != nil {
 		t.Fatalf("Run error = %v", err)
 	}

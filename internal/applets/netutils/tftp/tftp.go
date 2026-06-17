@@ -48,6 +48,11 @@ var (
 	writeLocal = os.WriteFile
 )
 
+// dialTransport opens the client transport to the server. It is a package-level
+// seam so tests can substitute an in-memory pipe (one end of net.Pipe) and drive
+// a fixture server without binding a real UDP socket. Production dials UDP.
+var dialTransport = func(server string) (net.Conn, error) { return dialUDP(server) }
+
 // Run executes tftp.
 func (c *Command) Run(_ context.Context, stdio command.IO, args []string) error {
 	fs := command.NewFlagSet(c.Name(), "[-g|-p] -l LOCAL -r REMOTE HOST [PORT]", stdio.Err).WithHelp(command.Help{
@@ -136,7 +141,7 @@ func dialUDP(server string) (*net.UDPConn, error) {
 
 // tftpGet downloads remote via an RRQ and returns the assembled file.
 func tftpGet(server, remote string) ([]byte, error) {
-	conn, err := dialUDP(server)
+	conn, err := dialTransport(server)
 	if err != nil {
 		return nil, err
 	}
@@ -176,7 +181,7 @@ func tftpGet(server, remote string) ([]byte, error) {
 
 // tftpPut uploads data as remote via a WRQ.
 func tftpPut(server, remote string, data []byte) error {
-	conn, err := dialUDP(server)
+	conn, err := dialTransport(server)
 	if err != nil {
 		return err
 	}
@@ -211,7 +216,7 @@ func tftpPut(server, remote string, data []byte) error {
 }
 
 // expectAck reads one packet and verifies it is an ACK for want.
-func expectAck(conn *net.UDPConn, want uint16) error {
+func expectAck(conn net.Conn, want uint16) error {
 	buf := make([]byte, 4+blockSize)
 	n, err := conn.Read(buf)
 	if err != nil {

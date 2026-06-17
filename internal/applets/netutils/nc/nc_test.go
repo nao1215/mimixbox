@@ -8,35 +8,30 @@ import (
 	"testing"
 	"time"
 
+	"github.com/nao1215/mimixbox/internal/applets/netutils/internal/memnet"
 	"github.com/nao1215/mimixbox/internal/command"
 )
 
 func TestConnectSendsAndReceives(t *testing.T) {
-	t.Parallel()
-	ln, err := net.Listen("tcp", "127.0.0.1:0")
-	if err != nil {
-		t.Skipf("loopback TCP/UDP listen unavailable: %v", err)
-	}
-	defer func() { _ = ln.Close() }()
+	// Inject an in-memory dialer: nc gets the client side of a pipe and the
+	// server side runs an echo fixture. No loopback socket is used.
+	server, client := net.Pipe()
+	orig := dial
+	dial = func(string, string) (net.Conn, error) { return client, nil }
+	t.Cleanup(func() { dial = orig })
 
 	done := make(chan string, 1)
 	go func() {
-		conn, err := ln.Accept()
-		if err != nil {
-			done <- ""
-			return
-		}
-		defer func() { _ = conn.Close() }()
+		defer func() { _ = server.Close() }()
 		buf := make([]byte, 64)
-		n, _ := conn.Read(buf)
-		_, _ = conn.Write([]byte("pong"))
+		n, _ := server.Read(buf)
+		_, _ = server.Write([]byte("pong"))
 		done <- string(buf[:n])
 	}()
 
-	_, port, _ := net.SplitHostPort(ln.Addr().String())
 	out := &bytes.Buffer{}
 	io := command.IO{In: strings.NewReader("ping"), Out: out, Err: &bytes.Buffer{}}
-	if err := New().Run(context.Background(), io, []string{"127.0.0.1", port}); err != nil {
+	if err := New().Run(context.Background(), io, []string{"127.0.0.1", "9999"}); err != nil {
 		t.Fatalf("Run error = %v", err)
 	}
 
@@ -86,8 +81,11 @@ func TestDialAddr(t *testing.T) {
 }
 
 func TestConnectRefused(t *testing.T) {
-	t.Parallel()
-	// Port 1 on loopback is virtually always closed.
+	// Inject a dialer that fails, mimicking a refused connection without a socket.
+	orig := dial
+	dial = func(string, string) (net.Conn, error) { return nil, net.UnknownNetworkError("refused") }
+	t.Cleanup(func() { dial = orig })
+
 	out := &bytes.Buffer{}
 	io := command.IO{In: strings.NewReader(""), Out: out, Err: &bytes.Buffer{}}
 	if err := New().Run(context.Background(), io, []string{"127.0.0.1", "1"}); err == nil {
@@ -105,38 +103,25 @@ func TestMissingOperands(t *testing.T) {
 }
 
 func TestUDPRoundTrip(t *testing.T) {
-	t.Parallel()
-	// Listen with the applet, send a datagram with a plain UDP socket.
+	// Inject an in-memory packet conn so serveUDP receives a datagram without a
+	// real UDP socket.
+	server, client := memnet.NewPacketPipe()
+	orig := listenPacket
+	listenPacket = func(string, string) (net.PacketConn, error) { return server, nil }
+	t.Cleanup(func() { listenPacket = orig })
+
 	out := &bytes.Buffer{}
 	errCh := make(chan error, 1)
-	ready := make(chan string, 1)
-
-	// Bind a UDP socket first to learn a free port, then hand it to the applet
-	// path via address reuse is awkward; instead listen directly here and feed
-	// serveUDP through Run using a fixed ephemeral port.
-	pc, err := net.ListenPacket("udp", "127.0.0.1:0")
-	if err != nil {
-		t.Skipf("loopback TCP/UDP listen unavailable: %v", err)
-	}
-	addr := pc.LocalAddr().String()
-	_ = pc.Close()
-
 	go func() {
 		io := command.IO{In: strings.NewReader(""), Out: out, Err: &bytes.Buffer{}}
-		_, port, _ := net.SplitHostPort(addr)
-		ready <- port
-		errCh <- New().Run(context.Background(), io, []string{"-u", "-l", "-p", port})
+		errCh <- New().Run(context.Background(), io, []string{"-u", "-l", "-p", "9000"})
 	}()
 
-	port := <-ready
-	// Give the listener a moment to bind.
-	time.Sleep(200 * time.Millisecond)
-	conn, err := net.Dial("udp", net.JoinHostPort("127.0.0.1", port))
-	if err != nil {
-		t.Fatal(err)
+	// Give the listener a moment to bind to the injected conn, then send.
+	time.Sleep(50 * time.Millisecond)
+	if _, err := client.WriteTo([]byte("hello-udp"), client.PeerAddr()); err != nil {
+		t.Fatalf("write: %v", err)
 	}
-	_, _ = conn.Write([]byte("hello-udp"))
-	_ = conn.Close()
 
 	select {
 	case err := <-errCh:
@@ -152,31 +137,26 @@ func TestUDPRoundTrip(t *testing.T) {
 }
 
 func TestListenTCP(t *testing.T) {
-	t.Parallel()
-	// Find a free TCP port, release it, then have the applet listen on it.
-	probe, err := net.Listen("tcp", "127.0.0.1:0")
-	if err != nil {
-		t.Skipf("loopback TCP/UDP listen unavailable: %v", err)
-	}
-	_, port, _ := net.SplitHostPort(probe.Addr().String())
-	_ = probe.Close()
+	// Inject an in-memory listener so serve accepts one connection without a
+	// real TCP socket.
+	ln := memnet.NewPipeListener()
+	orig := listen
+	listen = func(string, string) (net.Listener, error) { return ln, nil }
+	t.Cleanup(func() { listen = orig })
 
 	out := &bytes.Buffer{}
 	errCh := make(chan error, 1)
 	go func() {
 		io := command.IO{In: strings.NewReader(""), Out: out, Err: &bytes.Buffer{}}
-		errCh <- New().Run(context.Background(), io, []string{"-l", "-p", port})
+		errCh <- New().Run(context.Background(), io, []string{"-l", "-p", "9001"})
 	}()
 
-	time.Sleep(200 * time.Millisecond)
-	conn, err := net.Dial("tcp", net.JoinHostPort("127.0.0.1", port))
+	conn, err := ln.Dial()
 	if err != nil {
-		t.Fatal(err)
+		t.Fatalf("dial: %v", err)
 	}
 	_, _ = conn.Write([]byte("from-client"))
-	if tc, ok := conn.(*net.TCPConn); ok {
-		_ = tc.CloseWrite()
-	}
+	_ = conn.(memnet.HalfCloseConn).CloseWrite()
 
 	select {
 	case err := <-errCh:

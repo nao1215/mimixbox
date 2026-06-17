@@ -10,6 +10,7 @@ import (
 	"strings"
 	"testing"
 
+	"github.com/nao1215/mimixbox/internal/applets/netutils/internal/memnet"
 	"github.com/nao1215/mimixbox/internal/command"
 )
 
@@ -36,42 +37,48 @@ func TestParsePasv(t *testing.T) {
 	}
 }
 
-// fakeServer is a minimal single-session FTP server for tests. serveContent is
-// returned for RETR; stored captures STOR data.
+// fakeServer is a minimal single-session FTP server for tests. It runs over
+// in-memory pipes (no loopback socket): the control connection and each PASV
+// data connection are buffered in-memory conn pairs handed to the applet via the
+// dialTCP seam. serveContent is returned for RETR; stored captures STOR data.
 type fakeServer struct {
-	listener     net.Listener
 	serveContent []byte
 	stored       []byte
+	dataCh       chan net.Conn // data-connection server ends, one per PASV
 }
 
+// pasvAddr is the synthetic data address the fixture advertises; the dialTCP
+// dispatcher recognizes it and produces an in-memory data connection.
+const pasvAddr = "127.0.0.1:258" // 1,2 -> 1*256+2
+
+// startFTP installs the dialTCP seam and starts the fixture control loop over an
+// in-memory pipe. No real socket is bound.
 func startFTP(t *testing.T, content []byte) *fakeServer {
 	t.Helper()
-	ln, err := net.Listen("tcp", "127.0.0.1:0")
-	if err != nil {
-		t.Skipf("loopback TCP unavailable: %v", err)
+	s := &fakeServer{serveContent: content, dataCh: make(chan net.Conn, 1)}
+
+	controlClient, controlServer := memnet.BufferedConn()
+	orig := dialTCP
+	dialTCP = func(address string) (net.Conn, error) {
+		if address == pasvAddr {
+			dataClient, dataServer := memnet.BufferedConn()
+			s.dataCh <- dataServer
+			return dataClient, nil
+		}
+		return controlClient, nil // control connection
 	}
-	s := &fakeServer{listener: ln, serveContent: content}
-	t.Cleanup(func() { _ = ln.Close() })
-	go s.accept(t)
+	t.Cleanup(func() { dialTCP = orig })
+
+	go s.serve(controlServer)
 	return s
 }
 
-func (s *fakeServer) addr() (host, port string) {
-	host, port, _ = net.SplitHostPort(s.listener.Addr().String())
-	return host, port
-}
-
-func (s *fakeServer) accept(t *testing.T) {
-	conn, err := s.listener.Accept()
-	if err != nil {
-		return
-	}
+func (s *fakeServer) serve(conn net.Conn) {
 	defer func() { _ = conn.Close() }()
 	r := bufio.NewReader(conn)
 	w := func(line string) { _, _ = fmt.Fprintf(conn, "%s\r\n", line) }
 
 	w("220 fake FTP ready")
-	var dataLn net.Listener
 	for {
 		line, err := r.ReadString('\n')
 		if err != nil {
@@ -89,32 +96,20 @@ func (s *fakeServer) accept(t *testing.T) {
 		case "TYPE":
 			w("200 type set")
 		case "PASV":
-			dl, err := net.Listen("tcp", "127.0.0.1:0")
-			if err != nil {
-				w("425 cannot open data connection")
-				continue
-			}
-			dataLn = dl
-			_, p, _ := net.SplitHostPort(dl.Addr().String())
-			port := atoi(t, p)
-			w(fmt.Sprintf("227 Entering Passive Mode (127,0,0,1,%d,%d)", port/256, port%256))
+			w("227 Entering Passive Mode (127,0,0,1,1,2)")
 		case "RETR":
 			w("150 opening data connection")
-			dc, err := dataLn.Accept()
-			if err == nil {
-				_, _ = dc.Write(s.serveContent)
-				_ = dc.Close()
-			}
+			dc := <-s.dataCh
+			_, _ = dc.Write(s.serveContent)
+			_ = dc.Close()
 			w("226 transfer complete")
 		case "STOR":
 			w("150 opening data connection")
-			dc, err := dataLn.Accept()
-			if err == nil {
-				var buf bytes.Buffer
-				_, _ = buf.ReadFrom(dc)
-				s.stored = buf.Bytes()
-				_ = dc.Close()
-			}
+			dc := <-s.dataCh
+			var buf bytes.Buffer
+			_, _ = buf.ReadFrom(dc)
+			s.stored = buf.Bytes()
+			_ = dc.Close()
 			w("226 transfer complete")
 		case "QUIT":
 			w("221 bye")
@@ -125,26 +120,16 @@ func (s *fakeServer) accept(t *testing.T) {
 	}
 }
 
-func atoi(t *testing.T, s string) int {
-	t.Helper()
-	n := 0
-	for _, ch := range s {
-		n = n*10 + int(ch-'0')
-	}
-	return n
-}
-
 func TestFtpget(t *testing.T) {
 	content := bytes.Repeat([]byte("X"), 1500)
 	s := startFTP(t, content)
-	host, port := s.addr()
 
 	var written []byte
 	orig := writeLocal
 	writeLocal = func(_ string, data []byte, _ os.FileMode) error { written = data; return nil }
 	t.Cleanup(func() { writeLocal = orig })
 
-	out, _, err := run(t, NewFtpget(), "-P", port, host, "out.bin", "remote.bin")
+	out, _, err := run(t, NewFtpget(), "ftp.test", "out.bin", "remote.bin")
 	if err != nil {
 		t.Fatalf("Run error = %v", err)
 	}
@@ -154,18 +139,18 @@ func TestFtpget(t *testing.T) {
 	if !strings.Contains(out, "Downloaded 1500 bytes") {
 		t.Errorf("out = %q", out)
 	}
+	_ = s
 }
 
 func TestFtpput(t *testing.T) {
 	content := []byte("upload me")
 	s := startFTP(t, nil)
-	host, port := s.addr()
 
 	orig := readLocal
 	readLocal = func(string) ([]byte, error) { return content, nil }
 	t.Cleanup(func() { readLocal = orig })
 
-	out, _, err := run(t, NewFtpput(), "-P", port, host, "in.bin", "remote.bin")
+	out, _, err := run(t, NewFtpput(), "ftp.test", "in.bin", "remote.bin")
 	if err != nil {
 		t.Fatalf("Run error = %v", err)
 	}

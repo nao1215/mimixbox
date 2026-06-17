@@ -89,15 +89,17 @@ func (c *Command) Run(ctx context.Context, stdio command.IO, args []string) erro
 }
 
 // Serve runs the TFTP loop on pc until ctx is cancelled. Each read request is
-// answered with the file's contents split into 512-byte DATA blocks.
-func Serve(ctx context.Context, pc *net.UDPConn, root string) error {
+// answered with the file's contents split into 512-byte DATA blocks. pc is a
+// net.PacketConn so tests can drive the loop with an in-memory packet pipe
+// instead of a real UDP socket.
+func Serve(ctx context.Context, pc net.PacketConn, root string) error {
 	go func() {
 		<-ctx.Done()
 		_ = pc.Close()
 	}()
 	buf := make([]byte, 1024)
 	for {
-		n, raddr, err := pc.ReadFromUDP(buf)
+		n, raddr, err := pc.ReadFrom(buf)
 		if err != nil {
 			if ctx.Err() != nil {
 				return nil
@@ -111,44 +113,44 @@ func Serve(ctx context.Context, pc *net.UDPConn, root string) error {
 }
 
 // handleRequest decodes and serves a single request datagram.
-func handleRequest(pc *net.UDPConn, raddr *net.UDPAddr, req []byte, root string) {
+func handleRequest(pc net.PacketConn, raddr net.Addr, req []byte, root string) {
 	op, filename, _, err := ParseRequest(req)
 	if err != nil {
-		_, _ = pc.WriteToUDP(ErrorPacket(4, "illegal TFTP operation"), raddr)
+		_, _ = pc.WriteTo(ErrorPacket(4, "illegal TFTP operation"), raddr)
 		return
 	}
 	if op == opWRQ {
-		_, _ = pc.WriteToUDP(ErrorPacket(2, "writes are not permitted"), raddr)
+		_, _ = pc.WriteTo(ErrorPacket(2, "writes are not permitted"), raddr)
 		return
 	}
 	if op != opRRQ {
-		_, _ = pc.WriteToUDP(ErrorPacket(4, "illegal TFTP operation"), raddr)
+		_, _ = pc.WriteTo(ErrorPacket(4, "illegal TFTP operation"), raddr)
 		return
 	}
 	path, err := safeJoin(root, filename)
 	if err != nil {
-		_, _ = pc.WriteToUDP(ErrorPacket(2, "access violation"), raddr)
+		_, _ = pc.WriteTo(ErrorPacket(2, "access violation"), raddr)
 		return
 	}
 	data, err := os.ReadFile(path)
 	if err != nil {
-		_, _ = pc.WriteToUDP(ErrorPacket(1, "file not found"), raddr)
+		_, _ = pc.WriteTo(ErrorPacket(1, "file not found"), raddr)
 		return
 	}
 	sendFile(pc, raddr, data)
 }
 
 // sendFile transfers data as a sequence of DATA blocks; it does not wait for
-// ACKs (a simplified lock-step is sufficient for hermetic loopback tests, where
-// the client reads sequentially). A final short block terminates the transfer.
-func sendFile(pc *net.UDPConn, raddr *net.UDPAddr, data []byte) {
+// ACKs (a simplified lock-step is sufficient for hermetic tests, where the
+// client reads sequentially). A final short block terminates the transfer.
+func sendFile(pc net.PacketConn, raddr net.Addr, data []byte) {
 	block := uint16(1)
 	for off := 0; ; off += blockSize {
 		end := off + blockSize
 		if end > len(data) {
 			end = len(data)
 		}
-		_, _ = pc.WriteToUDP(DataPacket(block, data[off:end]), raddr)
+		_, _ = pc.WriteTo(DataPacket(block, data[off:end]), raddr)
 		if end == len(data) {
 			return
 		}

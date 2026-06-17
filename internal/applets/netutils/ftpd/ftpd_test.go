@@ -9,12 +9,12 @@ import (
 	"net"
 	"os"
 	"path/filepath"
-	"strconv"
 	"strings"
 	"sync"
 	"testing"
 	"time"
 
+	"github.com/nao1215/mimixbox/internal/applets/netutils/internal/memnet"
 	"github.com/nao1215/mimixbox/internal/command"
 )
 
@@ -46,18 +46,22 @@ func TestResolvePath(t *testing.T) {
 	}
 }
 
-func TestFTPRetrieveOverLoopback(t *testing.T) {
-	t.Parallel()
+func TestFTPRetrieveOverPipe(t *testing.T) {
 	root := t.TempDir()
 	want := "file contents here\n"
 	if err := os.WriteFile(filepath.Join(root, "hello.txt"), []byte(want), 0o600); err != nil {
 		t.Fatal(err)
 	}
 
-	ln, err := net.Listen("tcp", "127.0.0.1:0")
-	if err != nil {
-		t.Skipf("loopback listen unavailable: %v", err)
-	}
+	// In-memory control listener: the accept loop runs without a real socket.
+	ln := memnet.NewPipeListener()
+	// In-memory data listener installed via the newDataListener seam. PASV will
+	// advertise port 258 (1,2); the test dials this listener directly.
+	dataLn := memnet.NewPipeListener()
+	origData := newDataListener
+	newDataListener = func() (net.Listener, int, error) { return dataLn, 258, nil }
+	t.Cleanup(func() { newDataListener = origData })
+
 	ctx, cancel := context.WithCancel(context.Background())
 	defer cancel()
 	var wg sync.WaitGroup
@@ -67,7 +71,7 @@ func TestFTPRetrieveOverLoopback(t *testing.T) {
 		_ = Serve(ctx, ln, root)
 	}()
 
-	conn, err := net.Dial("tcp", ln.Addr().String())
+	conn, err := ln.Dial()
 	if err != nil {
 		t.Fatalf("dial: %v", err)
 	}
@@ -89,11 +93,12 @@ func TestFTPRetrieveOverLoopback(t *testing.T) {
 		t.Fatal("login failed")
 	}
 	send("PASV")
-	pasv := readReply()
-	dataAddr := parsePASV(t, pasv)
+	if !strings.HasPrefix(readReply(), "227") {
+		t.Fatal("expected 227 PASV reply")
+	}
 
 	send("RETR hello.txt")
-	dataConn, err := net.Dial("tcp", dataAddr)
+	dataConn, err := dataLn.Dial()
 	if err != nil {
 		t.Fatalf("data dial: %v", err)
 	}
@@ -118,24 +123,6 @@ func TestFTPRetrieveOverLoopback(t *testing.T) {
 
 	cancel()
 	wg.Wait()
-}
-
-// parsePASV extracts the host:port from a 227 PASV reply.
-func parsePASV(t *testing.T, line string) string {
-	t.Helper()
-	open := strings.IndexByte(line, '(')
-	close := strings.IndexByte(line, ')')
-	if open < 0 || close < 0 {
-		t.Fatalf("bad PASV reply: %q", line)
-	}
-	nums := strings.Split(line[open+1:close], ",")
-	if len(nums) != 6 {
-		t.Fatalf("bad PASV tuple: %q", line)
-	}
-	p1, _ := strconv.Atoi(nums[4])
-	p2, _ := strconv.Atoi(nums[5])
-	port := p1<<8 | p2
-	return net.JoinHostPort(strings.Join(nums[:4], "."), strconv.Itoa(port))
 }
 
 func TestRunRequiresForeground(t *testing.T) {

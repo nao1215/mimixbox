@@ -97,10 +97,21 @@ func ServeTLS(ln net.Listener, handler Handler) error {
 	}
 }
 
+// dialTLS opens the client TLS connection. It is a package-level seam so tests
+// can drive DialAndPipe over an in-memory pipe (tls.Client over net.Pipe)
+// instead of a loopback TCP socket. Production dials TCP and does a TLS
+// handshake.
+var dialTLS = func(addr string, cfg *tls.Config) (interface {
+	io.ReadWriteCloser
+	CloseWrite() error
+}, error) {
+	return tls.Dial("tcp", addr, cfg)
+}
+
 // DialAndPipe opens a TLS connection to addr with cfg, writes everything from in
 // to the server, then copies the server's reply to out.
 func DialAndPipe(addr string, cfg *tls.Config, in io.Reader, out io.Writer) error {
-	conn, err := tls.Dial("tcp", addr, cfg)
+	conn, err := dialTLS(addr, cfg)
 	if err != nil {
 		return fmt.Errorf("tls dial %s: %w", addr, err)
 	}

@@ -142,8 +142,9 @@ func (c *Command) serveUDP(ctx context.Context, stdio command.IO, addr string, v
 
 // ServeUDP runs the UDP receive loop on pc until ctx is cancelled. Each datagram
 // is delivered to handler through a udpConn that reads the datagram payload and
-// writes replies back to the sender.
-func ServeUDP(ctx context.Context, pc *net.UDPConn, stdio command.IO, verbose bool, handler ConnHandler) error {
+// writes replies back to the sender. pc is a net.PacketConn so tests can drive
+// the loop with an in-memory packet pipe instead of a real UDP socket.
+func ServeUDP(ctx context.Context, pc net.PacketConn, stdio command.IO, verbose bool, handler ConnHandler) error {
 	buf := make([]byte, 64*1024)
 	return supervisor{
 		sock:     pc,
@@ -151,7 +152,7 @@ func ServeUDP(ctx context.Context, pc *net.UDPConn, stdio command.IO, verbose bo
 		logLine:  func(conn net.Conn) string { return fmt.Sprintf("udpsvd: datagram from %s", conn.RemoteAddr()) },
 		errLabel: "read",
 		accept: func() (net.Conn, bool, error) {
-			n, raddr, err := pc.ReadFromUDP(buf)
+			n, raddr, err := pc.ReadFrom(buf)
 			if err != nil {
 				return nil, false, err
 			}

@@ -111,15 +111,17 @@ func ParseHosts(r io.Reader) (map[string]net.IP, error) {
 	return zone, nil
 }
 
-// Serve runs the UDP DNS loop on pc until ctx is cancelled.
-func Serve(ctx context.Context, pc *net.UDPConn, zone map[string]net.IP) error {
+// Serve runs the UDP DNS loop on pc until ctx is cancelled. pc is a
+// net.PacketConn so tests can drive the loop with an in-memory packet pipe
+// instead of a real UDP socket.
+func Serve(ctx context.Context, pc net.PacketConn, zone map[string]net.IP) error {
 	go func() {
 		<-ctx.Done()
 		_ = pc.Close()
 	}()
 	buf := make([]byte, 512)
 	for {
-		n, raddr, err := pc.ReadFromUDP(buf)
+		n, raddr, err := pc.ReadFrom(buf)
 		if err != nil {
 			if ctx.Err() != nil {
 				return nil
@@ -130,7 +132,7 @@ func Serve(ctx context.Context, pc *net.UDPConn, zone map[string]net.IP) error {
 		if err != nil {
 			continue // ignore malformed queries
 		}
-		_, _ = pc.WriteToUDP(reply, raddr)
+		_, _ = pc.WriteTo(reply, raddr)
 	}
 }
 
@@ -170,12 +172,12 @@ func BuildResponse(query []byte, zone map[string]net.IP) ([]byte, error) {
 
 	if answer {
 		ans := make([]byte, 0, 16)
-		ans = append(ans, 0xc0, 0x0c)                 // name pointer to offset 12
-		ans = append(ans, 0x00, 0x01)                 // type A
-		ans = append(ans, 0x00, 0x01)                 // class IN
-		ans = append(ans, 0x00, 0x00, 0x00, 0x3c)     // TTL 60
-		ans = append(ans, 0x00, 0x04)                 // RDLENGTH 4
-		ans = append(ans, ip.To4()...)                // RDATA
+		ans = append(ans, 0xc0, 0x0c)             // name pointer to offset 12
+		ans = append(ans, 0x00, 0x01)             // type A
+		ans = append(ans, 0x00, 0x01)             // class IN
+		ans = append(ans, 0x00, 0x00, 0x00, 0x3c) // TTL 60
+		ans = append(ans, 0x00, 0x04)             // RDLENGTH 4
+		ans = append(ans, ip.To4()...)            // RDATA
 		resp = append(resp, ans...)
 	}
 	return resp, nil

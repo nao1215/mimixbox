@@ -9,6 +9,7 @@ import (
 	"testing"
 	"time"
 
+	"github.com/nao1215/mimixbox/internal/applets/netutils/internal/memnet"
 	"github.com/nao1215/mimixbox/internal/command"
 )
 
@@ -64,10 +65,10 @@ func (c *chunkReader) Read(p []byte) (int, error) {
 
 func TestServeRunsHandler(t *testing.T) {
 	t.Parallel()
-	ln, err := net.Listen("tcp", "127.0.0.1:0")
-	if err != nil {
-		t.Skipf("loopback listen unavailable: %v", err)
-	}
+	// In-memory listener: the accept loop runs without a real socket. The
+	// connections support CloseWrite, so the handler's ReadAll sees EOF and
+	// can still write its reply on the other half.
+	ln := memnet.NewPipeListener()
 	ctx, cancel := context.WithCancel(context.Background())
 	defer cancel()
 
@@ -85,12 +86,12 @@ func TestServeRunsHandler(t *testing.T) {
 		_ = Serve(ctx, ln, handler)
 	}()
 
-	conn, err := net.Dial("tcp", ln.Addr().String())
+	conn, err := ln.Dial()
 	if err != nil {
 		t.Fatalf("dial: %v", err)
 	}
 	_, _ = conn.Write([]byte{'h', iac, 253, 24, 'i'})
-	_ = conn.(*net.TCPConn).CloseWrite()
+	_ = conn.(memnet.HalfCloseConn).CloseWrite()
 	_ = conn.SetReadDeadline(time.Now().Add(2 * time.Second))
 	got, _ := io.ReadAll(conn)
 	_ = conn.Close()
