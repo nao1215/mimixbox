@@ -7,6 +7,57 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## [Unreleased]
 
+## [0.42.0] - 2026-06-18
+
+A correctness, robustness, and test-quality release across the 451-command tree.
+It streams more byte-faithfully, hardens process and install behavior, widens
+RPM payload support, and clears the 2026-06-17 whole-project review backlog
+(roadmap #967) of refactor, test, release, and auth follow-ups.
+
+### Added
+
+- **rpm/rpm2cpio**: read `xz` and `zstd` RPM payloads in addition to gzip and
+  bzip2, so modern packages can be inspected and extracted (#982).
+
+### Changed
+
+- **Release artifacts** now actually ship the dependency-license bundle: the
+  tagged release flow generates `licenses/` via `go-licenses`, bundles it into
+  the archives, and a smoke check verifies every installer-required file is
+  present (#985).
+- **Retired the non-functional `-tags pam` build tag**: the stub backend that
+  always failed is removed, the shadow backend is now the single always-built
+  backend, and the contributor docs/Dockerfile no longer advertise a
+  PAM-backed build (#981).
+- Refactored multi-applet and shared low-level code without changing behavior:
+  `cp` overwrite planning (#944), `ls` per-entry metadata model (#945), `i2c`
+  shared parse/render helpers (#946), a shared spool backend for `lpr`/`lpq`/
+  `lpd` (#947), a shared signal-disposition helper for `env`/`nohup` (#986), and
+  removal of the dead stdin/TTY helpers in `internal/lib/shell` (#984).
+
+### Fixed
+
+- **Byte-faithful streaming I/O**: `tr` and `wc` process binary and non-UTF-8
+  input byte-for-byte (#959); `od`, `hexdump`, `tr`, `uuencode`/`uudecode`,
+  `base32`/`base64`, and `cksum` stream their input instead of buffering it all
+  in memory (#962, #963), and surface write errors instead of dropping them
+  (#964); `grep` drops hard line-length caps and surfaces read errors (#960);
+  stdin read errors are reported instead of being treated as empty input (#956).
+- **mimixbox launcher**: top-level options keep working when the binary is
+  renamed (#955), and install decisions are based on the target directory rather
+  than the host `PATH` (#958).
+- **timeout**: kills the whole process group so descendant processes are not
+  leaked (#957).
+
+### Tests
+
+- Removed host `PATH` dependencies from unit tests via a repo-local fake-command
+  helper, so they no longer skip on stripped-down hosts (#987).
+- Reduced loopback-socket skips across `netutils` with in-memory transport seams
+  (`net.Pipe`-style listener, datagram pipe, buffered conn), cutting 19 skips to
+  a single documented integration test (#988).
+- Added package-local tests for the shared archival `comp` frontend (#983).
+
 ## [0.41.0] - 2026-06-16
 
 A large compatibility, usability, and quality release across the 449-command
