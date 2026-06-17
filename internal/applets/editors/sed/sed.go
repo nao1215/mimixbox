@@ -214,7 +214,7 @@ func readLines(stdio command.IO, name string) ([]string, error) {
 
 	var lines []string
 	scanner := bufio.NewScanner(r)
-	scanner.Buffer(make([]byte, 0, 64*1024), 4*1024*1024)
+	scanner.Buffer(make([]byte, 0, 64*1024), command.MaxLineSize)
 	for scanner.Scan() {
 		lines = append(lines, scanner.Text())
 	}

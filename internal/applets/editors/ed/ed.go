@@ -57,7 +57,7 @@ func (c *Command) Run(_ context.Context, stdio command.IO, args []string) error 
 	}
 
 	sc := bufio.NewScanner(stdio.In)
-	sc.Buffer(make([]byte, 0, 64*1024), 1024*1024)
+	sc.Buffer(make([]byte, 0, 64*1024), command.MaxLineSize)
 
 	e := &editor{dot: 0, in: sc, out: stdio.Out, errw: stdio.Err}
 	if rest := fs.Args(); len(rest) > 0 {

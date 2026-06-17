@@ -74,7 +74,7 @@ func (c *Command) fmtFile(stdio command.IO, name string, width int) error {
 	defer func() { _ = r.Close() }()
 
 	sc := bufio.NewScanner(r)
-	sc.Buffer(make([]byte, 0, 64*1024), 1024*1024)
+	sc.Buffer(make([]byte, 0, 64*1024), command.MaxLineSize)
 
 	var para []string
 	flush := func() error {

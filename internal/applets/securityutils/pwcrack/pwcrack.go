@@ -143,7 +143,7 @@ func (c *Command) loadWords(stdio command.IO, path string) ([]string, error) {
 
 	var words []string
 	sc := bufio.NewScanner(r)
-	sc.Buffer(make([]byte, 0, 64*1024), 1024*1024)
+	sc.Buffer(make([]byte, 0, 64*1024), command.MaxLineSize)
 	for sc.Scan() {
 		words = append(words, sc.Text())
 	}

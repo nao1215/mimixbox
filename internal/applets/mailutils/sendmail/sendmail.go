@@ -87,7 +87,7 @@ func appendMbox(path, from string, body []byte) error {
 	w := bufio.NewWriter(f)
 	fmt.Fprintf(w, "From %s %s\n", from, now().UTC().Format("Mon Jan  2 15:04:05 2006"))
 	sc := bufio.NewScanner(strings.NewReader(string(body)))
-	sc.Buffer(make([]byte, 0, 64*1024), 1024*1024)
+	sc.Buffer(make([]byte, 0, 64*1024), command.MaxLineSize)
 	for sc.Scan() {
 		line := sc.Text()
 		if strings.HasPrefix(line, "From ") {

@@ -19,6 +19,20 @@ func run(t *testing.T, stdin string, args ...string) (string, string, error) {
 	return out.String(), errBuf.String(), err
 }
 
+func TestLongLineBeyondDefaultScannerCap(t *testing.T) {
+	t.Parallel()
+	// A 2 MiB single line exceeds the old fixed scanner cap; rev must handle it
+	// like GNU rev instead of failing with "token too long" (issue #950).
+	line := strings.Repeat("a", 2*1024*1024)
+	out, errOut, err := run(t, line+"\n")
+	if err != nil {
+		t.Fatalf("rev error = %v (stderr: %s)", err, errOut)
+	}
+	if want := line + "\n"; out != want {
+		t.Errorf("rev of a 2 MiB line: got %d bytes, want %d", len(out), len(want))
+	}
+}
+
 func TestRun(t *testing.T) {
 	t.Parallel()
 	tests := []struct {

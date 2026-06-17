@@ -307,7 +307,7 @@ func (g *grepper) searchFile(name string) {
 	}
 
 	scanner := bufio.NewScanner(r)
-	scanner.Buffer(make([]byte, 0, 64*1024), 1024*1024)
+	scanner.Buffer(make([]byte, 0, 64*1024), command.MaxLineSize)
 
 	contextNeeded := g.opts.after > 0 || g.opts.before > 0
 	if g.opts.count || g.opts.filesMatch || g.opts.filesNoMat || g.opts.quiet {
@@ -365,6 +365,14 @@ func (g *grepper) searchFile(name string) {
 		}
 
 		g.printMatchLine(display, lineNo, byteOff, line, &lastPrinted)
+	}
+
+	// A read failure must surface as a grep error (exit 2), not be hidden behind
+	// a silent "no matches" result (issue #950).
+	if err := scanner.Err(); err != nil {
+		_, _ = fmt.Fprintf(g.stdio.Err, "grep: %s\n", command.FileError(display, err))
+		g.failed = true
+		return
 	}
 
 	if g.opts.filesMatch && count > 0 {
