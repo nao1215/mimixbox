@@ -116,11 +116,18 @@ func dumpStream(stdio command.IO, files []string, r radix, ft formatType) error 
 		_, cerr := io.Copy(d, rc)
 		_ = rc.Close()
 		if cerr != nil {
+			if d.err != nil {
+				// The output stream failed (e.g. a closed downstream pipe);
+				// stop draining input and report it directly.
+				return command.Failure(cerr)
+			}
 			_, _ = fmt.Fprintf(stdio.Err, "od: %s\n", command.FileError(name, cerr))
 			firstErr = keep(firstErr)
 		}
 	}
-	d.finish()
+	if err := d.finish(); err != nil && firstErr == nil {
+		return command.Failure(err)
+	}
 	if err := bw.Flush(); err != nil && firstErr == nil {
 		return command.Failure(err)
 	}
@@ -138,15 +145,21 @@ type rowDumper struct {
 	n     int // bytes currently buffered for the in-progress row
 	off   int // file offset of the first byte in buf
 	total int // total bytes seen
+	err   error
 }
 
 func (d *rowDumper) Write(p []byte) (int, error) {
-	for _, b := range p {
+	if d.err != nil {
+		return 0, d.err
+	}
+	for i, b := range p {
 		d.buf[d.n] = b
 		d.n++
 		d.total++
 		if d.n == bytesPerLine {
-			d.flushRow()
+			if err := d.flushRow(); err != nil {
+				return i + 1, err
+			}
 			d.off += bytesPerLine
 			d.n = 0
 		}
@@ -154,19 +167,29 @@ func (d *rowDumper) Write(p []byte) (int, error) {
 	return len(p), nil
 }
 
-func (d *rowDumper) flushRow() {
-	_, _ = d.w.WriteString(line(d.buf[:d.n], d.off, d.radix, d.ft))
-	_ = d.w.WriteByte('\n')
+func (d *rowDumper) flushRow() error {
+	if _, d.err = d.w.WriteString(line(d.buf[:d.n], d.off, d.radix, d.ft)); d.err != nil {
+		return d.err
+	}
+	d.err = d.w.WriteByte('\n')
+	return d.err
 }
 
-func (d *rowDumper) finish() {
+func (d *rowDumper) finish() error {
 	if d.n > 0 {
-		d.flushRow()
+		if err := d.flushRow(); err != nil {
+			return err
+		}
 	}
 	if addr := address(d.total, d.radix); addr != "" {
-		_, _ = d.w.WriteString(addr)
-		_ = d.w.WriteByte('\n')
+		if _, err := d.w.WriteString(addr); err != nil {
+			return err
+		}
+		if err := d.w.WriteByte('\n'); err != nil {
+			return err
+		}
 	}
+	return nil
 }
 
 func keep(existing error) error {

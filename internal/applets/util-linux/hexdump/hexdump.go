@@ -82,7 +82,9 @@ func (c *Command) Run(_ context.Context, stdio command.IO, args []string) error 
 		_, _ = fmt.Fprintf(stdio.Err, "%s: %v\n", c.Name(), err)
 		return command.SilentFailure()
 	}
-	d.finish()
+	if err := d.finish(); err != nil {
+		return command.Failure(err)
+	}
 	if err := bw.Flush(); err != nil {
 		return command.Failure(err)
 	}
@@ -124,15 +126,21 @@ type rowDumper struct {
 	canonical bool
 	buf       [16]byte
 	n         int
-	off       int // offset (relative to base) of the first byte in buf
+	off       int64 // offset (relative to base) of the first byte in buf
+	err       error
 }
 
 func (d *rowDumper) Write(p []byte) (int, error) {
-	for _, b := range p {
+	if d.err != nil {
+		return 0, d.err
+	}
+	for i, b := range p {
 		d.buf[d.n] = b
 		d.n++
 		if d.n == 16 {
-			d.flushRow()
+			if err := d.flushRow(); err != nil {
+				return i + 1, err
+			}
 			d.off += 16
 			d.n = 0
 		}
@@ -140,29 +148,35 @@ func (d *rowDumper) Write(p []byte) (int, error) {
 	return len(p), nil
 }
 
-func (d *rowDumper) flushRow() {
+func (d *rowDumper) flushRow() error {
 	if d.canonical {
-		writeCanonicalRow(d.w, d.base+int64(d.off), d.buf[:d.n])
+		d.err = writeCanonicalRow(d.w, d.base+d.off, d.buf[:d.n])
 	} else {
-		writeTwoByteRow(d.w, d.base+int64(d.off), d.buf[:d.n])
+		d.err = writeTwoByteRow(d.w, d.base+d.off, d.buf[:d.n])
 	}
+	return d.err
 }
 
-func (d *rowDumper) finish() {
-	end := d.off + d.n
+func (d *rowDumper) finish() error {
+	end := d.off + int64(d.n)
 	if d.n > 0 {
-		d.flushRow()
+		if err := d.flushRow(); err != nil {
+			return err
+		}
 	}
+	var err error
 	if d.canonical {
-		_, _ = fmt.Fprintf(d.w, "%08x\n", d.base+int64(end))
+		_, err = fmt.Fprintf(d.w, "%08x\n", d.base+end)
 	} else {
-		_, _ = fmt.Fprintf(d.w, "%07x\n", d.base+int64(end))
+		_, err = fmt.Fprintf(d.w, "%07x\n", d.base+end)
 	}
+	return err
 }
 
 // writeCanonicalRow writes one "hexdump -C" / hd row for the bytes in row, whose
-// first byte is at absolute offset addr.
-func writeCanonicalRow(b *bufio.Writer, addr int64, row []byte) {
+// first byte is at absolute offset addr. It returns the first write error so a
+// broken output stream stops the dump instead of draining the rest of the input.
+func writeCanonicalRow(b *bufio.Writer, addr int64, row []byte) error {
 	_, _ = fmt.Fprintf(b, "%08x  ", addr)
 	for i := 0; i < 16; i++ {
 		if i == 8 {
@@ -182,12 +196,15 @@ func writeCanonicalRow(b *bufio.Writer, addr int64, row []byte) {
 			_ = b.WriteByte('.')
 		}
 	}
-	_, _ = b.WriteString("|\n")
+	// bufio.Writer is sticky: this final write returns any earlier error too.
+	_, err := b.WriteString("|\n")
+	return err
 }
 
 // writeTwoByteRow writes one default-layout row (two-byte little-endian words)
-// for the bytes in row, whose first byte is at absolute offset addr.
-func writeTwoByteRow(b *bufio.Writer, addr int64, row []byte) {
+// for the bytes in row, whose first byte is at absolute offset addr. It returns
+// the first write error (see writeCanonicalRow).
+func writeTwoByteRow(b *bufio.Writer, addr int64, row []byte) error {
 	_, _ = fmt.Fprintf(b, "%07x", addr)
 	for i := 0; i < 16; i += 2 {
 		switch {
@@ -199,7 +216,7 @@ func writeTwoByteRow(b *bufio.Writer, addr int64, row []byte) {
 			_, _ = b.WriteString("     ") // pad missing words to keep 8 columns
 		}
 	}
-	_ = b.WriteByte('\n')
+	return b.WriteByte('\n')
 }
 
 func (c *Command) help() command.Help {

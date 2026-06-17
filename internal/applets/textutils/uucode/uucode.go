@@ -106,17 +106,11 @@ func writeUU(w io.Writer, name string, r io.Reader) error {
 	for {
 		n, err := io.ReadFull(r, buf)
 		if n > 0 {
-			line := buf[:n]
-			_ = bw.WriteByte(enc(byte(len(line))))
-			for i := 0; i < len(line); i += 3 {
-				var g [3]byte
-				copy(g[:], line[i:])
-				_ = bw.WriteByte(enc(g[0] >> 2))
-				_ = bw.WriteByte(enc((g[0]<<4 | g[1]>>4) & 0x3f))
-				_ = bw.WriteByte(enc((g[1]<<2 | g[2]>>6) & 0x3f))
-				_ = bw.WriteByte(enc(g[2] & 0x3f))
+			// Stop as soon as the output stream fails (e.g. a closed downstream
+			// pipe) instead of draining the rest of the input.
+			if werr := writeUULine(bw, buf[:n]); werr != nil {
+				return werr
 			}
-			_ = bw.WriteByte('\n')
 		}
 		if err == io.EOF || err == io.ErrUnexpectedEOF {
 			break
@@ -126,8 +120,26 @@ func writeUU(w io.Writer, name string, r io.Reader) error {
 		}
 	}
 	_ = bw.WriteByte(enc(0))
-	_, _ = bw.WriteString("\nend\n")
+	if _, err := bw.WriteString("\nend\n"); err != nil {
+		return err
+	}
 	return bw.Flush()
+}
+
+// writeUULine encodes one uuencode body line (a length character followed by the
+// 4-character groups) and returns the first write error. bufio.Writer is sticky,
+// so the final WriteByte reflects any earlier failure.
+func writeUULine(bw *bufio.Writer, line []byte) error {
+	_ = bw.WriteByte(enc(byte(len(line))))
+	for i := 0; i < len(line); i += 3 {
+		var g [3]byte
+		copy(g[:], line[i:])
+		_ = bw.WriteByte(enc(g[0] >> 2))
+		_ = bw.WriteByte(enc((g[0]<<4 | g[1]>>4) & 0x3f))
+		_ = bw.WriteByte(enc((g[1]<<2 | g[2]>>6) & 0x3f))
+		_ = bw.WriteByte(enc(g[2] & 0x3f))
+	}
+	return bw.WriteByte('\n')
 }
 
 func writeBase64(w io.Writer, name string, r io.Reader) error {
