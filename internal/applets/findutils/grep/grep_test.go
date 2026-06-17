@@ -108,6 +108,27 @@ func TestNoMatchExit1(t *testing.T) {
 	}
 }
 
+// errReader fails on the first read, modeling an unreadable input stream.
+type errReader struct{}
+
+func (errReader) Read([]byte) (int, error) { return 0, errors.New("input error") }
+
+func TestStdinReadErrorExitsTwoNotSilentNoMatch(t *testing.T) {
+	t.Parallel()
+	out := &bytes.Buffer{}
+	errBuf := &bytes.Buffer{}
+	io := command.IO{In: errReader{}, Out: out, Err: errBuf}
+	// A real read failure must be reported as a grep error (exit 2), not hidden
+	// behind the "no matches" exit 1 with empty stderr (issue #950).
+	err := grep.New().Run(context.Background(), io, []string{"foo"})
+	if code := exitCode(t, err); code != 2 {
+		t.Fatalf("exit = %d, want 2 on read error", code)
+	}
+	if !strings.Contains(errBuf.String(), "grep:") {
+		t.Errorf("stderr should report the read error, got %q", errBuf.String())
+	}
+}
+
 func TestInvalidRegexExit2(t *testing.T) {
 	t.Parallel()
 	_, errOut, err := run(t, "x\n", "[")

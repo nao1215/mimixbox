@@ -19,6 +19,20 @@ func runStdin(t *testing.T, stdin string, args ...string) (string, string, error
 	return out.String(), errBuf.String(), err
 }
 
+func TestCutLongLineBeyondDefaultScannerCap(t *testing.T) {
+	t.Parallel()
+	// A 2 MiB single line must be processed like GNU cut, not rejected with
+	// "token too long" (issue #950).
+	line := strings.Repeat("a", 2*1024*1024)
+	out, errOut, err := runStdin(t, line+"\n", "-c", "1-3")
+	if err != nil {
+		t.Fatalf("cut error = %v (stderr: %s)", err, errOut)
+	}
+	if want := "aaa\n"; out != want {
+		t.Errorf("cut -c1-3 of a 2 MiB line = %q, want %q", out, want)
+	}
+}
+
 func TestRunCut(t *testing.T) {
 	t.Parallel()
 	tests := []struct {

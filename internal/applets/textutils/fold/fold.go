@@ -74,7 +74,7 @@ func (c *Command) foldFile(stdio command.IO, name string, width int, spaces bool
 	defer func() { _ = r.Close() }()
 
 	sc := bufio.NewScanner(r)
-	sc.Buffer(make([]byte, 0, 64*1024), 1024*1024)
+	sc.Buffer(make([]byte, 0, 64*1024), command.MaxLineSize)
 	for sc.Scan() {
 		for _, piece := range foldLine(sc.Text(), width, spaces) {
 			if _, err := io.WriteString(stdio.Out, piece+"\n"); err != nil {

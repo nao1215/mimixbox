@@ -114,7 +114,7 @@ func formatLine(offset int, data []byte) string {
 // text between ": " and the two-space gap that precedes the ASCII column.
 func (c *Command) revert(stdio command.IO, r io.Reader) error {
 	sc := bufio.NewScanner(r)
-	sc.Buffer(make([]byte, 0, 64*1024), 1024*1024)
+	sc.Buffer(make([]byte, 0, 64*1024), command.MaxLineSize)
 	for sc.Scan() {
 		line := sc.Text()
 		colon := strings.Index(line, ": ")

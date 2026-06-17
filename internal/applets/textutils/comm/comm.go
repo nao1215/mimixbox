@@ -180,7 +180,7 @@ func readLines(stdio command.IO, name string, zero bool) ([]string, error) {
 
 	var lines []string
 	sc := bufio.NewScanner(r)
-	sc.Buffer(make([]byte, 0, 64*1024), 1024*1024)
+	sc.Buffer(make([]byte, 0, 64*1024), command.MaxLineSize)
 	if zero {
 		sc.Split(scanNUL)
 	}

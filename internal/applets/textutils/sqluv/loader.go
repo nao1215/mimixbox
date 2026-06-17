@@ -28,6 +28,7 @@ import (
 	"strings"
 
 	"github.com/klauspost/compress/zstd"
+	"github.com/nao1215/mimixbox/internal/command"
 	"github.com/ulikunitz/xz"
 )
 
@@ -142,7 +143,7 @@ func readSeparated(r io.Reader, t *table, format fileFormat) error {
 // fields; the union of labels (in first-seen order) becomes the columns.
 func readLTSV(r io.Reader, t *table) error {
 	scanner := bufio.NewScanner(r)
-	scanner.Buffer(make([]byte, 0, 64*1024), 16*1024*1024)
+	scanner.Buffer(make([]byte, 0, 64*1024), command.MaxLineSize)
 
 	colIndex := map[string]int{}
 	var records []map[string]string

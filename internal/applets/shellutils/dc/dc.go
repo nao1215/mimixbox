@@ -81,7 +81,7 @@ func (c *Command) Run(_ context.Context, stdio command.IO, args []string) error 
 	}
 	if len(exprs) == 0 && len(files) == 0 {
 		sc := bufio.NewScanner(stdio.In)
-		sc.Buffer(make([]byte, 0, 64*1024), 1024*1024)
+		sc.Buffer(make([]byte, 0, 64*1024), command.MaxLineSize)
 		for sc.Scan() {
 			m.eval(sc.Text())
 		}

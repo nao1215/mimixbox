@@ -59,7 +59,7 @@ func (c *Command) Run(_ context.Context, stdio command.IO, args []string) error 
 	} else {
 		var b strings.Builder
 		sc := bufio.NewScanner(stdio.In)
-		sc.Buffer(make([]byte, 0, 64*1024), 8*1024*1024)
+		sc.Buffer(make([]byte, 0, 64*1024), command.MaxLineSize)
 		for sc.Scan() {
 			b.WriteString(sc.Text())
 			b.WriteByte('\n')

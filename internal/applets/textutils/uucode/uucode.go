@@ -195,7 +195,7 @@ func runUudecode(stdio command.IO, args []string) error {
 // the decoded bytes.
 func decode(r io.Reader) (string, []byte, error) {
 	sc := bufio.NewScanner(r)
-	sc.Buffer(make([]byte, 0, 64*1024), 1024*1024)
+	sc.Buffer(make([]byte, 0, 64*1024), command.MaxLineSize)
 
 	name := ""
 	base64Mode := false

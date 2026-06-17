@@ -110,7 +110,7 @@ func openOutput(stdio command.IO, operands []string) (io.Writer, func(), error) 
 func readLines(r io.Reader) ([]string, error) {
 	var lines []string
 	sc := bufio.NewScanner(r)
-	sc.Buffer(make([]byte, 0, 64*1024), 1024*1024)
+	sc.Buffer(make([]byte, 0, 64*1024), command.MaxLineSize)
 	for sc.Scan() {
 		lines = append(lines, sc.Text())
 	}

@@ -68,7 +68,7 @@ func (c *Command) revFile(stdio command.IO, name string) error {
 	defer func() { _ = r.Close() }()
 
 	sc := bufio.NewScanner(r)
-	sc.Buffer(make([]byte, 0, 64*1024), 1024*1024)
+	sc.Buffer(make([]byte, 0, 64*1024), command.MaxLineSize)
 	for sc.Scan() {
 		if _, err := io.WriteString(stdio.Out, reverseRunes(sc.Text())+"\n"); err != nil {
 			return err

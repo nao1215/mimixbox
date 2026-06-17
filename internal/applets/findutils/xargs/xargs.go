@@ -125,7 +125,7 @@ func readItems(stdio command.IO, opts options) ([]string, []int, error) {
 	// Default: split on whitespace but remember which input line each item came
 	// from so -L can group by line.
 	scanner := bufio.NewScanner(stdio.In)
-	scanner.Buffer(make([]byte, 0, 64*1024), 4*1024*1024)
+	scanner.Buffer(make([]byte, 0, 64*1024), command.MaxLineSize)
 	scanner.Split(bufio.ScanLines)
 
 	var items []string
@@ -145,7 +145,7 @@ func readItems(stdio command.IO, opts options) ([]string, []int, error) {
 // readDelimited reads items separated by NUL (-0) or a custom delimiter (-d).
 func readDelimited(stdio command.IO, opts options) ([]string, error) {
 	scanner := bufio.NewScanner(stdio.In)
-	scanner.Buffer(make([]byte, 0, 64*1024), 4*1024*1024)
+	scanner.Buffer(make([]byte, 0, 64*1024), command.MaxLineSize)
 	if opts.null {
 		scanner.Split(splitOn(0))
 	} else {

@@ -156,7 +156,7 @@ func parseSize(s string) (int, error) {
 // byLines writes perFile lines into each successive output file.
 func (c *Command) byLines(stdio command.IO, r io.Reader, prefix string, perFile int, ns namingScheme) error {
 	sc := bufio.NewScanner(r)
-	sc.Buffer(make([]byte, 0, 64*1024), 1024*1024)
+	sc.Buffer(make([]byte, 0, 64*1024), command.MaxLineSize)
 
 	idx, count := 0, 0
 	var w *os.File

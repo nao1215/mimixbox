@@ -118,7 +118,7 @@ func (st *state) process(stdio command.IO, files []string, rules []rule) error {
 			return fmt.Errorf("%s", command.FileError(f, err))
 		}
 		scanner := bufio.NewScanner(r)
-		scanner.Buffer(make([]byte, 0, 64*1024), 4*1024*1024)
+		scanner.Buffer(make([]byte, 0, 64*1024), command.MaxLineSize)
 		for scanner.Scan() {
 			st.nr++
 			st.setLine(scanner.Text())

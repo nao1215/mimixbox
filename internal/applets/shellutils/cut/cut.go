@@ -188,7 +188,7 @@ func run(stdio command.IO, opts options, files []string) error {
 // terminates each emitted line.
 func cutReader(w io.Writer, r io.Reader, opts options) error {
 	sc := bufio.NewScanner(r)
-	sc.Buffer(make([]byte, 0, 64*1024), 1024*1024)
+	sc.Buffer(make([]byte, 0, 64*1024), command.MaxLineSize)
 	sc.Split(splitOn(opts.lineDelim))
 	bw := bufio.NewWriter(w)
 	for sc.Scan() {
