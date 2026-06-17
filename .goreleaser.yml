@@ -27,6 +27,11 @@ archives:
     files:
       - LICENSE
       - README.md
+      # Dependency-license output produced by `go-licenses save` before
+      # GoReleaser runs (see the Makefile "licenses" target and the
+      # release workflow). installer.sh installs this into
+      # /usr/share/doc/mimixbox when the archive is extracted.
+      - licenses/**/*
       - src: scripts/installer.sh
         strip_parent: true
         info:
