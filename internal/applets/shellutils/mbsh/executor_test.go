@@ -4,12 +4,12 @@ import (
 	"bytes"
 	"context"
 	"os"
-	"os/exec"
 	"path/filepath"
 	"strings"
 	"testing"
 
 	"github.com/nao1215/mimixbox/internal/command"
+	"github.com/nao1215/mimixbox/internal/testutil/fakecmd"
 )
 
 func parseLine(t *testing.T, input string) commandList {
@@ -82,13 +82,12 @@ func execLine(t *testing.T, input string) (string, int) {
 	return out.String(), status
 }
 
+// requireCmds installs repo-local fakes for the given command names at the
+// front of PATH so the executor's exec path runs deterministically without
+// depending on host commands.
 func requireCmds(t *testing.T, names ...string) {
 	t.Helper()
-	for _, n := range names {
-		if _, err := exec.LookPath(n); err != nil {
-			t.Skipf("%s not on PATH: %v", n, err)
-		}
-	}
+	fakecmd.Use(t, names...)
 }
 
 func TestExecSequence(t *testing.T) {

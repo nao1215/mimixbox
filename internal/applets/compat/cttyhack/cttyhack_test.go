@@ -4,17 +4,17 @@ import (
 	"bytes"
 	"context"
 	"errors"
-	"os/exec"
 	"strings"
 	"testing"
 
 	"github.com/nao1215/mimixbox/internal/command"
+	"github.com/nao1215/mimixbox/internal/testutil/fakecmd"
 )
 
 func TestRunsProgram(t *testing.T) {
-	if _, err := exec.LookPath("echo"); err != nil {
-		t.Skipf("echo not on PATH: %v", err)
-	}
+	// Use a repo-local fake echo so the test runs even on a stripped-down
+	// host without /bin/echo. UseOnly hides host commands entirely.
+	fakecmd.UseOnly(t, "echo")
 	out := &bytes.Buffer{}
 	io := command.IO{In: strings.NewReader(""), Out: out, Err: &bytes.Buffer{}}
 	if err := New().Run(context.Background(), io, []string{"echo", "hi"}); err != nil {
