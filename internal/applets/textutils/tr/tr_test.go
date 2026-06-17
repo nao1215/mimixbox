@@ -3,6 +3,7 @@ package tr_test
 import (
 	"bytes"
 	"context"
+	"io"
 	"strings"
 	"testing"
 
@@ -27,6 +28,53 @@ func runBytes(t *testing.T, stdin []byte, args ...string) ([]byte, error) {
 	io := command.IO{In: bytes.NewReader(stdin), Out: out, Err: &bytes.Buffer{}}
 	err := tr.New().Run(context.Background(), io, args)
 	return out.Bytes(), err
+}
+
+// dripReader returns its data one byte per Read call, forcing tr to handle
+// multi-byte UTF-8 sequences and squeeze runs that straddle read boundaries.
+type dripReader struct {
+	data []byte
+	pos  int
+}
+
+func (d *dripReader) Read(p []byte) (int, error) {
+	if d.pos >= len(d.data) {
+		return 0, io.EOF
+	}
+	p[0] = d.data[d.pos]
+	d.pos++
+	return 1, nil
+}
+
+func TestStreamingMatchesWholeInput(t *testing.T) {
+	t.Parallel()
+	// Streaming the input one byte at a time must produce the same output as a
+	// single read, across multi-byte UTF-8 boundaries and squeeze runs (#952).
+	cases := []struct {
+		in   string
+		args []string
+	}{
+		{"あああいいうう\n", []string{"-s", "あいう"}},   // squeeze multibyte across chunks
+		{"héllo wörld\n", []string{"a-z", "A-Z"}},        // translate ASCII, keep multibyte
+		{"aaabbbccc\n", []string{"-s", "a-z"}},           // squeeze ASCII run
+		{"abcあ123\n", []string{"-d", "[:digit:]"}},      // delete with multibyte present
+		{"x\xff\xffy\n", []string{"-s", "\\377"}},        // squeeze raw bytes
+	}
+	for _, tc := range cases {
+		out := &bytes.Buffer{}
+		io1 := command.IO{In: strings.NewReader(tc.in), Out: out, Err: &bytes.Buffer{}}
+		if err := tr.New().Run(context.Background(), io1, tc.args); err != nil {
+			t.Fatalf("whole run error = %v", err)
+		}
+		drip := &bytes.Buffer{}
+		io2 := command.IO{In: &dripReader{data: []byte(tc.in)}, Out: drip, Err: &bytes.Buffer{}}
+		if err := tr.New().Run(context.Background(), io2, tc.args); err != nil {
+			t.Fatalf("drip run error = %v", err)
+		}
+		if out.String() != drip.String() {
+			t.Errorf("args %v: drip=%q whole=%q", tc.args, drip.String(), out.String())
+		}
+	}
 }
 
 func TestTranslatesRawByteMatchingOctalSet(t *testing.T) {

@@ -3,6 +3,7 @@ package od_test
 import (
 	"bytes"
 	"context"
+	"io"
 	"os"
 	"path/filepath"
 	"strings"
@@ -19,6 +20,44 @@ func runStdin(t *testing.T, stdin string, args ...string) (string, string, error
 	io := command.IO{In: strings.NewReader(stdin), Out: out, Err: errBuf}
 	err := od.New().Run(context.Background(), io, args)
 	return out.String(), errBuf.String(), err
+}
+
+// dripReader returns its data one byte per Read call so the row formatter is
+// forced to assemble rows across many read boundaries.
+type dripReader struct {
+	data []byte
+	pos  int
+}
+
+func (d *dripReader) Read(p []byte) (int, error) {
+	if d.pos >= len(d.data) {
+		return 0, io.EOF
+	}
+	p[0] = d.data[d.pos]
+	d.pos++
+	return 1, nil
+}
+
+func TestStreamingMatchesSingleRead(t *testing.T) {
+	t.Parallel()
+	// Streaming the input one byte at a time must produce the same dump as a
+	// single read, across row boundaries and the trailing offset line (#952).
+	data := bytes.Repeat([]byte{0x00, 0x41, 0xff, '\n', 0x7f, 0x10}, 5000) // ~30 KiB
+	for _, args := range [][]string{nil, {"-c"}, {"-A", "x", "-t", "x1"}} {
+		whole := &bytes.Buffer{}
+		io1 := command.IO{In: bytes.NewReader(data), Out: whole, Err: &bytes.Buffer{}}
+		if err := od.New().Run(context.Background(), io1, args); err != nil {
+			t.Fatalf("whole run error = %v", err)
+		}
+		drip := &bytes.Buffer{}
+		io2 := command.IO{In: &dripReader{data: data}, Out: drip, Err: &bytes.Buffer{}}
+		if err := od.New().Run(context.Background(), io2, args); err != nil {
+			t.Fatalf("drip run error = %v", err)
+		}
+		if whole.String() != drip.String() {
+			t.Errorf("args %v: streaming output differs from single read", args)
+		}
+	}
 }
 
 // Expected outputs are verified against GNU od, e.g. `printf 'ABC\n' | od -c`.
