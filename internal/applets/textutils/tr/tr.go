@@ -7,7 +7,7 @@ import (
 	"context"
 	"fmt"
 	"io"
-	"strings"
+	"unicode/utf8"
 
 	"github.com/nao1215/mimixbox/internal/command"
 )
@@ -95,8 +95,8 @@ func (c *Command) Run(_ context.Context, stdio command.IO, args []string) error 
 		return command.Failuref("%v", readErr)
 	}
 
-	result := transform(string(data), set1, set2, opts)
-	if _, err := io.WriteString(stdio.Out, result); err != nil {
+	result := transform(data, set1, set2, opts)
+	if _, err := stdio.Out.Write(result); err != nil {
 		return command.Failure(err)
 	}
 	return nil
@@ -124,68 +124,115 @@ func validate(stdio command.IO, opts options, operands []string) error {
 	return nil
 }
 
+// cell is one decoded input symbol. A valid UTF-8 sequence becomes a normal
+// rune (raw=false); an invalid byte is preserved verbatim as a raw byte
+// (raw=true, r in 0..255). Keeping the raw flag lets tr behave like GNU tr on
+// binary input — matching SET entries by byte value and writing untranslated
+// bytes back unchanged instead of corrupting them into U+FFFD (issue #953).
+type cell struct {
+	r   rune
+	raw bool
+}
+
+// decodeCells splits raw input into cells, preserving invalid UTF-8 bytes.
+func decodeCells(data []byte) []cell {
+	cells := make([]cell, 0, len(data))
+	for i := 0; i < len(data); {
+		r, size := utf8.DecodeRune(data[i:])
+		if r == utf8.RuneError && size == 1 {
+			cells = append(cells, cell{r: rune(data[i]), raw: true})
+			i++
+			continue
+		}
+		cells = append(cells, cell{r: r, raw: false})
+		i += size
+	}
+	return cells
+}
+
+// appendCell writes a cell to out: a raw byte as itself, a normal rune as UTF-8.
+func appendCell(out []byte, c cell) []byte {
+	if c.raw {
+		return append(out, byte(c.r))
+	}
+	return utf8.AppendRune(out, c.r)
+}
+
+func appendCells(out []byte, cells []cell) []byte {
+	for _, c := range cells {
+		out = appendCell(out, c)
+	}
+	return out
+}
+
 // transform applies the requested operation (delete, squeeze, translate, or a
-// combination) to s and returns the result.
-func transform(s string, set1, set2 []rune, opts options) string {
-	in := []rune(s)
+// combination) to data and returns the result.
+func transform(data []byte, set1, set2 []rune, opts options) []byte {
+	in := decodeCells(data)
 
 	// Resolve which runes SET1 selects, honoring -c/-C complement.
 	inSet1 := membership(set1, opts.complement)
 
-	var b strings.Builder
-	b.Grow(len(in))
+	out := make([]byte, 0, len(data))
 
 	switch {
 	case opts.delete:
 		// Delete chars in SET1, then optionally squeeze repeats from SET2.
-		var del strings.Builder
-		for _, r := range in {
-			if !inSet1(r) {
-				del.WriteRune(r)
+		kept := make([]cell, 0, len(in))
+		for _, c := range in {
+			if !inSet1(c.r) {
+				kept = append(kept, c)
 			}
 		}
 		if opts.squeeze && len(set2) > 0 {
 			inSet2 := membership(set2, false)
-			writeSqueezed(&b, []rune(del.String()), inSet2)
+			out = writeSqueezed(out, kept, inSet2)
 		} else {
-			b.WriteString(del.String())
+			out = appendCells(out, kept)
 		}
 	case opts.squeeze && len(set2) == 0:
 		// Squeeze only: collapse runs of characters in SET1.
-		writeSqueezed(&b, in, inSet1)
+		out = writeSqueezed(out, in, inSet1)
 	default:
 		// Translate SET1 -> SET2, then optionally squeeze repeats from SET2.
-		mapped := translateRunes(in, set1, set2, opts.complement)
+		mapped := translateCells(in, set1, set2, opts.complement)
 		if opts.squeeze {
 			inSet2 := membership(set2, false)
-			writeSqueezed(&b, mapped, inSet2)
+			out = writeSqueezed(out, mapped, inSet2)
 		} else {
-			b.WriteString(string(mapped))
+			out = appendCells(out, mapped)
 		}
 	}
-	return b.String()
+	return out
 }
 
-// translateRunes maps each rune of in according to SET1 -> SET2. With the
-// complement flag, every rune not in SET1 maps to the last rune of SET2 (GNU
+// mapped returns c translated to rune to, keeping the raw-byte representation
+// when the result still fits in a single byte (so a translated binary byte is
+// written as a byte, not as multi-byte UTF-8).
+func (c cell) mapped(to rune) cell {
+	return cell{r: to, raw: c.raw && to <= 0xFF}
+}
+
+// translateCells maps each cell of in according to SET1 -> SET2. With the
+// complement flag, every cell not in SET1 maps to the last rune of SET2 (GNU
 // behavior). Otherwise the i-th rune of SET1 maps to the i-th rune of SET2; when
 // SET2 is shorter, its last rune is repeated to pad it.
-func translateRunes(in, set1, set2 []rune, complement bool) []rune {
+func translateCells(in []cell, set1, set2 []rune, complement bool) []cell {
 	if len(set2) == 0 {
 		return in
 	}
-	out := make([]rune, 0, len(in))
+	out := make([]cell, 0, len(in))
 	if complement {
 		inSet1 := make(map[rune]struct{}, len(set1))
 		for _, r := range set1 {
 			inSet1[r] = struct{}{}
 		}
 		last := set2[len(set2)-1]
-		for _, r := range in {
-			if _, ok := inSet1[r]; ok {
-				out = append(out, r)
+		for _, c := range in {
+			if _, ok := inSet1[c.r]; ok {
+				out = append(out, c)
 			} else {
-				out = append(out, last)
+				out = append(out, c.mapped(last))
 			}
 		}
 		return out
@@ -199,11 +246,11 @@ func translateRunes(in, set1, set2 []rune, complement bool) []rune {
 			m[r] = set2[len(set2)-1]
 		}
 	}
-	for _, r := range in {
-		if to, ok := m[r]; ok {
-			out = append(out, to)
+	for _, c := range in {
+		if to, ok := m[c.r]; ok {
+			out = append(out, c.mapped(to))
 		} else {
-			out = append(out, r)
+			out = append(out, c)
 		}
 	}
 	return out
@@ -225,19 +272,20 @@ func membership(set []rune, complement bool) func(rune) bool {
 	}
 }
 
-// writeSqueezed writes runes to b, collapsing each run of repeated characters
+// writeSqueezed appends cells to out, collapsing each run of repeated characters
 // for which selected reports true into a single occurrence.
-func writeSqueezed(b *strings.Builder, in []rune, selected func(rune) bool) {
+func writeSqueezed(out []byte, in []cell, selected func(rune) bool) []byte {
 	var prev rune
 	havePrev := false
-	for _, r := range in {
-		if havePrev && r == prev && selected(r) {
+	for _, c := range in {
+		if havePrev && c.r == prev && selected(c.r) {
 			continue
 		}
-		b.WriteRune(r)
-		prev = r
+		out = appendCell(out, c)
+		prev = c.r
 		havePrev = true
 	}
+	return out
 }
 
 // expandSet expands a tr SET specification into its sequence of runes,

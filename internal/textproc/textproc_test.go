@@ -43,6 +43,30 @@ func TestCountReader(t *testing.T) {
 			input: "",
 			want:  textproc.Count{},
 		},
+		{
+			// A lone NUL byte is not a word: GNU wc counts only printable,
+			// non-space characters as starting a word (issue #953).
+			name:  "lone NUL is not a word",
+			input: "\x00",
+			want:  textproc.Count{Lines: 0, Words: 0, Runes: 1, Bytes: 1, MaxLineWidth: 1},
+		},
+		{
+			name:  "lone control byte is not a word",
+			input: "\x01",
+			want:  textproc.Count{Lines: 0, Words: 0, Runes: 1, Bytes: 1, MaxLineWidth: 1},
+		},
+		{
+			// A control byte between letters is transparent: it neither starts
+			// nor ends a word, so "a\x01b" is a single word like GNU wc.
+			name:  "control byte does not split a word",
+			input: "a\x01b",
+			want:  textproc.Count{Lines: 0, Words: 1, Runes: 3, Bytes: 3, MaxLineWidth: 3},
+		},
+		{
+			name:  "invalid UTF-8 byte is not a word",
+			input: "\xff",
+			want:  textproc.Count{Lines: 0, Words: 0, Runes: 1, Bytes: 1, MaxLineWidth: 1},
+		},
 	}
 	for _, tt := range tests {
 		tt := tt

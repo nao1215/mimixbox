@@ -57,9 +57,17 @@ func CountReader(r io.Reader) (Count, error) {
 			} else {
 				lineWidth++
 			}
-			if unicode.IsSpace(ru) {
+			// Word boundaries follow GNU wc: only a printable, non-space
+			// character starts a word. White space ends the current word, while
+			// control bytes and invalid UTF-8 bytes are transparent — they
+			// neither start nor end a word — so "a\x01b" is one word and a lone
+			// NUL/control byte is zero words (issue #953). An invalid byte is
+			// reported by ReadRune as RuneError with size 1.
+			invalidByte := ru == unicode.ReplacementChar && size == 1
+			switch {
+			case unicode.IsSpace(ru):
 				inWord = false
-			} else if !inWord {
+			case !invalidByte && unicode.IsPrint(ru) && !inWord:
 				inWord = true
 				c.Words++
 			}
