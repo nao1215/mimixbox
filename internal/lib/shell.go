@@ -23,9 +23,6 @@ import (
 	"os/user"
 	"path/filepath"
 	"strings"
-	"syscall"
-
-	"golang.org/x/term"
 )
 
 func ExistCmd(cmd string) bool {
@@ -90,18 +87,6 @@ func ParrotFrom(in io.Reader, out io.Writer, withNl bool) {
 	}
 }
 
-func Input() (string, bool) {
-	var response string
-
-	_, err := fmt.Scanln(&response)
-	if err != nil {
-		if !strings.Contains(err.Error(), "expected newline") {
-			return "", false // Ctrl+D or other error.
-		}
-	}
-	return response, true
-}
-
 func WrapString(src string, column int) string {
 	var buf []string
 
@@ -156,21 +141,6 @@ func PrintStrListWithNumberLineTo(w io.Writer, strList []string, countEmpryLine 
 // PrintStrWithNumberLineTo writes one numbered line to w.
 func PrintStrWithNumberLineTo(w io.Writer, nl int, format string, message string) {
 	fmt.Fprintf(w, format, nl, message)
-}
-
-func FromPIPE() (string, error) {
-	if HasPipeData() {
-		b, err := io.ReadAll(os.Stdin)
-		if err != nil {
-			return "", err
-		}
-		return string(b), nil
-	}
-	return "", nil
-}
-
-func HasPipeData() bool {
-	return !term.IsTerminal(syscall.Stdin)
 }
 
 func ChopAll(lines []string) []string {
