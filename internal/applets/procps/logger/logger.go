@@ -83,7 +83,10 @@ func (c *Command) Run(_ context.Context, stdio command.IO, args []string) error 
 	if rest := fs.Args(); len(rest) > 0 {
 		message = strings.Join(rest, " ")
 	} else {
-		data, _ := io.ReadAll(stdio.In)
+		data, err := io.ReadAll(stdio.In)
+		if err != nil {
+			return command.Failuref("%v", err)
+		}
 		message = strings.TrimRight(string(data), "\n")
 	}
 

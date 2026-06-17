@@ -3,6 +3,7 @@ package vi_test
 import (
 	"bytes"
 	"context"
+	"errors"
 	"os"
 	"path/filepath"
 	"strings"
@@ -20,6 +21,26 @@ func run(t *testing.T, stdin string, args ...string) (string, string, error) {
 	io := command.IO{In: strings.NewReader(stdin), Out: out, Err: errBuf}
 	err := vi.New().Run(context.Background(), io, args)
 	return out.String(), errBuf.String(), err
+}
+
+// errReader fails on the first read, modeling an unreadable stdin (e.g. stdin
+// redirected from a directory, which makes read(0) fail with EISDIR).
+type errReader struct{}
+
+func (errReader) Read([]byte) (int, error) { return 0, errors.New("is a directory") }
+
+func TestBatchStdinReadErrorIsReported(t *testing.T) {
+	t.Parallel()
+	out := &bytes.Buffer{}
+	errBuf := &bytes.Buffer{}
+	io := command.IO{In: errReader{}, Out: out, Err: errBuf}
+	err := vi.New().Run(context.Background(), io, nil)
+	if err == nil {
+		t.Fatal("vi must report an unreadable stdin instead of treating it as empty")
+	}
+	if !strings.Contains(errBuf.String(), "is a directory") {
+		t.Errorf("stderr = %q, want the read error", errBuf.String())
+	}
 }
 
 func TestNameSynopsis(t *testing.T) {

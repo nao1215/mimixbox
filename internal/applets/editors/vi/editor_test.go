@@ -302,7 +302,9 @@ func TestRunInteractiveFallsBackOnPipe(t *testing.T) {
 
 	e := newEditor("f", "abc")
 	out := &bytes.Buffer{}
-	runInteractive(command.IO{In: r, Out: out, Err: &bytes.Buffer{}}, e)
+	if err := runInteractive(command.IO{In: r, Out: out, Err: &bytes.Buffer{}}, e); err != nil {
+		t.Fatalf("runInteractive batch fallback error = %v", err)
+	}
 
 	if e.lines[0] != "bc" {
 		t.Errorf("batch fallback should have applied 'x': lines[0] = %q", e.lines[0])
