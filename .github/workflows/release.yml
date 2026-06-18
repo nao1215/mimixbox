@@ -22,10 +22,15 @@ jobs:
       - name: Generate dependency licenses
         # Produce the licenses/ directory bundled into the release archives.
         # Uses the same invocation as the Makefile "licenses" target so local
-        # and release output stay in sync.
+        # and release output stay in sync. The --ignore prefixes skip a few
+        # transitive deps whose license files go-licenses cannot auto-classify
+        # (freetype uses a non-standard file name; modernc.org/mathutil lacks a
+        # recognized one), which would otherwise abort the release.
         run: |
           go install github.com/google/go-licenses@latest
-          go-licenses save ./cmd/mimixbox --force --save_path "licenses/"
+          go-licenses save ./cmd/mimixbox --force --save_path "licenses/" \
+            --ignore github.com/golang/freetype \
+            --ignore modernc.org/mathutil
       - name: Run GoReleaser
         uses: goreleaser/goreleaser-action@v7
         with:

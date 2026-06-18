@@ -93,8 +93,13 @@ licenses: ## Get licenses for dependent libraries
 	# build; the release workflow (.github/workflows/release.yml) installs and
 	# runs go-licenses with this exact invocation before GoReleaser packages the
 	# licenses/ directory into the shipped archives.
+	# The --ignore prefixes skip transitive deps whose license files
+	# go-licenses cannot auto-classify (freetype uses a non-standard file name;
+	# modernc.org/mathutil lacks a recognized one), which would otherwise abort.
 	@if command -v go-licenses >/dev/null 2>&1; then \
-		go-licenses save ./cmd/mimixbox --force --save_path "licenses/"; \
+		go-licenses save ./cmd/mimixbox --force --save_path "licenses/" \
+			--ignore github.com/golang/freetype \
+			--ignore modernc.org/mathutil; \
 	else \
 		echo "WARNING: go-licenses not found; skipping dependency-license generation."; \
 		echo "         Install it with: go install github.com/google/go-licenses@latest"; \
