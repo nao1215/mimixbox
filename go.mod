@@ -15,7 +15,7 @@ require (
 	golang.org/x/crypto v0.53.0
 	golang.org/x/sys v0.46.0
 	golang.org/x/term v0.44.0
-	modernc.org/sqlite v1.52.0
+	modernc.org/sqlite v1.53.0
 )
 
 require (
@@ -33,7 +33,7 @@ require (
 	golang.org/x/image v0.0.0-20211028202545-6944b10bf410 // indirect
 	gopkg.in/check.v1 v1.0.0-20180628173108-788fd7840127 // indirect
 	gopkg.in/yaml.v3 v3.0.1 // indirect
-	modernc.org/libc v1.72.3 // indirect
+	modernc.org/libc v1.73.4 // indirect
 	modernc.org/mathutil v1.7.1 // indirect
 	modernc.org/memory v1.11.0 // indirect
 )
