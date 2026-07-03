@@ -52,8 +52,12 @@ test: pre_ut  ## Run unit tests with coverage (writes cover.out / cover.html)
 	rm -rf /tmp/mimixbox/ut/*; \
 	exit $$status
 
+# --parallel 1 on purpose (atago defaults to NumCPU): kill-family scenarios
+# (killall/pkill/pgrep) signal processes BY NAME, so running them alongside
+# other scenarios' `sleep` processes would be a cross-scenario race
+# (ShellSpec was sequential too).
 e2e: ## Run the atago end-to-end tests against MimixBox applets in an isolated PATH
-	./e2e/run.sh --parallel 8
+	./e2e/run.sh --parallel 1
 
 lint: ## Run golangci-lint
 	golangci-lint run ./...
