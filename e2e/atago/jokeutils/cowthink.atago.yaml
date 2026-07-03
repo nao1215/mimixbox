@@ -1,0 +1,19 @@
+# Migrated from mimixbox's ShellSpec test/it/spec/cowthink_spec.sh
+# (+ jokeutils/cowthink_test.sh). The helper pipes cowthink through head/tail to
+# pluck the 4th line (the thought-bubble connector), so this needs a shell. The
+# expected line has leading spaces, so it is a double-quoted scalar.
+version: "1"
+
+suite:
+  name: mimixbox cowthink
+
+scenarios:
+  - name: draws the thought-bubble connector
+    steps:
+      - run:
+          shell: true
+          command: cowthink hi | head -n 4 | tail -n 1
+      - assert:
+          exit_code: 0
+          stdout:
+            equals: "   o"

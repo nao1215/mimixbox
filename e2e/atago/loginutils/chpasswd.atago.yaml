@@ -1,0 +1,28 @@
+# Migrated from mimixbox's ShellSpec test/it/spec/chpasswd_spec.sh
+# (+ loginutils/chpasswd_test.sh). chpasswd writes /etc/shadow (privileged);
+# the e2e exercises the deterministic unknown-method path and --help.
+version: "1"
+
+suite:
+  name: mimixbox chpasswd
+
+scenarios:
+  - name: rejects an unknown method
+    steps:
+      # Error case: direct exec, but chpasswd reads user:password from stdin.
+      - run:
+          command: chpasswd -c bogus
+          stdin: "alice:secret\n"
+      - assert:
+          exit_code: { not: 0 }
+
+  - name: describes itself with --help
+    steps:
+      - run:
+          command: chpasswd --help
+      - assert:
+          exit_code: 0
+          stdout:
+            contains:
+              - "Usage: chpasswd"
+              - "password"

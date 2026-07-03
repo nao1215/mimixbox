@@ -1,0 +1,18 @@
+# Migrated from mimixbox's ShellSpec test/it/spec/brctl_spec.sh (no helper; inline --help contract).
+# Universal --help contract (Issue #477): exit 0, "Usage: brctl" on stdout, empty stderr.
+version: "1"
+
+suite:
+  name: mimixbox brctl
+
+scenarios:
+  - name: describes itself with --help
+    steps:
+      - run:
+          command: brctl --help
+      - assert:
+          exit_code: 0
+          stdout:
+            contains: "Usage: brctl"
+          stderr:
+            empty: true

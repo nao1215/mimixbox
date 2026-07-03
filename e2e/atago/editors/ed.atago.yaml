@@ -1,0 +1,43 @@
+# Migrated from mimixbox's ShellSpec test/it/spec/ed_spec.sh (+ editors/ed_test.sh).
+# Setup builds buf.txt; here a fixture builds it in the workdir. The ed command
+# script is fed via run.stdin. The append/substitute cases write the buffer then
+# read it back, so they use a shell to chain `ed >/dev/null && cat`.
+version: "1"
+
+suite:
+  name: mimixbox ed
+
+scenarios:
+  - name: prints the buffer with size
+    steps:
+      - fixture: { file: buf.txt, content: "one\ntwo\nthree\n" }
+      - run:
+          command: "ed buf.txt"
+          stdin: "1,$p\nq\n"
+      - assert:
+          exit_code: 0
+          stdout: { equals: "14\none\ntwo\nthree" }
+
+  - name: appends a line and writes it
+    steps:
+      - fixture: { file: buf.txt, content: "one\ntwo\nthree\n" }
+      - run:
+          shell: true
+          command: |
+            printf '2a\nINSERTED\n.\nw\nq\n' | ed buf.txt > /dev/null
+            cat buf.txt
+      - assert:
+          exit_code: 0
+          stdout: { equals: "one\ntwo\nINSERTED\nthree" }
+
+  - name: substitutes text on a line
+    steps:
+      - fixture: { file: buf.txt, content: "one\ntwo\nthree\n" }
+      - run:
+          shell: true
+          command: |
+            printf '2s/two/TWO/\nw\nq\n' | ed buf.txt > /dev/null
+            cat buf.txt
+      - assert:
+          exit_code: 0
+          stdout: { equals: "one\nTWO\nthree" }

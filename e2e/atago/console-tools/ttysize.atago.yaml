@@ -1,0 +1,28 @@
+# Migrated from mimixbox's ShellSpec test/it/spec/ttysize_spec.sh.
+# Run without a controlling tty, so ttysize reports the 80x24 default (atago
+# runs commands with a non-terminal stdin).
+version: "1"
+
+suite:
+  name: mimixbox ttysize
+
+scenarios:
+  - name: prints width and height
+    steps:
+      - run:
+          command: ttysize
+          stdin: ""
+      - assert:
+          exit_code: 0
+          stdout:
+            equals: "80 24"
+
+  - name: prints just the width with w
+    steps:
+      - run:
+          command: ttysize w
+          stdin: ""
+      - assert:
+          exit_code: 0
+          stdout:
+            equals: "80"

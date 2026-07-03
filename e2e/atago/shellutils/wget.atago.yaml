@@ -1,0 +1,38 @@
+# Migrated from mimixbox's ShellSpec test/it/spec/wget_spec.sh (+ shellutils/wget_test.sh).
+version: "1"
+
+suite:
+  name: mimixbox wget
+
+scenarios:
+  - name: prints usage with --help and exits 0
+    steps:
+      - run:
+          command: wget --help
+      - assert:
+          exit_code: 0
+          stdout:
+            contains: "Usage: wget"
+
+  - name: fails with a message when given no operand
+    steps:
+      - run:
+          command: wget
+      - assert:
+          exit_code: { not: 0 }
+          stderr:
+            contains: "wget"
+
+  - name: documents the added download options
+    steps:
+      - run:
+          command: wget --help
+      - assert:
+          exit_code: 0
+          stdout:
+            contains:
+              - "--directory-prefix"
+              - "--continue"
+              - "--timeout"
+              - "--tries"
+              - "--user-agent"

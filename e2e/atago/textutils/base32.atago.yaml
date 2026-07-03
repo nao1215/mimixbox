@@ -1,0 +1,26 @@
+# Migrated from mimixbox's ShellSpec test/it/spec/base32_spec.sh (+ textutils/base32_test.sh).
+version: "1"
+
+suite:
+  name: mimixbox base32
+
+scenarios:
+  - name: encodes standard input
+    steps:
+      - run:
+          shell: true
+          command: printf 'hello\n' | base32
+      - assert:
+          exit_code: 0
+          stdout:
+            equals: "NBSWY3DPBI======"
+
+  - name: decodes standard input
+    steps:
+      - run:
+          shell: true
+          command: printf 'NBSWY3DPBI======\n' | base32 -d
+      - assert:
+          exit_code: 0
+          stdout:
+            equals: "hello"

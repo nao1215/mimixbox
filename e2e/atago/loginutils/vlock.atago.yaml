@@ -1,0 +1,28 @@
+# Migrated from mimixbox's ShellSpec test/it/spec/vlock_spec.sh
+# (+ loginutils/vlock_test.sh). vlock verifies the current user's password
+# against the system backend; the e2e exercises the wrong-password path and --help.
+version: "1"
+
+suite:
+  name: mimixbox vlock
+
+scenarios:
+  - name: fails on a wrong password
+    steps:
+      # Error case -> direct exec. vlock reads the password from stdin.
+      - run:
+          command: vlock
+          stdin: "definitely_wrong_xyz\n"
+      - assert:
+          exit_code: { not: 0 }
+
+  - name: describes itself with --help
+    steps:
+      - run:
+          command: vlock --help
+      - assert:
+          exit_code: 0
+          stdout:
+            contains:
+              - "Usage: vlock"
+              - "terminal"

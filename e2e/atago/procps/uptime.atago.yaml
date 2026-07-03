@@ -1,0 +1,27 @@
+# Migrated from mimixbox's ShellSpec test/it/spec/uptime_spec.sh (no helper; inline).
+# Universal --help contract (Issue #477) plus an uptime/load-line behavior case.
+version: "1"
+
+suite:
+  name: mimixbox uptime
+
+scenarios:
+  - name: describes itself with --help
+    steps:
+      - run:
+          command: uptime --help
+      - assert:
+          exit_code: 0
+          stdout:
+            contains: "Usage: uptime"
+          stderr:
+            empty: true
+
+  - name: prints an uptime/load line
+    steps:
+      - run:
+          command: uptime
+      - assert:
+          exit_code: 0
+          stdout:
+            contains: "load average:"

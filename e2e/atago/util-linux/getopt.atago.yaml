@@ -1,0 +1,31 @@
+# Migrated from mimixbox's ShellSpec test/it/spec/getopt_spec.sh.
+# (Its Test functions live in test/it/util-linux/hexdump_test.sh.)
+version: "1"
+
+suite:
+  name: mimixbox getopt
+
+scenarios:
+  - name: normalizes short and long options with quoted args
+    steps:
+      - run:
+          command: "getopt -o ab: --long alpha,beta: -- -a -b val --alpha pos"
+      - assert:
+          exit_code: 0
+          stdout:
+            contains:
+              - "-b 'val'"
+              - "--alpha"
+              - "-- 'pos'"
+
+  - name: produces output a script can eval
+    steps:
+      # eval set -- "$(getopt ...)"; printf '%s|' "$@" — needs command
+      # substitution, set, and printf, so shell:true.
+      - run:
+          shell: true
+          command: 'eval set -- "$(getopt -o n: -- -n hello world)"; printf ''%s|'' "$@"'
+      - assert:
+          exit_code: 0
+          stdout:
+            equals: "-n|hello|--|world|"

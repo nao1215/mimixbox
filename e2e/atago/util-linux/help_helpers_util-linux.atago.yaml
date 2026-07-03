@@ -1,0 +1,135 @@
+# Migrated from mimixbox's ShellSpec test/it/spec/help_helpers_util-linux_spec.sh.
+# Per-command --help contract specs (issue #489): each util-linux applet exposes
+# a dedicated --help helper that exits 0 and prints a "Usage:" line. The helpers
+# invoke `env -- '<cmd>' --help` (a simple single command → direct exec).
+version: "1"
+
+suite:
+  name: mimixbox util-linux --help helpers
+
+scenarios:
+  - name: fallocate --help is structured
+    steps:
+      - run:
+          command: env -- fallocate --help
+      - assert:
+          exit_code: 0
+          stdout:
+            contains: "Usage:"
+
+  - name: fsck.minix --help is structured
+    steps:
+      - run:
+          command: env -- fsck.minix --help
+      - assert:
+          exit_code: 0
+          stdout:
+            contains: "Usage:"
+
+  - name: linux32 --help is structured
+    steps:
+      - run:
+          command: env -- linux32 --help
+      - assert:
+          exit_code: 0
+          stdout:
+            contains: "Usage:"
+
+  - name: linux64 --help is structured
+    steps:
+      - run:
+          command: env -- linux64 --help
+      - assert:
+          exit_code: 0
+          stdout:
+            contains: "Usage:"
+
+  - name: mkdosfs --help is structured
+    steps:
+      - run:
+          command: env -- mkdosfs --help
+      - assert:
+          exit_code: 0
+          stdout:
+            contains: "Usage:"
+
+  - name: mkfs.ext2 --help is structured
+    steps:
+      - run:
+          command: env -- mkfs.ext2 --help
+      - assert:
+          exit_code: 0
+          stdout:
+            contains: "Usage:"
+
+  - name: mkfs.minix --help is structured
+    steps:
+      - run:
+          command: env -- mkfs.minix --help
+      - assert:
+          exit_code: 0
+          stdout:
+            contains: "Usage:"
+
+  - name: mkfs.reiser --help is structured
+    steps:
+      - run:
+          command: env -- mkfs.reiser --help
+      - assert:
+          exit_code: 0
+          stdout:
+            contains: "Usage:"
+
+  - name: mkfs.vfat --help is structured
+    steps:
+      - run:
+          command: env -- mkfs.vfat --help
+      - assert:
+          exit_code: 0
+          stdout:
+            contains: "Usage:"
+
+  - name: scriptreplay --help is structured
+    steps:
+      - run:
+          command: env -- scriptreplay --help
+      - assert:
+          exit_code: 0
+          stdout:
+            contains: "Usage:"
+
+  - name: setsid --help is structured
+    steps:
+      - run:
+          command: env -- setsid --help
+      - assert:
+          exit_code: 0
+          stdout:
+            contains: "Usage:"
+
+  - name: sh --help is structured
+    steps:
+      - run:
+          command: env -- sh --help
+      - assert:
+          exit_code: 0
+          stdout:
+            contains: "Usage:"
+
+  - name: swapoff --help is structured
+    steps:
+      - run:
+          command: env -- swapoff --help
+      - assert:
+          exit_code: 0
+          stdout:
+            contains: "Usage:"
+
+  - name: swapon --help is structured
+    steps:
+      - run:
+          command: env -- swapon --help
+      - assert:
+          exit_code: 0
+          stdout:
+            contains: "Usage:"

@@ -1,0 +1,45 @@
+# Migrated from mimixbox's ShellSpec test/it/spec/dc_spec.sh (+ shellutils/dc_test.sh).
+version: "1"
+
+suite:
+  name: mimixbox dc
+
+scenarios:
+  - name: performs integer division
+    steps:
+      - run:
+          shell: true
+          command: echo '6 3 / p' | dc
+      - assert:
+          exit_code: 0
+          stdout:
+            equals: "2"
+
+  - name: honors the precision register
+    steps:
+      - run:
+          shell: true
+          command: echo '2k 7 3 / p' | dc
+      - assert:
+          exit_code: 0
+          stdout:
+            equals: "2.33"
+
+  - name: evaluates -e expressions
+    steps:
+      - run:
+          command: dc -e '2 10 ^ p'
+      - assert:
+          exit_code: 0
+          stdout:
+            equals: "1024"
+
+  - name: stores and loads registers
+    steps:
+      - run:
+          shell: true
+          command: echo '5 sa 3 la + p' | dc
+      - assert:
+          exit_code: 0
+          stdout:
+            equals: "8"

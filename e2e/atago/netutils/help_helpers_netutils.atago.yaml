@@ -1,0 +1,506 @@
+# Migrated from mimixbox's ShellSpec test/it/spec/help_helpers_netutils_spec.sh
+# (+ netutils/<cmd>_test.sh for each command below).
+# Per-command --help contract specs (issue #489): each command's --help exits 0
+# and prints a 'Usage:' line. The ShellSpec wrapped each in 'env -- CMD --help';
+# direct exec of CMD --help is the equivalent.
+version: "1"
+
+suite:
+  name: mimixbox netutils --help helpers
+
+scenarios:
+  - name: arp --help is structured
+    steps:
+      - run:
+          command: arp --help
+      - assert:
+          exit_code: 0
+          stdout:
+            contains: "Usage:"
+
+  - name: arping --help is structured
+    steps:
+      - run:
+          command: arping --help
+      - assert:
+          exit_code: 0
+          stdout:
+            contains: "Usage:"
+
+  - name: brctl --help is structured
+    steps:
+      - run:
+          command: brctl --help
+      - assert:
+          exit_code: 0
+          stdout:
+            contains: "Usage:"
+
+  - name: dhcprelay --help is structured
+    steps:
+      - run:
+          command: dhcprelay --help
+      - assert:
+          exit_code: 0
+          stdout:
+            contains: "Usage:"
+
+  - name: dnsd --help is structured
+    steps:
+      - run:
+          command: dnsd --help
+      - assert:
+          exit_code: 0
+          stdout:
+            contains: "Usage:"
+
+  - name: dnsdomainname --help is structured
+    steps:
+      - run:
+          command: dnsdomainname --help
+      - assert:
+          exit_code: 0
+          stdout:
+            contains: "Usage:"
+
+  - name: dumpleases --help is structured
+    steps:
+      - run:
+          command: dumpleases --help
+      - assert:
+          exit_code: 0
+          stdout:
+            contains: "Usage:"
+
+  - name: ether-wake --help is structured
+    steps:
+      - run:
+          command: ether-wake --help
+      - assert:
+          exit_code: 0
+          stdout:
+            contains: "Usage:"
+
+  - name: fakeidentd --help is structured
+    steps:
+      - run:
+          command: fakeidentd --help
+      - assert:
+          exit_code: 0
+          stdout:
+            contains: "Usage:"
+
+  - name: ftpd --help is structured
+    steps:
+      - run:
+          command: ftpd --help
+      - assert:
+          exit_code: 0
+          stdout:
+            contains: "Usage:"
+
+  - name: ftpget --help is structured
+    steps:
+      - run:
+          command: ftpget --help
+      - assert:
+          exit_code: 0
+          stdout:
+            contains: "Usage:"
+
+  - name: ftpput --help is structured
+    steps:
+      - run:
+          command: ftpput --help
+      - assert:
+          exit_code: 0
+          stdout:
+            contains: "Usage:"
+
+  - name: http-status-code --help is structured
+    steps:
+      - run:
+          command: http-status-code --help
+      - assert:
+          exit_code: 0
+          stdout:
+            contains: "Usage:"
+
+  - name: httpd --help is structured
+    steps:
+      - run:
+          command: httpd --help
+      - assert:
+          exit_code: 0
+          stdout:
+            contains: "Usage:"
+
+  - name: ifconfig --help is structured
+    steps:
+      - run:
+          command: ifconfig --help
+      - assert:
+          exit_code: 0
+          stdout:
+            contains: "Usage:"
+
+  - name: ifdown --help is structured
+    steps:
+      - run:
+          command: ifdown --help
+      - assert:
+          exit_code: 0
+          stdout:
+            contains: "Usage:"
+
+  - name: ifenslave --help is structured
+    steps:
+      - run:
+          command: ifenslave --help
+      - assert:
+          exit_code: 0
+          stdout:
+            contains: "Usage:"
+
+  - name: ifplugd --help is structured
+    steps:
+      - run:
+          command: ifplugd --help
+      - assert:
+          exit_code: 0
+          stdout:
+            contains: "Usage:"
+
+  - name: ifup --help is structured
+    steps:
+      - run:
+          command: ifup --help
+      - assert:
+          exit_code: 0
+          stdout:
+            contains: "Usage:"
+
+  - name: inetd --help is structured
+    steps:
+      - run:
+          command: inetd --help
+      - assert:
+          exit_code: 0
+          stdout:
+            contains: "Usage:"
+
+  - name: ip --help is structured
+    steps:
+      - run:
+          command: ip --help
+      - assert:
+          exit_code: 0
+          stdout:
+            contains: "Usage:"
+
+  - name: ipaddr --help is structured
+    steps:
+      - run:
+          command: ipaddr --help
+      - assert:
+          exit_code: 0
+          stdout:
+            contains: "Usage:"
+
+  - name: iplink --help is structured
+    steps:
+      - run:
+          command: iplink --help
+      - assert:
+          exit_code: 0
+          stdout:
+            contains: "Usage:"
+
+  - name: ipneigh --help is structured
+    steps:
+      - run:
+          command: ipneigh --help
+      - assert:
+          exit_code: 0
+          stdout:
+            contains: "Usage:"
+
+  - name: iproute --help is structured
+    steps:
+      - run:
+          command: iproute --help
+      - assert:
+          exit_code: 0
+          stdout:
+            contains: "Usage:"
+
+  - name: iprule --help is structured
+    steps:
+      - run:
+          command: iprule --help
+      - assert:
+          exit_code: 0
+          stdout:
+            contains: "Usage:"
+
+  - name: iptunnel --help is structured
+    steps:
+      - run:
+          command: iptunnel --help
+      - assert:
+          exit_code: 0
+          stdout:
+            contains: "Usage:"
+
+  - name: nameif --help is structured
+    steps:
+      - run:
+          command: nameif --help
+      - assert:
+          exit_code: 0
+          stdout:
+            contains: "Usage:"
+
+  - name: nbd-client --help is structured
+    steps:
+      - run:
+          command: nbd-client --help
+      - assert:
+          exit_code: 0
+          stdout:
+            contains: "Usage:"
+
+  - name: netcat --help is structured
+    steps:
+      - run:
+          command: netcat --help
+      - assert:
+          exit_code: 0
+          stdout:
+            contains: "Usage:"
+
+  - name: netstat --help is structured
+    steps:
+      - run:
+          command: netstat --help
+      - assert:
+          exit_code: 0
+          stdout:
+            contains: "Usage:"
+
+  - name: nslookup --help is structured
+    steps:
+      - run:
+          command: nslookup --help
+      - assert:
+          exit_code: 0
+          stdout:
+            contains: "Usage:"
+
+  - name: ntpd --help is structured
+    steps:
+      - run:
+          command: ntpd --help
+      - assert:
+          exit_code: 0
+          stdout:
+            contains: "Usage:"
+
+  - name: ping6 --help is structured
+    steps:
+      - run:
+          command: ping6 --help
+      - assert:
+          exit_code: 0
+          stdout:
+            contains: "Usage:"
+
+  - name: pscan --help is structured
+    steps:
+      - run:
+          command: pscan --help
+      - assert:
+          exit_code: 0
+          stdout:
+            contains: "Usage:"
+
+  - name: route --help is structured
+    steps:
+      - run:
+          command: route --help
+      - assert:
+          exit_code: 0
+          stdout:
+            contains: "Usage:"
+
+  - name: slattach --help is structured
+    steps:
+      - run:
+          command: slattach --help
+      - assert:
+          exit_code: 0
+          stdout:
+            contains: "Usage:"
+
+  - name: ssl_client --help is structured
+    steps:
+      - run:
+          command: ssl_client --help
+      - assert:
+          exit_code: 0
+          stdout:
+            contains: "Usage:"
+
+  - name: ssl_server --help is structured
+    steps:
+      - run:
+          command: ssl_server --help
+      - assert:
+          exit_code: 0
+          stdout:
+            contains: "Usage:"
+
+  - name: tc --help is structured
+    steps:
+      - run:
+          command: tc --help
+      - assert:
+          exit_code: 0
+          stdout:
+            contains: "Usage:"
+
+  - name: tcpsvd --help is structured
+    steps:
+      - run:
+          command: tcpsvd --help
+      - assert:
+          exit_code: 0
+          stdout:
+            contains: "Usage:"
+
+  - name: telnet --help is structured
+    steps:
+      - run:
+          command: telnet --help
+      - assert:
+          exit_code: 0
+          stdout:
+            contains: "Usage:"
+
+  - name: telnetd --help is structured
+    steps:
+      - run:
+          command: telnetd --help
+      - assert:
+          exit_code: 0
+          stdout:
+            contains: "Usage:"
+
+  - name: tftp --help is structured
+    steps:
+      - run:
+          command: tftp --help
+      - assert:
+          exit_code: 0
+          stdout:
+            contains: "Usage:"
+
+  - name: tftpd --help is structured
+    steps:
+      - run:
+          command: tftpd --help
+      - assert:
+          exit_code: 0
+          stdout:
+            contains: "Usage:"
+
+  - name: traceroute --help is structured
+    steps:
+      - run:
+          command: traceroute --help
+      - assert:
+          exit_code: 0
+          stdout:
+            contains: "Usage:"
+
+  - name: traceroute6 --help is structured
+    steps:
+      - run:
+          command: traceroute6 --help
+      - assert:
+          exit_code: 0
+          stdout:
+            contains: "Usage:"
+
+  - name: tunctl --help is structured
+    steps:
+      - run:
+          command: tunctl --help
+      - assert:
+          exit_code: 0
+          stdout:
+            contains: "Usage:"
+
+  - name: udhcpc --help is structured
+    steps:
+      - run:
+          command: udhcpc --help
+      - assert:
+          exit_code: 0
+          stdout:
+            contains: "Usage:"
+
+  - name: udhcpc6 --help is structured
+    steps:
+      - run:
+          command: udhcpc6 --help
+      - assert:
+          exit_code: 0
+          stdout:
+            contains: "Usage:"
+
+  - name: udhcpd --help is structured
+    steps:
+      - run:
+          command: udhcpd --help
+      - assert:
+          exit_code: 0
+          stdout:
+            contains: "Usage:"
+
+  - name: udpsvd --help is structured
+    steps:
+      - run:
+          command: udpsvd --help
+      - assert:
+          exit_code: 0
+          stdout:
+            contains: "Usage:"
+
+  - name: vconfig --help is structured
+    steps:
+      - run:
+          command: vconfig --help
+      - assert:
+          exit_code: 0
+          stdout:
+            contains: "Usage:"
+
+  - name: whois --help is structured
+    steps:
+      - run:
+          command: whois --help
+      - assert:
+          exit_code: 0
+          stdout:
+            contains: "Usage:"
+
+  - name: zcip --help is structured
+    steps:
+      - run:
+          command: zcip --help
+      - assert:
+          exit_code: 0
+          stdout:
+            contains: "Usage:"
+

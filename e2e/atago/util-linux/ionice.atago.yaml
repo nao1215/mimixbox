@@ -1,0 +1,27 @@
+# Migrated from mimixbox's ShellSpec test/it/spec/ionice_spec.sh.
+version: "1"
+
+suite:
+  name: mimixbox ionice
+
+scenarios:
+  - name: prints a process I/O class
+    steps:
+      # ionice -p $$ | grep -cE 'prio|idle' → one matching line. $$ + pipe
+      # require shell:true.
+      - run:
+          shell: true
+          command: ionice -p $$ | grep -cE 'prio|idle'
+      - assert:
+          exit_code: 0
+          stdout:
+            equals: "1"
+
+  - name: runs a command at a given I/O class
+    steps:
+      - run:
+          command: ionice -c 3 -- echo idled
+      - assert:
+          exit_code: 0
+          stdout:
+            equals: "idled"

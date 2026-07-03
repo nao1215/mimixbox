@@ -1,0 +1,16 @@
+# Migrated from mimixbox's ShellSpec test/it/spec/uuidgen_spec.sh (+ shellutils/uuidgen_test.sh).
+version: "1"
+
+suite:
+  name: mimixbox uuidgen
+
+scenarios:
+  - name: prints a well-formed UUID
+    steps:
+      - run:
+          shell: true
+          command: uuidgen | grep -Eq '^[0-9a-fA-F]{8}-[0-9a-fA-F]{4}-[0-9a-fA-F]{4}-[0-9a-fA-F]{4}-[0-9a-fA-F]{12}$' && echo ok
+      - assert:
+          exit_code: 0
+          stdout:
+            equals: "ok"

@@ -1,0 +1,20 @@
+# Migrated from mimixbox's ShellSpec test/it/spec/stat_spec.sh (+ fileutils/stat_test.sh).
+# Setup writes 'hello' (5 bytes) to stat_file; the test prints the size with a
+# custom -c format.
+version: "1"
+
+suite:
+  name: mimixbox stat
+
+scenarios:
+  - name: prints the size with a custom format
+    steps:
+      - fixture:
+          file: stat_file
+          content: hello
+      - run:
+          command: stat -c %s ${workdir}/stat_file
+      - assert:
+          exit_code: 0
+          stdout:
+            equals: "5"

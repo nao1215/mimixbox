@@ -1,0 +1,27 @@
+# Migrated from mimixbox's ShellSpec test/it/spec/nmeter_spec.sh.
+version: "1"
+
+suite:
+  name: mimixbox nmeter
+
+scenarios:
+  - name: expands a literal percent and copies text
+    # TestNmeterLiteral: nmeter 'hello %% world' -> 'hello % world'
+    steps:
+      - run:
+          command: nmeter "hello %% world"
+      - assert:
+          exit_code: 0
+          stdout:
+            equals: "hello % world"
+
+  - name: expands the total-memory directive
+    # TestNmeterMem: nmeter 'mem:%M' | grep -cE 'mem:[0-9]+M' -> '1'.
+    # %M expands to total memory like 'mem:NNNNM'.
+    steps:
+      - run:
+          command: nmeter "mem:%M"
+      - assert:
+          exit_code: 0
+          stdout:
+            matches: "mem:[0-9]+M"

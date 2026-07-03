@@ -1,0 +1,22 @@
+# Migrated from mimixbox's ShellSpec test/it/spec/bootchartd_spec.sh
+# (+ loginutils/bootchartd_test.sh). bootchartd -o DIR writes a proc_stat.log;
+# the test confirms a CPU line was sampled.
+version: "1"
+
+suite:
+  name: mimixbox bootchartd
+
+scenarios:
+  - name: records a proc_stat sample
+    steps:
+      # Pipe (grep -c) -> shell:true. ${workdir} is the isolated scenario dir.
+      - run:
+          shell: true
+          command: bootchartd -o "${workdir}/bc" >/dev/null && grep -c '^cpu ' "${workdir}/bc/proc_stat.log"
+      - assert:
+          exit_code: 0
+      # ShellSpec asserted the count was not '0'; /proc/stat has exactly one
+      # aggregate "cpu " line, so the recorded sample count is 1.
+      - assert:
+          stdout:
+            equals: "1"

@@ -1,0 +1,27 @@
+# Migrated from mimixbox's ShellSpec test/it/spec/blockdev_spec.sh.
+# Reading a block device requires privilege; the e2e exercises --help and the
+# no-query error path. The ioctl dispatch is covered by Go unit tests.
+version: "1"
+
+suite:
+  name: mimixbox blockdev
+
+scenarios:
+  - name: describes itself with --help
+    steps:
+      - run:
+          command: blockdev --help
+      - assert:
+          exit_code: 0
+          stdout:
+            contains:
+              - "Usage: blockdev"
+              - "DEVICE"
+
+  - name: fails when no query flag is given
+    steps:
+      # ShellSpec asserted rc=1; direct exec on the error path.
+      - run:
+          command: blockdev /dev/null
+      - assert:
+          exit_code: { not: 0 }

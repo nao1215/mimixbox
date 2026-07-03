@@ -1,0 +1,26 @@
+# Migrated from mimixbox's ShellSpec test/it/spec/showkey_spec.sh.
+# showkey needs a console in raw mode; only the deterministic validation and
+# capability paths are exercised here.
+version: "1"
+
+suite:
+  name: mimixbox showkey
+
+scenarios:
+  - name: rejects conflicting modes
+    steps:
+      # Error case → direct exec.
+      - run:
+          command: showkey -a -s
+      - assert:
+          exit_code: 1
+
+  - name: fails deterministically without a console
+    steps:
+      # Without a real console, showkey fails deterministically rather than
+      # hanging (atago runs with a non-terminal stdin).
+      - run:
+          command: showkey
+          stdin: ""
+      - assert:
+          exit_code: 1

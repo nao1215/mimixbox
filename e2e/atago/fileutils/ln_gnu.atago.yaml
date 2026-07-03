@@ -1,0 +1,42 @@
+# Migrated from mimixbox's ShellSpec test/it/spec/ln_gnu_spec.sh
+# (+ fileutils/ln_gnu_test.sh). Setup builds ${ROOT}/ln_gnu/{a,b,dst} with
+# a/target.txt, a.txt, b.txt; reproduced here as a setup `run` step inside the
+# isolated ${workdir}.
+version: "1"
+
+suite:
+  name: mimixbox ln GNU flags
+
+scenarios:
+  - name: ln -s --relative stores the target relative to the link location
+    steps:
+      - run:
+          shell: true
+          command: |
+            mkdir -p ln_gnu/a ln_gnu/b ln_gnu/dst
+            printf 'content\n' > ln_gnu/a/target.txt
+      - run:
+          shell: true
+          command: ln -s --relative ${workdir}/ln_gnu/a/target.txt ${workdir}/ln_gnu/b/link.txt && readlink ${workdir}/ln_gnu/b/link.txt
+      - assert:
+          exit_code: 0
+          stdout:
+            equals: "../a/target.txt"
+
+  - name: ln --target-directory links each operand into the directory
+    steps:
+      - run:
+          shell: true
+          command: |
+            mkdir -p ln_gnu/a ln_gnu/b ln_gnu/dst
+            printf 'A\n' > ln_gnu/a.txt
+            printf 'B\n' > ln_gnu/b.txt
+      - run:
+          shell: true
+          command: ln --target-directory ${workdir}/ln_gnu/dst ${workdir}/ln_gnu/a.txt ${workdir}/ln_gnu/b.txt && ls ${workdir}/ln_gnu/dst
+      - assert:
+          exit_code: 0
+          stdout:
+            equals: |
+              a.txt
+              b.txt

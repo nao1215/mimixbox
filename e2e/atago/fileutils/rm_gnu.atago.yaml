@@ -1,0 +1,53 @@
+# Migrated from mimixbox's ShellSpec test/it/spec/rm_gnu_spec.sh (no helper; inline).
+# Issue #732: GNU flags for rm (--preserve-root default, --no-preserve-root,
+# --one-file-system). The "/" guard is asserted via direct exec (no shell:true)
+# so the failure exit code is faithful and nothing is ever deleted (the guard
+# returns before any removal). The remove-tree cases need mkdir + rm + a test,
+# so they use shell: true and operate inside the isolated ${workdir}.
+version: "1"
+
+suite:
+  name: mimixbox rm GNU flags
+
+scenarios:
+  - name: refuses to recurse on / by default (--preserve-root)
+    steps:
+      - run:
+          command: rm -r /
+      - assert:
+          exit_code:
+            not: 0
+          stderr:
+            contains:
+              - "it is dangerous to operate recursively on '/'"
+              - "use --no-preserve-root to override this failsafe"
+
+  - name: removes an ordinary directory recursively (guard does not interfere)
+    steps:
+      - run:
+          shell: true
+          command: "mkdir -p tree/sub && : > tree/sub/leaf.txt && rm -r tree && [ ! -e tree ] && printf 'gone'"
+      - assert:
+          exit_code: 0
+          stdout:
+            equals: "gone"
+
+  - name: removes a single-filesystem tree with --one-file-system
+    steps:
+      - run:
+          shell: true
+          command: "mkdir -p ofs/a/b && : > ofs/a/b/leaf.txt && : > ofs/top.txt && rm -r --one-file-system ofs && [ ! -e ofs ] && printf 'gone'"
+      - assert:
+          exit_code: 0
+          stdout:
+            equals: "gone"
+
+  - name: removes a tree when --no-preserve-root is given (safe target)
+    steps:
+      - run:
+          shell: true
+          command: "mkdir -p victim/sub && : > victim/sub/f && rm -r --no-preserve-root victim && [ ! -e victim ] && printf 'gone'"
+      - assert:
+          exit_code: 0
+          stdout:
+            equals: "gone"

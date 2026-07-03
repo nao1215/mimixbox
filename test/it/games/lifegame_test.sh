@@ -1,1 +1,0 @@
-LifegameHelp() { lifegame --help; }

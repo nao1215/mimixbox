@@ -1,0 +1,25 @@
+# Migrated from mimixbox's ShellSpec test/it/spec/timeout_spec.sh (+ shellutils/timeout_test.sh).
+version: "1"
+
+suite:
+  name: mimixbox timeout
+
+scenarios:
+  - name: runs the command to completion
+    steps:
+      - run:
+          command: timeout 5 echo done
+      - assert:
+          exit_code: 0
+          stdout:
+            equals: "done"
+
+  - name: returns exit code 124 on timeout
+    steps:
+      - run:
+          shell: true
+          command: timeout 0.1 sleep 5; echo "exit:$?"
+      - assert:
+          exit_code: 0
+          stdout:
+            equals: "exit:124"

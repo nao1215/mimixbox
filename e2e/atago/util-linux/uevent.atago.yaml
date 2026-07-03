@@ -1,0 +1,18 @@
+# Migrated from mimixbox's ShellSpec test/it/spec/uevent_spec.sh.
+# uevent blocks on a privileged netlink socket; the e2e exercises --help.
+version: "1"
+
+suite:
+  name: mimixbox uevent
+
+scenarios:
+  - name: describes itself with --help
+    steps:
+      - run:
+          command: uevent --help
+      - assert:
+          exit_code: 0
+          stdout:
+            contains:
+              - "Usage: uevent"
+              - "uevent"

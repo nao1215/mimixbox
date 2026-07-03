@@ -1,0 +1,34 @@
+# Migrated from mimixbox's ShellSpec test/it/spec/valid-shell_spec.sh
+# (+ debianutils/valid-shell_test.sh). The --help contract is a single command
+# (direct exec). The valid-file case in ShellSpec builds a temp file with mktemp
+# and feeds it to valid-shell; here a declarative fixture lists existing shells
+# and valid-shell runs against it via direct exec, which prints an "OK:" line
+# per entry and exits 0.
+version: "1"
+
+suite:
+  name: mimixbox valid-shell
+
+scenarios:
+  - name: prints usage with --help and exits 0
+    steps:
+      - run:
+          command: valid-shell --help
+      - assert:
+          exit_code: 0
+          stdout:
+            contains: "Usage: valid-shell"
+
+  - name: accepts a file listing existing shells
+    steps:
+      - fixture:
+          file: shells.txt
+          content: |
+            /bin/sh
+            /bin/bash
+      - run:
+          command: valid-shell shells.txt
+      - assert:
+          exit_code: 0
+          stdout:
+            contains: "OK"

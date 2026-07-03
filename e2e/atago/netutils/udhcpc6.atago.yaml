@@ -1,0 +1,19 @@
+# Migrated from mimixbox's ShellSpec test/it/spec/udhcpc6_spec.sh (no helper; inline).
+# Universal --help contract (Issue #477): exit 0, "Usage: udhcpc6" on stdout,
+# empty stderr. Privileged/networked/destructive applet exercised via --help only.
+version: "1"
+
+suite:
+  name: mimixbox udhcpc6
+
+scenarios:
+  - name: describes itself with --help
+    steps:
+      - run:
+          command: udhcpc6 --help
+      - assert:
+          exit_code: 0
+          stdout:
+            contains: "Usage: udhcpc6"
+          stderr:
+            empty: true

@@ -1,0 +1,21 @@
+# Migrated from mimixbox's ShellSpec test/it/spec/compress_spec.sh (+ archival/compress_test.sh).
+# compress writes file.Z and removes the original; uncompress reverses it. The
+# .Z bytes are binary, so we assert the round-trip restores the payload.
+version: "1"
+
+suite:
+  name: mimixbox compress and uncompress
+
+scenarios:
+  - name: round-trips a file through compress and uncompress
+    steps:
+      - fixture:
+          file: data.txt
+          content: |
+            compress me compress me compress me
+      - run:
+          shell: true
+          command: cp data.txt rt.txt && compress rt.txt && uncompress rt.txt.Z && cat rt.txt
+      - assert:
+          exit_code: 0
+          stdout: { equals: "compress me compress me compress me" }

@@ -1,0 +1,42 @@
+# Migrated from mimixbox's ShellSpec test/it/spec/convert_mode_spec.sh
+# (+ textutils/convert_mode_test.sh). Each helper converts a 0600 file then
+# prints its mode with stat; the conversion must preserve the original mode.
+# The bodies redirect to /dev/null and run two commands (convert; stat), so they
+# use shell: true. The fixture's `mode: "0600"` replaces the helper's chmod 600.
+version: "1"
+
+suite:
+  name: mimixbox convert_mode
+
+scenarios:
+  - name: dos2unix keeps the original mode
+    steps:
+      - fixture:
+          file: d2u.txt
+          content: "a\r\nb\r\n"
+          mode: "0600"
+      - run:
+          shell: true
+          command: |
+            dos2unix "${workdir}/d2u.txt" >/dev/null 2>&1
+            stat -c '%a' "${workdir}/d2u.txt"
+      - assert:
+          exit_code: 0
+          stdout:
+            equals: "600"
+
+  - name: unix2dos keeps the original mode
+    steps:
+      - fixture:
+          file: u2d.txt
+          content: "a\nb\n"
+          mode: "0600"
+      - run:
+          shell: true
+          command: |
+            unix2dos "${workdir}/u2d.txt" >/dev/null 2>&1
+            stat -c '%a' "${workdir}/u2d.txt"
+      - assert:
+          exit_code: 0
+          stdout:
+            equals: "600"

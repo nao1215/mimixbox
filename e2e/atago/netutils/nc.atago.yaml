@@ -1,0 +1,48 @@
+# Migrated from mimixbox's ShellSpec test/it/spec/nc_spec.sh
+# (+ netutils/nc_test.sh). nc transfers data over a TCP loopback socket.
+#
+# The ShellSpec guarded this with a runtime 'Skip if NcSocketsForbidden'
+# predicate: locked-down hosts (seccomp, restricted netns, no CAP_NET_RAW/BIND)
+# forbid opening the loopback sockets and report "operation not permitted", which
+# is an environment capability gap, not an nc regression. atago has no runtime
+# skip predicate, so this scenario assumes loopback TCP is available (it is in
+# the /tmp/mbenv sandbox, verified). The fresh-listener retry loop from the
+# helper is kept so a slow bind does not flake.
+version: "1"
+
+suite:
+  name: mimixbox nc loopback
+
+scenarios:
+  - name: transfers data over TCP
+    steps:
+      # Background listener + retry loop -> shell:true. The loop keys off the
+      # received file's contents, not nc's exit status; only the first received
+      # line is printed so a racing retry cannot duplicate the message.
+      - run:
+          shell: true
+          command: |
+            recv="${workdir}/nc_recv.txt"
+            : > "$recv"
+            for attempt in $(seq 1 8); do
+                port=$((18640 + attempt))
+                (nc -l -p "$port" > "$recv") &
+                lpid=$!
+                for _ in $(seq 1 20); do
+                    echo "from-client" | nc 127.0.0.1 "$port" >/dev/null 2>&1
+                    if [ -s "$recv" ]; then
+                        break
+                    fi
+                    sleep 0.1
+                done
+                kill "$lpid" 2>/dev/null
+                wait "$lpid" 2>/dev/null
+                if [ -s "$recv" ]; then
+                    break
+                fi
+            done
+            head -n 1 "$recv"
+      - assert:
+          exit_code: 0
+          stdout:
+            equals: "from-client"

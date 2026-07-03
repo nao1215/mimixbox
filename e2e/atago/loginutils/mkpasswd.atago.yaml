@@ -1,0 +1,29 @@
+# Migrated from mimixbox's ShellSpec test/it/spec/mkpasswd_spec.sh
+# (+ loginutils/mkpasswd_test.sh). mkpasswd hashes a password with a fixed salt;
+# output is deterministic. Stdin variant reads the password from standard input.
+version: "1"
+
+suite:
+  name: mimixbox mkpasswd
+
+scenarios:
+  - name: hashes with sha-512 and a fixed salt
+    steps:
+      - run:
+          command: mkpasswd -m sha-512 -S abcdefgh secret
+      - assert:
+          exit_code: 0
+          stdout:
+            equals: "$6$abcdefgh$ltjgWl6579NluT/Vi1nwEvcil.G5Nbc4NiXZaNGStk8PSwGfQv72N2CKPPrVACtLtip/cZ/1GM/O6IND4WQhG."
+
+  - name: reads the password from stdin
+    steps:
+      # ShellSpec piped through 'head -c 12' for the salt prefix; we assert the
+      # prefix with stdout.contains on the full md5 hash instead.
+      - run:
+          command: mkpasswd -m md5 -S abcdefgh
+          stdin: "frompipe\n"
+      - assert:
+          exit_code: 0
+          stdout:
+            contains: "$1$abcdefgh$"

@@ -1,0 +1,25 @@
+# Migrated from mimixbox's ShellSpec test/it/spec/svok_spec.sh
+# (+ runit/svok_test.sh). svok exits 0 for a supervised service (supervise/ok
+# present) and 100 for an unsupervised one.
+version: "1"
+
+suite:
+  name: mimixbox svok
+
+scenarios:
+  - name: succeeds for a supervised service
+    steps:
+      - fixture: { file: svc/supervise/ok, content: "" }
+      - run:
+          command: svok svc
+      - assert:
+          exit_code: 0
+
+  - name: returns 100 for an unsupervised service
+    steps:
+      # The 'down' dir exists but has no supervise/ok, so svok returns 100.
+      - fixture: { file: down/.keep, content: "" }
+      - run:
+          command: svok down
+      - assert:
+          exit_code: 100

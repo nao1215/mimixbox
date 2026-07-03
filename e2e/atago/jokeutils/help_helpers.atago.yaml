@@ -1,0 +1,17 @@
+# Migrated from mimixbox's ShellSpec test/it/spec/help_helpers_jokeutils_spec.sh
+# (+ jokeutils/sl_test.sh). The helper is `env -- 'sl' --help`; the --help
+# contract prints a "Usage:" line to stdout and exits 0. Direct exec.
+version: "1"
+
+suite:
+  name: mimixbox jokeutils --help contract
+
+scenarios:
+  - name: sl --help is structured
+    steps:
+      - run:
+          command: sl --help
+      - assert:
+          exit_code: 0
+          stdout:
+            contains: "Usage:"

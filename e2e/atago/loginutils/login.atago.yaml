@@ -1,0 +1,28 @@
+# Migrated from mimixbox's ShellSpec test/it/spec/login_spec.sh
+# (+ loginutils/login_test.sh). login authenticates and starts a shell
+# (privileged); the e2e exercises the unknown-user path and --help.
+version: "1"
+
+suite:
+  name: mimixbox login
+
+scenarios:
+  - name: fails for an unknown user
+    steps:
+      # Error case -> direct exec. login reads a password from stdin.
+      - run:
+          command: login nonexistent_user_xyz
+          stdin: "nope\n"
+      - assert:
+          exit_code: { not: 0 }
+
+  - name: describes itself with --help
+    steps:
+      - run:
+          command: login --help
+      - assert:
+          exit_code: 0
+          stdout:
+            contains:
+              - "Usage: login"
+              - "login shell"

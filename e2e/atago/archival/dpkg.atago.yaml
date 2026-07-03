@@ -1,0 +1,18 @@
+# Migrated from mimixbox's ShellSpec test/it/spec/dpkg_spec.sh (no helper; inline --help contract).
+# Universal --help contract (Issue #477): exit 0, "Usage: dpkg" on stdout, empty stderr.
+version: "1"
+
+suite:
+  name: mimixbox dpkg
+
+scenarios:
+  - name: describes itself with --help
+    steps:
+      - run:
+          command: dpkg --help
+      - assert:
+          exit_code: 0
+          stdout:
+            contains: "Usage: dpkg"
+          stderr:
+            empty: true

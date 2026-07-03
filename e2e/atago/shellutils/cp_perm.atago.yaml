@@ -1,0 +1,36 @@
+# Migrated from mimixbox's ShellSpec test/it/spec/cp_perm_spec.sh (+ shellutils/cp_perm_test.sh).
+version: "1"
+
+suite:
+  name: mimixbox cp (permission preservation)
+
+scenarios:
+  - name: keeps the source file mode (execute bit)
+    steps:
+      - run:
+          shell: true
+          command: printf '#!/bin/sh\necho hi\n' > script.sh && chmod 755 script.sh && cp script.sh copy.sh && stat -c '%a' copy.sh
+      - assert:
+          exit_code: 0
+          stdout:
+            equals: "755"
+
+  - name: keeps a private directory mode
+    steps:
+      - run:
+          shell: true
+          command: mkdir -m 700 private && cp -r private private_copy && stat -c '%a' private_copy
+      - assert:
+          exit_code: 0
+          stdout:
+            equals: "700"
+
+  - name: overwrites a read-only destination with -f
+    steps:
+      - run:
+          shell: true
+          command: printf 'old\n' > dst.txt && chmod 444 dst.txt && printf 'new\n' > src.txt && cp -f src.txt dst.txt && cat dst.txt
+      - assert:
+          exit_code: 0
+          stdout:
+            equals: "new"

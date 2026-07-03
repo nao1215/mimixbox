@@ -1,0 +1,28 @@
+# Migrated from mimixbox's ShellSpec test/it/spec/uptime_pwdx_spec.sh.
+version: "1"
+
+suite:
+  name: mimixbox uptime / pwdx
+
+scenarios:
+  - name: uptime shows the load averages
+    # TestUptime: uptime | grep -c 'load average'
+    steps:
+      - run:
+          command: uptime
+      - assert:
+          exit_code: 0
+          stdout:
+            contains: "load average"
+
+  - name: pwdx prints a process working directory
+    # TestPwdx: cd /tmp; pwdx $$ | grep -c '/'
+    # pwdx prints "<pid>: <cwd>" for the atago process; assert it shows a path.
+    steps:
+      - run:
+          shell: true
+          command: pwdx $$
+      - assert:
+          exit_code: 0
+          stdout:
+            matches: "^[0-9]+: /"

@@ -1,0 +1,120 @@
+# Migrated from mimixbox's ShellSpec test/it/spec/help_helpers_embedded_spec.sh
+# (+ embedded/{devmem,i2cdetect,i2cdump,i2cget,i2cset,partprobe,raidautorun,
+#  readahead,resume,seedrng,volname,watchdog}_test.sh).
+# Per-command --help contract specs (issue #489): each command's --help exits 0
+# and prints a 'Usage:' line. The ShellSpec wrapped each in 'env -- CMD --help';
+# direct exec of CMD --help is the equivalent.
+version: "1"
+
+suite:
+  name: mimixbox embedded --help helpers
+
+scenarios:
+  - name: devmem --help is structured
+    steps:
+      - run:
+          command: devmem --help
+      - assert:
+          exit_code: 0
+          stdout:
+            contains: "Usage:"
+
+  - name: i2cdetect --help is structured
+    steps:
+      - run:
+          command: i2cdetect --help
+      - assert:
+          exit_code: 0
+          stdout:
+            contains: "Usage:"
+
+  - name: i2cdump --help is structured
+    steps:
+      - run:
+          command: i2cdump --help
+      - assert:
+          exit_code: 0
+          stdout:
+            contains: "Usage:"
+
+  - name: i2cget --help is structured
+    steps:
+      - run:
+          command: i2cget --help
+      - assert:
+          exit_code: 0
+          stdout:
+            contains: "Usage:"
+
+  - name: i2cset --help is structured
+    steps:
+      - run:
+          command: i2cset --help
+      - assert:
+          exit_code: 0
+          stdout:
+            contains: "Usage:"
+
+  - name: partprobe --help is structured
+    steps:
+      - run:
+          command: partprobe --help
+      - assert:
+          exit_code: 0
+          stdout:
+            contains: "Usage:"
+
+  - name: raidautorun --help is structured
+    steps:
+      - run:
+          command: raidautorun --help
+      - assert:
+          exit_code: 0
+          stdout:
+            contains: "Usage:"
+
+  - name: readahead --help is structured
+    steps:
+      - run:
+          command: readahead --help
+      - assert:
+          exit_code: 0
+          stdout:
+            contains: "Usage:"
+
+  - name: resume --help is structured
+    steps:
+      - run:
+          command: resume --help
+      - assert:
+          exit_code: 0
+          stdout:
+            contains: "Usage:"
+
+  - name: seedrng --help is structured
+    steps:
+      - run:
+          command: seedrng --help
+      - assert:
+          exit_code: 0
+          stdout:
+            contains: "Usage:"
+
+  - name: volname --help is structured
+    steps:
+      - run:
+          command: volname --help
+      - assert:
+          exit_code: 0
+          stdout:
+            contains: "Usage:"
+
+  - name: watchdog --help is structured
+    steps:
+      - run:
+          command: watchdog --help
+      - assert:
+          exit_code: 0
+          stdout:
+            contains: "Usage:"
+

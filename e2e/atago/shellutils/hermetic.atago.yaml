@@ -1,0 +1,39 @@
+# Migrated from mimixbox's ShellSpec test/it/spec/hermetic_spec.sh (+ shellutils/hermetic_test.sh).
+# Every applet on PATH must resolve to the MimixBox binary, never a host command
+# of the same name (GitHub issue #270). ShellSpec used a Parameters loop over
+# cat/head/base64; each parameter becomes one scenario here.
+version: "1"
+
+suite:
+  name: mimixbox hermetic harness
+
+scenarios:
+  - name: resolves cat to the MimixBox binary, not the host command
+    steps:
+      - run:
+          shell: true
+          command: path=$(command -v cat) && basename "$(readlink -f "${path}")"
+      - assert:
+          exit_code: 0
+          stdout:
+            equals: "mimixbox"
+
+  - name: resolves head to the MimixBox binary, not the host command
+    steps:
+      - run:
+          shell: true
+          command: path=$(command -v head) && basename "$(readlink -f "${path}")"
+      - assert:
+          exit_code: 0
+          stdout:
+            equals: "mimixbox"
+
+  - name: resolves base64 to the MimixBox binary, not the host command
+    steps:
+      - run:
+          shell: true
+          command: path=$(command -v base64) && basename "$(readlink -f "${path}")"
+      - assert:
+          exit_code: 0
+          stdout:
+            equals: "mimixbox"

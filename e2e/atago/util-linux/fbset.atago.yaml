@@ -1,0 +1,27 @@
+# Migrated from mimixbox's ShellSpec test/it/spec/fbset_spec.sh.
+# No framebuffer device is available on CI; the e2e exercises the missing-device
+# path and --help. The mode formatting is unit-tested.
+version: "1"
+
+suite:
+  name: mimixbox fbset
+
+scenarios:
+  - name: fails on a missing framebuffer
+    steps:
+      # ShellSpec asserted rc=1; direct exec on the error path.
+      - run:
+          command: fbset -fb /dev/no_such_fb
+      - assert:
+          exit_code: { not: 0 }
+
+  - name: describes itself with --help
+    steps:
+      - run:
+          command: fbset --help
+      - assert:
+          exit_code: 0
+          stdout:
+            contains:
+              - "Usage: fbset"
+              - "framebuffer"

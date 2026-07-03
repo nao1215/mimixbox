@@ -1,0 +1,130 @@
+# Migrated from mimixbox's ShellSpec test/it/spec/df_gnu_spec.sh (no Included helper;
+# inline). GNU df --output/--total/--type/--block-size/--all flags (Issue #754).
+# These read the live mount table (read-only); the header/total assertions are
+# stable across machines. Direct exec for single commands; the -a row-count
+# comparison needs a pipeline (wc), so shell: true.
+version: "1"
+
+suite:
+  name: mimixbox df GNU flags
+
+scenarios:
+  - name: --output prints the selected column headers in order
+    steps:
+      - run:
+          command: df --output=source,fstype,size,used,avail,pcent,target
+      - assert:
+          exit_code: 0
+          stdout:
+            line: 1
+            contains: "Filesystem"
+      - assert:
+          stdout:
+            line: 1
+            contains: "Type"
+      - assert:
+          stdout:
+            line: 1
+            contains: "Size"
+      - assert:
+          stdout:
+            line: 1
+            contains: "Used"
+      - assert:
+          stdout:
+            line: 1
+            contains: "Avail"
+      - assert:
+          stdout:
+            line: 1
+            contains: "Use%"
+      - assert:
+          stdout:
+            line: 1
+            contains: "Mounted on"
+
+  - name: --output honors a reordered field list
+    steps:
+      - run:
+          command: df --output=target,source
+      - assert:
+          exit_code: 0
+          stdout:
+            line: 1
+            matches: "Mounted on.*Filesystem.*"
+
+  - name: --output rejects an unknown field
+    steps:
+      - run:
+          command: df --output=bogus
+      - assert:
+          exit_code:
+            not: 0
+          stderr:
+            contains: "bogus"
+
+  - name: --total emits a row labeled total
+    steps:
+      - run:
+          command: df --total --output=source,size,used,avail,target
+      - assert:
+          exit_code: 0
+          stdout:
+            contains: "total"
+
+  - name: --total works with the classic layout too
+    steps:
+      - run:
+          command: df --total
+      - assert:
+          exit_code: 0
+          stdout:
+            contains: "total"
+
+  - name: --type accepts a type filter and exits cleanly
+    steps:
+      - run:
+          command: df --type=tmpfs --output=fstype,target
+      - assert:
+          exit_code: 0
+          stdout:
+            line: 1
+            contains: "Type"
+
+  - name: --type is repeatable
+    steps:
+      - run:
+          command: df -t tmpfs -t ext4 --output=fstype
+      - assert:
+          exit_code: 0
+          stdout:
+            line: 1
+            contains: "Type"
+
+  - name: --block-size labels the block-size in the classic header
+    steps:
+      - run:
+          command: df --block-size=1M
+      - assert:
+          exit_code: 0
+          stdout:
+            line: 1
+            contains: "1048576-blocks"
+
+  - name: --block-size rejects an invalid size
+    steps:
+      - run:
+          command: df --block-size=1Z
+      - assert:
+          exit_code:
+            not: 0
+          stderr:
+            contains: "block-size"
+
+  - name: --all lists at least as many rows with -a as without
+    steps:
+      - run:
+          shell: true
+          command: test "$(df -a --output=target | wc -l)" -ge "$(df --output=target | wc -l)"
+      - assert:
+          exit_code: 0

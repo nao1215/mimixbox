@@ -1,0 +1,90 @@
+# Migrated from mimixbox's ShellSpec test/it/spec/find_spec.sh (+ findutils/find_test.sh).
+# Setup builds ${ROOT}/find/{a.txt,sub/b.txt}; reproduced inside ${workdir}.
+# The -type d count pipes through wc, so that case is shell:true; the rest are
+# direct exec (including the unknown-predicate error case).
+version: "1"
+
+suite:
+  name: mimixbox find
+
+scenarios:
+  - name: finds a file by -name
+    steps:
+      - run:
+          shell: true
+          command: mkdir -p find/sub && touch find/a.txt find/sub/b.txt
+      - run:
+          command: find ${workdir}/find -name a.txt
+      - assert:
+          exit_code: 0
+          stdout:
+            equals: "${workdir}/find/a.txt"
+
+  - name: lists directories with -type d
+    steps:
+      - run:
+          shell: true
+          command: mkdir -p find/sub && touch find/a.txt find/sub/b.txt
+      - run:
+          shell: true
+          command: find ${workdir}/find -type d | wc -l | tr -d ' '
+      - assert:
+          exit_code: 0
+          stdout:
+            equals: "2"
+
+  - name: rejects an unknown predicate
+    steps:
+      - run:
+          shell: true
+          command: mkdir -p find/sub && touch find/a.txt find/sub/b.txt
+      - run:
+          command: find ${workdir}/find -bogus
+      - assert:
+          exit_code: { not: 0 }
+          stderr:
+            contains: "unknown predicate"
+
+  - name: prints usage for --help
+    steps:
+      - run:
+          command: find --help
+      - assert:
+          exit_code: 0
+          stdout:
+            contains: "Usage: find"
+
+  - name: lists an Options block with --help and --version in --help
+    steps:
+      - run:
+          command: find --help
+      - assert:
+          exit_code: 0
+          stdout:
+            contains:
+              - "Options:"
+              - "--help"
+              - "--version"
+
+  - name: documents the supported subset tokens in --help
+    steps:
+      - run:
+          command: find --help
+      - assert:
+          exit_code: 0
+          stdout:
+            contains:
+              - "-name"
+              - "-type"
+              - "-print0"
+              - "-maxdepth"
+              - "-mindepth"
+
+  - name: prints the version line for --version
+    steps:
+      - run:
+          command: find --version
+      - assert:
+          exit_code: 0
+          stdout:
+            contains: "find (mimixbox)"

@@ -1,0 +1,20 @@
+# Migrated from mimixbox's ShellSpec test/it/spec/rtcwake_spec.sh.
+version: "1"
+
+suite:
+  name: mimixbox rtcwake
+
+scenarios:
+  - name: rejects a suspend mode
+    steps:
+      - run:
+          command: rtcwake -m mem -s 10
+      - assert:
+          exit_code: { not: 0 }
+
+  - name: requires a wake time
+    steps:
+      - run:
+          command: rtcwake -m no
+      - assert:
+          exit_code: { not: 0 }

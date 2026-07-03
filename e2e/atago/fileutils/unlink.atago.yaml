@@ -1,0 +1,21 @@
+# Migrated from mimixbox's ShellSpec test/it/spec/unlink_spec.sh
+# (+ fileutils/unlink_test.sh). Setup writes 'x' to unlink.txt; the test unlinks
+# it and proves the file is gone.
+version: "1"
+
+suite:
+  name: mimixbox unlink
+
+scenarios:
+  - name: removes a single file
+    steps:
+      - fixture:
+          file: unlink.txt
+          content: x
+      - run:
+          shell: true
+          command: unlink ${workdir}/unlink.txt && test ! -e ${workdir}/unlink.txt && echo gone
+      - assert:
+          exit_code: 0
+          stdout:
+            equals: "gone"

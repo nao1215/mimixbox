@@ -1,0 +1,21 @@
+# Migrated from mimixbox's ShellSpec test/it/spec/findfs_spec.sh.
+version: "1"
+
+suite:
+  name: mimixbox findfs
+
+scenarios:
+  - name: fails for an unknown label
+    steps:
+      # ShellSpec asserted rc=1; direct exec on the error path.
+      - run:
+          command: findfs LABEL=no_such_label_xyz
+      - assert:
+          exit_code: { not: 0 }
+
+  - name: rejects a malformed tag
+    steps:
+      - run:
+          command: findfs notatag
+      - assert:
+          exit_code: { not: 0 }

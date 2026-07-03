@@ -1,0 +1,21 @@
+# Migrated from mimixbox's ShellSpec test/it/spec/rdate_spec.sh.
+# Fetching from a live RFC 868 server is non-deterministic; e2e tests error paths.
+version: "1"
+
+suite:
+  name: mimixbox rdate
+
+scenarios:
+  - name: fails when no host is given
+    steps:
+      - run:
+          command: rdate
+      - assert:
+          exit_code: { not: 0 }
+
+  - name: fails when the host has no time service
+    steps:
+      - run:
+          command: rdate 127.0.0.1
+      - assert:
+          exit_code: { not: 0 }

@@ -1,0 +1,27 @@
+# Migrated from mimixbox's ShellSpec test/it/spec/chrt_spec.sh.
+version: "1"
+
+suite:
+  name: mimixbox chrt
+
+scenarios:
+  - name: prints a process scheduling policy
+    steps:
+      # chrt -p $$ | grep -c 'scheduling policy' → one matching line. $$ is the
+      # shell PID, so this needs shell:true.
+      - run:
+          shell: true
+          command: chrt -p $$ | grep -c 'scheduling policy'
+      - assert:
+          exit_code: 0
+          stdout:
+            equals: "1"
+
+  - name: runs a command under a scheduling policy
+    steps:
+      - run:
+          command: chrt -o 0 -- echo scheduled
+      - assert:
+          exit_code: 0
+          stdout:
+            equals: "scheduled"

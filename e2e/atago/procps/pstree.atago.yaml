@@ -1,0 +1,17 @@
+# Migrated from mimixbox's ShellSpec test/it/spec/pstree_spec.sh.
+version: "1"
+
+suite:
+  name: mimixbox pstree
+
+scenarios:
+  - name: builds a tree containing PID 1
+    # TestPstreeHasInit: pstree | grep -c '(1)' (must not equal 0).
+    # PID 1 (init/systemd) is always present in the tree.
+    steps:
+      - run:
+          command: pstree
+      - assert:
+          exit_code: 0
+          stdout:
+            contains: "(1)"

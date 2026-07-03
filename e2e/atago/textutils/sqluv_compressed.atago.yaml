@@ -1,0 +1,25 @@
+# Migrated from mimixbox's ShellSpec test/it/spec/sqluv_compressed_spec.sh (+
+# sqluv_test.sh SqluvCompressed). Builds a gzip-compressed CSV under a private
+# mktemp dir and queries it headlessly; the pipe + mktemp need shell:true.
+version: "1"
+
+suite:
+  name: mimixbox sqluv (compressed input)
+
+scenarios:
+  - name: query a gzip-compressed CSV fixture
+    steps:
+      - run:
+          shell: true
+          command: |
+            dir=$(mktemp -d "${TMPDIR:-/tmp}/sqluv-it.XXXXXX")
+            printf 'id,name\n1,alice\n2,bob\n' | gzip -c > "$dir/data.csv.gz"
+            sqluv "$dir/data.csv.gz" \
+                --history-file "$dir/history.log" \
+                --output csv \
+                --execute 'select count(*) as n from data'
+            rm -rf "$dir"
+      - assert:
+          exit_code: 0
+          stdout:
+            contains: "2"

@@ -1,0 +1,58 @@
+# Migrated from mimixbox's ShellSpec test/it/spec/cut_spec.sh (+ shellutils/cut_test.sh).
+version: "1"
+
+suite:
+  name: mimixbox cut
+
+scenarios:
+  - name: prints the chosen field
+    steps:
+      - run:
+          shell: true
+          command: printf 'a,b,c\n' | cut -f 2 -d ,
+      - assert:
+          exit_code: 0
+          stdout:
+            equals: "b"
+
+  - name: prints the chosen fields joined by the delimiter
+    steps:
+      - run:
+          shell: true
+          command: printf 'a,b,c,d\n' | cut -f 1,3 -d ,
+      - assert:
+          exit_code: 0
+          stdout:
+            equals: "a,c"
+
+  - name: prints from the field to the end
+    steps:
+      - run:
+          shell: true
+          command: printf 'a,b,c,d\n' | cut -f 2- -d ,
+      - assert:
+          exit_code: 0
+          stdout:
+            equals: "b,c,d"
+
+  - name: prints the chosen character range
+    steps:
+      - run:
+          shell: true
+          command: printf 'abcdef\n' | cut -c 1-3
+      - assert:
+          exit_code: 0
+          stdout:
+            equals: "abc"
+
+  - name: reports an error without a list
+    steps:
+      # A pipe makes /bin/sh surface cut's real non-zero exit (the harness shell
+      # is /bin/sh, not mimixbox's own sh).
+      - run:
+          shell: true
+          command: printf 'a,b\n' | cut -d ,
+      - assert:
+          exit_code: { not: 0 }
+          stderr:
+            equals: "cut: you must specify a list of bytes, characters, or fields"

@@ -1,0 +1,19 @@
+# Migrated from mimixbox's ShellSpec test/it/spec/unlzop_spec.sh (no helper; inline).
+# Universal --help contract (Issue #477): exit 0, "Usage: unlzop" on stdout,
+# empty stderr.
+version: "1"
+
+suite:
+  name: mimixbox unlzop
+
+scenarios:
+  - name: describes itself with --help
+    steps:
+      - run:
+          command: unlzop --help
+      - assert:
+          exit_code: 0
+          stdout:
+            contains: "Usage: unlzop"
+          stderr:
+            empty: true

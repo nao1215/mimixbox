@@ -1,0 +1,27 @@
+# Migrated from mimixbox's ShellSpec test/it/spec/deallocvt_spec.sh.
+# Deallocating a VT needs a console and privilege; only the deterministic
+# invalid-arg path and --help are exercised here.
+version: "1"
+
+suite:
+  name: mimixbox deallocvt
+
+scenarios:
+  - name: rejects a non-numeric VT
+    steps:
+      # Error case → direct exec.
+      - run:
+          command: deallocvt notanumber
+      - assert:
+          exit_code: 1
+
+  - name: describes itself with --help
+    steps:
+      - run:
+          command: deallocvt --help
+      - assert:
+          exit_code: 0
+          stdout:
+            contains:
+              - "Usage: deallocvt"
+              - "virtual terminal"

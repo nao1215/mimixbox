@@ -1,0 +1,35 @@
+# Migrated from mimixbox's ShellSpec test/it/spec/mkswap_spec.sh.
+version: "1"
+
+suite:
+  name: mimixbox mkswap
+
+scenarios:
+  - name: formats an image as swap
+    steps:
+      # mkswap prints a 'version 1' line on success.
+      - run:
+          shell: true
+          command: >
+            dd if=/dev/zero of=swap.img bs=1024 count=64 2>/dev/null;
+            chmod 0600 swap.img;
+            mkswap swap.img
+      - assert:
+          exit_code: 0
+          stdout:
+            contains: "version 1"
+
+  - name: writes the swap signature
+    steps:
+      # The SWAPSPACE2 signature must be present in the formatted image.
+      - run:
+          shell: true
+          command: >
+            dd if=/dev/zero of=swap2.img bs=1024 count=64 2>/dev/null;
+            chmod 0600 swap2.img;
+            mkswap swap2.img >/dev/null;
+            od -c swap2.img | grep -c 'S   W   A   P   S   P   A   C   E   2'
+      - assert:
+          exit_code: 0
+          stdout:
+            equals: "1"

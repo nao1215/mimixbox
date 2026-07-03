@@ -1,0 +1,133 @@
+# Migrated from mimixbox's ShellSpec test/it/spec/basename_spec.sh.
+version: "1"
+
+suite:
+  name: mimixbox basename
+
+scenarios:
+  - name: show test.txt
+    steps:
+      - run:
+          shell: true
+          command: basename "/home/nao/test.txt"
+      - assert:
+          exit_code: 0
+          stdout:
+            equals: "test.txt"
+
+  - name: show test
+    steps:
+      - run:
+          shell: true
+          command: basename "/home/nao/test"
+      - assert:
+          exit_code: 0
+          stdout:
+            equals: "test"
+
+  - name: show .test
+    steps:
+      - run:
+          shell: true
+          command: basename "/home/nao/.test"
+      - assert:
+          exit_code: 0
+          stdout:
+            equals: ".test"
+
+  - name: show nao for a trailing slash
+    steps:
+      - run:
+          shell: true
+          command: basename "/home/nao/"
+      - assert:
+          exit_code: 0
+          stdout:
+            equals: "nao"
+
+  - name: show error without operand
+    steps:
+      - run:
+          shell: true
+          command: basename
+      - assert:
+          exit_code: { not: 0 }
+          stderr:
+            equals: "basename: missing operand"
+
+  - name: show / for root
+    steps:
+      - run:
+          shell: true
+          command: basename "/"
+      - assert:
+          exit_code: 0
+          stdout:
+            equals: "/"
+
+  - name: show empty string
+    steps:
+      - run:
+          shell: true
+          command: basename ""
+      - assert:
+          exit_code: 0
+          stdout:
+            empty: true
+
+  - name: show error for extra operand
+    steps:
+      - run:
+          shell: true
+          command: basename /bin/basename /home/nao /home
+      - assert:
+          exit_code: { not: 0 }
+          stderr:
+            equals: "basename: extra operand '/home'"
+
+  - name: show three basenames with -a
+    steps:
+      - run:
+          shell: true
+          command: basename -a /bin/basename /home/nao /home
+      - assert:
+          exit_code: 0
+          stdout:
+            equals: |
+              basename
+              nao
+              home
+
+  - name: show three basenames joined with -a -z
+    steps:
+      - run:
+          shell: true
+          command: basename -a -z /bin/basename /home/nao /home
+      - assert:
+          exit_code: 0
+      # -z terminates each name with NUL instead of newline. ShellSpec saw
+      # "basenamenaohome" because $(...) strips NULs; atago captures the raw
+      # bytes, so assert the exact NUL-separated form with a regex.
+      - assert:
+          stdout:
+            matches: "^basename\\x00nao\\x00home\\x00$"
+
+  - name: show basename without the suffix
+    steps:
+      - run:
+          shell: true
+          command: basename -s .txt /home/nao/test.txt
+      - assert:
+          exit_code: 0
+          stdout:
+            equals: "test"
+
+  - name: show basename built from an environment variable
+    steps:
+      - run:
+          shell: true
+          command: TEST_DIR="/aaa/bbb/ccc"; basename "$TEST_DIR/ddd.txt"
+      - assert:
+          exit_code: 0
+          stdout:
+            equals: "ddd.txt"

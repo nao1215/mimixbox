@@ -1,0 +1,154 @@
+# Migrated from mimixbox's ShellSpec test/it/spec/mbsh_spec.sh (+ shellutils/mbsh_test.sh).
+version: "1"
+
+suite:
+  name: mimixbox mbsh
+
+scenarios:
+  - name: runs an external command and shows a cwd-aware prompt
+    steps:
+      - run:
+          shell: true
+          command: printf 'echo hello\nexit\n' | mbsh 2>/dev/null
+      - assert:
+          exit_code: 0
+          stdout:
+            contains:
+              - "hello"
+              - "mbsh:"
+
+  - name: ignores comment lines
+    steps:
+      - run:
+          shell: true
+          command: printf '# a comment\necho ok\nexit\n' | mbsh 2>/dev/null
+      - assert:
+          exit_code: 0
+          stdout:
+            contains: "ok"
+
+  - name: expands $? to the last exit status
+    steps:
+      - run:
+          shell: true
+          command: printf 'false\necho status=$?\nexit\n' | mbsh 2>/dev/null
+      - assert:
+          exit_code: 0
+          stdout:
+            contains: "status=1"
+
+  - name: lets a stdin-consuming command read the remaining script input
+    steps:
+      - run:
+          shell: true
+          command: printf 'cat\nhello\nexit\n' | mbsh 2>/dev/null
+      - assert:
+          exit_code: 0
+          stdout:
+            contains: "hello"
+
+  - name: does not reparse command-consumed stdin as later commands
+    steps:
+      - run:
+          shell: true
+          command: |
+            err=$(printf 'cat\nhello\nexit\n' | mbsh 2>&1 >/dev/null)
+            case "${err}" in
+                *"not a mimixbox command"*) echo reparsed ;;
+                *) echo ok ;;
+            esac
+      - assert:
+          exit_code: 0
+          stdout:
+            equals: "ok"
+
+  - name: keeps double-quoted spaces in one argument
+    steps:
+      - run:
+          shell: true
+          command: printf 'echo "a b"\nexit\n' | mbsh 2>/dev/null
+      - assert:
+          exit_code: 0
+          stdout:
+            contains: "a b"
+
+  - name: expands $HOME
+    steps:
+      - run:
+          shell: true
+          command: |
+            out=$(printf 'echo $HOME\nexit\n' | mbsh 2>/dev/null)
+            case "${out}" in
+                *"${HOME}"*) echo expanded ;;
+                *) echo literal ;;
+            esac
+      - assert:
+          exit_code: 0
+          stdout:
+            equals: "expanded"
+
+  - name: passes a NAME=value prefix to the command environment
+    steps:
+      - run:
+          shell: true
+          command: printf 'FOO=bar env\nexit\n' | mbsh 2>/dev/null | grep '^FOO=bar$'
+      - assert:
+          exit_code: 0
+          stdout:
+            contains: "FOO=bar"
+
+  - name: runs commands in sequence and redirects output
+    steps:
+      - run:
+          shell: true
+          command: |
+            d=$(mktemp -d)
+            printf 'echo one > %s/o; echo two >> %s/o\nexit\n' "$d" "$d" | mbsh >/dev/null 2>&1
+            cat "$d/o"
+            rm -rf "$d"
+      - assert:
+          exit_code: 0
+          stdout:
+            equals: |
+              one
+              two
+
+  - name: pipes one command into another
+    steps:
+      - run:
+          shell: true
+          command: |
+            d=$(mktemp -d)
+            printf 'printf foo | wc -c > %s/o\nexit\n' "$d" | mbsh >/dev/null 2>&1
+            tr -d ' \n' < "$d/o"
+            rm -rf "$d"
+      - assert:
+          exit_code: 0
+          stdout:
+            equals: "3"
+
+  - name: redirects input with <
+    steps:
+      - run:
+          shell: true
+          command: |
+            d=$(mktemp -d)
+            printf 'a\nb\nc\n' > "$d/in"
+            printf 'wc -l < %s/in > %s/o\nexit\n' "$d" "$d" | mbsh >/dev/null 2>&1
+            tr -d ' \n' < "$d/o"
+            rm -rf "$d"
+      - assert:
+          exit_code: 0
+          stdout:
+            equals: "3"
+
+  - name: changes directory with cd
+    steps:
+      # ShellSpec Setup created ${MIMIXBOX_IT_ROOT}/mbsh before the cd.
+      - run:
+          shell: true
+          command: mkdir -p ${workdir}/mbsh && printf 'cd %s\npwd\nexit\n' "${workdir}/mbsh" | mbsh 2>/dev/null
+      - assert:
+          exit_code: 0
+          stdout:
+            contains: "${workdir}/mbsh"

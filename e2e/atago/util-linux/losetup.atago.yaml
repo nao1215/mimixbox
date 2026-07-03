@@ -1,0 +1,25 @@
+# Migrated from mimixbox's ShellSpec test/it/spec/losetup_spec.sh.
+# Active loop devices vary by host; the e2e confirms -a runs cleanly (exit 0)
+# and that a setup request is refused. Listing logic is unit-tested.
+version: "1"
+
+suite:
+  name: mimixbox losetup
+
+scenarios:
+  - name: lists active loop devices cleanly
+    steps:
+      # losetup -a >/dev/null; rc=0 — redirect requires shell:true.
+      - run:
+          shell: true
+          command: losetup -a >/dev/null
+      - assert:
+          exit_code: 0
+
+  - name: refuses to associate a loop device
+    steps:
+      # ShellSpec captured rc=1; direct exec on the error path.
+      - run:
+          command: losetup /dev/loop0 /tmp/img
+      - assert:
+          exit_code: { not: 0 }

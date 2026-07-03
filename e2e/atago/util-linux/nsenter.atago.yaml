@@ -1,0 +1,21 @@
+# Migrated from mimixbox's ShellSpec test/it/spec/nsenter_spec.sh.
+# Entering namespaces needs privilege, so the e2e exercises the validation paths.
+version: "1"
+
+suite:
+  name: mimixbox nsenter
+
+scenarios:
+  - name: requires a target PID
+    steps:
+      - run:
+          command: nsenter -n echo x
+      - assert:
+          exit_code: { not: 0 }
+
+  - name: requires a namespace flag
+    steps:
+      - run:
+          command: nsenter -t 1 echo x
+      - assert:
+          exit_code: { not: 0 }

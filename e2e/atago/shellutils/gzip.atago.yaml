@@ -1,0 +1,19 @@
+# Migrated from mimixbox's ShellSpec test/it/spec/gzip_spec.sh (+ shellutils/gzip_test.sh).
+version: "1"
+
+suite:
+  name: mimixbox gzip
+
+scenarios:
+  - name: compresses and decompresses back to the original
+    steps:
+      - fixture:
+          file: g.txt
+          content: "hello gzip roundtrip\n"
+      - run:
+          shell: true
+          command: gzip ${workdir}/g.txt && gunzip ${workdir}/g.txt.gz && cat ${workdir}/g.txt
+      - assert:
+          exit_code: 0
+          stdout:
+            equals: "hello gzip roundtrip"

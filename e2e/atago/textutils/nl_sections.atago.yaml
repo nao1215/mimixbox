@@ -1,0 +1,54 @@
+# Migrated from mimixbox's ShellSpec test/it/spec/nl_sections_spec.sh
+# (+ textutils/nl_test.sh: SetupNlSections / TestNlSectionsAll / Mixed / JoinBlankLines).
+#
+# nl_sec.txt uses nl's section-delimiter lines: a line of `\:\:\:` starts a new
+# header, `\:\:` a body, `\:` a footer. The ShellSpec Setup printf writes those
+# bytes literally (\\:\\:\\: -> \:\:\:), so the fixture reproduces the exact bytes.
+# nl_blank.txt is `a`, four blank lines, `b`. Output has leading spaces / tabs and
+# some unnumbered lines padded with 7 trailing spaces, so exact output uses
+# double-quoted scalars with \t/\n escapes.
+version: "1"
+
+suite:
+  name: mimixbox nl sections
+
+scenarios:
+  - name: number every line in every section with -h a -b a -f a
+    steps:
+      - fixture:
+          file: nl_sec.txt
+          content: "H1\n\\:\\:\\:\nHDR\n\\:\\:\nB1\n\\:\nF1\n"
+      - run:
+          command: nl -h a -b a -f a nl_sec.txt
+      - assert:
+          exit_code: 0
+          stdout:
+            equals: "     1\tH1\n\n     1\tHDR\n\n     1\tB1\n\n     1\tF1"
+
+  - name: number header (a) and body (t) but not footer (n)
+    steps:
+      - fixture:
+          file: nl_sec.txt
+          content: "H1\n\\:\\:\\:\nHDR\n\\:\\:\nB1\n\\:\nF1\n"
+      - run:
+          command: nl -h a -b t -f n nl_sec.txt
+      - assert:
+          exit_code: 0
+      # The footer line F1 is unnumbered: 7 leading spaces then F1.
+      - assert:
+          stdout:
+            equals: "     1\tH1\n\n     1\tHDR\n\n     1\tB1\n\n       F1"
+
+  - name: number every second blank line with -l 2
+    steps:
+      - fixture:
+          file: nl_blank.txt
+          content: "a\n\n\n\n\nb\n"
+      - run:
+          command: nl -b a -l 2 nl_blank.txt
+      - assert:
+          exit_code: 0
+      # Unnumbered blank rows are padded to 7 spaces; numbered ones are "     N\t".
+      - assert:
+          stdout:
+            equals: "     1\ta\n       \n     2\t\n       \n     3\t\n     4\tb"

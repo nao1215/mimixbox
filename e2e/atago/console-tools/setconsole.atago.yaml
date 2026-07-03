@@ -1,0 +1,27 @@
+# Migrated from mimixbox's ShellSpec test/it/spec/setconsole_spec.sh.
+# Redirecting the console needs privilege; only a missing-device failure and
+# --help are exercised here.
+version: "1"
+
+suite:
+  name: mimixbox setconsole
+
+scenarios:
+  - name: fails on an inaccessible device
+    steps:
+      # Error case → direct exec.
+      - run:
+          command: setconsole /dev/no_such_console
+      - assert:
+          exit_code: 1
+
+  - name: describes itself with --help
+    steps:
+      - run:
+          command: setconsole --help
+      - assert:
+          exit_code: 0
+          stdout:
+            contains:
+              - "Usage: setconsole"
+              - "console"

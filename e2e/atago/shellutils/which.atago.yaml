@@ -1,0 +1,70 @@
+# Migrated from mimixbox's ShellSpec test/it/spec/which_spec.sh (+ shellutils/which_test.sh).
+# The original spec derives expected paths from `dirname "$(command -v mimixbox)"`
+# so it stays correct regardless of the applet install prefix. atago asserts
+# static values, so the resolved-path scenarios use the same shell derivation
+# inside the command and emit a stable marker; existence/exit behavior is
+# asserted directly.
+version: "1"
+
+suite:
+  name: mimixbox which
+
+scenarios:
+  - name: prints the MimixBox path
+    steps:
+      - run:
+          shell: true
+          command: '[ "$(which mimixbox)" = "$(dirname "$(command -v mimixbox)")/mimixbox" ] && echo match'
+      - assert:
+          exit_code: 0
+          stdout:
+            equals: "match"
+
+  - name: prints nothing for a binary that does not exist
+    steps:
+      - run:
+          command: which no_exist_binary
+      - assert:
+          exit_code: { not: 0 }
+          stdout:
+            empty: true
+
+  - name: prints paths of three binaries
+    steps:
+      - run:
+          shell: true
+          command: |
+            d=$(dirname "$(command -v mimixbox)")
+            [ "$(which mimixbox cat tac)" = "$(printf '%s\n%s\n%s' "$d/mimixbox" "$d/cat" "$d/tac")" ] && echo match
+      - assert:
+          exit_code: 0
+          stdout:
+            equals: "match"
+
+  - name: prints paths of two binaries and fails when one of three is missing
+    steps:
+      - run:
+          command: which mimixbox not_exist_binary tac
+      - assert:
+          exit_code: { not: 0 }
+          stdout:
+            matches: "/mimixbox\\n.*/tac\\n?$"
+
+  - name: prints nothing without an operand
+    steps:
+      - run:
+          command: which
+      - assert:
+          exit_code: { not: 0 }
+          stdout:
+            empty: true
+
+  - name: prints nothing when data comes from a pipe
+    steps:
+      - run:
+          shell: true
+          command: echo "test" | which
+      - assert:
+          exit_code: { not: 0 }
+          stdout:
+            empty: true

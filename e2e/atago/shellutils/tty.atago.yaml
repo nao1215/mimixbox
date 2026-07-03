@@ -1,0 +1,16 @@
+# Migrated from mimixbox's ShellSpec test/it/spec/tty_spec.sh (+ shellutils/tty_test.sh).
+version: "1"
+
+suite:
+  name: mimixbox tty
+
+scenarios:
+  - name: reports not a tty when stdin is a pipe
+    steps:
+      - run:
+          shell: true
+          command: echo "" | tty
+      - assert:
+          exit_code: { not: 0 }
+          stdout:
+            equals: "not a tty"

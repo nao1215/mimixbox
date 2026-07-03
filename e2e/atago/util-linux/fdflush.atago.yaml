@@ -1,0 +1,25 @@
+# Migrated from mimixbox's ShellSpec test/it/spec/fdflush_spec.sh.
+version: "1"
+
+suite:
+  name: mimixbox fdflush
+
+scenarios:
+  - name: requires a device
+    steps:
+      # ShellSpec asserted rc=1; direct exec on the error path.
+      - run:
+          command: fdflush
+      - assert:
+          exit_code: { not: 0 }
+
+  - name: describes itself with --help
+    steps:
+      - run:
+          command: fdflush --help
+      - assert:
+          exit_code: 0
+          stdout:
+            contains:
+              - "Usage: fdflush"
+              - "floppy"

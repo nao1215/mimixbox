@@ -1,0 +1,118 @@
+# Migrated from mimixbox's ShellSpec test/it/spec/sha1sum_spec.sh (+ textutils/sha1sum_test.sh).
+# The ShellSpec Setup created files under ${MIMIXBOX_IT_ROOT}/sha1sum/; here fixtures
+# build them under the scenario workdir's sha1sum/ subdir so the absolute paths the
+# applet prints (and the paths embedded in checksum.txt) reproduce exactly via
+# ${workdir}. atago expands ${workdir} in fixture content AND assertion values.
+# Error cases (directory / missing file) use direct exec so the real non-zero exit
+# is preserved (a shell wrapper would mask a single failing command's status).
+# Note: the ShellSpec helper function names are TestMd5sum* even in sha1sum_test.sh;
+# the actual command run is sha1sum.
+version: "1"
+
+suite:
+  name: mimixbox sha1sum
+
+scenarios:
+  - name: get sha1sum of one file
+    steps:
+      - fixture:
+          file: sha1sum/1.txt
+          content: "Dungeon of Regalias\n"
+      - run:
+          command: sha1sum ${workdir}/sha1sum/1.txt
+      - assert:
+          exit_code: 0
+          stdout:
+            equals: "9dc2936d38932f9ffc6738cb677e4a8722116070  ${workdir}/sha1sum/1.txt"
+
+  - name: cannot get sha1sum of one directory
+    steps:
+      - fixture:
+          file: sha1sum/1.txt
+          content: "Dungeon of Regalias\n"
+      - run:
+          command: sha1sum ${workdir}/sha1sum
+      - assert:
+          exit_code: { not: 0 }
+          stderr:
+            equals: "sha1sum: ${workdir}/sha1sum: It is directory"
+
+  - name: cannot get sha1sum of not exist file
+    steps:
+      - run:
+          command: sha1sum /not_exist_file
+      - assert:
+          exit_code: { not: 0 }
+          stderr:
+            equals: "sha1sum: /not_exist_file: No such file or directory"
+
+  - name: get sha1sum of three files
+    steps:
+      - fixture:
+          file: sha1sum/1.txt
+          content: "Dungeon of Regalias\n"
+      - fixture:
+          file: sha1sum/2.txt
+          content: "DEMONION\n"
+      - fixture:
+          file: sha1sum/3.txt
+          content: "Dungeon Crusadearz\n"
+      - run:
+          command: sha1sum ${workdir}/sha1sum/1.txt ${workdir}/sha1sum/2.txt ${workdir}/sha1sum/3.txt
+      - assert:
+          exit_code: 0
+          stdout:
+            equals: |
+              9dc2936d38932f9ffc6738cb677e4a8722116070  ${workdir}/sha1sum/1.txt
+              317e30648976d62fae4662fe4435e6568648e8a7  ${workdir}/sha1sum/2.txt
+              d4e9619d949de0c0182a09757346ad22e80114b3  ${workdir}/sha1sum/3.txt
+
+  - name: check sha1sum with --check option
+    steps:
+      - fixture:
+          file: sha1sum/1.txt
+          content: "Dungeon of Regalias\n"
+      - fixture:
+          file: sha1sum/2.txt
+          content: "DEMONION\n"
+      - fixture:
+          file: sha1sum/3.txt
+          content: "Dungeon Crusadearz\n"
+      - fixture:
+          file: sha1sum/checksum.txt
+          content: |
+            9dc2936d38932f9ffc6738cb677e4a8722116070  ${workdir}/sha1sum/1.txt
+            317e30648976d62fae4662fe4435e6568648e8a7  ${workdir}/sha1sum/2.txt
+            d4e9619d949de0c0182a09757346ad22e80114b3  ${workdir}/sha1sum/3.txt
+      - run:
+          command: sha1sum -c ${workdir}/sha1sum/checksum.txt
+      - assert:
+          exit_code: 0
+          stdout:
+            equals: |
+              ${workdir}/sha1sum/1.txt: OK
+              ${workdir}/sha1sum/2.txt: OK
+              ${workdir}/sha1sum/3.txt: OK
+
+  - name: get sha1sum for pipe data
+    steps:
+      - run:
+          shell: true
+          command: echo "test" | sha1sum
+      - assert:
+          exit_code: 0
+          stdout:
+            equals: "4e1243bd22c66e76c2ba9eddc1f91394e57f9f83  -"
+
+  - name: get sha1sum for pipe data and file at same time
+    steps:
+      - fixture:
+          file: sha1sum/1.txt
+          content: "Dungeon of Regalias\n"
+      - run:
+          shell: true
+          command: echo "test" | sha1sum ${workdir}/sha1sum/1.txt
+      - assert:
+          exit_code: 0
+          stdout:
+            equals: "9dc2936d38932f9ffc6738cb677e4a8722116070  ${workdir}/sha1sum/1.txt"

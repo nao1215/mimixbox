@@ -1,0 +1,36 @@
+# Migrated from mimixbox's ShellSpec test/it/spec/diff_spec.sh (+ editors/diff_test.sh).
+# Setup builds a/b/c under MIMIXBOX_IT_ROOT/diff; here fixtures build them in the
+# workdir. diff is a simple single command -> direct exec (no shell), which keeps
+# its exit code accurate (1 when files differ).
+version: "1"
+
+suite:
+  name: mimixbox diff
+
+scenarios:
+  - name: reports a change in normal format
+    steps:
+      - fixture: { file: a, content: "one\ntwo\nthree\n" }
+      - fixture: { file: b, content: "one\n2\nthree\n" }
+      - run: { command: "diff a b" }
+      - assert:
+          exit_code: 1
+          stdout: { line: 1, equals: "2c2" }
+
+  - name: is silent and succeeds for identical files
+    steps:
+      - fixture: { file: a, content: "one\ntwo\nthree\n" }
+      - fixture: { file: c, content: "one\ntwo\nthree\n" }
+      - run: { command: "diff a c" }
+      - assert:
+          exit_code: 0
+          stdout: { empty: true }
+
+  - name: reports briefly with -q
+    steps:
+      - fixture: { file: a, content: "one\ntwo\nthree\n" }
+      - fixture: { file: b, content: "one\n2\nthree\n" }
+      - run: { command: "diff -q a b" }
+      - assert:
+          exit_code: 1
+          stdout: { contains: "differ" }

@@ -1,0 +1,114 @@
+# Migrated from mimixbox's ShellSpec test/it/spec/cp_spec.sh (+ fileutils/cp_test.sh).
+# The ShellSpec Setup builds ${ROOT}/cp/{1,2,3}.txt + ${ROOT}/cp/inner/inner.txt
+# and an empty ${ROOT}/cp2. Here a setup `run` step (shell:true for the
+# mkdir/touch sequence) reproduces that tree inside the isolated ${workdir}, and
+# the assertions echo ${workdir}-relative paths just like the originals echoed
+# ${MIMIXBOX_IT_ROOT}-relative ones. ls of a directory is name-sorted and
+# deterministic for mimixbox ls.
+version: "1"
+
+suite:
+  name: mimixbox cp
+
+scenarios:
+  - name: copy one file
+    steps:
+      - run:
+          shell: true
+          command: mkdir -p cp/inner cp2 && touch cp/1.txt cp/2.txt cp/3.txt cp/inner/inner.txt
+      - run:
+          shell: true
+          command: cp ${workdir}/cp/1.txt ${workdir}/cp/cp.txt && ls ${workdir}/cp/cp.txt
+      - assert:
+          exit_code: 0
+          stdout:
+            equals: "${workdir}/cp/cp.txt"
+
+  - name: copy directory recursively
+    steps:
+      - run:
+          shell: true
+          command: mkdir -p cp/inner cp2 && touch cp/1.txt cp/2.txt cp/3.txt cp/inner/inner.txt
+      - run:
+          shell: true
+          command: cp -r ${workdir}/cp ${workdir}/cp2 && ls ${workdir}/cp2 && ls ${workdir}/cp2/cp
+      - assert:
+          exit_code: 0
+          stdout:
+            equals: |
+              cp
+              1.txt
+              2.txt
+              3.txt
+              inner
+
+  - name: can not copy when src and dest are the same
+    steps:
+      - run:
+          shell: true
+          command: mkdir -p cp/inner cp2 && touch cp/1.txt cp/2.txt cp/3.txt cp/inner/inner.txt
+      - run:
+          shell: true
+          command: cp -r ${workdir}/cp ${workdir}/cp; ls ${workdir}/cp
+      - assert:
+          stdout:
+            equals: |
+              1.txt
+              2.txt
+              3.txt
+              inner
+          stderr:
+            equals: "cp: ${workdir}/cp and ${workdir}/cp is same."
+
+  - name: status failure when src and dest are the same
+    steps:
+      - run:
+          shell: true
+          command: mkdir -p cp/inner cp2 && touch cp/1.txt cp/2.txt cp/3.txt cp/inner/inner.txt
+      - run:
+          command: cp -r ${workdir}/cp ${workdir}/cp
+      - assert:
+          exit_code: { not: 0 }
+          stderr:
+            equals: "cp: ${workdir}/cp and ${workdir}/cp is same."
+
+  - name: copy three files at the same time
+    steps:
+      - run:
+          shell: true
+          command: mkdir -p cp/inner cp2 && touch cp/1.txt cp/2.txt cp/3.txt cp/inner/inner.txt
+      - run:
+          shell: true
+          command: cp ${workdir}/cp/1.txt ${workdir}/cp/2.txt ${workdir}/cp/3.txt ${workdir}/cp2 && ls ${workdir}/cp2
+      - assert:
+          exit_code: 0
+          stdout:
+            equals: |
+              1.txt
+              2.txt
+              3.txt
+
+  - name: can not copy a directory without the recursive option
+    steps:
+      - run:
+          shell: true
+          command: mkdir -p cp/inner cp2 && touch cp/1.txt cp/2.txt cp/3.txt cp/inner/inner.txt
+      - run:
+          command: cp ${workdir}/cp ${workdir}/cp2
+      - assert:
+          exit_code: { not: 0 }
+          stderr:
+            equals: "cp: --recursive is not specified: omitting directory: ${workdir}/cp"
+
+  - name: can not copy a directory to root without authority
+    # Mirrors the ShellSpec 'Copy directory to Root' case. The original skipped
+    # when running as root (root may really create /cp). We always skip here:
+    # the sandbox cannot be allowed to write to / and the errno spelling
+    # ("permission denied" vs "read-only file system") is environment dependent.
+    skip:
+      os: linux
+    steps:
+      - run:
+          command: cp -r ${workdir}/cp /
+      - assert:
+          exit_code: { not: 0 }

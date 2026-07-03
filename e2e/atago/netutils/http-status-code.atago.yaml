@@ -1,0 +1,27 @@
+# Migrated from mimixbox's ShellSpec test/it/spec/http-status-code_spec.sh (no helper; inline).
+# Universal --help contract (Issue #477) plus a status-code lookup case.
+version: "1"
+
+suite:
+  name: mimixbox http-status-code
+
+scenarios:
+  - name: describes itself with --help
+    steps:
+      - run:
+          command: http-status-code --help
+      - assert:
+          exit_code: 0
+          stdout:
+            contains: "Usage: http-status-code"
+          stderr:
+            empty: true
+
+  - name: looks up a status code by number
+    steps:
+      - run:
+          command: http-status-code search 404
+      - assert:
+          exit_code: 0
+          stdout:
+            contains: "404 Not Found"

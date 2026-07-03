@@ -1,0 +1,19 @@
+# Migrated from mimixbox's ShellSpec test/it/spec/unxz_spec.sh (no helper; inline).
+# Universal --help contract (Issue #477): exit 0, "Usage: unxz" on stdout,
+# empty stderr.
+version: "1"
+
+suite:
+  name: mimixbox unxz
+
+scenarios:
+  - name: describes itself with --help
+    steps:
+      - run:
+          command: unxz --help
+      - assert:
+          exit_code: 0
+          stdout:
+            contains: "Usage: unxz"
+          stderr:
+            empty: true

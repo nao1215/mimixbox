@@ -1,0 +1,28 @@
+# Migrated from mimixbox's ShellSpec test/it/spec/mpstat_spec.sh.
+version: "1"
+
+suite:
+  name: mimixbox mpstat
+
+scenarios:
+  - name: prints the CPU column header
+    # TestMpstatHeader: mpstat | sed -n '1p' (must include '%usr' and '%idle')
+    steps:
+      - run:
+          command: mpstat
+      - assert:
+          exit_code: 0
+          stdout:
+            contains:
+              - "%usr"
+              - "%idle"
+
+  - name: prints the aggregate all row
+    # TestMpstatAll: mpstat | grep -c '^all '
+    steps:
+      - run:
+          command: mpstat
+      - assert:
+          exit_code: 0
+          stdout:
+            matches: "(?m)^all "

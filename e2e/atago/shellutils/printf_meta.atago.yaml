@@ -1,0 +1,40 @@
+# Migrated from mimixbox's ShellSpec test/it/spec/printf_meta_spec.sh.
+# printf honors a first-argument --help/--version but treats a later --help as
+# an ordinary operand (issue #758).
+version: "1"
+
+suite:
+  name: mimixbox printf_meta
+
+scenarios:
+  - name: prints help for a leading --help
+    steps:
+      - run:
+          command: printf --help
+      - assert:
+          exit_code: 0
+          stdout:
+            contains: "Examples:"
+      - assert:
+          stdout:
+            line: 1
+            matches: "^Usage: printf"
+
+  - name: prints the version banner for a leading --version
+    steps:
+      - run:
+          command: printf --version
+      - assert:
+          exit_code: 0
+          stdout:
+            contains: "printf (mimixbox)"
+
+  - name: treats a later --help as an ordinary operand
+    steps:
+      - run:
+          shell: true
+          command: printf 'foo --help\n'
+      - assert:
+          exit_code: 0
+          stdout:
+            equals: "foo --help"

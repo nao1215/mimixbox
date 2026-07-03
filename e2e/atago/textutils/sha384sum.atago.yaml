@@ -1,0 +1,29 @@
+# Migrated from mimixbox's ShellSpec test/it/spec/sha384sum_spec.sh (no helper; inline).
+# Universal --help contract (Issue #477) plus the SHA-384 digest behavior.
+# ShellSpec's `Data 'hello'` feeds "hello\n" on stdin (6 bytes hashed).
+version: "1"
+
+suite:
+  name: mimixbox sha384sum
+
+scenarios:
+  - name: describes itself with --help
+    steps:
+      - run:
+          command: sha384sum --help
+      - assert:
+          exit_code: 0
+          stdout:
+            contains: "Usage: sha384sum"
+          stderr:
+            empty: true
+
+  - name: prints the SHA-384 digest of stdin
+    steps:
+      - run:
+          command: sha384sum
+          stdin: "hello\n"
+      - assert:
+          exit_code: 0
+          stdout:
+            equals: "1d0f284efe3edea4b9ca3bd514fa134b17eae361ccc7a1eefeff801b9bd6604e01f21f6bf249ef030599f0c218f2ba8c  -"

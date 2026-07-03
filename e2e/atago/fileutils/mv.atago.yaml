@@ -1,0 +1,176 @@
+# Migrated from mimixbox's ShellSpec test/it/spec/mv_spec.sh (+ fileutils/mv_test.sh).
+# Setup builds ${ROOT}/mv/{1,2,3}.txt + ${ROOT}/mv/inner/inner.txt and three
+# empty sibling dirs mv2, mv3, mv4. A setup `run` step (shell:true) reproduces
+# that tree inside the isolated ${workdir}; assertions echo ${workdir}-relative
+# paths. ls of a directory is name-sorted and deterministic.
+version: "1"
+
+suite:
+  name: mimixbox mv
+
+scenarios:
+  - name: rename a file
+    steps:
+      - run:
+          shell: true
+          command: mkdir -p mv/inner mv2 mv3 mv4 && touch mv/1.txt mv/2.txt mv/3.txt mv/inner/inner.txt
+      - run:
+          shell: true
+          command: mv ${workdir}/mv/1.txt ${workdir}/mv/rename.txt && ls ${workdir}/mv/rename.txt
+      - assert:
+          exit_code: 0
+          stdout:
+            equals: "${workdir}/mv/rename.txt"
+
+  - name: move a file into an inner directory
+    steps:
+      - run:
+          shell: true
+          command: mkdir -p mv/inner mv2 mv3 mv4 && touch mv/1.txt mv/2.txt mv/3.txt mv/inner/inner.txt
+      - run:
+          shell: true
+          command: mv ${workdir}/mv/1.txt ${workdir}/mv/inner && ls ${workdir}/mv/inner
+      - assert:
+          exit_code: 0
+          stdout:
+            equals: |
+              1.txt
+              inner.txt
+
+  - name: move three files into an inner directory
+    steps:
+      - run:
+          shell: true
+          command: mkdir -p mv/inner mv2 mv3 mv4 && touch mv/1.txt mv/2.txt mv/3.txt mv/inner/inner.txt
+      - run:
+          shell: true
+          command: mv ${workdir}/mv/1.txt ${workdir}/mv/2.txt ${workdir}/mv/3.txt ${workdir}/mv/inner && ls ${workdir}/mv/inner
+      - assert:
+          exit_code: 0
+          stdout:
+            equals: |
+              1.txt
+              2.txt
+              3.txt
+              inner.txt
+
+  - name: move three files where one does not exist
+    steps:
+      - run:
+          shell: true
+          command: mkdir -p mv/inner mv2 mv3 mv4 && touch mv/1.txt mv/2.txt mv/3.txt mv/inner/inner.txt
+      - run:
+          shell: true
+          command: mv ${workdir}/mv/1.txt ${workdir}/mv/no_exist_file ${workdir}/mv/3.txt ${workdir}/mv/inner; ls ${workdir}/mv/inner
+      - assert:
+          stdout:
+            equals: |
+              1.txt
+              3.txt
+              inner.txt
+          stderr:
+            equals: "mv: ${workdir}/mv/no_exist_file doesn't exist"
+
+  - name: move a directory into a directory
+    steps:
+      - run:
+          shell: true
+          command: mkdir -p mv/inner mv2 mv3 mv4 && touch mv/1.txt mv/2.txt mv/3.txt mv/inner/inner.txt
+      - run:
+          shell: true
+          command: mv ${workdir}/mv2 ${workdir}/mv && ls ${workdir}/mv
+      - assert:
+          exit_code: 0
+          stdout:
+            equals: |
+              1.txt
+              2.txt
+              3.txt
+              inner
+              mv2
+
+  - name: move three directories
+    steps:
+      - run:
+          shell: true
+          command: mkdir -p mv/inner mv2 mv3 mv4 && touch mv/1.txt mv/2.txt mv/3.txt mv/inner/inner.txt
+      - run:
+          shell: true
+          command: mv ${workdir}/mv2 ${workdir}/mv3 ${workdir}/mv4 ${workdir}/mv && ls ${workdir}/mv
+      - assert:
+          exit_code: 0
+          stdout:
+            equals: |
+              1.txt
+              2.txt
+              3.txt
+              inner
+              mv2
+              mv3
+              mv4
+
+  - name: move three directories where one does not exist
+    steps:
+      - run:
+          shell: true
+          command: mkdir -p mv/inner mv2 mv3 mv4 && touch mv/1.txt mv/2.txt mv/3.txt mv/inner/inner.txt
+      - run:
+          shell: true
+          command: mv ${workdir}/mv2 ${workdir}/mv/no_exist_dir ${workdir}/mv4 ${workdir}/mv/inner; ls ${workdir}/mv/inner
+      - assert:
+          stdout:
+            equals: |
+              inner.txt
+              mv2
+              mv4
+          stderr:
+            equals: "mv: ${workdir}/mv/no_exist_dir doesn't exist"
+
+  - name: moving a file onto itself fails
+    steps:
+      - run:
+          shell: true
+          command: mkdir -p mv/inner mv2 mv3 mv4 && touch mv/1.txt mv/2.txt mv/3.txt mv/inner/inner.txt
+      - run:
+          command: mv ${workdir}/mv/1.txt ${workdir}/mv/1.txt
+      - assert:
+          exit_code: { not: 0 }
+          stderr:
+            equals: "mv: source '${workdir}/mv/1.txt' and destination '${workdir}/mv/1.txt' is same"
+
+  - name: overwrite a file with the same destination name
+    steps:
+      - run:
+          shell: true
+          command: mkdir -p mv/inner mv2 mv3 mv4 && touch mv/1.txt mv/2.txt mv/3.txt mv/inner/inner.txt
+      - run:
+          shell: true
+          command: touch ${workdir}/mv/inner.txt && mv ${workdir}/mv/inner.txt ${workdir}/mv/inner/inner.txt && ls ${workdir}/mv && ls ${workdir}/mv/inner
+      - assert:
+          exit_code: 0
+      # ShellSpec's helper listed both ${TEST_DIR} and ${DIR_IN_TEST_DIR}; the
+      # moved inner.txt now shows up under inner/, so the combined listing is
+      # 1.txt 2.txt 3.txt inner (from mv/) then inner.txt (from mv/inner/).
+      - assert:
+          stdout:
+            equals: |
+              1.txt
+              2.txt
+              3.txt
+              inner
+              inner.txt
+
+  - name: overwrite with the backup option keeps a tilde copy
+    steps:
+      - run:
+          shell: true
+          command: mkdir -p mv/inner mv2 mv3 mv4 && touch mv/1.txt mv/2.txt mv/3.txt mv/inner/inner.txt
+      - run:
+          shell: true
+          command: touch ${workdir}/mv/inner.txt && mv -b ${workdir}/mv/inner.txt ${workdir}/mv/inner && ls ${workdir}/mv/inner
+      - assert:
+          exit_code: 0
+          stdout:
+            equals: |
+              inner.txt
+              inner.txt~

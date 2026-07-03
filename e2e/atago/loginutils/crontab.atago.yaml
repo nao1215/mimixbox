@@ -1,0 +1,26 @@
+# Migrated from mimixbox's ShellSpec test/it/spec/crontab_spec.sh
+# (+ loginutils/crontab_test.sh). crontab uses the system spool dir (privileged);
+# the e2e exercises the unsupported interactive-edit path and --help.
+version: "1"
+
+suite:
+  name: mimixbox crontab
+
+scenarios:
+  - name: reports that interactive edit is unsupported
+    steps:
+      - run:
+          command: crontab -e
+      - assert:
+          exit_code: { not: 0 }
+
+  - name: describes itself with --help
+    steps:
+      - run:
+          command: crontab --help
+      - assert:
+          exit_code: 0
+          stdout:
+            contains:
+              - "Usage: crontab"
+              - "crontab"

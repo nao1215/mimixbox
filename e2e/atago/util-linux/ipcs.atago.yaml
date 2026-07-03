@@ -1,0 +1,29 @@
+# Migrated from mimixbox's ShellSpec test/it/spec/ipcs_spec.sh.
+version: "1"
+
+suite:
+  name: mimixbox ipcs
+
+scenarios:
+  - name: shows the IPC facility sections
+    steps:
+      # ipcs | grep -c 'Message Queues' → one matching section header.
+      - run:
+          shell: true
+          command: ipcs | grep -c 'Message Queues'
+      - assert:
+          exit_code: 0
+          stdout:
+            equals: "1"
+
+  - name: limits to shared memory with -m
+    steps:
+      - run:
+          command: ipcs -m
+      - assert:
+          exit_code: 0
+          stdout:
+            contains: "Shared Memory Segments"
+      - assert:
+          stdout:
+            not_contains: "Message Queues"

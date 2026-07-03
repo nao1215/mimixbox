@@ -1,0 +1,18 @@
+# Migrated from mimixbox's ShellSpec test/it/spec/speaker_spec.sh (+ shellutils/speaker_test.sh).
+version: "1"
+
+suite:
+  name: mimixbox speaker
+
+scenarios:
+  - name: errors when no text is given
+    steps:
+      # The helper captures speaker's failure and echoes the rc, so the overall
+      # pipeline succeeds while the output records the nonzero exit.
+      - run:
+          shell: true
+          command: speaker 2>&1; echo "rc:$?"
+      - assert:
+          exit_code: 0
+          stdout:
+            contains: "rc:1"

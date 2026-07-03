@@ -1,0 +1,15 @@
+# Migrated from mimixbox's ShellSpec test/it/spec/uname_spec.sh (+ shellutils/uname_test.sh).
+version: "1"
+
+suite:
+  name: mimixbox uname
+
+scenarios:
+  - name: prints the kernel name
+    steps:
+      - run:
+          command: uname -s
+      - assert:
+          exit_code: 0
+          stdout:
+            equals: "Linux"

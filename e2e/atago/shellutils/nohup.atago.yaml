@@ -1,0 +1,15 @@
+# Migrated from mimixbox's ShellSpec test/it/spec/nohup_spec.sh (+ shellutils/nohup_test.sh).
+version: "1"
+
+suite:
+  name: mimixbox nohup
+
+scenarios:
+  - name: runs the command and passes output through
+    steps:
+      - run:
+          command: nohup echo hello
+      - assert:
+          exit_code: 0
+          stdout:
+            equals: "hello"

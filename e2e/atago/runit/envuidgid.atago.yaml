@@ -1,0 +1,24 @@
+# Migrated from mimixbox's ShellSpec test/it/spec/envuidgid_spec.sh
+# (+ runit/envuidgid_test.sh). envuidgid USER sets $UID/$GID from /etc/passwd and
+# runs a program; root is always present (0:0). Unknown user is the failure.
+version: "1"
+
+suite:
+  name: mimixbox envuidgid
+
+scenarios:
+  - name: exports root uid and gid
+    steps:
+      - run:
+          command: envuidgid root sh -c 'echo "$UID:$GID"'
+      - assert:
+          exit_code: 0
+          stdout:
+            equals: "0:0"
+
+  - name: fails for an unknown user
+    steps:
+      - run:
+          command: envuidgid nonexistent_xyz true
+      - assert:
+          exit_code: { not: 0 }

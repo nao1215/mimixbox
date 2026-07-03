@@ -1,0 +1,26 @@
+# Migrated from mimixbox's ShellSpec test/it/spec/chown_spec.sh
+# (+ fileutils/chown_contract_test.sh). Help/no-operand contract only — both are
+# simple single commands, so direct exec (no shell:true).
+version: "1"
+
+suite:
+  name: mimixbox chown
+
+scenarios:
+  - name: prints usage with --help and exits 0
+    steps:
+      - run:
+          command: chown --help
+      - assert:
+          exit_code: 0
+          stdout:
+            contains: "Usage: chown"
+
+  - name: fails with a message when given no operand
+    steps:
+      - run:
+          command: chown
+      - assert:
+          exit_code: { not: 0 }
+          stderr:
+            contains: "chown"

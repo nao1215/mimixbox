@@ -1,0 +1,25 @@
+# Migrated from mimixbox's ShellSpec test/it/spec/fakemovie_spec.sh
+# (+ jokeutils/fakemovie_test.sh). Both helpers are single commands → direct exec.
+version: "1"
+
+suite:
+  name: mimixbox fakemovie
+
+scenarios:
+  - name: prints usage with --help and exits 0
+    steps:
+      - run:
+          command: fakemovie --help
+      - assert:
+          exit_code: 0
+          stdout:
+            contains: "Usage: fakemovie"
+
+  - name: fails with a message when given no operand
+    steps:
+      - run:
+          command: fakemovie
+      - assert:
+          exit_code: { not: 0 }
+          stderr:
+            contains: "fakemovie"

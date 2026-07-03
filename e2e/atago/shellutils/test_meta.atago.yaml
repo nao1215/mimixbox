@@ -1,0 +1,37 @@
+# Migrated from mimixbox's ShellSpec test/it/spec/test_meta_spec.sh (no helper; inline).
+# Issue #759: `test` honors --help/--version only as the sole argument; otherwise
+# they are ordinary operands. Invoked via `env test` so the shell builtin does
+# not shadow the mimixbox applet. Direct exec keeps the exit codes faithful.
+version: "1"
+
+suite:
+  name: mimixbox test (meta)
+
+scenarios:
+  - name: prints help for a sole --help
+    steps:
+      - run:
+          command: env test --help
+      - assert:
+          exit_code: 0
+          stdout:
+            contains: "Usage: test"
+
+  - name: prints the version banner for a sole --version
+    steps:
+      - run:
+          command: env test --version
+      - assert:
+          exit_code: 0
+          stdout:
+            contains: "test (mimixbox)"
+
+  - name: evaluates an expression when --help is not the sole argument
+    steps:
+      - run:
+          command: env test foo = --help
+      - assert:
+          exit_code:
+            not: 0
+          stdout:
+            not_contains: "Usage: test"

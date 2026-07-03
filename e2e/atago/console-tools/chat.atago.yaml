@@ -1,0 +1,36 @@
+# Migrated from mimixbox's ShellSpec test/it/spec/chat_spec.sh.
+version: "1"
+
+suite:
+  name: mimixbox chat
+
+scenarios:
+  - name: sends the reply after the expected string
+    steps:
+      # Feeding chat the expected string makes it send the reply. Needs a pipe.
+      - run:
+          shell: true
+          command: printf 'OK' | chat OK GO | grep -c 'GO'
+      - assert:
+          exit_code: 0
+          stdout:
+            equals: "1"
+
+  - name: requires a script
+    steps:
+      # A script is required. Error case → direct exec (redirect stdin from /dev/null).
+      - run:
+          command: chat
+          stdin: ""
+      - assert:
+          exit_code: 1
+
+  - name: fails when an expected string never arrives
+    steps:
+      # An expect string that never arrives is a deterministic failure (EOF).
+      # Error case → direct exec; feed the input via stdin instead of a pipe.
+      - run:
+          command: "chat LOGIN: user"
+          stdin: "nope"
+      - assert:
+          exit_code: 1

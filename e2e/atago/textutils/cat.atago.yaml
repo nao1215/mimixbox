@@ -1,0 +1,170 @@
+# Migrated from mimixbox's ShellSpec test/it/spec/cat_spec.sh (+ textutils/cat_test.sh).
+# The ShellSpec Setup builds cat.txt (sh/ash/csh/bash) and cat2.txt (fish/zsh)
+# under MIMIXBOX_IT_ROOT; here fixtures build them in the scenario workdir and
+# cat runs against the relative names. The "show path" case mirrors the
+# ShellSpec MIMIXBOX_IT_ROOT echo with atago's ${workdir}.
+version: "1"
+
+suite:
+  name: mimixbox cat
+
+scenarios:
+  - name: show shell family name
+    steps:
+      - fixture:
+          file: cat.txt
+          content: |
+            sh
+            ash
+            csh
+            bash
+      - run:
+          shell: true
+          command: cat cat.txt
+      - assert:
+          exit_code: 0
+          stdout:
+            equals: |
+              sh
+              ash
+              csh
+              bash
+
+  - name: show shell family name with line numbers
+    steps:
+      - fixture:
+          file: cat.txt
+          content: |
+            sh
+            ash
+            csh
+            bash
+      - run:
+          shell: true
+          command: cat -n cat.txt
+      - assert:
+          exit_code: 0
+      # cat -n right-aligns the number in a 6-wide field then a tab; encode the
+      # exact spaces/tab with a double-quoted scalar so YAML preserves them.
+      - assert:
+          stdout:
+            equals: "     1\tsh\n     2\tash\n     3\tcsh\n     4\tbash"
+
+  - name: show the piped path unchanged
+    steps:
+      - run:
+          shell: true
+          command: echo "${workdir}/cat.txt" | cat
+      - assert:
+          exit_code: 0
+          stdout:
+            equals: "${workdir}/cat.txt"
+
+  - name: cat only the file operand, ignoring pipe data
+    steps:
+      - fixture:
+          file: cat.txt
+          content: |
+            sh
+            ash
+            csh
+            bash
+      - run:
+          shell: true
+          command: echo "${workdir}/cat2.txt" | cat cat.txt
+      - assert:
+          exit_code: 0
+          stdout:
+            equals: |
+              sh
+              ash
+              csh
+              bash
+
+  - name: concatenate two files
+    steps:
+      - fixture:
+          file: cat.txt
+          content: |
+            sh
+            ash
+            csh
+            bash
+      - fixture:
+          file: cat2.txt
+          content: |
+            fish
+            zsh
+      - run:
+          shell: true
+          command: cat cat.txt cat2.txt
+      - assert:
+          exit_code: 0
+          stdout:
+            equals: |
+              sh
+              ash
+              csh
+              bash
+              fish
+              zsh
+
+  - name: concatenate two files with line numbers
+    steps:
+      - fixture:
+          file: cat.txt
+          content: |
+            sh
+            ash
+            csh
+            bash
+      - fixture:
+          file: cat2.txt
+          content: |
+            fish
+            zsh
+      - run:
+          shell: true
+          command: cat -n cat.txt cat2.txt
+      - assert:
+          exit_code: 0
+          stdout:
+            equals: "     1\tsh\n     2\tash\n     3\tcsh\n     4\tbash\n     5\tfish\n     6\tzsh"
+
+  - name: concatenate a heredoc and a file via redirect
+    steps:
+      - fixture:
+          file: cat.txt
+          content: |
+            sh
+            ash
+            csh
+            bash
+      - run:
+          shell: true
+          command: |
+            cat - << EOS cat.txt > cat2.txt
+            fish
+            zsh
+            EOS
+            cat cat2.txt
+      - assert:
+          exit_code: 0
+          stdout:
+            equals: |
+              fish
+              zsh
+              sh
+              ash
+              csh
+              bash
+
+  - name: show error for a missing file
+    steps:
+      - run:
+          shell: true
+          command: cat no_exist_file
+      - assert:
+          exit_code: { not: 0 }
+          stderr:
+            equals: "cat: no_exist_file: no such file or directory"

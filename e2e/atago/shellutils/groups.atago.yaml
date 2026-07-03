@@ -1,0 +1,27 @@
+# Migrated from mimixbox's ShellSpec test/it/spec/groups_spec.sh (no helper; inline).
+# Universal --help contract (Issue #477) plus a named-user group lookup case.
+version: "1"
+
+suite:
+  name: mimixbox groups
+
+scenarios:
+  - name: describes itself with --help
+    steps:
+      - run:
+          command: groups --help
+      - assert:
+          exit_code: 0
+          stdout:
+            contains: "Usage: groups"
+          stderr:
+            empty: true
+
+  - name: prints the groups of a named user
+    steps:
+      - run:
+          command: groups root
+      - assert:
+          exit_code: 0
+          stdout:
+            equals: "root"

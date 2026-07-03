@@ -1,0 +1,35 @@
+# Migrated from mimixbox's ShellSpec test/it/spec/svlogd_spec.sh
+# (+ runit/svlogd_test.sh). svlogd appends stdin to DIR/current; the no-directory
+# path is the deterministic failure.
+version: "1"
+
+suite:
+  name: mimixbox svlogd
+
+scenarios:
+  - name: appends stdin to the current log
+    steps:
+      # Pipe (printf | svlogd) then cat -> shell:true.
+      - run:
+          shell: true
+          command: |
+            printf 'hello\nworld\n' | svlogd log
+            cat log/current
+      - assert:
+          exit_code: 0
+          stdout:
+            line: 1
+            equals: "hello"
+      - assert:
+          stdout:
+            line: 2
+            equals: "world"
+
+  - name: requires a directory
+    steps:
+      # Error case -> direct exec. svlogd reads from stdin.
+      - run:
+          command: svlogd
+          stdin: "x\n"
+      - assert:
+          exit_code: { not: 0 }

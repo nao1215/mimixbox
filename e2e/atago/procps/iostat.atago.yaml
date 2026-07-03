@@ -1,0 +1,28 @@
+# Migrated from mimixbox's ShellSpec test/it/spec/iostat_spec.sh.
+version: "1"
+
+suite:
+  name: mimixbox iostat
+
+scenarios:
+  - name: prints the avg-cpu header
+    # TestIostatCpuHeader: iostat | sed -n '1p' (must include 'avg-cpu' and '%idle')
+    steps:
+      - run:
+          command: iostat
+      - assert:
+          exit_code: 0
+          stdout:
+            contains:
+              - "avg-cpu"
+              - "%idle"
+
+  - name: prints the device table header
+    # TestIostatDeviceHeader: iostat | grep -c 'Device'
+    steps:
+      - run:
+          command: iostat
+      - assert:
+          exit_code: 0
+          stdout:
+            contains: "Device"

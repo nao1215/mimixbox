@@ -1,0 +1,111 @@
+# Migrated from mimixbox's ShellSpec test/it/spec/install_gnu_spec.sh.
+# GNU install flag parity (Issue #755): --backup[=CONTROL], --suffix/-S,
+# --owner/-o, --group/-g. Each scenario runs in its own isolated ${workdir}.
+# Assertions only check behavior deterministic for a non-root CI user.
+version: "1"
+
+suite:
+  name: mimixbox install_gnu
+
+scenarios:
+  - name: makes a simple backup before overwriting with --backup=simple
+    steps:
+      - run:
+          shell: true
+          command: |
+            printf 'new\n' > src
+            printf 'old\n' > dst
+            install --backup=simple src dst
+            cat dst dst~
+      - assert:
+          exit_code: 0
+          stdout:
+            equals: "new\nold"
+
+  - name: honors --suffix when backing up
+    steps:
+      - run:
+          shell: true
+          command: |
+            printf 'new\n' > src
+            printf 'old\n' > dst
+            install --backup=simple -S .bak src dst
+            cat dst.bak
+      - assert:
+          exit_code: 0
+          stdout:
+            equals: "old"
+
+  - name: makes numbered backups with --backup=numbered
+    steps:
+      - run:
+          shell: true
+          command: |
+            printf 'v1\n' > src
+            printf 'orig\n' > dst
+            install --backup=numbered src dst
+            printf 'v2\n' > src
+            install --backup=numbered src dst
+            cat dst dst.~1~ dst.~2~
+      - assert:
+          exit_code: 0
+          stdout:
+            equals: "v2\norig\nv1"
+
+  - name: uses a simple backup with --backup=existing when none are numbered
+    steps:
+      - run:
+          shell: true
+          command: |
+            printf 'new\n' > src
+            printf 'old\n' > dst
+            install --backup=existing src dst
+            cat dst~
+      - assert:
+          exit_code: 0
+          stdout:
+            equals: "old"
+
+  - name: attempts chown and fails as non-root with --owner/--group
+    # Assumes a non-root user (EPERM on chown to uid/gid 0). The destination is
+    # written before the chown is attempted, so it still exists afterwards.
+    steps:
+      - run:
+          shell: true
+          command: |
+            printf 'data\n' > src
+            install -o 0 -g 0 src dst
+      - assert:
+          exit_code:
+            not: 0
+          stderr:
+            contains: "ownership"
+          file:
+            path: dst
+            exists: true
+
+  - name: rejects an invalid owner name
+    steps:
+      - run:
+          shell: true
+          command: |
+            printf 'data\n' > src
+            install -o no-such-user-xyz src dst
+      - assert:
+          exit_code:
+            not: 0
+          stderr:
+            contains: "invalid user"
+
+  - name: rejects an invalid --backup control
+    steps:
+      - run:
+          shell: true
+          command: |
+            printf 'data\n' > src
+            install --backup=bogus src dst
+      - assert:
+          exit_code:
+            not: 0
+          stderr:
+            contains: "invalid argument"

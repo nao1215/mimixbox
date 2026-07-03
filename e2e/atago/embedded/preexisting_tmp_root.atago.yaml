@@ -1,0 +1,43 @@
+# Migrated from mimixbox's ShellSpec test/it/spec/preexisting_tmp_root_spec.sh.
+# Regression for issue #478: the integration suite must use a per-run temp root
+# and must NOT assume /tmp/mimixbox is a writable directory. Under atago the
+# per-run root is each scenario's isolated ${workdir}; the assertions below
+# confirm it is allocated and usable and is never /tmp/mimixbox.
+version: "1"
+
+suite:
+  name: mimixbox preexisting_tmp_root
+
+scenarios:
+  - name: allocates a usable per-run root that is not /tmp/mimixbox
+    steps:
+      - run:
+          shell: true
+          command: |
+            [ -n "${workdir}" ] || exit 1
+            [ "${workdir}" != "/tmp/mimixbox" ] || exit 1
+            mkdir -p "${workdir}/it478" || exit 1
+            touch "${workdir}/it478/probe" || exit 1
+            printf 'ok'
+      - assert:
+          exit_code: 0
+          stdout:
+            equals: "ok"
+
+  # The original second example asserts that a pre-existing /tmp/mimixbox *file*
+  # (a fixture the ShellSpec harness deliberately creates) is left untouched.
+  # That is specific to ShellSpec's BeforeAll/AfterAll harness fixture and the
+  # legacy global root, neither of which exists under atago's isolated-workdir
+  # model, so it is gated off here.
+  - name: leaves a pre-existing /tmp/mimixbox file untouched (harness-specific)
+    only:
+      env: ATAGO_RUN_HARNESS_SPECIFIC
+    steps:
+      - run:
+          shell: true
+          command: |
+            [ ! -d /tmp/mimixbox ] && printf 'not-a-dir'
+      - assert:
+          exit_code: 0
+          stdout:
+            equals: "not-a-dir"

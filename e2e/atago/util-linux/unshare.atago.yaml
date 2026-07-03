@@ -1,0 +1,25 @@
+# Migrated from mimixbox's ShellSpec test/it/spec/unshare_spec.sh.
+# Most namespaces need privilege; e2e tests the no-flag path and --help.
+version: "1"
+
+suite:
+  name: mimixbox unshare
+
+scenarios:
+  - name: requires a namespace flag
+    steps:
+      - run:
+          command: unshare echo x
+      - assert:
+          exit_code: { not: 0 }
+
+  - name: describes itself with --help
+    steps:
+      - run:
+          command: unshare --help
+      - assert:
+          exit_code: 0
+          stdout:
+            contains:
+              - "Usage: unshare"
+              - "namespace"

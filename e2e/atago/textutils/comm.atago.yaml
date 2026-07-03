@@ -1,0 +1,28 @@
+# Migrated from mimixbox's ShellSpec test/it/spec/comm_spec.sh
+# (+ textutils/comm_test.sh). The ShellSpec Setup builds comm_a.txt and
+# comm_b.txt at MIMIXBOX_IT_ROOT; here fixtures build them in the scenario
+# workdir. TestCommBoth is a single comm command, so it uses direct exec.
+version: "1"
+
+suite:
+  name: mimixbox comm
+
+scenarios:
+  - name: print lines common to both files
+    steps:
+      - fixture:
+          file: comm_a.txt
+          content: |
+            apple
+            banana
+      - fixture:
+          file: comm_b.txt
+          content: |
+            banana
+            cherry
+      - run:
+          command: comm -1 -2 ${workdir}/comm_a.txt ${workdir}/comm_b.txt
+      - assert:
+          exit_code: 0
+          stdout:
+            equals: "banana"

@@ -1,0 +1,48 @@
+# Migrated from mimixbox's ShellSpec test/it/spec/ls_spec.sh (+ fileutils/ls_test.sh).
+# Setup builds ${ROOT}/ls/{a.txt,b.txt,.hidden} + ${ROOT}/ls/sub; reproduced
+# inside ${workdir}. mimixbox ls is name-sorted, so the default listing is
+# deterministic.
+version: "1"
+
+suite:
+  name: mimixbox ls
+
+scenarios:
+  - name: lists entries sorted, hiding dotfiles
+    steps:
+      - run:
+          shell: true
+          command: mkdir -p ls/sub && touch ls/a.txt ls/b.txt ls/.hidden
+      - run:
+          command: ls ${workdir}/ls
+      - assert:
+          exit_code: 0
+          stdout:
+            equals: |
+              a.txt
+              b.txt
+              sub
+
+  - name: includes dotfiles with -a
+    steps:
+      - run:
+          shell: true
+          command: mkdir -p ls/sub && touch ls/a.txt ls/b.txt ls/.hidden
+      - run:
+          command: ls -a ${workdir}/ls
+      - assert:
+          exit_code: 0
+          stdout:
+            contains: ".hidden"
+
+  - name: marks directories with -F
+    steps:
+      - run:
+          shell: true
+          command: mkdir -p ls/sub && touch ls/a.txt ls/b.txt ls/.hidden
+      - run:
+          command: ls -F ${workdir}/ls
+      - assert:
+          exit_code: 0
+          stdout:
+            contains: "sub/"

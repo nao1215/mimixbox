@@ -1,0 +1,17 @@
+# Migrated from mimixbox's ShellSpec test/it/spec/httpstatus_spec.sh
+# (+ netutils/httpstatus_test.sh). http-status-code search NNN explains an HTTP
+# status code.
+version: "1"
+
+suite:
+  name: mimixbox http-status-code
+
+scenarios:
+  - name: explains a status code
+    steps:
+      - run:
+          command: http-status-code search 404
+      - assert:
+          exit_code: 0
+          stdout:
+            contains: "404 Not Found"

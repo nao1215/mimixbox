@@ -1,0 +1,21 @@
+# Migrated from mimixbox's ShellSpec test/it/spec/setkeycodes_spec.sh.
+version: "1"
+
+suite:
+  name: mimixbox setkeycodes
+
+scenarios:
+  - name: requires arguments in pairs
+    steps:
+      # Error case → direct exec.
+      - run:
+          command: setkeycodes e060
+      - assert:
+          exit_code: 1
+
+  - name: rejects an invalid scancode
+    steps:
+      - run:
+          command: setkeycodes zz 1
+      - assert:
+          exit_code: 1

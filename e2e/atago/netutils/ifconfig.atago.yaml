@@ -1,0 +1,27 @@
+# Migrated from mimixbox's ShellSpec test/it/spec/ifconfig_spec.sh (no helper; inline).
+# Universal --help contract (Issue #477) plus a purpose-paragraph check.
+version: "1"
+
+suite:
+  name: mimixbox ifconfig
+
+scenarios:
+  - name: describes itself with --help
+    steps:
+      - run:
+          command: ifconfig --help
+      - assert:
+          exit_code: 0
+          stdout:
+            contains: "Usage: ifconfig"
+          stderr:
+            empty: true
+
+  - name: documents its purpose in --help
+    steps:
+      - run:
+          command: ifconfig --help
+      - assert:
+          exit_code: 0
+          stdout:
+            contains: "network interfaces"

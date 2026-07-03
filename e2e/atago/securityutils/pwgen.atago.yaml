@@ -1,0 +1,18 @@
+# Migrated from mimixbox's ShellSpec test/it/spec/pwgen_spec.sh
+# (+ securityutils/pwgen_test.sh). The helper pipes pwgen into `wc -l | tr -d`,
+# so this needs a shell pipeline.
+version: "1"
+
+suite:
+  name: mimixbox pwgen
+
+scenarios:
+  - name: generates the requested number of passwords
+    steps:
+      - run:
+          shell: true
+          command: pwgen -n 3 -l 8 | wc -l | tr -d ' '
+      - assert:
+          exit_code: 0
+          stdout:
+            equals: "3"

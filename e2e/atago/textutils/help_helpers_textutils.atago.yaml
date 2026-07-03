@@ -1,0 +1,64 @@
+# Migrated from mimixbox's ShellSpec test/it/spec/help_helpers_textutils_spec.sh
+# (+ crc32/sha384sum/sha3sum/sum/uudecode/uuencode _test.sh, GitHub issue #489).
+# Each helper is `env -- '<cmd>' --help`; that is a single command with no shell
+# metacharacters, so direct exec is used. Each command prints 'Usage:' to stdout
+# and exits 0.
+version: "1"
+
+suite:
+  name: mimixbox textutils --help helpers
+
+scenarios:
+  - name: crc32 --help is structured
+    steps:
+      - run:
+          command: env -- crc32 --help
+      - assert:
+          exit_code: 0
+          stdout:
+            contains: "Usage:"
+
+  - name: sha384sum --help is structured
+    steps:
+      - run:
+          command: env -- sha384sum --help
+      - assert:
+          exit_code: 0
+          stdout:
+            contains: "Usage:"
+
+  - name: sha3sum --help is structured
+    steps:
+      - run:
+          command: env -- sha3sum --help
+      - assert:
+          exit_code: 0
+          stdout:
+            contains: "Usage:"
+
+  - name: sum --help is structured
+    steps:
+      - run:
+          command: env -- sum --help
+      - assert:
+          exit_code: 0
+          stdout:
+            contains: "Usage:"
+
+  - name: uudecode --help is structured
+    steps:
+      - run:
+          command: env -- uudecode --help
+      - assert:
+          exit_code: 0
+          stdout:
+            contains: "Usage:"
+
+  - name: uuencode --help is structured
+    steps:
+      - run:
+          command: env -- uuencode --help
+      - assert:
+          exit_code: 0
+          stdout:
+            contains: "Usage:"

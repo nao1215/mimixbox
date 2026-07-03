@@ -1,0 +1,27 @@
+# Migrated from mimixbox's ShellSpec test/it/spec/sysctl_spec.sh.
+version: "1"
+
+suite:
+  name: mimixbox sysctl
+
+scenarios:
+  - name: reads a kernel parameter
+    # TestSysctlRead: sysctl kernel.ostype
+    steps:
+      - run:
+          command: sysctl kernel.ostype
+      - assert:
+          exit_code: 0
+          stdout:
+            equals: "kernel.ostype = Linux"
+
+  - name: lists parameters with -a
+    # TestSysctlAll: sysctl -a | grep -c ' = ' (must not equal 0).
+    # Assert the real -a output contains key=value lines.
+    steps:
+      - run:
+          command: sysctl -a
+      - assert:
+          exit_code: 0
+          stdout:
+            contains: " = "

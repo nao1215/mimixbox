@@ -1,0 +1,26 @@
+# Migrated from mimixbox's ShellSpec test/it/spec/pmap_spec.sh.
+version: "1"
+
+suite:
+  name: mimixbox pmap
+
+scenarios:
+  - name: prints a total line for a process map
+    # TestPmapTotal: pmap $$ | tail -n 1 | grep -c 'total' -> '1'
+    steps:
+      - run:
+          shell: true
+          command: pmap $$
+      - assert:
+          exit_code: 0
+          stdout:
+            contains: "total"
+
+  - name: rejects an invalid PID
+    # TestPmapInvalid: pmap notapid -> rc=1.
+    # Error case uses direct exec.
+    steps:
+      - run:
+          command: pmap notapid
+      - assert:
+          exit_code: { not: 0 }

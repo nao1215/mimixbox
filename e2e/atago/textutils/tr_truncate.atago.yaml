@@ -1,0 +1,26 @@
+# Migrated from mimixbox's ShellSpec test/it/spec/tr_truncate_spec.sh (+ textutils/tr_truncate_test.sh).
+version: "1"
+
+suite:
+  name: mimixbox tr --truncate-set1
+
+scenarios:
+  - name: truncates SET1 to SET2 length, leaving extra chars unchanged
+    steps:
+      - run:
+          shell: true
+          command: printf 'abc\n' | tr --truncate-set1 abc xy
+      - assert:
+          exit_code: 0
+          stdout:
+            equals: "xyc"
+
+  - name: accepts the -t short form
+    steps:
+      - run:
+          shell: true
+          command: printf 'abc\n' | tr -t abc xy
+      - assert:
+          exit_code: 0
+          stdout:
+            equals: "xyc"

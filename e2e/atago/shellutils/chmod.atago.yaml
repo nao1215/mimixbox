@@ -1,0 +1,37 @@
+# Migrated from mimixbox's ShellSpec test/it/spec/chmod_spec.sh (+ shellutils/chmod_test.sh).
+version: "1"
+
+suite:
+  name: mimixbox chmod
+
+scenarios:
+  - name: sets the permission bits with an octal mode
+    steps:
+      # Setup: create file.txt at mode 600, then change it and read it back.
+      - run:
+          shell: true
+          command: mkdir -p chmod && touch chmod/file.txt && chmod 600 chmod/file.txt && chmod 644 chmod/file.txt && stat -c '%a' chmod/file.txt
+      - assert:
+          exit_code: 0
+          stdout:
+            equals: "644"
+
+  - name: adds owner execute to mode 600 with a symbolic mode
+    steps:
+      - run:
+          shell: true
+          command: mkdir -p chmod && touch chmod/file.txt && chmod 600 chmod/file.txt && chmod u+x chmod/file.txt && stat -c '%a' chmod/file.txt
+      - assert:
+          exit_code: 0
+          stdout:
+            equals: "700"
+
+  - name: reports an error on a missing file
+    steps:
+      # Direct exec so the single failing command surfaces its real exit code.
+      - run:
+          command: chmod 644 /no_such_file
+      - assert:
+          exit_code: { not: 0 }
+          stderr:
+            equals: "chmod: cannot access '/no_such_file': no such file or directory"

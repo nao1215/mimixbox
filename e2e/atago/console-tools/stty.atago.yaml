@@ -1,0 +1,18 @@
+# Migrated from mimixbox's ShellSpec test/it/spec/stty_spec.sh.
+version: "1"
+
+suite:
+  name: mimixbox stty
+
+scenarios:
+  - name: reports when standard input is not a terminal
+    steps:
+      # atago runs the command with a non-terminal stdin, so stty reports the
+      # not-a-tty error on stderr and exits 1. Error case → direct exec.
+      - run:
+          command: stty
+          stdin: "x\n"
+      - assert:
+          exit_code: 1
+          stderr:
+            equals: "stty: standard input: not a tty"

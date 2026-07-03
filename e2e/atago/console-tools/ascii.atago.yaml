@@ -1,0 +1,28 @@
+# Migrated from mimixbox's ShellSpec test/it/spec/ascii_spec.sh.
+version: "1"
+
+suite:
+  name: mimixbox ascii
+
+scenarios:
+  - name: prints 128 entries
+    steps:
+      # ascii | grep -c .  → needs a pipe.
+      - run:
+          shell: true
+          command: ascii | grep -c .
+      - assert:
+          exit_code: 0
+          stdout:
+            equals: "128"
+
+  - name: maps code 65 to A
+    steps:
+      # Code 65 (0x41) must map to the letter A on the same line.
+      - run:
+          shell: true
+          command: ascii | grep '0x41' | grep -c 'A'
+      - assert:
+          exit_code: 0
+          stdout:
+            equals: "1"

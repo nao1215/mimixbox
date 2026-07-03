@@ -1,0 +1,23 @@
+# Migrated from mimixbox's ShellSpec test/it/spec/chvt_spec.sh.
+# Switching VTs needs a console and privilege; only the deterministic
+# validation paths are exercised here.
+version: "1"
+
+suite:
+  name: mimixbox chvt
+
+scenarios:
+  - name: rejects a non-numeric VT
+    steps:
+      # Error case → direct exec.
+      - run:
+          command: chvt notanumber
+      - assert:
+          exit_code: 1
+
+  - name: requires a VT number
+    steps:
+      - run:
+          command: chvt
+      - assert:
+          exit_code: 1

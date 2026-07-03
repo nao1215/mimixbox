@@ -1,0 +1,18 @@
+# Migrated from mimixbox's ShellSpec test/it/spec/ftpget_spec.sh (no helper; inline --help contract).
+# Universal --help contract (Issue #477): exit 0, "Usage: ftpget" on stdout, empty stderr.
+version: "1"
+
+suite:
+  name: mimixbox ftpget
+
+scenarios:
+  - name: describes itself with --help
+    steps:
+      - run:
+          command: ftpget --help
+      - assert:
+          exit_code: 0
+          stdout:
+            contains: "Usage: ftpget"
+          stderr:
+            empty: true

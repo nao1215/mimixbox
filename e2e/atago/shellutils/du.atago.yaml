@@ -1,0 +1,27 @@
+# Migrated from mimixbox's ShellSpec test/it/spec/du_spec.sh (+ shellutils/du_test.sh).
+version: "1"
+
+suite:
+  name: mimixbox du
+
+scenarios:
+  - name: -b reports the total apparent byte size
+    steps:
+      # Setup: 100-byte a.txt and 50-byte sub/b.txt (150 bytes total).
+      - run:
+          shell: true
+          command: mkdir -p du/sub && printf '%0.s.' $(seq 1 100) > du/a.txt && printf '%0.s.' $(seq 1 50) > du/sub/b.txt && du -s -b ${workdir}/du
+      - assert:
+          exit_code: 0
+          stdout:
+            equals: "150\t${workdir}/du"
+
+  - name: -s reports the total in 1K blocks
+    steps:
+      - run:
+          shell: true
+          command: mkdir -p du/sub && printf '%0.s.' $(seq 1 100) > du/a.txt && printf '%0.s.' $(seq 1 50) > du/sub/b.txt && du -s ${workdir}/du
+      - assert:
+          exit_code: 0
+          stdout:
+            equals: "1\t${workdir}/du"

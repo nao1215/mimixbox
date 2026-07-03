@@ -1,0 +1,110 @@
+# Migrated from mimixbox's ShellSpec test/it/spec/cp_gnu_spec.sh (no Included helper;
+# Test* functions are inline). GNU cp flag parity (Issues #727, #728, #729, #940):
+# --target-directory/-t, --no-target-directory/-T, --parents, --backup, --update/-u.
+#
+# Each scenario builds its own isolated fixtures in the per-run workdir and runs a
+# pipeline, so shell: true. The ShellSpec used `diff <(ls a) <(ls b)` (bash process
+# substitution); under the /bin/sh harness that is rewritten to a POSIX string
+# comparison `[ "$(ls a)" = "$(ls b)" ]`, which checks the same equality.
+version: "1"
+
+suite:
+  name: mimixbox cp GNU flags
+
+scenarios:
+  - name: copies into the target directory (-t equals destination-last form)
+    steps:
+      - run:
+          shell: true
+          command: >
+            printf 'A\n' > a.txt && printf 'B\n' > b.txt && mkdir dst_t dst_plain &&
+            cp --target-directory dst_t a.txt b.txt &&
+            cp a.txt b.txt dst_plain &&
+            [ "$(ls dst_t)" = "$(ls dst_plain)" ] && cat dst_t/a.txt dst_t/b.txt
+      - assert:
+          exit_code: 0
+          stdout:
+            equals: |
+              A
+              B
+
+  - name: rejects a directory destination with --no-target-directory (-T)
+    steps:
+      - run:
+          shell: true
+          command: printf 'A\n' > a.txt && mkdir b && cp -T a.txt b
+      - assert:
+          exit_code:
+            not: 0
+          stderr:
+            contains: "cannot overwrite directory"
+
+  - name: recreates the source path prefix with --parents
+    steps:
+      - run:
+          shell: true
+          command: >
+            mkdir -p src/a dst && printf 'deep\n' > src/a/b.txt &&
+            cp --parents src/a/b.txt dst/ && cat dst/src/a/b.txt
+      - assert:
+          exit_code: 0
+          stdout:
+            equals: "deep"
+
+  - name: makes a backup before overwriting with --backup
+    steps:
+      - run:
+          shell: true
+          command: >
+            printf 'new\n' > src.txt && printf 'old\n' > dst.txt &&
+            cp --backup=simple src.txt dst.txt && cat dst.txt dst.txt~
+      - assert:
+          exit_code: 0
+          stdout:
+            equals: |
+              new
+              old
+
+  - name: skips the copy when the destination is newer (-u)
+    steps:
+      # Pin mtimes explicitly (src old, dst new) instead of relying on a sleep
+      # gap, so cp -u's "destination is newer" decision is deterministic even
+      # under parallel load / coarse mtime granularity.
+      - run:
+          shell: true
+          command: >
+            printf 'srcdata\n' > src.txt && printf 'dstdata\n' > dst.txt &&
+            touch -d '2020-01-01T00:00:00' src.txt && touch -d '2021-01-01T00:00:00' dst.txt &&
+            cp -u src.txt dst.txt && cat dst.txt
+      - assert:
+          exit_code: 0
+          stdout:
+            equals: "dstdata"
+
+  - name: skips a newer file inside the tree with -ru (#940)
+    steps:
+      - run:
+          shell: true
+          command: >
+            mkdir -p src dst/src && printf 'from-src\n' > src/f.txt &&
+            printf 'newer-dst\n' > dst/src/f.txt &&
+            touch -d '2020-01-01T00:00:00' src/f.txt && touch -d '2021-01-01T00:00:00' dst/src/f.txt &&
+            cp -ru src dst && cat dst/src/f.txt
+      - assert:
+          exit_code: 0
+          stdout:
+            equals: "newer-dst"
+
+  - name: backs up a file inside the tree with -r --backup (#940)
+    steps:
+      - run:
+          shell: true
+          command: >
+            mkdir -p src dst/src && printf 'new\n' > src/f.txt && printf 'old\n' > dst/src/f.txt &&
+            cp -r --backup=simple src dst && cat dst/src/f.txt dst/src/f.txt~
+      - assert:
+          exit_code: 0
+          stdout:
+            equals: |
+              new
+              old

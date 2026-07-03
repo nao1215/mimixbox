@@ -1,0 +1,16 @@
+# Migrated from mimixbox's ShellSpec test/it/spec/mountpoint_spec.sh
+# (+ fileutils/mountpoint_test.sh). Single simple command, so direct exec.
+version: "1"
+
+suite:
+  name: mimixbox mountpoint
+
+scenarios:
+  - name: reports that / is a mountpoint
+    steps:
+      - run:
+          command: mountpoint /
+      - assert:
+          exit_code: 0
+          stdout:
+            equals: "/ is a mountpoint"

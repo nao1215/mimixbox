@@ -1,0 +1,16 @@
+# Migrated from mimixbox's ShellSpec test/it/spec/sleep_spec.sh (+ shellutils/sleep_test.sh).
+version: "1"
+
+suite:
+  name: mimixbox sleep
+
+scenarios:
+  - name: sleeps then returns
+    steps:
+      - run:
+          shell: true
+          command: sleep 0.1 && echo slept
+      - assert:
+          exit_code: 0
+          stdout:
+            equals: "slept"

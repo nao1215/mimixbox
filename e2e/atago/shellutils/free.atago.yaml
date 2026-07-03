@@ -1,0 +1,18 @@
+# Migrated from mimixbox's ShellSpec test/it/spec/free_spec.sh (+ shellutils/free_test.sh).
+version: "1"
+
+suite:
+  name: mimixbox free
+
+scenarios:
+  - name: prints the column header
+    steps:
+      - run:
+          shell: true
+          command: free | head -n 1
+      - assert:
+          exit_code: 0
+          stdout:
+            contains:
+              - "total"
+              - "available"

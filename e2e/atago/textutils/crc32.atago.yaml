@@ -1,0 +1,30 @@
+# Migrated from mimixbox's ShellSpec test/it/spec/crc32_spec.sh (no helper; inline).
+# Universal --help contract (Issue #477) plus a CRC-32-of-stdin behavior case.
+# ShellSpec's `Data 'hello'` feeds "hello\n" on stdin, so crc32 hashes the
+# 6 bytes including the trailing newline.
+version: "1"
+
+suite:
+  name: mimixbox crc32
+
+scenarios:
+  - name: describes itself with --help
+    steps:
+      - run:
+          command: crc32 --help
+      - assert:
+          exit_code: 0
+          stdout:
+            contains: "Usage: crc32"
+          stderr:
+            empty: true
+
+  - name: prints the CRC-32 of stdin
+    steps:
+      - run:
+          command: crc32
+          stdin: "hello\n"
+      - assert:
+          exit_code: 0
+          stdout:
+            equals: "363a3020  -"

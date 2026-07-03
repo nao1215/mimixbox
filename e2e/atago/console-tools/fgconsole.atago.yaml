@@ -1,0 +1,28 @@
+# Migrated from mimixbox's ShellSpec test/it/spec/fgconsole_spec.sh.
+# A Linux virtual console isn't available on CI/WSL, so only the deterministic
+# failure path and --help are exercised here.
+version: "1"
+
+suite:
+  name: mimixbox fgconsole
+
+scenarios:
+  - name: fails without a virtual console
+    steps:
+      # Error case → direct exec; no controlling VT (stdin from empty).
+      - run:
+          command: fgconsole
+          stdin: ""
+      - assert:
+          exit_code: 1
+
+  - name: describes itself with --help
+    steps:
+      - run:
+          command: fgconsole --help
+      - assert:
+          exit_code: 0
+          stdout:
+            contains:
+              - "Usage: fgconsole"
+              - "virtual terminal"

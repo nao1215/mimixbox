@@ -1,0 +1,16 @@
+# Migrated from mimixbox's ShellSpec test/it/spec/false_spec.sh (+ shellutils/false_test.sh).
+version: "1"
+
+suite:
+  name: mimixbox false
+
+scenarios:
+  - name: prints nothing and exits 1
+    steps:
+      # Direct exec so the single failing command surfaces its real exit code.
+      - run:
+          command: false
+      - assert:
+          exit_code: { not: 0 }
+          stdout:
+            empty: true

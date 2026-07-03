@@ -1,0 +1,42 @@
+# Migrated from mimixbox's ShellSpec test/it/spec/cmp_spec.sh (+ shellutils/cmp_test.sh).
+version: "1"
+
+suite:
+  name: mimixbox cmp
+
+scenarios:
+  - name: prints nothing and succeeds on identical files
+    steps:
+      - fixture: { file: cmp/a.txt, content: "abc\n" }
+      - fixture: { file: cmp/same.txt, content: "abc\n" }
+      - run:
+          shell: true
+          command: cmp cmp/a.txt cmp/same.txt; echo "rc=$?"
+      - assert:
+          exit_code: 0
+          stdout:
+            equals: "rc=0"
+
+  - name: reports the first differing byte and line on differing files
+    steps:
+      - fixture: { file: cmp/a.txt, content: "abc\n" }
+      - fixture: { file: cmp/diff.txt, content: "abd\n" }
+      # Direct exec so the failing single command surfaces its real exit code.
+      - run:
+          command: cmp ${workdir}/cmp/a.txt ${workdir}/cmp/diff.txt
+      - assert:
+          exit_code: { not: 0 }
+          stdout:
+            equals: "${workdir}/cmp/a.txt ${workdir}/cmp/diff.txt differ: byte 3, line 1"
+
+  - name: cmp -s prints nothing but exits non-zero
+    steps:
+      - fixture: { file: cmp/a.txt, content: "abc\n" }
+      - fixture: { file: cmp/diff.txt, content: "abd\n" }
+      - run:
+          shell: true
+          command: cmp -s cmp/a.txt cmp/diff.txt; echo "rc=$?"
+      - assert:
+          exit_code: 0
+          stdout:
+            equals: "rc=1"

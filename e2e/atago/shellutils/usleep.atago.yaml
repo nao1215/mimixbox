@@ -1,0 +1,29 @@
+# Migrated from mimixbox's ShellSpec test/it/spec/usleep_spec.sh (no helper; inline).
+# Universal --help contract (Issue #477) plus a bad-argument error case.
+# The error case uses direct exec (no shell:true) so the exit code is faithful.
+version: "1"
+
+suite:
+  name: mimixbox usleep
+
+scenarios:
+  - name: describes itself with --help
+    steps:
+      - run:
+          command: usleep --help
+      - assert:
+          exit_code: 0
+          stdout:
+            contains: "Usage: usleep"
+          stderr:
+            empty: true
+
+  - name: rejects a non-numeric microsecond count
+    steps:
+      - run:
+          command: usleep notanumber
+      - assert:
+          exit_code:
+            not: 0
+          stderr:
+            contains: "usleep:"

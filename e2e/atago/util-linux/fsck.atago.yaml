@@ -1,0 +1,28 @@
+# Migrated from mimixbox's ShellSpec test/it/spec/fsck_spec.sh.
+version: "1"
+
+suite:
+  name: mimixbox fsck
+
+scenarios:
+  - name: detects a Minix filesystem
+    steps:
+      - run:
+          shell: true
+          command: >-
+            dd if=/dev/zero of=m.img bs=1024 count=2048 2>/dev/null;
+            mkfs.minix m.img >/dev/null;
+            fsck m.img
+      - assert:
+          exit_code: 0
+          stdout:
+            contains: "minix"
+
+  - name: fails on an unrecognized image
+    steps:
+      # ShellSpec captured rc=1; assert the exit code directly.
+      - run:
+          shell: true
+          command: dd if=/dev/zero of=u.img bs=1024 count=8 2>/dev/null; fsck u.img
+      - assert:
+          exit_code: { not: 0 }

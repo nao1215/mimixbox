@@ -1,0 +1,85 @@
+# Migrated from mimixbox's ShellSpec test/it/spec/debcomp_spec.sh (+ archival/debcomp_test.sh).
+# The dpkg* scenarios consume a committed binary fixture hello.deb (copied from
+# mimixbox's test/it/testdata/hello.deb): a minimal Debian 2.0 package "hello"
+# containing /usr/bin/hello, materialized into the workdir via fixture.from.
+# The roundtrip scenarios pipe a payload through a compressor and decompressor
+# and assert the round-trip text.
+version: "1"
+
+suite:
+  name: mimixbox bzip2, lzop and Debian package applets
+
+scenarios:
+  - name: bzip2 | bzip2 -dc round-trips data
+    steps:
+      - run:
+          shell: true
+          command: printf 'roundtrip-bzip2\n' | bzip2 | bzip2 -dc
+      - assert:
+          exit_code: 0
+          stdout: { equals: "roundtrip-bzip2" }
+
+  - name: lzop | lzopcat round-trips data
+    steps:
+      - run:
+          shell: true
+          command: printf 'roundtrip-lzop\n' | lzop | lzopcat
+      - assert:
+          exit_code: 0
+          stdout: { equals: "roundtrip-lzop" }
+
+  - name: lzop | unlzop -c round-trips data
+    steps:
+      - run:
+          shell: true
+          command: printf 'roundtrip-unlzop\n' | lzop | unlzop -c
+      - assert:
+          exit_code: 0
+          stdout: { equals: "roundtrip-unlzop" }
+
+  - name: dpkg-deb -c lists package contents
+    steps:
+      - fixture: { file: hello.deb, from: hello.deb }
+      - run:
+          shell: true
+          command: dpkg-deb -c hello.deb | grep -q 'usr/bin/hello' && printf 'has-hello\n'
+      - assert:
+          exit_code: 0
+          stdout: { equals: "has-hello" }
+
+  - name: dpkg-deb -f prints a control field
+    steps:
+      - fixture: { file: hello.deb, from: hello.deb }
+      - run:
+          shell: true
+          command: dpkg-deb -f hello.deb Package
+      - assert:
+          exit_code: 0
+          stdout: { equals: "hello" }
+
+  - name: dpkg -x extracts the data tarball path-safely
+    steps:
+      - fixture: { file: hello.deb, from: hello.deb }
+      - run:
+          shell: true
+          command: |
+            dpkg -x hello.deb out
+            test -f out/usr/bin/hello && printf 'extracted\n'
+      - assert:
+          exit_code: 0
+          stdout: { equals: "extracted" }
+
+  - name: dpkg rejects unsupported database operations
+    steps:
+      - fixture: { file: hello.deb, from: hello.deb }
+      - run:
+          shell: true
+          command: |
+            if dpkg -i hello.deb 2>/dev/null; then
+              printf 'unexpected-success\n'
+            else
+              printf 'rejected\n'
+            fi
+      - assert:
+          exit_code: 0
+          stdout: { equals: "rejected" }

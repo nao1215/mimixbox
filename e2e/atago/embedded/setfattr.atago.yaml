@@ -1,0 +1,54 @@
+# Migrated from mimixbox's ShellSpec test/it/spec/setfattr_spec.sh
+# (+ embedded/setfattr_test.sh). setfattr sets an extended attribute that
+# getfattr can read back; -n and -x are mutually exclusive. On a filesystem
+# without xattr support the helper prints a 'skipped' line containing 'user.k'.
+version: "1"
+
+suite:
+  name: mimixbox setfattr
+
+scenarios:
+  - name: sets an attribute that getfattr can read back (or skips without xattr support)
+    steps:
+      - fixture: { file: file.txt, content: "" }
+      - run:
+          shell: true
+          command: |
+            if ! setfattr -n user.k -v v file.txt 2>/dev/null; then
+                echo 'user.k="v" (skipped: filesystem has no xattr support)'
+            else
+                getfattr -d file.txt | grep 'user.k'
+            fi
+      - assert:
+          exit_code: 0
+          stdout:
+            contains: "user.k"
+
+  - name: rejects mutually exclusive -n and -x
+    steps:
+      - fixture: { file: file.txt, content: "" }
+      # Error case -> direct exec.
+      - run:
+          command: setfattr -n user.k -x user.k file.txt
+      - assert:
+          exit_code: { not: 0 }
+          stderr:
+            contains: "mutually exclusive"
+
+  - name: prints usage for --help
+    steps:
+      - run:
+          command: setfattr --help
+      - assert:
+          exit_code: 0
+          stdout:
+            contains: "Usage: setfattr"
+
+  - name: prints the version line for --version
+    steps:
+      - run:
+          command: setfattr --version
+      - assert:
+          exit_code: 0
+          stdout:
+            contains: "setfattr (mimixbox)"

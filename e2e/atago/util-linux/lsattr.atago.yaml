@@ -1,0 +1,19 @@
+# Migrated from mimixbox's ShellSpec test/it/spec/lsattr_spec.sh.
+# FS_IOC_GETFLAGS support depends on the filesystem (tmpfs lacks it); the e2e
+# exercises --help. The attribute decoding is covered by Go unit tests.
+version: "1"
+
+suite:
+  name: mimixbox lsattr
+
+scenarios:
+  - name: describes itself with --help
+    steps:
+      - run:
+          command: lsattr --help
+      - assert:
+          exit_code: 0
+          stdout:
+            contains:
+              - "Usage: lsattr"
+              - "attribute"

@@ -1,3 +1,0 @@
-TestTtyNotATty() {
-    echo "" | tty
-}

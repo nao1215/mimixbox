@@ -1,0 +1,53 @@
+# Migrated from mimixbox's ShellSpec test/it/spec/cp_symlink_spec.sh
+# (+ fileutils/cp_symlink_test.sh). Each helper built a mktemp -d tree, ran
+# `mimixbox cp`, then echoed link/regular based on a [ -L ] / [ -f ] test. Here
+# the tree is built inside ${workdir} and the same echo logic runs under
+# shell:true (the && / [ ] chain needs a shell).
+version: "1"
+
+suite:
+  name: mimixbox cp symlink handling
+
+scenarios:
+  - name: cp -P copies the symlink as a link
+    steps:
+      - run:
+          shell: true
+          command: |
+            echo data > real.txt
+            ln -s real.txt link
+            cp -P link copy
+            [ -L copy ] && echo link || echo notlink
+      - assert:
+          exit_code: 0
+          stdout:
+            equals: "link"
+
+  - name: cp -L copies the link target as a regular file
+    steps:
+      - run:
+          shell: true
+          command: |
+            echo data > real.txt
+            ln -s real.txt link
+            cp -L link copy
+            if [ -L copy ]; then echo link; elif [ -f copy ]; then echo regular; else echo missing; fi
+      - assert:
+          exit_code: 0
+          stdout:
+            equals: "regular"
+
+  - name: cp -d preserves a symlink inside a copied tree
+    steps:
+      - run:
+          shell: true
+          command: |
+            mkdir -p src
+            echo data > src/real.txt
+            ln -s real.txt src/lnk
+            cp -d -r src dst
+            [ -L dst/lnk ] && echo link || echo notlink
+      - assert:
+          exit_code: 0
+          stdout:
+            equals: "link"

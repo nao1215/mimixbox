@@ -1,0 +1,118 @@
+# Migrated from mimixbox's ShellSpec test/it/spec/sha512sum_spec.sh (+ textutils/sha512sum_test.sh).
+# The ShellSpec Setup created files under ${MIMIXBOX_IT_ROOT}/sha512sum/; here fixtures
+# build them under the scenario workdir's sha512sum/ subdir so the absolute paths the
+# applet prints (and the paths embedded in checksum.txt) reproduce exactly via
+# ${workdir}. atago expands ${workdir} in fixture content AND assertion values.
+# Error cases (directory / missing file) use direct exec so the real non-zero exit
+# is preserved (a shell wrapper would mask a single failing command's status).
+# Note: the ShellSpec helper function names are TestMd5sum* even in sha512sum_test.sh;
+# the actual command run is sha512sum.
+version: "1"
+
+suite:
+  name: mimixbox sha512sum
+
+scenarios:
+  - name: get sha512sum of one file
+    steps:
+      - fixture:
+          file: sha512sum/1.txt
+          content: "Dungeon of Regalias\n"
+      - run:
+          command: sha512sum ${workdir}/sha512sum/1.txt
+      - assert:
+          exit_code: 0
+          stdout:
+            equals: "05eec7dcf412f63d5a291d019f6b3d62d4f8f5236592815ed171f7d6d0a7969f65a589a092740bd04a2f181d7d5a27ff36808e04a69bd84a854aad0a01da3612  ${workdir}/sha512sum/1.txt"
+
+  - name: cannot get sha512sum of one directory
+    steps:
+      - fixture:
+          file: sha512sum/1.txt
+          content: "Dungeon of Regalias\n"
+      - run:
+          command: sha512sum ${workdir}/sha512sum
+      - assert:
+          exit_code: { not: 0 }
+          stderr:
+            equals: "sha512sum: ${workdir}/sha512sum: It is directory"
+
+  - name: cannot get sha512sum of not exist file
+    steps:
+      - run:
+          command: sha512sum /not_exist_file
+      - assert:
+          exit_code: { not: 0 }
+          stderr:
+            equals: "sha512sum: /not_exist_file: No such file or directory"
+
+  - name: get sha512sum of three files
+    steps:
+      - fixture:
+          file: sha512sum/1.txt
+          content: "Dungeon of Regalias\n"
+      - fixture:
+          file: sha512sum/2.txt
+          content: "DEMONION\n"
+      - fixture:
+          file: sha512sum/3.txt
+          content: "Dungeon Crusadearz\n"
+      - run:
+          command: sha512sum ${workdir}/sha512sum/1.txt ${workdir}/sha512sum/2.txt ${workdir}/sha512sum/3.txt
+      - assert:
+          exit_code: 0
+          stdout:
+            equals: |
+              05eec7dcf412f63d5a291d019f6b3d62d4f8f5236592815ed171f7d6d0a7969f65a589a092740bd04a2f181d7d5a27ff36808e04a69bd84a854aad0a01da3612  ${workdir}/sha512sum/1.txt
+              cb2389a103184f607973b1acd073dc15310c8172b03f340a52bdc3843621cf9fbc6263c7dbbd786ceb0244f5147a83aa32ce09a485f544093b7fc5c7533e564f  ${workdir}/sha512sum/2.txt
+              3dafa5f1ec7f09cbe551dc0d4bdb153dedb81104b7e930b7c20733965f7ebb86ee2abea64b6bfa1c54045032865044a3feca5dcc89c28def410b2954094a1890  ${workdir}/sha512sum/3.txt
+
+  - name: check sha512sum with --check option
+    steps:
+      - fixture:
+          file: sha512sum/1.txt
+          content: "Dungeon of Regalias\n"
+      - fixture:
+          file: sha512sum/2.txt
+          content: "DEMONION\n"
+      - fixture:
+          file: sha512sum/3.txt
+          content: "Dungeon Crusadearz\n"
+      - fixture:
+          file: sha512sum/checksum.txt
+          content: |
+            05eec7dcf412f63d5a291d019f6b3d62d4f8f5236592815ed171f7d6d0a7969f65a589a092740bd04a2f181d7d5a27ff36808e04a69bd84a854aad0a01da3612  ${workdir}/sha512sum/1.txt
+            cb2389a103184f607973b1acd073dc15310c8172b03f340a52bdc3843621cf9fbc6263c7dbbd786ceb0244f5147a83aa32ce09a485f544093b7fc5c7533e564f  ${workdir}/sha512sum/2.txt
+            3dafa5f1ec7f09cbe551dc0d4bdb153dedb81104b7e930b7c20733965f7ebb86ee2abea64b6bfa1c54045032865044a3feca5dcc89c28def410b2954094a1890  ${workdir}/sha512sum/3.txt
+      - run:
+          command: sha512sum -c ${workdir}/sha512sum/checksum.txt
+      - assert:
+          exit_code: 0
+          stdout:
+            equals: |
+              ${workdir}/sha512sum/1.txt: OK
+              ${workdir}/sha512sum/2.txt: OK
+              ${workdir}/sha512sum/3.txt: OK
+
+  - name: get sha512sum for pipe data
+    steps:
+      - run:
+          shell: true
+          command: echo "test" | sha512sum
+      - assert:
+          exit_code: 0
+          stdout:
+            equals: "0e3e75234abc68f4378a86b3f4b32a198ba301845b0cd6e50106e874345700cc6663a86c1ea125dc5e92be17c98f9a0f85ca9d5f595db2012f7cc3571945c123  -"
+
+  - name: get sha512sum for pipe data and file at same time
+    steps:
+      - fixture:
+          file: sha512sum/1.txt
+          content: "Dungeon of Regalias\n"
+      - run:
+          shell: true
+          command: echo "test" | sha512sum ${workdir}/sha512sum/1.txt
+      - assert:
+          exit_code: 0
+          stdout:
+            equals: "05eec7dcf412f63d5a291d019f6b3d62d4f8f5236592815ed171f7d6d0a7969f65a589a092740bd04a2f181d7d5a27ff36808e04a69bd84a854aad0a01da3612  ${workdir}/sha512sum/1.txt"

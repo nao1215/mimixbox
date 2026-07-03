@@ -1,0 +1,51 @@
+# Migrated from mimixbox's ShellSpec test/it/spec/pager_spec.sh.
+version: "1"
+
+suite:
+  name: mimixbox more / less
+
+scenarios:
+  - name: more streams stdin through when stdout is not a terminal
+    steps:
+      # printf ... | more  → needs a pipe.
+      - run:
+          shell: true
+          command: printf 'a\nb\nc\n' | more
+      - assert:
+          exit_code: 0
+          stdout:
+            equals: |
+              a
+              b
+              c
+
+  - name: less streams stdin through when stdout is not a terminal
+    steps:
+      - run:
+          shell: true
+          command: printf 'x\ny\nz\n' | less
+      - assert:
+          exit_code: 0
+          stdout:
+            equals: |
+              x
+              y
+              z
+
+  - name: more streams a file through
+    steps:
+      # The ShellSpec helper writes the file to a temp dir; use a fixture in the
+      # isolated workdir instead.
+      - fixture:
+          file: f
+          content: |
+            one
+            two
+      - run:
+          command: more f
+      - assert:
+          exit_code: 0
+          stdout:
+            equals: |
+              one
+              two

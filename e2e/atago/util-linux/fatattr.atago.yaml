@@ -1,0 +1,23 @@
+# Migrated from mimixbox's ShellSpec test/it/spec/fatattr_spec.sh.
+# A FAT filesystem isn't available on CI; the e2e exercises the deterministic
+# validation paths. The attribute math is unit-tested.
+version: "1"
+
+suite:
+  name: mimixbox fatattr
+
+scenarios:
+  - name: requires a file
+    steps:
+      # ShellSpec asserted rc=1; direct exec on the error path.
+      - run:
+          command: fatattr
+      - assert:
+          exit_code: { not: 0 }
+
+  - name: rejects an unknown attribute
+    steps:
+      - run:
+          command: fatattr +Z /tmp/x
+      - assert:
+          exit_code: { not: 0 }

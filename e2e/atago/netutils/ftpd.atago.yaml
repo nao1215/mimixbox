@@ -1,0 +1,18 @@
+# Migrated from mimixbox's ShellSpec test/it/spec/ftpd_spec.sh (no helper; inline --help contract).
+# Universal --help contract (Issue #477): exit 0, "Usage: ftpd" on stdout, empty stderr.
+version: "1"
+
+suite:
+  name: mimixbox ftpd
+
+scenarios:
+  - name: describes itself with --help
+    steps:
+      - run:
+          command: ftpd --help
+      - assert:
+          exit_code: 0
+          stdout:
+            contains: "Usage: ftpd"
+          stderr:
+            empty: true

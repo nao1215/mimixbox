@@ -1,0 +1,124 @@
+# Migrated from mimixbox's ShellSpec test/it/spec/du_gnu_spec.sh (no Included helper;
+# Test* functions are inline). GNU du flag parity (Issue #753): --max-depth,
+# --exclude, --apparent-size, --one-file-system/-x.
+#
+# Each scenario builds its own deterministic fixture tree in the per-run workdir
+# (a.txt 1000B -> 1 block, sub/b.txt 2000B -> 2, sub/deep/c.txt 3000B -> 3) and
+# pipes du through `sed "s#${workdir}#ROOT#"` to normalize the absolute path, just
+# like the ShellSpec `sed "s#${WORK}#ROOT#"`. These cases need a pipe, so shell: true.
+version: "1"
+
+suite:
+  name: mimixbox du GNU flags
+
+scenarios:
+  - name: omits directories deeper than --max-depth
+    steps:
+      - run:
+          shell: true
+          command: >
+            mkdir -p sub/deep &&
+            head -c 1000 /dev/zero > a.txt &&
+            head -c 2000 /dev/zero > sub/b.txt &&
+            head -c 3000 /dev/zero > sub/deep/c.txt &&
+            du --max-depth=1 "${workdir}" | sed "s#${workdir}#ROOT#"
+      - assert:
+          exit_code: 0
+          stdout:
+            line: 1
+            equals: "5\tROOT/sub"
+      - assert:
+          stdout:
+            line: 2
+            equals: "6\tROOT"
+
+  - name: prints only the operand total with --max-depth=0
+    steps:
+      - run:
+          shell: true
+          command: >
+            mkdir -p sub/deep &&
+            head -c 1000 /dev/zero > a.txt &&
+            head -c 2000 /dev/zero > sub/b.txt &&
+            head -c 3000 /dev/zero > sub/deep/c.txt &&
+            du --max-depth=0 "${workdir}" | sed "s#${workdir}#ROOT#"
+      - assert:
+          exit_code: 0
+          stdout:
+            equals: "6\tROOT"
+
+  - name: skips entries matching --exclude
+    steps:
+      - run:
+          shell: true
+          command: >
+            mkdir -p sub/deep &&
+            head -c 1000 /dev/zero > a.txt &&
+            head -c 2000 /dev/zero > sub/b.txt &&
+            head -c 3000 /dev/zero > sub/deep/c.txt &&
+            du --exclude='sub' "${workdir}" | sed "s#${workdir}#ROOT#"
+      - assert:
+          exit_code: 0
+          stdout:
+            equals: "1\tROOT"
+
+  - name: skips glob-matching files under -a
+    steps:
+      - run:
+          shell: true
+          command: >
+            mkdir -p sub/deep &&
+            head -c 1000 /dev/zero > a.txt &&
+            head -c 2000 /dev/zero > sub/b.txt &&
+            head -c 3000 /dev/zero > sub/deep/c.txt &&
+            head -c 4096 /dev/zero > drop.tmp &&
+            du -a --exclude='*.tmp' "${workdir}" | grep -c 'drop.tmp' || true
+      - assert:
+          exit_code: 0
+          stdout:
+            equals: "0"
+
+  - name: reports exact bytes with --apparent-size
+    steps:
+      - run:
+          shell: true
+          command: >
+            mkdir -p sub/deep &&
+            head -c 1000 /dev/zero > a.txt &&
+            head -c 2000 /dev/zero > sub/b.txt &&
+            head -c 3000 /dev/zero > sub/deep/c.txt &&
+            du -s --apparent-size "${workdir}" | sed "s#${workdir}#ROOT#"
+      - assert:
+          exit_code: 0
+          stdout:
+            equals: "6000\tROOT"
+
+  - name: reports block counts by default
+    steps:
+      - run:
+          shell: true
+          command: >
+            mkdir -p sub/deep &&
+            head -c 1000 /dev/zero > a.txt &&
+            head -c 2000 /dev/zero > sub/b.txt &&
+            head -c 3000 /dev/zero > sub/deep/c.txt &&
+            du -s "${workdir}" | sed "s#${workdir}#ROOT#"
+      - assert:
+          exit_code: 0
+          stdout:
+            equals: "6\tROOT"
+
+  - name: matches a plain run on a single filesystem with -x
+    steps:
+      - run:
+          shell: true
+          command: >
+            mkdir -p sub/deep &&
+            head -c 1000 /dev/zero > a.txt &&
+            head -c 2000 /dev/zero > sub/b.txt &&
+            head -c 3000 /dev/zero > sub/deep/c.txt &&
+            du -x -s "${workdir}" | sed "s#${workdir}#ROOT#"
+      - assert:
+          exit_code: 0
+          stdout:
+            equals: "6\tROOT"

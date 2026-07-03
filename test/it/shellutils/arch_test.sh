@@ -1,3 +1,0 @@
-TestArch() {
-    arch
-}

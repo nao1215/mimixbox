@@ -1,0 +1,45 @@
+# Migrated from mimixbox's ShellSpec test/it/spec/sed_spec.sh (+ editors/sed_test.sh).
+# Each helper pipes input into sed, so each run needs a shell.
+version: "1"
+
+suite:
+  name: mimixbox sed
+
+scenarios:
+  - name: substitutes the first match
+    steps:
+      - run:
+          shell: true
+          command: printf 'hello world\n' | sed 's/world/sed/'
+      - assert:
+          exit_code: 0
+          stdout: { equals: "hello sed" }
+
+  - name: substitutes globally
+    steps:
+      - run:
+          shell: true
+          command: printf 'a a a\n' | sed 's/a/b/g'
+      - assert:
+          exit_code: 0
+          stdout: { equals: "b b b" }
+
+  - name: deletes a line by number
+    steps:
+      - run:
+          shell: true
+          command: printf '1\n2\n3\n' | sed '2d'
+      - assert:
+          exit_code: 0
+          stdout: { line: 1, equals: "1" }
+      - assert:
+          stdout: { line: 2, equals: "3" }
+
+  - name: prints a single line with -n
+    steps:
+      - run:
+          shell: true
+          command: printf 'x\ny\nz\n' | sed -n '2p'
+      - assert:
+          exit_code: 0
+          stdout: { equals: "y" }

@@ -1,0 +1,24 @@
+# Migrated from mimixbox's ShellSpec test/it/spec/sqluv_tui_smoke_spec.sh (+
+# sqluv_test.sh SqluvTUISmoke). Feeds "q" on stdin so the minimal viewer renders
+# its table list and exits cleanly; the pipe + mktemp need shell:true.
+version: "1"
+
+suite:
+  name: mimixbox sqluv (TUI smoke)
+
+scenarios:
+  - name: render the minimal viewer and exit cleanly on quit
+    steps:
+      - run:
+          shell: true
+          command: |
+            dir=$(mktemp -d "${TMPDIR:-/tmp}/sqluv-it.XXXXXX")
+            printf 'id,name\n1,alice\n' > "$dir/data.csv"
+            printf 'q\n' | sqluv "$dir/data.csv" --history-file "$dir/history.log"
+            rm -rf "$dir"
+      - assert:
+          exit_code: 0
+          stdout:
+            contains:
+              - "minimal viewer"
+              - "bye"

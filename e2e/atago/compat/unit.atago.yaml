@@ -1,0 +1,27 @@
+# Migrated from mimixbox's ShellSpec test/it/spec/unit_spec.sh (no helper; inline).
+# Universal --help contract (Issue #477) plus a help-content assertion.
+version: "1"
+
+suite:
+  name: mimixbox unit
+
+scenarios:
+  - name: describes itself with --help
+    steps:
+      - run:
+          command: unit --help
+      - assert:
+          exit_code: 0
+          stdout:
+            contains: "Usage: unit"
+          stderr:
+            empty: true
+
+  - name: documents its purpose in --help
+    steps:
+      - run:
+          command: unit --help
+      - assert:
+          exit_code: 0
+          stdout:
+            contains: "does not embed"

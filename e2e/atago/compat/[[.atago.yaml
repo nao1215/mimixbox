@@ -1,0 +1,29 @@
+# Migrated from mimixbox's ShellSpec test/it/spec/[[_spec.sh (no helper; inline).
+# `[[` is the test applet (requires a closing `]]`). Universal --help contract
+# (Issue #477) plus a purpose-paragraph check. Run via direct exec so the
+# applet on PATH is reached, not the shell builtin.
+version: "1"
+
+suite:
+  name: mimixbox [[
+
+scenarios:
+  - name: describes itself with --help
+    steps:
+      - run:
+          command: "[[ --help"
+      - assert:
+          exit_code: 0
+          stdout:
+            contains: "Usage: [["
+          stderr:
+            empty: true
+
+  - name: documents its purpose in --help
+    steps:
+      - run:
+          command: "[[ --help"
+      - assert:
+          exit_code: 0
+          stdout:
+            contains: "Evaluate EXPRESSION"

@@ -1,0 +1,27 @@
+# Migrated from mimixbox's ShellSpec test/it/spec/acpid_spec.sh
+# (+ loginutils/acpid_test.sh). acpid -f reads /proc/acpi/event (often absent)
+# and blocks; the e2e exercises the no-foreground rejection path and --help.
+version: "1"
+
+suite:
+  name: mimixbox acpid
+
+scenarios:
+  - name: requires foreground mode
+    steps:
+      # error case -> direct exec (no shell:true)
+      - run:
+          command: acpid
+      - assert:
+          exit_code: { not: 0 }
+
+  - name: describes itself with --help
+    steps:
+      - run:
+          command: acpid --help
+      - assert:
+          exit_code: 0
+          stdout:
+            contains:
+              - "Usage: acpid"
+              - "ACPI"

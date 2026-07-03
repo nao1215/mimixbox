@@ -1,0 +1,54 @@
+# Migrated from mimixbox's ShellSpec test/it/spec/tee_output_error_spec.sh (+ shellutils/tee_output_error_test.sh).
+version: "1"
+
+suite:
+  name: mimixbox tee --output-error
+
+scenarios:
+  - name: copies input and succeeds with an explicit MODE
+    steps:
+      - run:
+          shell: true
+          command: printf 'hello\n' | tee --output-error=warn ${workdir}/good.txt > /dev/null; cat ${workdir}/good.txt
+      - assert:
+          exit_code: 0
+          stdout:
+            equals: "hello"
+
+  - name: warn mode still writes the good file but exits nonzero
+    steps:
+      # The bad path (missing dir) fails, but warn mode keeps writing good.txt.
+      # We capture tee's rc, print good.txt, then propagate the failing rc.
+      - run:
+          shell: true
+          command: |
+            printf 'payload\n' | tee --output-error=warn \
+              ${workdir}/missing-dir/bad.txt ${workdir}/good.txt > /dev/null 2>&1
+            rc=$?
+            cat ${workdir}/good.txt 2>/dev/null
+            exit ${rc}
+      - assert:
+          exit_code: { not: 0 }
+          stdout:
+            equals: "payload"
+
+  - name: exit mode does not create the later good file and exits nonzero
+    steps:
+      # exit mode stops at the first failing destination, so the good file that
+      # follows the bad one is never created; we emit "absent".
+      - run:
+          shell: true
+          command: |
+            printf 'payload\n' | tee --output-error=exit \
+              ${workdir}/missing-dir/bad.txt ${workdir}/good.txt > /dev/null 2>&1
+            rc=$?
+            if [ -f ${workdir}/good.txt ]; then
+              printf 'present\n'
+            else
+              printf 'absent\n'
+            fi
+            exit ${rc}
+      - assert:
+          exit_code: { not: 0 }
+          stdout:
+            equals: "absent"

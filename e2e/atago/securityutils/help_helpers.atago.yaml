@@ -1,0 +1,125 @@
+# Migrated from mimixbox's ShellSpec test/it/spec/help_helpers_securityutils_spec.sh
+# (+ securityutils/<cmd>_test.sh). Each helper is `env -- '<cmd>' --help`; the
+# --help contract prints a "Usage:" line to stdout and exits 0. Direct exec.
+version: "1"
+
+suite:
+  name: mimixbox securityutils --help contract
+
+scenarios:
+  - name: chcon --help is structured
+    steps:
+      - run:
+          command: chcon --help
+      - assert:
+          exit_code: 0
+          stdout:
+            contains: "Usage:"
+
+  - name: getenforce --help is structured
+    steps:
+      - run:
+          command: getenforce --help
+      - assert:
+          exit_code: 0
+          stdout:
+            contains: "Usage:"
+
+  - name: getsebool --help is structured
+    steps:
+      - run:
+          command: getsebool --help
+      - assert:
+          exit_code: 0
+          stdout:
+            contains: "Usage:"
+
+  - name: load_policy --help is structured
+    steps:
+      - run:
+          command: load_policy --help
+      - assert:
+          exit_code: 0
+          stdout:
+            contains: "Usage:"
+
+  - name: matchpathcon --help is structured
+    steps:
+      - run:
+          command: matchpathcon --help
+      - assert:
+          exit_code: 0
+          stdout:
+            contains: "Usage:"
+
+  - name: restorecon --help is structured
+    steps:
+      - run:
+          command: restorecon --help
+      - assert:
+          exit_code: 0
+          stdout:
+            contains: "Usage:"
+
+  - name: runcon --help is structured
+    steps:
+      - run:
+          command: runcon --help
+      - assert:
+          exit_code: 0
+          stdout:
+            contains: "Usage:"
+
+  - name: selinuxenabled --help is structured
+    steps:
+      - run:
+          command: selinuxenabled --help
+      - assert:
+          exit_code: 0
+          stdout:
+            contains: "Usage:"
+
+  - name: sestatus --help is structured
+    steps:
+      - run:
+          command: sestatus --help
+      - assert:
+          exit_code: 0
+          stdout:
+            contains: "Usage:"
+
+  - name: setenforce --help is structured
+    steps:
+      - run:
+          command: setenforce --help
+      - assert:
+          exit_code: 0
+          stdout:
+            contains: "Usage:"
+
+  - name: setfiles --help is structured
+    steps:
+      - run:
+          command: setfiles --help
+      - assert:
+          exit_code: 0
+          stdout:
+            contains: "Usage:"
+
+  - name: setsebool --help is structured
+    steps:
+      - run:
+          command: setsebool --help
+      - assert:
+          exit_code: 0
+          stdout:
+            contains: "Usage:"
+
+  - name: zip-pwcrack --help is structured
+    steps:
+      - run:
+          command: zip-pwcrack --help
+      - assert:
+          exit_code: 0
+          stdout:
+            contains: "Usage:"

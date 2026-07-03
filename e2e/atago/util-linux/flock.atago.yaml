@@ -1,0 +1,25 @@
+# Migrated from mimixbox's ShellSpec test/it/spec/flock_spec.sh.
+version: "1"
+
+suite:
+  name: mimixbox flock
+
+scenarios:
+  - name: runs a command while holding the lock
+    steps:
+      - run:
+          command: flock lock echo locked-run
+      - assert:
+          exit_code: 0
+          stdout:
+            equals: "locked-run"
+
+  - name: fails -n when the lock is already held
+    steps:
+      # Hold the lock with a background sleep, then a -n attempt must fail.
+      # Backgrounding (&) and the timing require shell:true.
+      - run:
+          shell: true
+          command: flock lock sleep 1 & sleep 0.2; flock -n lock echo nope
+      - assert:
+          exit_code: { not: 0 }

@@ -1,0 +1,28 @@
+# Migrated from mimixbox's ShellSpec test/it/spec/busybox_spec.sh (no helper; inline).
+# busybox is a multi-call front-end. Universal --help contract (Issue #477)
+# plus a purpose-paragraph check.
+version: "1"
+
+suite:
+  name: mimixbox busybox
+
+scenarios:
+  - name: describes itself with --help
+    steps:
+      - run:
+          command: busybox --help
+      - assert:
+          exit_code: 0
+          stdout:
+            contains: "Usage: busybox"
+          stderr:
+            empty: true
+
+  - name: documents its purpose in --help
+    steps:
+      - run:
+          command: busybox --help
+      - assert:
+          exit_code: 0
+          stdout:
+            contains: "multi-call front-end"

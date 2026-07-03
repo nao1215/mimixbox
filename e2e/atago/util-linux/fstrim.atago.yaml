@@ -1,0 +1,27 @@
+# Migrated from mimixbox's ShellSpec test/it/spec/fstrim_spec.sh.
+# Trimming needs privilege; the e2e exercises the missing-argument path and
+# --help. The ioctl dispatch is unit-tested.
+version: "1"
+
+suite:
+  name: mimixbox fstrim
+
+scenarios:
+  - name: requires a mount point
+    steps:
+      # ShellSpec asserted rc=1; direct exec on the error path.
+      - run:
+          command: fstrim
+      - assert:
+          exit_code: { not: 0 }
+
+  - name: describes itself with --help
+    steps:
+      - run:
+          command: fstrim --help
+      - assert:
+          exit_code: 0
+          stdout:
+            contains:
+              - "Usage: fstrim"
+              - "Discard"

@@ -1,0 +1,18 @@
+# Migrated from mimixbox's ShellSpec test/it/spec/strings_spec.sh (+ textutils/strings_test.sh).
+version: "1"
+
+suite:
+  name: mimixbox strings
+
+scenarios:
+  - name: prints printable sequences
+    steps:
+      - run:
+          shell: true
+          command: printf 'hi\000hello\000world' | strings
+      - assert:
+          exit_code: 0
+          stdout:
+            equals: |
+              hello
+              world

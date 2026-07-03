@@ -1,0 +1,19 @@
+# Migrated from mimixbox's ShellSpec test/it/spec/tc_spec.sh (no helper; inline).
+# Universal --help contract (Issue #477): exit 0, "Usage: tc" on stdout,
+# empty stderr. Privileged/networked/destructive applet exercised via --help only.
+version: "1"
+
+suite:
+  name: mimixbox tc
+
+scenarios:
+  - name: describes itself with --help
+    steps:
+      - run:
+          command: tc --help
+      - assert:
+          exit_code: 0
+          stdout:
+            contains: "Usage: tc"
+          stderr:
+            empty: true

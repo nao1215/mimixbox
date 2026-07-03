@@ -1,0 +1,20 @@
+# Migrated from mimixbox's ShellSpec test/it/spec/syslogd_spec.sh.
+# syslogd runs until interrupted, so the e2e exercises --help; the socket-to-log
+# behavior is covered by a Go integration-style unit test.
+version: "1"
+
+suite:
+  name: mimixbox syslogd
+
+scenarios:
+  - name: describes itself with --help
+    # TestSyslogdHelp: syslogd --help (must include 'Usage: syslogd' and 'log')
+    steps:
+      - run:
+          command: syslogd --help
+      - assert:
+          exit_code: 0
+          stdout:
+            contains:
+              - "Usage: syslogd"
+              - "log"

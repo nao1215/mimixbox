@@ -1,0 +1,15 @@
+# Migrated from mimixbox's ShellSpec test/it/spec/resize_spec.sh.
+version: "1"
+
+suite:
+  name: mimixbox resize
+
+scenarios:
+  - name: shows the usage line for --help
+    steps:
+      - run:
+          command: resize --help
+      - assert:
+          exit_code: 0
+          stdout:
+            contains: "Usage: resize"

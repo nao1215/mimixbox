@@ -1,0 +1,66 @@
+# Migrated from mimixbox's ShellSpec test/it/spec/leadtime_spec.sh (+ shellutils/leadtime_test.sh).
+version: "1"
+
+suite:
+  name: mimixbox leadtime
+
+scenarios:
+  - name: prints usage with --help and exits 0
+    steps:
+      - run:
+          command: leadtime --help
+      - assert:
+          exit_code: 0
+          stdout:
+            contains:
+              - "Usage: leadtime"
+              - "LT_GITHUB_ACCESS_TOKEN"
+
+  - name: fails when no subcommand is given
+    steps:
+      - run:
+          command: leadtime
+      - assert:
+          exit_code: { not: 0 }
+          stderr:
+            contains: "stat"
+
+  - name: fails on an unknown subcommand
+    steps:
+      - run:
+          command: leadtime bogus --owner=a --repo=b
+      - assert:
+          exit_code: { not: 0 }
+          stderr:
+            contains: "unknown subcommand"
+
+  - name: fails with a deterministic error when no token is set
+    steps:
+      # VAR=val prefixes require a shell; the single command's exit is preserved.
+      - run:
+          shell: true
+          command: LT_GITHUB_ACCESS_TOKEN= GITHUB_TOKEN= leadtime stat --owner=acme --repo=demo
+      - assert:
+          exit_code: { not: 0 }
+          stderr:
+            contains: "no GitHub token"
+
+  - name: fails when --owner/--repo are missing
+    steps:
+      - run:
+          shell: true
+          command: LT_GITHUB_ACCESS_TOKEN=x leadtime stat
+      - assert:
+          exit_code: { not: 0 }
+          stderr:
+            contains: "--owner and --repo are required"
+
+  - name: rejects --json with --markdown
+    steps:
+      - run:
+          shell: true
+          command: LT_GITHUB_ACCESS_TOKEN=x leadtime stat --owner=a --repo=b --json --markdown
+      - assert:
+          exit_code: { not: 0 }
+          stderr:
+            contains: "mutually exclusive"

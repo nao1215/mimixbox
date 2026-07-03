@@ -1,0 +1,29 @@
+# Migrated from mimixbox's ShellSpec test/it/spec/powertop_spec.sh.
+# Power-supply hardware is absent on CI/WSL, so the report path is covered by Go
+# unit tests with fixtures; the e2e confirms powertop runs and exits 0, plus
+# the --help contract.
+version: "1"
+
+suite:
+  name: mimixbox powertop
+
+scenarios:
+  - name: runs and exits zero
+    # TestPowertopRuns: powertop >/dev/null -> rc=0
+    steps:
+      - run:
+          command: powertop
+      - assert:
+          exit_code: 0
+
+  - name: describes itself with --help
+    # TestPowertopHelp: powertop --help (must include 'Usage: powertop' and 'power')
+    steps:
+      - run:
+          command: powertop --help
+      - assert:
+          exit_code: 0
+          stdout:
+            contains:
+              - "Usage: powertop"
+              - "power"

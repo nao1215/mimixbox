@@ -1,0 +1,40 @@
+# Migrated from mimixbox's ShellSpec test/it/spec/chsh_spec.sh
+# (+ loginutils/chsh_test.sh). chsh rewrites /etc/passwd (privileged); the e2e
+# exercises the deterministic read-only and rejection paths plus --help.
+version: "1"
+
+suite:
+  name: mimixbox chsh
+
+scenarios:
+  - name: describes itself with --help
+    steps:
+      - run:
+          command: chsh --help
+      - assert:
+          exit_code: 0
+          stdout:
+            contains:
+              - "Usage: chsh"
+              - "login shell"
+
+  - name: lists shells and exits successfully
+    steps:
+      - run:
+          command: chsh -l
+      - assert:
+          exit_code: 0
+
+  - name: rejects an unknown user
+    steps:
+      - run:
+          command: chsh -s /bin/sh mimixbox-no-such-user-xyz
+      - assert:
+          exit_code: { not: 0 }
+
+  - name: rejects a relative shell path
+    steps:
+      - run:
+          command: chsh -s relative/shell root
+      - assert:
+          exit_code: { not: 0 }

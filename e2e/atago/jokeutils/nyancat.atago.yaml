@@ -1,0 +1,20 @@
+# Migrated from mimixbox's ShellSpec test/it/spec/nyancat_spec.sh
+# (+ jokeutils/nyancat_test.sh). The helper runs nyancat then echoes its rc, so
+# this needs a shell. With no TTY nyancat exits gracefully (0) with no output.
+version: "1"
+
+suite:
+  name: mimixbox nyancat
+
+scenarios:
+  - name: exits gracefully without a terminal
+    steps:
+      - run:
+          shell: true
+          command: |
+            nyancat
+            echo "rc:$?"
+      - assert:
+          exit_code: 0
+          stdout:
+            equals: "rc:0"

@@ -1,0 +1,38 @@
+# Migrated from mimixbox's ShellSpec test/it/spec/hexdump_spec.sh.
+version: "1"
+
+suite:
+  name: mimixbox hexdump / hd
+
+scenarios:
+  - name: hd shows the canonical hex+ASCII layout
+    steps:
+      - run:
+          shell: true
+          command: printf 'hello world\n' | hd
+      - assert:
+          exit_code: 0
+          stdout:
+            contains:
+              - "00000000  68 65 6c 6c 6f 20 77 6f  72 6c 64 0a"
+              - "|hello world.|"
+
+  - name: hexdump -C matches hd
+    steps:
+      - run:
+          shell: true
+          command: printf 'hello world\n' | hexdump -C
+      - assert:
+          exit_code: 0
+          stdout:
+            contains: "|hello world.|"
+
+  - name: hexdump default shows two-byte words
+    steps:
+      - run:
+          shell: true
+          command: printf 'hello world\n' | hexdump
+      - assert:
+          exit_code: 0
+          stdout:
+            contains: "6568 6c6c 206f"

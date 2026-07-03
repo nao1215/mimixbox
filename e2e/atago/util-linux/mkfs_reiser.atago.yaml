@@ -1,0 +1,23 @@
+# Migrated from mimixbox's ShellSpec test/it/spec/mkfs_reiser_spec.sh.
+# mkfs.reiser deterministically refuses: ReiserFS is deprecated.
+version: "1"
+
+suite:
+  name: mimixbox mkfs.reiser
+
+scenarios:
+  - name: refuses deterministically
+    steps:
+      - run:
+          command: mkfs.reiser /tmp/x.img
+      - assert:
+          exit_code: { not: 0 }
+
+  - name: explains that ReiserFS is deprecated
+    steps:
+      - run:
+          command: mkfs.reiser /tmp/x.img
+      - assert:
+          exit_code: { not: 0 }
+          stderr:
+            contains: "deprecated"

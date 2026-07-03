@@ -1,0 +1,26 @@
+# Migrated from mimixbox's ShellSpec test/it/spec/chgrp_spec.sh
+# (+ fileutils/chgrp_contract_test.sh). Help/no-operand contract only — both are
+# simple single commands, so direct exec (no shell:true).
+version: "1"
+
+suite:
+  name: mimixbox chgrp
+
+scenarios:
+  - name: prints usage with --help and exits 0
+    steps:
+      - run:
+          command: chgrp --help
+      - assert:
+          exit_code: 0
+          stdout:
+            contains: "Usage: chgrp"
+
+  - name: fails with a message when given no operand
+    steps:
+      - run:
+          command: chgrp
+      - assert:
+          exit_code: { not: 0 }
+          stderr:
+            contains: "chgrp"

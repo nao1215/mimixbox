@@ -1,0 +1,16 @@
+# Migrated from mimixbox's ShellSpec test/it/spec/paste_spec.sh (+ textutils/paste_test.sh).
+version: "1"
+
+suite:
+  name: mimixbox paste
+
+scenarios:
+  - name: joins lines with a delimiter
+    steps:
+      - run:
+          shell: true
+          command: printf 'a\nb\nc\n' | paste -s -d ,
+      - assert:
+          exit_code: 0
+          stdout:
+            equals: "a,b,c"

@@ -1,0 +1,203 @@
+# Migrated from mimixbox's ShellSpec test/it/spec/help_compression_spec.sh
+# (Parameters block, no helper). Issues #649-#660, #698-#708: every
+# compression/decompression applet routes --help through the structured
+# renderer, exits 0, with line 1 'Usage: <app>', an Examples and an
+# Exit status section, and at least one example line starting with the name.
+# Cross-cutting spec kept in embedded (the applets span archival/textutils).
+version: "1"
+
+suite:
+  name: mimixbox compression --help contract
+
+scenarios:
+  - name: xz --help exposes the documented sections
+    steps:
+      - run:
+          command: "xz --help"
+      - assert:
+          exit_code: 0
+          stdout:
+            line: 1
+            matches: "^Usage: xz"
+      - assert:
+          stdout:
+            contains:
+              - "Examples:"
+              - "Exit status:"
+              - "  xz "
+
+  - name: unxz --help exposes the documented sections
+    steps:
+      - run:
+          command: "unxz --help"
+      - assert:
+          exit_code: 0
+          stdout:
+            line: 1
+            matches: "^Usage: unxz"
+      - assert:
+          stdout:
+            contains:
+              - "Examples:"
+              - "Exit status:"
+              - "  unxz "
+
+  - name: xzcat --help exposes the documented sections
+    steps:
+      - run:
+          command: "xzcat --help"
+      - assert:
+          exit_code: 0
+          stdout:
+            line: 1
+            matches: "^Usage: xzcat"
+      - assert:
+          stdout:
+            contains:
+              - "Examples:"
+              - "Exit status:"
+              - "  xzcat "
+
+  - name: lzma --help exposes the documented sections
+    steps:
+      - run:
+          command: "lzma --help"
+      - assert:
+          exit_code: 0
+          stdout:
+            line: 1
+            matches: "^Usage: lzma"
+      - assert:
+          stdout:
+            contains:
+              - "Examples:"
+              - "Exit status:"
+              - "  lzma "
+
+  - name: unlzma --help exposes the documented sections
+    steps:
+      - run:
+          command: "unlzma --help"
+      - assert:
+          exit_code: 0
+          stdout:
+            line: 1
+            matches: "^Usage: unlzma"
+      - assert:
+          stdout:
+            contains:
+              - "Examples:"
+              - "Exit status:"
+              - "  unlzma "
+
+  - name: lzcat --help exposes the documented sections
+    steps:
+      - run:
+          command: "lzcat --help"
+      - assert:
+          exit_code: 0
+          stdout:
+            line: 1
+            matches: "^Usage: lzcat"
+      - assert:
+          stdout:
+            contains:
+              - "Examples:"
+              - "Exit status:"
+              - "  lzcat "
+
+  - name: lzop --help exposes the documented sections
+    steps:
+      - run:
+          command: "lzop --help"
+      - assert:
+          exit_code: 0
+          stdout:
+            line: 1
+            matches: "^Usage: lzop"
+      - assert:
+          stdout:
+            contains:
+              - "Examples:"
+              - "Exit status:"
+              - "  lzop "
+
+  - name: unlzop --help exposes the documented sections
+    steps:
+      - run:
+          command: "unlzop --help"
+      - assert:
+          exit_code: 0
+          stdout:
+            line: 1
+            matches: "^Usage: unlzop"
+      - assert:
+          stdout:
+            contains:
+              - "Examples:"
+              - "Exit status:"
+              - "  unlzop "
+
+  - name: lzopcat --help exposes the documented sections
+    steps:
+      - run:
+          command: "lzopcat --help"
+      - assert:
+          exit_code: 0
+          stdout:
+            line: 1
+            matches: "^Usage: lzopcat"
+      - assert:
+          stdout:
+            contains:
+              - "Examples:"
+              - "Exit status:"
+              - "  lzopcat "
+
+  - name: zcat --help exposes the documented sections
+    steps:
+      - run:
+          command: "zcat --help"
+      - assert:
+          exit_code: 0
+          stdout:
+            line: 1
+            matches: "^Usage: zcat"
+      - assert:
+          stdout:
+            contains:
+              - "Examples:"
+              - "Exit status:"
+              - "  zcat "
+
+  - name: bzcat --help exposes the documented sections
+    steps:
+      - run:
+          command: "bzcat --help"
+      - assert:
+          exit_code: 0
+          stdout:
+            line: 1
+            matches: "^Usage: bzcat"
+      - assert:
+          stdout:
+            contains:
+              - "Examples:"
+              - "Exit status:"
+              - "  bzcat "
+
+  - name: unit --help exposes the documented sections
+    steps:
+      - run:
+          command: "unit --help"
+      - assert:
+          exit_code: 0
+          stdout:
+            line: 1
+            matches: "^Usage: unit"
+      - assert:
+          stdout:
+            contains:
+              - "Examples:"
+              - "Exit status:"
+              - "  unit "

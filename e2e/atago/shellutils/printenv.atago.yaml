@@ -1,0 +1,16 @@
+# Migrated from mimixbox's ShellSpec test/it/spec/printenv_spec.sh (+ shellutils/printenv_test.sh).
+version: "1"
+
+suite:
+  name: mimixbox printenv
+
+scenarios:
+  - name: prints an environment variable
+    steps:
+      - run:
+          shell: true
+          command: MB_TEST_VAR=hello printenv MB_TEST_VAR
+      - assert:
+          exit_code: 0
+          stdout:
+            equals: "hello"

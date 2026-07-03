@@ -1,0 +1,36 @@
+# Migrated from mimixbox's ShellSpec test/it/spec/dd_spec.sh (+ shellutils/dd_test.sh).
+version: "1"
+
+suite:
+  name: mimixbox dd
+
+scenarios:
+  - name: reproduces the input (stdin to stdout)
+    steps:
+      - run:
+          shell: true
+          command: printf 'hello world' | dd status=none
+      - assert:
+          exit_code: 0
+          stdout:
+            equals: "hello world"
+
+  - name: copies only the requested blocks with count
+    steps:
+      - run:
+          shell: true
+          command: printf 'hello world' | dd bs=1 count=5 status=none
+      - assert:
+          exit_code: 0
+          stdout:
+            equals: "hello"
+
+  - name: conv=ucase upper-cases the data
+    steps:
+      - run:
+          shell: true
+          command: printf 'abc' | dd conv=ucase status=none
+      - assert:
+          exit_code: 0
+          stdout:
+            equals: "ABC"

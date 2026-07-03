@@ -1,0 +1,32 @@
+# Migrated from mimixbox's ShellSpec test/it/spec/ar_spec.sh (+ archival/ar_test.sh).
+# The ShellSpec Setup builds a.txt/b.txt under MIMIXBOX_IT_ROOT/ar; here fixtures
+# build them in the scenario workdir. ar produces a binary archive, so we assert
+# the listing and the round-trip extraction rather than the archive bytes.
+version: "1"
+
+suite:
+  name: mimixbox ar
+
+scenarios:
+  - name: lists members
+    steps:
+      - fixture: { file: a.txt, content: alpha }
+      - fixture: { file: b.txt, content: beta }
+      - run:
+          shell: true
+          command: ar rc lib.a a.txt b.txt && ar t lib.a
+      - assert:
+          exit_code: 0
+          stdout: { line: 1, equals: "a.txt" }
+      - assert:
+          stdout: { line: 2, equals: "b.txt" }
+
+  - name: extracts a member
+    steps:
+      - fixture: { file: a.txt, content: alpha }
+      - run:
+          shell: true
+          command: ar rc lib2.a a.txt && mkdir -p out && cd out && ar x ../lib2.a && cat a.txt
+      - assert:
+          exit_code: 0
+          stdout: { equals: "alpha" }

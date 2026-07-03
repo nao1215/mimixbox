@@ -1,0 +1,44 @@
+# Migrated from mimixbox's ShellSpec test/it/spec/xzcomp_spec.sh (+ archival/xzcomp_test.sh).
+# Each scenario pipes a payload through a compressor then a decompressor and
+# asserts the round-trip text (the intermediate bytes are binary).
+version: "1"
+
+suite:
+  name: mimixbox compression applets
+
+scenarios:
+  - name: xz | xzcat round-trips data
+    steps:
+      - run:
+          shell: true
+          command: printf 'roundtrip-xz\n' | xz | xzcat
+      - assert:
+          exit_code: 0
+          stdout: { equals: "roundtrip-xz" }
+
+  - name: lzma | unlzma round-trips data
+    steps:
+      - run:
+          shell: true
+          command: printf 'roundtrip-lzma\n' | lzma | unlzma
+      - assert:
+          exit_code: 0
+          stdout: { equals: "roundtrip-lzma" }
+
+  - name: zcat decompresses a gzip file to stdout
+    steps:
+      - run:
+          shell: true
+          command: printf 'gz-payload\n' | gzip > f.gz && zcat f.gz
+      - assert:
+          exit_code: 0
+          stdout: { equals: "gz-payload" }
+
+  - name: pipe_progress passes stdin through to stdout
+    steps:
+      - run:
+          shell: true
+          command: printf 'pass-through\n' | pipe_progress 2>/dev/null
+      - assert:
+          exit_code: 0
+          stdout: { equals: "pass-through" }

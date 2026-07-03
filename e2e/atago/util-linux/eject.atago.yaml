@@ -1,0 +1,27 @@
+# Migrated from mimixbox's ShellSpec test/it/spec/eject_spec.sh.
+# Operating a CD-ROM needs a real drive + privilege; the e2e exercises --help
+# and the missing-device error. The ioctl dispatch is unit-tested.
+version: "1"
+
+suite:
+  name: mimixbox eject
+
+scenarios:
+  - name: describes itself with --help
+    steps:
+      - run:
+          command: eject --help
+      - assert:
+          exit_code: 0
+          stdout:
+            contains:
+              - "Usage: eject"
+              - "media"
+
+  - name: fails on a missing device
+    steps:
+      # ShellSpec asserted rc=1; direct exec on the error path.
+      - run:
+          command: eject /dev/no_such_cdrom
+      - assert:
+          exit_code: { not: 0 }

@@ -1,0 +1,37 @@
+# Migrated from mimixbox's ShellSpec test/it/spec/unexpand_spec.sh
+# (+ textutils/unexpand_test.sh).
+version: "1"
+
+suite:
+  name: mimixbox unexpand
+
+scenarios:
+  - name: convert leading spaces to a tab
+    steps:
+      - run:
+          shell: true
+          command: printf '        a\n' | unexpand
+      - assert:
+          exit_code: 0
+          stdout:
+            equals: "\ta"
+
+  - name: convert internal space runs to tabs with --all
+    steps:
+      - run:
+          shell: true
+          command: printf 'a        b\n' | unexpand -a
+      - assert:
+          exit_code: 0
+          stdout:
+            equals: "a\t b"
+
+  - name: report an error for a non-existent file
+    steps:
+      # Single failing command: use direct exec to get the real non-zero exit.
+      - run:
+          command: unexpand /no_exist_file
+      - assert:
+          exit_code: { not: 0 }
+          stderr:
+            equals: "unexpand: /no_exist_file: no such file or directory"

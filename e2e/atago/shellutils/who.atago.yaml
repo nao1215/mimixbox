@@ -1,0 +1,36 @@
+# Migrated from mimixbox's ShellSpec test/it/spec/who_spec.sh (+ shellutils/who_test.sh).
+# who reads the binary utmp database; the tests read an empty utmp (/dev/null)
+# so they stay independent of the host's login sessions.
+version: "1"
+
+suite:
+  name: mimixbox who
+
+scenarios:
+  - name: prints nothing and succeeds on an empty utmp
+    steps:
+      - run:
+          shell: true
+          command: who /dev/null; echo "rc=$?"
+      - assert:
+          exit_code: 0
+          stdout:
+            equals: "rc=0"
+
+  - name: -q reports zero users on an empty utmp
+    steps:
+      - run:
+          command: who -q /dev/null
+      - assert:
+          exit_code: 0
+          stdout:
+            equals: "# users=0"
+
+  - name: --help prints usage
+    steps:
+      - run:
+          command: who --help
+      - assert:
+          exit_code: 0
+          stdout:
+            contains: "Usage: who"

@@ -1,0 +1,18 @@
+# Migrated from mimixbox's ShellSpec test/it/spec/dnsd_spec.sh (no helper; inline --help contract).
+# Universal --help contract (Issue #477): exit 0, "Usage: dnsd" on stdout, empty stderr.
+version: "1"
+
+suite:
+  name: mimixbox dnsd
+
+scenarios:
+  - name: describes itself with --help
+    steps:
+      - run:
+          command: dnsd --help
+      - assert:
+          exit_code: 0
+          stdout:
+            contains: "Usage: dnsd"
+          stderr:
+            empty: true

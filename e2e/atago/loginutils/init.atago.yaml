@@ -1,0 +1,34 @@
+# Migrated from mimixbox's ShellSpec test/it/spec/init_spec.sh
+# (+ loginutils/init_test.sh). init -t INITTAB runs the sysinit and wait actions
+# from a supplied inittab; the missing-file path is the deterministic failure.
+version: "1"
+
+suite:
+  name: mimixbox init
+
+scenarios:
+  - name: runs the inittab sysinit and wait actions
+    steps:
+      - fixture:
+          file: inittab
+          content: |
+            si::sysinit:echo SYSINIT
+            l::wait:echo WAIT
+      - run:
+          command: init -t inittab
+      - assert:
+          exit_code: 0
+          stdout:
+            line: 1
+            equals: "SYSINIT"
+      - assert:
+          stdout:
+            line: 2
+            equals: "WAIT"
+
+  - name: fails on a missing inittab
+    steps:
+      - run:
+          command: init -t no_such_inittab
+      - assert:
+          exit_code: { not: 0 }

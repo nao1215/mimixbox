@@ -1,0 +1,123 @@
+# Migrated from mimixbox's ShellSpec test/it/spec/tail_spec.sh (+ textutils/tail_test.sh).
+# The ShellSpec Setup builds tail.txt (lines 1..12) under MIMIXBOX_IT_ROOT; here a
+# fixture builds it in the scenario workdir and tail runs against the relative name.
+# The tail --follow scenario lives here too (tail_pid follow is in tail_pid.atago.yaml).
+version: "1"
+
+suite:
+  name: mimixbox tail
+
+scenarios:
+  - name: print the last 10 lines
+    steps:
+      - fixture:
+          file: tail.txt
+          content: |
+            1
+            2
+            3
+            4
+            5
+            6
+            7
+            8
+            9
+            10
+            11
+            12
+      - run:
+          command: tail tail.txt
+      - assert:
+          exit_code: 0
+          stdout:
+            equals: |
+              3
+              4
+              5
+              6
+              7
+              8
+              9
+              10
+              11
+              12
+
+  - name: print the last N lines
+    steps:
+      - fixture:
+          file: tail.txt
+          content: |
+            1
+            2
+            3
+            4
+            5
+            6
+            7
+            8
+            9
+            10
+            11
+            12
+      - run:
+          command: tail -n 3 tail.txt
+      - assert:
+          exit_code: 0
+          stdout:
+            equals: |
+              10
+              11
+              12
+
+  - name: print the last N bytes
+    steps:
+      - run:
+          shell: true
+          command: printf 'hello world' | tail -c 5
+      - assert:
+          exit_code: 0
+          stdout:
+            equals: "world"
+
+  - name: print the last N lines of stdin
+    steps:
+      - run:
+          shell: true
+          command: printf 'a\nb\nc\nd\n' | tail -n 2
+      - assert:
+          exit_code: 0
+          stdout:
+            equals: |
+              c
+              d
+
+  - name: report an error for a non-existent file
+    steps:
+      # Single failing command: use direct exec to get the real non-zero exit.
+      - run:
+          command: tail /no_exist_file
+      - assert:
+          exit_code: { not: 0 }
+          stderr:
+            equals: "tail: /no_exist_file: no such file or directory"
+
+  - name: print data appended while following
+    steps:
+      - fixture:
+          file: follow.txt
+          content: |
+            start
+      # Append more data shortly after tail starts following, then bound tail
+      # with timeout. timeout kills tail -> non-zero exit (status failure), so
+      # this needs shell:true for the background job, pipe-free pipeline, and ;.
+      - run:
+          shell: true
+          command: |
+            ( sleep 0.2; printf 'appended\n' >> follow.txt ) &
+            timeout 0.5 tail -f -s 0.05 follow.txt
+      - assert:
+          exit_code: { not: 0 }
+          stdout:
+            contains:
+              - "start"
+              - "appended"

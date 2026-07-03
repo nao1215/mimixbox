@@ -1,0 +1,33 @@
+# Migrated from mimixbox's ShellSpec test/it/spec/setserial_spec.sh.
+version: "1"
+
+suite:
+  name: mimixbox setserial
+
+scenarios:
+  - name: echoes the parsed request with -g
+    steps:
+      # -g with explicit parameters echoes the parsed request without touching
+      # hardware. setserial ... | grep -c → needs a pipe.
+      - run:
+          shell: true
+          command: setserial -g /dev/ttyS0 baud_base 115200 | grep -c 'baud_base 115200'
+      - assert:
+          exit_code: 0
+          stdout:
+            equals: "1"
+
+  - name: rejects an unknown parameter
+    steps:
+      # Error case → direct exec.
+      - run:
+          command: setserial /dev/ttyS0 bogus 1
+      - assert:
+          exit_code: 1
+
+  - name: requires a device
+    steps:
+      - run:
+          command: setserial
+      - assert:
+          exit_code: 1

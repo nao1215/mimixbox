@@ -1,0 +1,91 @@
+# Migrated from mimixbox's ShellSpec test/it/spec/echo_spec.sh (+ shellutils/echo_test.sh).
+version: "1"
+
+suite:
+  name: mimixbox echo
+
+scenarios:
+  - name: says Hello World!
+    steps:
+      - run:
+          command: echo "Hello World!"
+      - assert:
+          exit_code: 0
+          stdout:
+            equals: "Hello World!"
+
+  - name: says Hello World! (helper ignores the positional argument)
+    steps:
+      # ShellSpec passed "World!" as $1 but TestEchoNormal echoes a fixed string.
+      - run:
+          command: echo "Hello World!"
+      - assert:
+          exit_code: 0
+          stdout:
+            equals: "Hello World!"
+
+  - name: expands an environment variable
+    steps:
+      - run:
+          shell: true
+          command: export TEST_ENV="TEST_ENV_VAR"; echo ${TEST_ENV}
+      - assert:
+          exit_code: 0
+          stdout:
+            equals: "TEST_ENV_VAR"
+
+  - name: pipes data through xargs
+    steps:
+      - run:
+          shell: true
+          command: echo "pipe" | xargs echo
+      - assert:
+          exit_code: 0
+          stdout:
+            equals: "pipe"
+
+  - name: says nothing with no arguments
+    steps:
+      - run:
+          command: echo
+      - assert:
+          exit_code: 0
+          stdout:
+            empty: true
+
+  - name: redirects data to a file and shows it
+    steps:
+      - run:
+          shell: true
+          command: echo "MimixBox" > echo.txt && cat echo.txt
+      - assert:
+          exit_code: 0
+          stdout:
+            equals: "MimixBox"
+
+  - name: --help as the first argument prints usage instead of the literal text
+    steps:
+      - run:
+          command: echo --help
+      - assert:
+          exit_code: 0
+          stdout:
+            contains: "Usage: echo"
+
+  - name: --version as the first argument prints the version line
+    steps:
+      - run:
+          command: echo --version
+      - assert:
+          exit_code: 0
+          stdout:
+            contains: "echo (mimixbox)"
+
+  - name: --help that is not the first argument stays literal
+    steps:
+      - run:
+          command: echo foo --help
+      - assert:
+          exit_code: 0
+          stdout:
+            equals: "foo --help"

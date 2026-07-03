@@ -1,0 +1,18 @@
+# Migrated from mimixbox's ShellSpec test/it/spec/lsusb_spec.sh.
+# /sys/bus/usb/devices may be absent, so the e2e exercises the --help path.
+version: "1"
+
+suite:
+  name: mimixbox lsusb
+
+scenarios:
+  - name: describes itself with --help
+    steps:
+      - run:
+          command: lsusb --help
+      - assert:
+          exit_code: 0
+          stdout:
+            contains:
+              - "Usage: lsusb"
+              - "USB"

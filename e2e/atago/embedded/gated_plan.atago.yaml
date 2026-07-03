@@ -1,0 +1,42 @@
+# Migrated from mimixbox's ShellSpec test/it/spec/gated_plan_spec.sh (no Included
+# helper; inline). Issue #788: capability-gated applets validate, plan, then
+# refuse (no silent no-op). One representative command per gated family
+# (netctl, selinux, modutils). Cross-cutting spec; kept in embedded as it spans
+# netutils/securityutils/procps. Direct exec; the gate fails with a non-zero exit.
+version: "1"
+
+suite:
+  name: mimixbox capability-gated applets
+
+scenarios:
+  - name: "netctl: brctl addbr prints the plan then fails with a capability-gated backend error"
+    steps:
+      - run:
+          command: brctl addbr br0
+      - assert:
+          exit_code:
+            not: 0
+          stdout:
+            contains: "brctl: planned action: brctl addbr br0"
+          stderr:
+            contains: "planned action [brctl addbr br0] requires privileged kernel network configuration not available in this environment (capability-gated backend)"
+
+  - name: "selinux: setenforce refuses to mutate SELinux state and exits non-zero"
+    steps:
+      - run:
+          command: setenforce Permissive
+      - assert:
+          exit_code:
+            not: 0
+          stderr:
+            contains: "setenforce: refusing to mutate SELinux state: requires CAP_MAC_ADMIN and a loaded policy; this operation is intentionally not implemented in the hermetic build"
+
+  - name: "modutils: modprobe validates the module then fails on the CAP_SYS_MODULE gate"
+    steps:
+      - run:
+          command: modprobe foo
+      - assert:
+          exit_code:
+            not: 0
+          stderr:
+            contains: "modprobe: load of foo validated successfully, but inserting/removing kernel modules requires CAP_SYS_MODULE; this privileged step is intentionally not implemented in the hermetic build"

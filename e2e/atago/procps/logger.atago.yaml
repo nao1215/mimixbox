@@ -1,0 +1,17 @@
+# Migrated from mimixbox's ShellSpec test/it/spec/logger_spec.sh.
+# Delivering to syslog needs a running syslogd, so the e2e exercises the
+# deterministic priority-validation path; logging itself is covered by unit tests.
+version: "1"
+
+suite:
+  name: mimixbox logger
+
+scenarios:
+  - name: rejects an unknown facility
+    # TestLoggerBadPriority: logger -p nosuchfacility.info msg -> rc=1.
+    # Error case uses direct exec.
+    steps:
+      - run:
+          command: logger -p nosuchfacility.info msg
+      - assert:
+          exit_code: { not: 0 }

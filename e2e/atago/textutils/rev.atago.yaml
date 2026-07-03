@@ -1,0 +1,16 @@
+# Migrated from mimixbox's ShellSpec test/it/spec/rev_spec.sh (+ textutils/rev_test.sh).
+version: "1"
+
+suite:
+  name: mimixbox rev
+
+scenarios:
+  - name: reverses the characters of a line
+    steps:
+      - run:
+          shell: true
+          command: printf 'abc\n' | rev
+      - assert:
+          exit_code: 0
+          stdout:
+            equals: "cba"

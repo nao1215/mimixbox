@@ -1,0 +1,39 @@
+# Migrated from mimixbox's ShellSpec test/it/spec/lpr_roundtrip_spec.sh.
+# Issue #942: shell-level round-trip for the local print spool. lpr queues a
+# file and stdin, lpq lists both jobs, lpd drains them into an output directory,
+# and the queue ends up empty. Runs in an isolated ${workdir}.
+version: "1"
+
+suite:
+  name: mimixbox lpr_roundtrip
+
+scenarios:
+  - name: queues, lists, drains, and empties the spool
+    steps:
+      - run:
+          shell: true
+          command: |
+            printf 'page content\n' > document.txt
+
+            # Queue a file and a stdin job.
+            lpr -S spool document.txt || exit 1
+            printf 'from stdin\n' | lpr -S spool || exit 1
+
+            # lpq must list both jobs in id order.
+            lpq -S spool | grep -q 'document.txt' || exit 1
+            lpq -S spool | grep -q '(stdin)' || exit 1
+
+            # Drain to an output directory; both jobs are reported printed.
+            lpd -S spool -o printed | grep -q 'printed job 1' || exit 1
+            lpd_out=$(lpd -S spool -o printed) # second drain run is a no-op
+            [ -z "${lpd_out}" ] || exit 1
+
+            # The printed file content survives the round-trip.
+            cat printed/0001-document.txt
+
+            # The queue is now empty.
+            lpq -S spool
+      - assert:
+          exit_code: 0
+          stdout:
+            equals: "page content\nno entries"

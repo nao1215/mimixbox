@@ -1,0 +1,59 @@
+# Migrated from mimixbox's ShellSpec test/it/spec/mimixbox_spec.sh (+ shellutils/mimixbox_test.sh).
+# Top-level MimixBox CLI surface (GitHub issue #234).
+version: "1"
+
+suite:
+  name: mimixbox top-level CLI
+
+scenarios:
+  - name: prints usage to stdout with --help and exits success
+    steps:
+      - run:
+          command: mimixbox --help
+      - assert:
+          exit_code: 0
+          stdout:
+            contains:
+              - "Usage: mimixbox"
+              - "Examples:"
+
+  - name: lists the applets with --list
+    steps:
+      - run:
+          command: mimixbox --list
+      - assert:
+          exit_code: 0
+          stdout:
+            contains:
+              - "cat"
+              - "pidof"
+
+  - name: rejects an unknown option on stderr without polluting stdout
+    steps:
+      - run:
+          command: mimixbox --definitely-not-an-option
+      - assert:
+          exit_code: { not: 0 }
+          stdout:
+            empty: true
+          stderr:
+            contains: "is not a mimixbox command or option"
+
+  - name: installs and removes applet symlinks in a temp directory
+    steps:
+      - run:
+          shell: true
+          command: |
+            d=$(mktemp -d) || exit 1
+            trap "rm -rf '$d'" EXIT
+            mimixbox --full-install "$d" >/dev/null 2>&1 || exit 1
+            [ -L "$d/cat" ] || exit 1
+            [ -L "$d/pidof" ] || exit 1
+            mimixbox --remove "$d" >/dev/null 2>&1 || exit 1
+            [ -L "$d/cat" ] && exit 1
+            [ -L "$d/pidof" ] && exit 1
+            echo ok
+      - assert:
+          exit_code: 0
+          stdout:
+            equals: "ok"

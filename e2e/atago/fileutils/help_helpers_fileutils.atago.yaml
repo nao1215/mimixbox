@@ -1,0 +1,27 @@
+# Migrated from mimixbox's ShellSpec test/it/spec/help_helpers_fileutils_spec.sh
+# (+ fileutils/chgrp_test.sh, fileutils/chown_test.sh). The ShellSpec helpers
+# wrap the applet in `env -- '<name>' --help`; here the applet is on PATH so a
+# direct exec of `<name> --help` is equivalent.
+version: "1"
+
+suite:
+  name: mimixbox fileutils help helpers
+
+scenarios:
+  - name: chgrp --help is structured
+    steps:
+      - run:
+          command: chgrp --help
+      - assert:
+          exit_code: 0
+          stdout:
+            contains: "Usage:"
+
+  - name: chown --help is structured
+    steps:
+      - run:
+          command: chown --help
+      - assert:
+          exit_code: 0
+          stdout:
+            contains: "Usage:"

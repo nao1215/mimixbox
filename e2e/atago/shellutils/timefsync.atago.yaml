@@ -1,0 +1,50 @@
+# Migrated from mimixbox's ShellSpec test/it/spec/timefsync_spec.sh (+ shellutils/timefsync_test.sh).
+version: "1"
+
+suite:
+  name: mimixbox time / fsync
+
+scenarios:
+  - name: time runs the command and passes its output through
+    steps:
+      # Use `env time` to invoke the PATH "time" binary regardless of any shell keyword.
+      - run:
+          shell: true
+          command: env time echo timed 2>/dev/null
+      - assert:
+          exit_code: 0
+          stdout:
+            equals: "timed"
+
+  - name: time reports the real elapsed time on stderr
+    steps:
+      - run:
+          shell: true
+          command: env time echo x 2>&1 1>/dev/null | grep -c real
+      - assert:
+          exit_code: 0
+          stdout:
+            equals: "1"
+
+  - name: fsync succeeds on an existing file
+    steps:
+      - fixture:
+          file: f.txt
+          content: "data\n"
+      - run:
+          shell: true
+          command: fsync ${workdir}/f.txt; echo $?
+      - assert:
+          exit_code: 0
+          stdout:
+            equals: "0"
+
+  - name: fsync fails on a missing file
+    steps:
+      - run:
+          shell: true
+          command: fsync /no/such/mimixbox/file 2>/dev/null; echo $?
+      - assert:
+          exit_code: 0
+          stdout:
+            equals: "1"

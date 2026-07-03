@@ -1,0 +1,16 @@
+# Migrated from mimixbox's ShellSpec test/it/spec/killall_spec.sh (+ shellutils/killall_test.sh).
+version: "1"
+
+suite:
+  name: mimixbox killall
+
+scenarios:
+  - name: kills a process by name
+    steps:
+      - run:
+          shell: true
+          command: sleep 30 & sleep 0.2; killall sleep; echo "killed:$?"
+      - assert:
+          exit_code: 0
+          stdout:
+            equals: "killed:0"

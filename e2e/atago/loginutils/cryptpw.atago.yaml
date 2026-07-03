@@ -1,0 +1,31 @@
+# Migrated from mimixbox's ShellSpec test/it/spec/cryptpw_spec.sh
+# (+ loginutils/cryptpw_test.sh). cryptpw reads a password from stdin and prints
+# the crypt(3) hash; the salt is fixed so the output is deterministic.
+version: "1"
+
+suite:
+  name: mimixbox cryptpw
+
+scenarios:
+  - name: hashes a stdin password with sha-512
+    steps:
+      # cryptpw reads stdin; no pipe/redirect needed -> direct exec with stdin.
+      - run:
+          command: cryptpw -S abcdefgh
+          stdin: "secret\n"
+      - assert:
+          exit_code: 0
+          stdout:
+            equals: "$6$abcdefgh$ltjgWl6579NluT/Vi1nwEvcil.G5Nbc4NiXZaNGStk8PSwGfQv72N2CKPPrVACtLtip/cZ/1GM/O6IND4WQhG."
+
+  - name: supports the md5 method
+    steps:
+      # ShellSpec piped through 'head -c 12' to print only the salt prefix; here
+      # we assert the prefix with stdout.contains on the full hash instead.
+      - run:
+          command: cryptpw -m md5 -S abcdefgh
+          stdin: "secret\n"
+      - assert:
+          exit_code: 0
+          stdout:
+            contains: "$1$abcdefgh$"

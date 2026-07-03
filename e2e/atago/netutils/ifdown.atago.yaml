@@ -1,0 +1,18 @@
+# Migrated from mimixbox's ShellSpec test/it/spec/ifdown_spec.sh (no helper; inline --help contract).
+# Universal --help contract (Issue #477): exit 0, "Usage: ifdown" on stdout, empty stderr.
+version: "1"
+
+suite:
+  name: mimixbox ifdown
+
+scenarios:
+  - name: describes itself with --help
+    steps:
+      - run:
+          command: ifdown --help
+      - assert:
+          exit_code: 0
+          stdout:
+            contains: "Usage: ifdown"
+          stderr:
+            empty: true

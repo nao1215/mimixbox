@@ -1,0 +1,19 @@
+# Migrated from mimixbox's ShellSpec test/it/spec/swapoff_spec.sh (no helper; inline).
+# Universal --help contract (Issue #477): exit 0, "Usage: swapoff" on stdout,
+# empty stderr. Privileged/networked/destructive applet exercised via --help only.
+version: "1"
+
+suite:
+  name: mimixbox swapoff
+
+scenarios:
+  - name: describes itself with --help
+    steps:
+      - run:
+          command: swapoff --help
+      - assert:
+          exit_code: 0
+          stdout:
+            contains: "Usage: swapoff"
+          stderr:
+            empty: true

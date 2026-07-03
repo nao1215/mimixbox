@@ -1,0 +1,20 @@
+# Migrated from mimixbox's ShellSpec test/it/spec/readlink_spec.sh
+# (+ fileutils/readlink_test.sh). Setup writes rl_target and a symlink rl_link
+# -> ${ROOT}/rl_target; reproduced inside ${workdir}.
+version: "1"
+
+suite:
+  name: mimixbox readlink
+
+scenarios:
+  - name: prints the symlink target
+    steps:
+      - run:
+          shell: true
+          command: printf 'x' > ${workdir}/rl_target && ln -sf ${workdir}/rl_target ${workdir}/rl_link
+      - run:
+          command: readlink ${workdir}/rl_link
+      - assert:
+          exit_code: 0
+          stdout:
+            equals: "${workdir}/rl_target"

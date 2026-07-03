@@ -1,0 +1,26 @@
+# Migrated from mimixbox's ShellSpec test/it/spec/help_helpers_printutils_spec.sh
+# (+ printutils/<cmd>_test.sh). Each helper runs `<cmd> --help` and asserts a
+# structured help banner. Simple single commands -> direct exec, no shell.
+version: "1"
+
+suite:
+  name: mimixbox printutils commands expose a dedicated --help helper
+
+scenarios:
+  - name: lpd --help is structured
+    steps:
+      - run: { command: "lpd --help" }
+      - assert: { exit_code: 0 }
+      - assert: { stdout: { contains: "Usage:" } }
+
+  - name: lpq --help is structured
+    steps:
+      - run: { command: "lpq --help" }
+      - assert: { exit_code: 0 }
+      - assert: { stdout: { contains: "Usage:" } }
+
+  - name: lpr --help is structured
+    steps:
+      - run: { command: "lpr --help" }
+      - assert: { exit_code: 0 }
+      - assert: { stdout: { contains: "Usage:" } }

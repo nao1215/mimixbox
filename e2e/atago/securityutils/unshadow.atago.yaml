@@ -1,0 +1,25 @@
+# Migrated from mimixbox's ShellSpec test/it/spec/unshadow_spec.sh
+# (+ securityutils/unshadow_test.sh). Setup writes passwd and shadow; unshadow is
+# a single command, run via direct exec against the workdir-relative files.
+version: "1"
+
+suite:
+  name: mimixbox unshadow
+
+scenarios:
+  - name: merges the shadow hash into the passwd line
+    steps:
+      - fixture:
+          file: passwd
+          content: |
+            alice:x:1000:1000:Alice:/home/alice:/bin/sh
+      - fixture:
+          file: shadow
+          content: |
+            alice:$6$abc$HASH:19000:0:99999:7:::
+      - run:
+          command: unshadow passwd shadow
+      - assert:
+          exit_code: 0
+          stdout:
+            contains: "alice:$6$abc$HASH:1000:1000"

@@ -1,0 +1,21 @@
+# Migrated from mimixbox's ShellSpec test/it/spec/fsfreeze_spec.sh.
+version: "1"
+
+suite:
+  name: mimixbox fsfreeze
+
+scenarios:
+  - name: requires a freeze or unfreeze mode
+    steps:
+      # ShellSpec asserted rc=1; direct exec on the error path.
+      - run:
+          command: fsfreeze /mnt
+      - assert:
+          exit_code: { not: 0 }
+
+  - name: rejects both modes at once
+    steps:
+      - run:
+          command: fsfreeze -f -u /mnt
+      - assert:
+          exit_code: { not: 0 }

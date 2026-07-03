@@ -1,0 +1,26 @@
+# Migrated from mimixbox's ShellSpec test/it/spec/mdev_spec.sh.
+# Creating /dev nodes needs privilege, so the e2e exercises the no-scan-flag
+# path (mdev with no -s exits 1) and the --help contract.
+version: "1"
+
+suite:
+  name: mimixbox mdev
+
+scenarios:
+  - name: requires scan mode
+    steps:
+      - run:
+          command: mdev
+      - assert:
+          exit_code: { not: 0 }
+
+  - name: describes itself with --help
+    steps:
+      - run:
+          command: mdev --help
+      - assert:
+          exit_code: 0
+          stdout:
+            contains:
+              - "Usage: mdev"
+              - "device"

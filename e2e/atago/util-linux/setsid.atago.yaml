@@ -1,0 +1,19 @@
+# Migrated from mimixbox's ShellSpec test/it/spec/setsid_spec.sh (no helper; inline).
+# Universal --help contract (Issue #477): exit 0, "Usage: setsid" on stdout,
+# empty stderr. Privileged/networked/destructive applet exercised via --help only.
+version: "1"
+
+suite:
+  name: mimixbox setsid
+
+scenarios:
+  - name: describes itself with --help
+    steps:
+      - run:
+          command: setsid --help
+      - assert:
+          exit_code: 0
+          stdout:
+            contains: "Usage: setsid"
+          stderr:
+            empty: true

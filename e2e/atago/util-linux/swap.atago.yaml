@@ -1,0 +1,24 @@
+# Migrated from mimixbox's ShellSpec test/it/spec/swap_spec.sh.
+version: "1"
+
+suite:
+  name: mimixbox swapon / swapoff
+
+scenarios:
+  - name: swapon -s prints the swaps header
+    steps:
+      # The first line of `swapon -s` is the 'Filename ...' header.
+      - run:
+          shell: true
+          command: swapon -s | sed -n '1p' | grep -c 'Filename'
+      - assert:
+          exit_code: 0
+          stdout:
+            equals: "1"
+
+  - name: swapoff requires a target
+    steps:
+      - run:
+          command: swapoff
+      - assert:
+          exit_code: { not: 0 }

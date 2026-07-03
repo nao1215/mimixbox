@@ -1,0 +1,15 @@
+# Migrated from mimixbox's ShellSpec test/it/spec/reset_spec.sh.
+version: "1"
+
+suite:
+  name: mimixbox reset
+
+scenarios:
+  - name: prints usage with --help and exits 0
+    steps:
+      - run:
+          command: reset --help
+      - assert:
+          exit_code: 0
+          stdout:
+            contains: "Usage: reset"

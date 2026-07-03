@@ -1,0 +1,75 @@
+# Migrated from mimixbox's ShellSpec test/it/spec/cat_showall_spec.sh
+# (+ textutils/cat_showall_test.sh). SetupShowAll builds cat_nonprinting.bin
+# containing a tab, a blank line, and non-printable bytes (0x01, 0x7f, 0x80);
+# here it comes in as a base64 fixture ("a\tb\x01\n\n\x7f\x80\n").
+#
+# The alias scenarios mirror the helper bodies that write `cat -A`/`cat --show-all`
+# (and `cat -v`/`cat --show-nonprinting`) to files and compare with cmp, printing
+# "identical" when byte-identical — multiple commands + redirects + if/cmp, so
+# shell: true. The rendering scenarios are single cat commands (direct exec) and
+# assert the real applet's bytes, verified against the installed cat.
+version: "1"
+
+suite:
+  name: mimixbox cat_showall
+
+scenarios:
+  - name: -A and --show-all are aliases
+    steps:
+      - fixture:
+          file: cat_nonprinting.bin
+          base64: YQliAQoKf4AK
+      - run:
+          shell: true
+          command: |
+            cat -A "${workdir}/cat_nonprinting.bin" > short.out
+            cat --show-all "${workdir}/cat_nonprinting.bin" > long.out
+            if cmp -s short.out long.out; then echo "identical"; else echo "different"; fi
+      - assert:
+          exit_code: 0
+          stdout:
+            equals: "identical"
+
+  - name: -v and --show-nonprinting are aliases
+    steps:
+      - fixture:
+          file: cat_nonprinting.bin
+          base64: YQliAQoKf4AK
+      - run:
+          shell: true
+          command: |
+            cat -v "${workdir}/cat_nonprinting.bin" > short.out
+            cat --show-nonprinting "${workdir}/cat_nonprinting.bin" > long.out
+            if cmp -s short.out long.out; then echo "identical"; else echo "different"; fi
+      - assert:
+          exit_code: 0
+          stdout:
+            equals: "identical"
+
+  - name: --show-all renders tabs as ^I, non-printing bytes, and $ line ends
+    steps:
+      - fixture:
+          file: cat_nonprinting.bin
+          base64: YQliAQoKf4AK
+      # tab -> ^I, 0x01 -> ^A, blank line -> $, DEL 0x7f -> ^?, 0x80 -> M-^@,
+      # each line terminated with $. Verified against the installed cat applet.
+      - run:
+          command: cat --show-all ${workdir}/cat_nonprinting.bin
+      - assert:
+          exit_code: 0
+          stdout:
+            equals: "a^Ib^A$\n$\n^?M-^@$"
+
+  - name: --show-nonprinting leaves TAB alone and renders ^X, ^?, and M- notation
+    steps:
+      - fixture:
+          file: cat_nonprinting.bin
+          base64: YQliAQoKf4AK
+      # -v leaves the TAB as a raw tab; only control/DEL/high bytes are rendered
+      # (0x01 -> ^A, 0x7f -> ^?, 0x80 -> M-^@). No trailing $ markers.
+      - run:
+          command: cat --show-nonprinting ${workdir}/cat_nonprinting.bin
+      - assert:
+          exit_code: 0
+          stdout:
+            equals: "a\tb^A\n\n^?M-^@"

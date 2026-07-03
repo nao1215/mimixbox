@@ -1,0 +1,35 @@
+# Migrated from mimixbox's ShellSpec test/it/spec/head_zero_spec.sh (no Included
+# helper; inline). head --zero-terminated / -z: split on NUL, keep embedded
+# newlines, emit NUL as the record separator. The ShellSpec piped through
+# `tr '\0' '|'` to render NUL as '|' for a printable comparison; reproduced here
+# with shell: true since these are pipelines.
+version: "1"
+
+suite:
+  name: mimixbox head --zero-terminated
+
+scenarios:
+  - name: prints the first NUL-delimited record, preserving the embedded newline
+    steps:
+      - run:
+          shell: true
+          command: printf 'a\nb\0c\nd\0' | head -z -n 1 | tr '\0' '|'
+      - assert:
+          exit_code: 0
+          stdout:
+            equals: |
+              a
+              b|
+
+  - name: prints two NUL-delimited records with embedded newlines preserved
+    steps:
+      - run:
+          shell: true
+          command: printf 'a\nb\0c\nd\0' | head --zero-terminated -n 2 | tr '\0' '|'
+      - assert:
+          exit_code: 0
+          stdout:
+            equals: |
+              a
+              b|c
+              d|

@@ -1,3 +1,0 @@
-TestNproc() {
-    nproc
-}

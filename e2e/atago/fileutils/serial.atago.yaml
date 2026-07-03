@@ -1,0 +1,50 @@
+# Migrated from mimixbox's ShellSpec test/it/spec/serial_spec.sh
+# (+ fileutils/serial_test.sh). Setup makes ${ROOT}/serial/{apple,banana,cherry}.txt;
+# reproduced inside ${workdir}. serial prints to stdout (discarded with > /dev/null
+# in the original), then ls shows the result, so those cases need shell:true.
+version: "1"
+
+suite:
+  name: mimixbox serial
+
+scenarios:
+  - name: adds a serial-number prefix to each file
+    steps:
+      - run:
+          shell: true
+          command: mkdir -p serial && touch serial/apple.txt serial/banana.txt serial/cherry.txt
+      - run:
+          shell: true
+          command: serial ${workdir}/serial > /dev/null && ls ${workdir}/serial
+      - assert:
+          exit_code: 0
+          stdout:
+            equals: |
+              0_apple.txt
+              1_banana.txt
+              2_cherry.txt
+
+  - name: --dry-run does not rename anything
+    steps:
+      - run:
+          shell: true
+          command: mkdir -p serial && touch serial/apple.txt serial/banana.txt serial/cherry.txt
+      - run:
+          shell: true
+          command: serial -d ${workdir}/serial > /dev/null && ls ${workdir}/serial
+      - assert:
+          exit_code: 0
+          stdout:
+            equals: |
+              apple.txt
+              banana.txt
+              cherry.txt
+
+  - name: serial with no operand reports an error
+    steps:
+      - run:
+          command: serial
+      - assert:
+          exit_code: { not: 0 }
+          stderr:
+            equals: "serial: missing operand"

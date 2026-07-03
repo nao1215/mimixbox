@@ -1,0 +1,89 @@
+# Migrated from mimixbox's ShellSpec test/it/spec/comm_gnu_spec.sh
+# (+ textutils/comm_gnu_test.sh). Setup builds a.txt/b.txt plus NUL-separated
+# za.txt/zb.txt and an unsorted.txt under a comm_gnu/ subdir at MIMIXBOX_IT_ROOT;
+# here fixtures build them under comm_gnu/ in the scenario workdir (the NUL files
+# come in via base64). The single comm commands use direct exec; the bodies with
+# a pipe (-z | tr) or a trailing `echo "rc=$?"` use shell: true.
+version: "1"
+
+suite:
+  name: mimixbox comm_gnu
+
+scenarios:
+  - name: separate the columns with --output-delimiter
+    steps:
+      - fixture:
+          file: comm_gnu/a.txt
+          content: |
+            apple
+            banana
+            cherry
+      - fixture:
+          file: comm_gnu/b.txt
+          content: |
+            banana
+            cherry
+            date
+      - run:
+          command: comm --output-delimiter=, ${workdir}/comm_gnu/a.txt ${workdir}/comm_gnu/b.txt
+      - assert:
+          exit_code: 0
+          stdout:
+            line: 1
+            equals: "apple"
+      - assert:
+          stdout:
+            line: 2
+            equals: ",,banana"
+      - assert:
+          stdout:
+            line: 3
+            equals: ",,cherry"
+      - assert:
+          stdout:
+            line: 4
+            equals: ",date"
+
+  - name: read and write NUL-terminated records with -z
+    steps:
+      # za.txt = "apple\x00banana\x00", zb.txt = "banana\x00date\x00" (base64).
+      - fixture:
+          file: comm_gnu/za.txt
+          base64: YXBwbGUAYmFuYW5hAA==
+      - fixture:
+          file: comm_gnu/zb.txt
+          base64: YmFuYW5hAGRhdGUA
+      - run:
+          shell: true
+          command: comm -z -1 -2 ${workdir}/comm_gnu/za.txt ${workdir}/comm_gnu/zb.txt | tr '\0' '#'
+      - assert:
+          exit_code: 0
+          stdout:
+            equals: "banana#"
+
+  - name: report an unsorted input on stderr and fail with --check-order
+    steps:
+      - fixture:
+          file: comm_gnu/unsorted.txt
+          content: |
+            cherry
+            banana
+      - fixture:
+          file: comm_gnu/b.txt
+          content: |
+            banana
+            cherry
+            date
+      # The body runs comm (which fails) then `echo "rc=$?"`; echo succeeds, so
+      # the overall status is success while comm's exit is captured as rc=1.
+      - run:
+          shell: true
+          command: |
+            comm --check-order ${workdir}/comm_gnu/unsorted.txt ${workdir}/comm_gnu/b.txt
+            echo "rc=$?"
+      - assert:
+          exit_code: 0
+          stdout:
+            equals: "rc=1"
+          stderr:
+            contains: "file 1 is not in sorted order"

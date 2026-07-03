@@ -1,3 +1,0 @@
-TestLogname() {
-    LOGNAME=mimixuser logname
-}

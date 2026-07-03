@@ -1,0 +1,52 @@
+# Migrated from mimixbox's ShellSpec test/it/spec/coreutils_slice_spec.sh
+# (+ coreutils/coreutils_test.sh). factor takes a literal operand (direct exec);
+# tsort/egrep/fgrep read piped stdin, so those use shell:true.
+version: "1"
+
+suite:
+  name: mimixbox coreutils slice
+
+scenarios:
+  - name: factor prints prime factors
+    steps:
+      - run:
+          command: factor 360
+      - assert:
+          exit_code: 0
+          stdout:
+            equals: "360: 2 2 2 3 3 5"
+
+  - name: tsort topologically sorts
+    steps:
+      - run:
+          shell: true
+          command: printf 'a b\nb c\n' | tsort
+      - assert:
+          exit_code: 0
+          stdout:
+            equals: |
+              a
+              b
+              c
+
+  - name: egrep uses extended regular expressions
+    steps:
+      - run:
+          shell: true
+          command: printf 'foo\nbar\nbaz\n' | egrep 'ba(r|z)'
+      - assert:
+          exit_code: 0
+          stdout:
+            equals: |
+              bar
+              baz
+
+  - name: fgrep matches fixed strings literally
+    steps:
+      - run:
+          shell: true
+          command: printf 'a.b\naxb\n' | fgrep 'a.b'
+      - assert:
+          exit_code: 0
+          stdout:
+            equals: "a.b"

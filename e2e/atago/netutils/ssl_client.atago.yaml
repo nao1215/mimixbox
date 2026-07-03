@@ -1,0 +1,19 @@
+# Migrated from mimixbox's ShellSpec test/it/spec/ssl_client_spec.sh (no helper; inline).
+# Universal --help contract (Issue #477): exit 0, "Usage: ssl_client" on stdout,
+# empty stderr. Privileged/networked/destructive applet exercised via --help only.
+version: "1"
+
+suite:
+  name: mimixbox ssl_client
+
+scenarios:
+  - name: describes itself with --help
+    steps:
+      - run:
+          command: ssl_client --help
+      - assert:
+          exit_code: 0
+          stdout:
+            contains: "Usage: ssl_client"
+          stderr:
+            empty: true

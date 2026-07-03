@@ -1,0 +1,106 @@
+# Migrated from mimixbox's ShellSpec test/it/spec/sort_gnu_spec.sh (+ shellutils/sort_test.sh).
+version: "1"
+
+suite:
+  name: mimixbox sort (GNU extensions)
+
+scenarios:
+  - name: -V orders version numbers by value
+    steps:
+      - run:
+          shell: true
+          command: printf '1.10\n1.2\n1.1\n' | sort -V
+      - assert:
+          exit_code: 0
+          stdout:
+            equals: |
+              1.1
+              1.2
+              1.10
+
+  - name: -g orders floating-point values including exponents
+    steps:
+      - run:
+          shell: true
+          command: printf '1e3\n2.5\n100\n0.5\n' | sort -g
+      - assert:
+          exit_code: 0
+          stdout:
+            equals: |
+              0.5
+              2.5
+              100
+              1e3
+
+  - name: -h orders human-readable sizes by magnitude
+    steps:
+      - run:
+          shell: true
+          command: printf '1G\n2K\n1M\n' | sort -h
+      - assert:
+          exit_code: 0
+          stdout:
+            equals: |
+              2K
+              1M
+              1G
+
+  - name: -s keeps input order for equal keys
+    steps:
+      - run:
+          shell: true
+          command: printf '5 zebra\n5 apple\n5 mango\n' | sort -s -n
+      - assert:
+          exit_code: 0
+          stdout:
+            equals: |
+              5 zebra
+              5 apple
+              5 mango
+
+  - name: -z reads and writes NUL-delimited records
+    steps:
+      - run:
+          shell: true
+          command: printf 'banana\000apple\000cherry\000' | sort -z | tr '\000' '|'
+      - assert:
+          exit_code: 0
+          stdout:
+            equals: "apple|banana|cherry|"
+
+  - name: -m merges already-sorted input
+    steps:
+      - run:
+          shell: true
+          command: printf 'apple\nbanana\ncherry\n' | sort -m
+      - assert:
+          exit_code: 0
+          stdout:
+            equals: |
+              apple
+              banana
+              cherry
+
+  - name: --parallel is accepted without error
+    steps:
+      - run:
+          shell: true
+          command: printf 'b\na\n' | sort --parallel=4
+      - assert:
+          exit_code: 0
+          stdout:
+            equals: |
+              a
+              b
+
+  - name: --temporary-directory is accepted without error
+    steps:
+      - run:
+          shell: true
+          command: printf 'b\na\n' | sort --temporary-directory=/tmp
+      - assert:
+          exit_code: 0
+          stdout:
+            equals: |
+              a
+              b

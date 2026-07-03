@@ -1,0 +1,31 @@
+# Migrated from mimixbox's ShellSpec test/it/spec/script_spec.sh.
+version: "1"
+
+suite:
+  name: mimixbox script / scriptreplay
+
+scenarios:
+  - name: records command output to a typescript
+    steps:
+      # script writes a 'Script started' header into the typescript file.
+      - run:
+          shell: true
+          command: >
+            script -c 'printf recorded' -T timing out.txt >/dev/null 2>&1;
+            grep -c 'Script started' out.txt
+      - assert:
+          exit_code: 0
+          stdout:
+            equals: "1"
+
+  - name: replays a recorded typescript
+    steps:
+      - run:
+          shell: true
+          command: >
+            script -c 'printf replayed' -T timing out.txt >/dev/null 2>&1;
+            scriptreplay timing out.txt
+      - assert:
+          exit_code: 0
+          stdout:
+            equals: "replayed"

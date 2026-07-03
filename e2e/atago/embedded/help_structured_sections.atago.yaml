@@ -1,0 +1,1466 @@
+# Migrated from mimixbox's ShellSpec test/it/spec/help_structured_sections_spec.sh
+# (Parameters block, no helper). Each applet routes --help through the structured
+# renderer: exit 0, line 1 'Usage: <app>', an Examples section, an Exit status
+# section, and an example line starting with the command name. true/test/printf/
+# pwd are shell builtins, run through env to reach the applet. In embedded.
+version: "1"
+
+suite:
+  name: mimixbox structured --help sections
+
+scenarios:
+  - name: ln --help exposes the documented sections
+    steps:
+      - run:
+          command: "ln --help"
+      - assert:
+          exit_code: 0
+          stdout:
+            line: 1
+            matches: "^Usage: ln"
+      - assert:
+          stdout:
+            contains:
+              - "Examples:"
+              - "Exit status:"
+              - "  ln "
+
+  - name: log-collect --help exposes the documented sections
+    steps:
+      - run:
+          command: "log-collect --help"
+      - assert:
+          exit_code: 0
+          stdout:
+            line: 1
+            matches: "^Usage: log\\-collect"
+      - assert:
+          stdout:
+            contains:
+              - "Examples:"
+              - "Exit status:"
+              - "  log-collect "
+
+  - name: logname --help exposes the documented sections
+    steps:
+      - run:
+          command: "logname --help"
+      - assert:
+          exit_code: 0
+          stdout:
+            line: 1
+            matches: "^Usage: logname"
+      - assert:
+          stdout:
+            contains:
+              - "Examples:"
+              - "Exit status:"
+              - "  logname "
+
+  - name: md5sum --help exposes the documented sections
+    steps:
+      - run:
+          command: "md5sum --help"
+      - assert:
+          exit_code: 0
+          stdout:
+            line: 1
+            matches: "^Usage: md5sum"
+      - assert:
+          stdout:
+            contains:
+              - "Examples:"
+              - "Exit status:"
+              - "  md5sum "
+
+  - name: mkdir --help exposes the documented sections
+    steps:
+      - run:
+          command: "mkdir --help"
+      - assert:
+          exit_code: 0
+          stdout:
+            line: 1
+            matches: "^Usage: mkdir"
+      - assert:
+          stdout:
+            contains:
+              - "Examples:"
+              - "Exit status:"
+              - "  mkdir "
+
+  - name: mkfifo --help exposes the documented sections
+    steps:
+      - run:
+          command: "mkfifo --help"
+      - assert:
+          exit_code: 0
+          stdout:
+            line: 1
+            matches: "^Usage: mkfifo"
+      - assert:
+          stdout:
+            contains:
+              - "Examples:"
+              - "Exit status:"
+              - "  mkfifo "
+
+  - name: mknod --help exposes the documented sections
+    steps:
+      - run:
+          command: "mknod --help"
+      - assert:
+          exit_code: 0
+          stdout:
+            line: 1
+            matches: "^Usage: mknod"
+      - assert:
+          stdout:
+            contains:
+              - "Examples:"
+              - "Exit status:"
+              - "  mknod "
+
+  - name: mktemp --help exposes the documented sections
+    steps:
+      - run:
+          command: "mktemp --help"
+      - assert:
+          exit_code: 0
+          stdout:
+            line: 1
+            matches: "^Usage: mktemp"
+      - assert:
+          stdout:
+            contains:
+              - "Examples:"
+              - "Exit status:"
+              - "  mktemp "
+
+  - name: mountpoint --help exposes the documented sections
+    steps:
+      - run:
+          command: "mountpoint --help"
+      - assert:
+          exit_code: 0
+          stdout:
+            line: 1
+            matches: "^Usage: mountpoint"
+      - assert:
+          stdout:
+            contains:
+              - "Examples:"
+              - "Exit status:"
+              - "  mountpoint "
+
+  - name: mv --help exposes the documented sections
+    steps:
+      - run:
+          command: "mv --help"
+      - assert:
+          exit_code: 0
+          stdout:
+            line: 1
+            matches: "^Usage: mv"
+      - assert:
+          stdout:
+            contains:
+              - "Examples:"
+              - "Exit status:"
+              - "  mv "
+
+  - name: nc --help exposes the documented sections
+    steps:
+      - run:
+          command: "nc --help"
+      - assert:
+          exit_code: 0
+          stdout:
+            line: 1
+            matches: "^Usage: nc"
+      - assert:
+          stdout:
+            contains:
+              - "Examples:"
+              - "Exit status:"
+              - "  nc "
+
+  - name: netcat --help exposes the documented sections
+    steps:
+      - run:
+          command: "netcat --help"
+      - assert:
+          exit_code: 0
+          stdout:
+            line: 1
+            matches: "^Usage: netcat"
+      - assert:
+          stdout:
+            contains:
+              - "Examples:"
+              - "Exit status:"
+              - "  netcat "
+
+  - name: nl --help exposes the documented sections
+    steps:
+      - run:
+          command: "nl --help"
+      - assert:
+          exit_code: 0
+          stdout:
+            line: 1
+            matches: "^Usage: nl"
+      - assert:
+          stdout:
+            contains:
+              - "Examples:"
+              - "Exit status:"
+              - "  nl "
+
+  - name: nohup --help exposes the documented sections
+    steps:
+      - run:
+          command: "nohup --help"
+      - assert:
+          exit_code: 0
+          stdout:
+            line: 1
+            matches: "^Usage: nohup"
+      - assert:
+          stdout:
+            contains:
+              - "Examples:"
+              - "Exit status:"
+              - "  nohup "
+
+  - name: nproc --help exposes the documented sections
+    steps:
+      - run:
+          command: "nproc --help"
+      - assert:
+          exit_code: 0
+          stdout:
+            line: 1
+            matches: "^Usage: nproc"
+      - assert:
+          stdout:
+            contains:
+              - "Examples:"
+              - "Exit status:"
+              - "  nproc "
+
+  - name: nyancat --help exposes the documented sections
+    steps:
+      - run:
+          command: "nyancat --help"
+      - assert:
+          exit_code: 0
+          stdout:
+            line: 1
+            matches: "^Usage: nyancat"
+      - assert:
+          stdout:
+            contains:
+              - "Examples:"
+              - "Exit status:"
+              - "  nyancat "
+
+  - name: od --help exposes the documented sections
+    steps:
+      - run:
+          command: "od --help"
+      - assert:
+          exit_code: 0
+          stdout:
+            line: 1
+            matches: "^Usage: od"
+      - assert:
+          stdout:
+            contains:
+              - "Examples:"
+              - "Exit status:"
+              - "  od "
+
+  - name: paste --help exposes the documented sections
+    steps:
+      - run:
+          command: "paste --help"
+      - assert:
+          exit_code: 0
+          stdout:
+            line: 1
+            matches: "^Usage: paste"
+      - assert:
+          stdout:
+            contains:
+              - "Examples:"
+              - "Exit status:"
+              - "  paste "
+
+  - name: patch --help exposes the documented sections
+    steps:
+      - run:
+          command: "patch --help"
+      - assert:
+          exit_code: 0
+          stdout:
+            line: 1
+            matches: "^Usage: patch"
+      - assert:
+          stdout:
+            contains:
+              - "Examples:"
+              - "Exit status:"
+              - "  patch "
+
+  - name: path --help exposes the documented sections
+    steps:
+      - run:
+          command: "path --help"
+      - assert:
+          exit_code: 0
+          stdout:
+            line: 1
+            matches: "^Usage: path"
+      - assert:
+          stdout:
+            contains:
+              - "Examples:"
+              - "Exit status:"
+              - "  path "
+
+  - name: pidof --help exposes the documented sections
+    steps:
+      - run:
+          command: "pidof --help"
+      - assert:
+          exit_code: 0
+          stdout:
+            line: 1
+            matches: "^Usage: pidof"
+      - assert:
+          stdout:
+            contains:
+              - "Examples:"
+              - "Exit status:"
+              - "  pidof "
+
+  - name: ping --help exposes the documented sections
+    steps:
+      - run:
+          command: "ping --help"
+      - assert:
+          exit_code: 0
+          stdout:
+            line: 1
+            matches: "^Usage: ping"
+      - assert:
+          stdout:
+            contains:
+              - "Examples:"
+              - "Exit status:"
+              - "  ping "
+
+  - name: posixer --help exposes the documented sections
+    steps:
+      - run:
+          command: "posixer --help"
+      - assert:
+          exit_code: 0
+          stdout:
+            line: 1
+            matches: "^Usage: posixer"
+      - assert:
+          stdout:
+            contains:
+              - "Examples:"
+              - "Exit status:"
+              - "  posixer "
+
+  - name: poweroff --help exposes the documented sections
+    steps:
+      - run:
+          command: "poweroff --help"
+      - assert:
+          exit_code: 0
+          stdout:
+            line: 1
+            matches: "^Usage: poweroff"
+      - assert:
+          stdout:
+            contains:
+              - "Examples:"
+              - "Exit status:"
+              - "  poweroff "
+
+  - name: printenv --help exposes the documented sections
+    steps:
+      - run:
+          command: "printenv --help"
+      - assert:
+          exit_code: 0
+          stdout:
+            line: 1
+            matches: "^Usage: printenv"
+      - assert:
+          stdout:
+            contains:
+              - "Examples:"
+              - "Exit status:"
+              - "  printenv "
+
+  - name: pwcrack --help exposes the documented sections
+    steps:
+      - run:
+          command: "pwcrack --help"
+      - assert:
+          exit_code: 0
+          stdout:
+            line: 1
+            matches: "^Usage: pwcrack"
+      - assert:
+          stdout:
+            contains:
+              - "Examples:"
+              - "Exit status:"
+              - "  pwcrack "
+
+  - name: pwgen --help exposes the documented sections
+    steps:
+      - run:
+          command: "pwgen --help"
+      - assert:
+          exit_code: 0
+          stdout:
+            line: 1
+            matches: "^Usage: pwgen"
+      - assert:
+          stdout:
+            contains:
+              - "Examples:"
+              - "Exit status:"
+              - "  pwgen "
+
+  - name: pwscore --help exposes the documented sections
+    steps:
+      - run:
+          command: "pwscore --help"
+      - assert:
+          exit_code: 0
+          stdout:
+            line: 1
+            matches: "^Usage: pwscore"
+      - assert:
+          stdout:
+            contains:
+              - "Examples:"
+              - "Exit status:"
+              - "  pwscore "
+
+  - name: readlink --help exposes the documented sections
+    steps:
+      - run:
+          command: "readlink --help"
+      - assert:
+          exit_code: 0
+          stdout:
+            line: 1
+            matches: "^Usage: readlink"
+      - assert:
+          stdout:
+            contains:
+              - "Examples:"
+              - "Exit status:"
+              - "  readlink "
+
+  - name: realpath --help exposes the documented sections
+    steps:
+      - run:
+          command: "realpath --help"
+      - assert:
+          exit_code: 0
+          stdout:
+            line: 1
+            matches: "^Usage: realpath"
+      - assert:
+          stdout:
+            contains:
+              - "Examples:"
+              - "Exit status:"
+              - "  realpath "
+
+  - name: reboot --help exposes the documented sections
+    steps:
+      - run:
+          command: "reboot --help"
+      - assert:
+          exit_code: 0
+          stdout:
+            line: 1
+            matches: "^Usage: reboot"
+      - assert:
+          stdout:
+            contains:
+              - "Examples:"
+              - "Exit status:"
+              - "  reboot "
+
+  - name: remove-shell --help exposes the documented sections
+    steps:
+      - run:
+          command: "remove-shell --help"
+      - assert:
+          exit_code: 0
+          stdout:
+            line: 1
+            matches: "^Usage: remove\\-shell"
+      - assert:
+          stdout:
+            contains:
+              - "Examples:"
+              - "Exit status:"
+              - "  remove-shell "
+
+  - name: reset --help exposes the documented sections
+    steps:
+      - run:
+          command: "reset --help"
+      - assert:
+          exit_code: 0
+          stdout:
+            line: 1
+            matches: "^Usage: reset"
+      - assert:
+          stdout:
+            contains:
+              - "Examples:"
+              - "Exit status:"
+              - "  reset "
+
+  - name: resize --help exposes the documented sections
+    steps:
+      - run:
+          command: "resize --help"
+      - assert:
+          exit_code: 0
+          stdout:
+            line: 1
+            matches: "^Usage: resize"
+      - assert:
+          stdout:
+            contains:
+              - "Examples:"
+              - "Exit status:"
+              - "  resize "
+
+  - name: rev --help exposes the documented sections
+    steps:
+      - run:
+          command: "rev --help"
+      - assert:
+          exit_code: 0
+          stdout:
+            line: 1
+            matches: "^Usage: rev"
+      - assert:
+          stdout:
+            contains:
+              - "Examples:"
+              - "Exit status:"
+              - "  rev "
+
+  - name: rm --help exposes the documented sections
+    steps:
+      - run:
+          command: "rm --help"
+      - assert:
+          exit_code: 0
+          stdout:
+            line: 1
+            matches: "^Usage: rm"
+      - assert:
+          stdout:
+            contains:
+              - "Examples:"
+              - "Exit status:"
+              - "  rm "
+
+  - name: rmdir --help exposes the documented sections
+    steps:
+      - run:
+          command: "rmdir --help"
+      - assert:
+          exit_code: 0
+          stdout:
+            line: 1
+            matches: "^Usage: rmdir"
+      - assert:
+          stdout:
+            contains:
+              - "Examples:"
+              - "Exit status:"
+              - "  rmdir "
+
+  - name: rpm --help exposes the documented sections
+    steps:
+      - run:
+          command: "rpm --help"
+      - assert:
+          exit_code: 0
+          stdout:
+            line: 1
+            matches: "^Usage: rpm"
+      - assert:
+          stdout:
+            contains:
+              - "Examples:"
+              - "Exit status:"
+              - "  rpm "
+
+  - name: rpm2cpio --help exposes the documented sections
+    steps:
+      - run:
+          command: "rpm2cpio --help"
+      - assert:
+          exit_code: 0
+          stdout:
+            line: 1
+            matches: "^Usage: rpm2cpio"
+      - assert:
+          stdout:
+            contains:
+              - "Examples:"
+              - "Exit status:"
+              - "  rpm2cpio "
+
+  - name: sddf --help exposes the documented sections
+    steps:
+      - run:
+          command: "sddf --help"
+      - assert:
+          exit_code: 0
+          stdout:
+            line: 1
+            matches: "^Usage: sddf"
+      - assert:
+          stdout:
+            contains:
+              - "Examples:"
+              - "Exit status:"
+              - "  sddf "
+
+  - name: sed --help exposes the documented sections
+    steps:
+      - run:
+          command: "sed --help"
+      - assert:
+          exit_code: 0
+          stdout:
+            line: 1
+            matches: "^Usage: sed"
+      - assert:
+          stdout:
+            contains:
+              - "Examples:"
+              - "Exit status:"
+              - "  sed "
+
+  - name: seq --help exposes the documented sections
+    steps:
+      - run:
+          command: "seq --help"
+      - assert:
+          exit_code: 0
+          stdout:
+            line: 1
+            matches: "^Usage: seq"
+      - assert:
+          stdout:
+            contains:
+              - "Examples:"
+              - "Exit status:"
+              - "  seq "
+
+  - name: serial --help exposes the documented sections
+    steps:
+      - run:
+          command: "serial --help"
+      - assert:
+          exit_code: 0
+          stdout:
+            line: 1
+            matches: "^Usage: serial"
+      - assert:
+          stdout:
+            contains:
+              - "Examples:"
+              - "Exit status:"
+              - "  serial "
+
+  - name: sha1sum --help exposes the documented sections
+    steps:
+      - run:
+          command: "sha1sum --help"
+      - assert:
+          exit_code: 0
+          stdout:
+            line: 1
+            matches: "^Usage: sha1sum"
+      - assert:
+          stdout:
+            contains:
+              - "Examples:"
+              - "Exit status:"
+              - "  sha1sum "
+
+  - name: sha256sum --help exposes the documented sections
+    steps:
+      - run:
+          command: "sha256sum --help"
+      - assert:
+          exit_code: 0
+          stdout:
+            line: 1
+            matches: "^Usage: sha256sum"
+      - assert:
+          stdout:
+            contains:
+              - "Examples:"
+              - "Exit status:"
+              - "  sha256sum "
+
+  - name: sha384sum --help exposes the documented sections
+    steps:
+      - run:
+          command: "sha384sum --help"
+      - assert:
+          exit_code: 0
+          stdout:
+            line: 1
+            matches: "^Usage: sha384sum"
+      - assert:
+          stdout:
+            contains:
+              - "Examples:"
+              - "Exit status:"
+              - "  sha384sum "
+
+  - name: sha3sum --help exposes the documented sections
+    steps:
+      - run:
+          command: "sha3sum --help"
+      - assert:
+          exit_code: 0
+          stdout:
+            line: 1
+            matches: "^Usage: sha3sum"
+      - assert:
+          stdout:
+            contains:
+              - "Examples:"
+              - "Exit status:"
+              - "  sha3sum "
+
+  - name: sha512sum --help exposes the documented sections
+    steps:
+      - run:
+          command: "sha512sum --help"
+      - assert:
+          exit_code: 0
+          stdout:
+            line: 1
+            matches: "^Usage: sha512sum"
+      - assert:
+          stdout:
+            contains:
+              - "Examples:"
+              - "Exit status:"
+              - "  sha512sum "
+
+  - name: shred --help exposes the documented sections
+    steps:
+      - run:
+          command: "shred --help"
+      - assert:
+          exit_code: 0
+          stdout:
+            line: 1
+            matches: "^Usage: shred"
+      - assert:
+          stdout:
+            contains:
+              - "Examples:"
+              - "Exit status:"
+              - "  shred "
+
+  - name: shuf --help exposes the documented sections
+    steps:
+      - run:
+          command: "shuf --help"
+      - assert:
+          exit_code: 0
+          stdout:
+            line: 1
+            matches: "^Usage: shuf"
+      - assert:
+          stdout:
+            contains:
+              - "Examples:"
+              - "Exit status:"
+              - "  shuf "
+
+  - name: sl --help exposes the documented sections
+    steps:
+      - run:
+          command: "sl --help"
+      - assert:
+          exit_code: 0
+          stdout:
+            line: 1
+            matches: "^Usage: sl"
+      - assert:
+          stdout:
+            contains:
+              - "Examples:"
+              - "Exit status:"
+              - "  sl "
+
+  - name: sleep --help exposes the documented sections
+    steps:
+      - run:
+          command: "sleep --help"
+      - assert:
+          exit_code: 0
+          stdout:
+            line: 1
+            matches: "^Usage: sleep"
+      - assert:
+          stdout:
+            contains:
+              - "Examples:"
+              - "Exit status:"
+              - "  sleep "
+
+  - name: sort --help exposes the documented sections
+    steps:
+      - run:
+          command: "sort --help"
+      - assert:
+          exit_code: 0
+          stdout:
+            line: 1
+            matches: "^Usage: sort"
+      - assert:
+          stdout:
+            contains:
+              - "Examples:"
+              - "Exit status:"
+              - "  sort "
+
+  - name: speaker --help exposes the documented sections
+    steps:
+      - run:
+          command: "speaker --help"
+      - assert:
+          exit_code: 0
+          stdout:
+            line: 1
+            matches: "^Usage: speaker"
+      - assert:
+          stdout:
+            contains:
+              - "Examples:"
+              - "Exit status:"
+              - "  speaker "
+
+  - name: split --help exposes the documented sections
+    steps:
+      - run:
+          command: "split --help"
+      - assert:
+          exit_code: 0
+          stdout:
+            line: 1
+            matches: "^Usage: split"
+      - assert:
+          stdout:
+            contains:
+              - "Examples:"
+              - "Exit status:"
+              - "  split "
+
+  - name: stat --help exposes the documented sections
+    steps:
+      - run:
+          command: "stat --help"
+      - assert:
+          exit_code: 0
+          stdout:
+            line: 1
+            matches: "^Usage: stat"
+      - assert:
+          stdout:
+            contains:
+              - "Examples:"
+              - "Exit status:"
+              - "  stat "
+
+  - name: strings --help exposes the documented sections
+    steps:
+      - run:
+          command: "strings --help"
+      - assert:
+          exit_code: 0
+          stdout:
+            line: 1
+            matches: "^Usage: strings"
+      - assert:
+          stdout:
+            contains:
+              - "Examples:"
+              - "Exit status:"
+              - "  strings "
+
+  - name: sync --help exposes the documented sections
+    steps:
+      - run:
+          command: "sync --help"
+      - assert:
+          exit_code: 0
+          stdout:
+            line: 1
+            matches: "^Usage: sync"
+      - assert:
+          stdout:
+            contains:
+              - "Examples:"
+              - "Exit status:"
+              - "  sync "
+
+  - name: tac --help exposes the documented sections
+    steps:
+      - run:
+          command: "tac --help"
+      - assert:
+          exit_code: 0
+          stdout:
+            line: 1
+            matches: "^Usage: tac"
+      - assert:
+          stdout:
+            contains:
+              - "Examples:"
+              - "Exit status:"
+              - "  tac "
+
+  - name: tar --help exposes the documented sections
+    steps:
+      - run:
+          command: "tar --help"
+      - assert:
+          exit_code: 0
+          stdout:
+            line: 1
+            matches: "^Usage: tar"
+      - assert:
+          stdout:
+            contains:
+              - "Examples:"
+              - "Exit status:"
+              - "  tar "
+
+  - name: tee --help exposes the documented sections
+    steps:
+      - run:
+          command: "tee --help"
+      - assert:
+          exit_code: 0
+          stdout:
+            line: 1
+            matches: "^Usage: tee"
+      - assert:
+          stdout:
+            contains:
+              - "Examples:"
+              - "Exit status:"
+              - "  tee "
+
+  - name: timeout --help exposes the documented sections
+    steps:
+      - run:
+          command: "timeout --help"
+      - assert:
+          exit_code: 0
+          stdout:
+            line: 1
+            matches: "^Usage: timeout"
+      - assert:
+          stdout:
+            contains:
+              - "Examples:"
+              - "Exit status:"
+              - "  timeout "
+
+  - name: touch --help exposes the documented sections
+    steps:
+      - run:
+          command: "touch --help"
+      - assert:
+          exit_code: 0
+          stdout:
+            line: 1
+            matches: "^Usage: touch"
+      - assert:
+          stdout:
+            contains:
+              - "Examples:"
+              - "Exit status:"
+              - "  touch "
+
+  - name: tr --help exposes the documented sections
+    steps:
+      - run:
+          command: "tr --help"
+      - assert:
+          exit_code: 0
+          stdout:
+            line: 1
+            matches: "^Usage: tr"
+      - assert:
+          stdout:
+            contains:
+              - "Examples:"
+              - "Exit status:"
+              - "  tr "
+
+  - name: truncate --help exposes the documented sections
+    steps:
+      - run:
+          command: "truncate --help"
+      - assert:
+          exit_code: 0
+          stdout:
+            line: 1
+            matches: "^Usage: truncate"
+      - assert:
+          stdout:
+            contains:
+              - "Examples:"
+              - "Exit status:"
+              - "  truncate "
+
+  - name: tty --help exposes the documented sections
+    steps:
+      - run:
+          command: "tty --help"
+      - assert:
+          exit_code: 0
+          stdout:
+            line: 1
+            matches: "^Usage: tty"
+      - assert:
+          stdout:
+            contains:
+              - "Examples:"
+              - "Exit status:"
+              - "  tty "
+
+  - name: uname --help exposes the documented sections
+    steps:
+      - run:
+          command: "uname --help"
+      - assert:
+          exit_code: 0
+          stdout:
+            line: 1
+            matches: "^Usage: uname"
+      - assert:
+          stdout:
+            contains:
+              - "Examples:"
+              - "Exit status:"
+              - "  uname "
+
+  - name: uncompress --help exposes the documented sections
+    steps:
+      - run:
+          command: "uncompress --help"
+      - assert:
+          exit_code: 0
+          stdout:
+            line: 1
+            matches: "^Usage: uncompress"
+      - assert:
+          stdout:
+            contains:
+              - "Examples:"
+              - "Exit status:"
+              - "  uncompress "
+
+  - name: unexpand --help exposes the documented sections
+    steps:
+      - run:
+          command: "unexpand --help"
+      - assert:
+          exit_code: 0
+          stdout:
+            line: 1
+            matches: "^Usage: unexpand"
+      - assert:
+          stdout:
+            contains:
+              - "Examples:"
+              - "Exit status:"
+              - "  unexpand "
+
+  - name: uniq --help exposes the documented sections
+    steps:
+      - run:
+          command: "uniq --help"
+      - assert:
+          exit_code: 0
+          stdout:
+            line: 1
+            matches: "^Usage: uniq"
+      - assert:
+          stdout:
+            contains:
+              - "Examples:"
+              - "Exit status:"
+              - "  uniq "
+
+  - name: unix2dos --help exposes the documented sections
+    steps:
+      - run:
+          command: "unix2dos --help"
+      - assert:
+          exit_code: 0
+          stdout:
+            line: 1
+            matches: "^Usage: unix2dos"
+      - assert:
+          stdout:
+            contains:
+              - "Examples:"
+              - "Exit status:"
+              - "  unix2dos "
+
+  - name: unlink --help exposes the documented sections
+    steps:
+      - run:
+          command: "unlink --help"
+      - assert:
+          exit_code: 0
+          stdout:
+            line: 1
+            matches: "^Usage: unlink"
+      - assert:
+          stdout:
+            contains:
+              - "Examples:"
+              - "Exit status:"
+              - "  unlink "
+
+  - name: unshadow --help exposes the documented sections
+    steps:
+      - run:
+          command: "unshadow --help"
+      - assert:
+          exit_code: 0
+          stdout:
+            line: 1
+            matches: "^Usage: unshadow"
+      - assert:
+          stdout:
+            contains:
+              - "Examples:"
+              - "Exit status:"
+              - "  unshadow "
+
+  - name: unzip --help exposes the documented sections
+    steps:
+      - run:
+          command: "unzip --help"
+      - assert:
+          exit_code: 0
+          stdout:
+            line: 1
+            matches: "^Usage: unzip"
+      - assert:
+          stdout:
+            contains:
+              - "Examples:"
+              - "Exit status:"
+              - "  unzip "
+
+  - name: uuidgen --help exposes the documented sections
+    steps:
+      - run:
+          command: "uuidgen --help"
+      - assert:
+          exit_code: 0
+          stdout:
+            line: 1
+            matches: "^Usage: uuidgen"
+      - assert:
+          stdout:
+            contains:
+              - "Examples:"
+              - "Exit status:"
+              - "  uuidgen "
+
+  - name: valid-shell --help exposes the documented sections
+    steps:
+      - run:
+          command: "valid-shell --help"
+      - assert:
+          exit_code: 0
+          stdout:
+            line: 1
+            matches: "^Usage: valid\\-shell"
+      - assert:
+          stdout:
+            contains:
+              - "Examples:"
+              - "Exit status:"
+              - "  valid-shell "
+
+  - name: watch --help exposes the documented sections
+    steps:
+      - run:
+          command: "watch --help"
+      - assert:
+          exit_code: 0
+          stdout:
+            line: 1
+            matches: "^Usage: watch"
+      - assert:
+          stdout:
+            contains:
+              - "Examples:"
+              - "Exit status:"
+              - "  watch "
+
+  - name: wc --help exposes the documented sections
+    steps:
+      - run:
+          command: "wc --help"
+      - assert:
+          exit_code: 0
+          stdout:
+            line: 1
+            matches: "^Usage: wc"
+      - assert:
+          stdout:
+            contains:
+              - "Examples:"
+              - "Exit status:"
+              - "  wc "
+
+  - name: which --help exposes the documented sections
+    steps:
+      - run:
+          command: "which --help"
+      - assert:
+          exit_code: 0
+          stdout:
+            line: 1
+            matches: "^Usage: which"
+      - assert:
+          stdout:
+            contains:
+              - "Examples:"
+              - "Exit status:"
+              - "  which "
+
+  - name: who --help exposes the documented sections
+    steps:
+      - run:
+          command: "who --help"
+      - assert:
+          exit_code: 0
+          stdout:
+            line: 1
+            matches: "^Usage: who"
+      - assert:
+          stdout:
+            contains:
+              - "Examples:"
+              - "Exit status:"
+              - "  who "
+
+  - name: whoami --help exposes the documented sections
+    steps:
+      - run:
+          command: "whoami --help"
+      - assert:
+          exit_code: 0
+          stdout:
+            line: 1
+            matches: "^Usage: whoami"
+      - assert:
+          stdout:
+            contains:
+              - "Examples:"
+              - "Exit status:"
+              - "  whoami "
+
+  - name: whris --help exposes the documented sections
+    steps:
+      - run:
+          command: "whris --help"
+      - assert:
+          exit_code: 0
+          stdout:
+            line: 1
+            matches: "^Usage: whris"
+      - assert:
+          stdout:
+            contains:
+              - "Examples:"
+              - "Exit status:"
+              - "  whris "
+
+  - name: xargs --help exposes the documented sections
+    steps:
+      - run:
+          command: "xargs --help"
+      - assert:
+          exit_code: 0
+          stdout:
+            line: 1
+            matches: "^Usage: xargs"
+      - assert:
+          stdout:
+            contains:
+              - "Examples:"
+              - "Exit status:"
+              - "  xargs "
+
+  - name: xxd --help exposes the documented sections
+    steps:
+      - run:
+          command: "xxd --help"
+      - assert:
+          exit_code: 0
+          stdout:
+            line: 1
+            matches: "^Usage: xxd"
+      - assert:
+          stdout:
+            contains:
+              - "Examples:"
+              - "Exit status:"
+              - "  xxd "
+
+  - name: yes --help exposes the documented sections
+    steps:
+      - run:
+          command: "yes --help"
+      - assert:
+          exit_code: 0
+          stdout:
+            line: 1
+            matches: "^Usage: yes"
+      - assert:
+          stdout:
+            contains:
+              - "Examples:"
+              - "Exit status:"
+              - "  yes "
+
+  - name: zip --help exposes the documented sections
+    steps:
+      - run:
+          command: "zip --help"
+      - assert:
+          exit_code: 0
+          stdout:
+            line: 1
+            matches: "^Usage: zip"
+      - assert:
+          stdout:
+            contains:
+              - "Examples:"
+              - "Exit status:"
+              - "  zip "
+
+  - name: zip-pwcrack --help exposes the documented sections
+    steps:
+      - run:
+          command: "zip-pwcrack --help"
+      - assert:
+          exit_code: 0
+          stdout:
+            line: 1
+            matches: "^Usage: zip\\-pwcrack"
+      - assert:
+          stdout:
+            contains:
+              - "Examples:"
+              - "Exit status:"
+              - "  zip-pwcrack "
+
+  - name: true --help exposes the documented sections
+    steps:
+      - run:
+          command: "env true --help"
+      - assert:
+          exit_code: 0
+          stdout:
+            line: 1
+            matches: "^Usage: true"
+      - assert:
+          stdout:
+            contains:
+              - "Examples:"
+              - "Exit status:"
+              - "  true "
+
+  - name: test --help exposes the documented sections
+    steps:
+      - run:
+          command: "env test --help"
+      - assert:
+          exit_code: 0
+          stdout:
+            line: 1
+            matches: "^Usage: test"
+      - assert:
+          stdout:
+            contains:
+              - "Examples:"
+              - "Exit status:"
+              - "  test "
+
+  - name: printf --help exposes the documented sections
+    steps:
+      - run:
+          command: "env printf --help"
+      - assert:
+          exit_code: 0
+          stdout:
+            line: 1
+            matches: "^Usage: printf"
+      - assert:
+          stdout:
+            contains:
+              - "Examples:"
+              - "Exit status:"
+              - "  printf "
+
+  - name: pwd --help exposes the documented sections
+    steps:
+      - run:
+          command: "env pwd --help"
+      - assert:
+          exit_code: 0
+          stdout:
+            line: 1
+            matches: "^Usage: pwd"
+      - assert:
+          stdout:
+            contains:
+              - "Examples:"
+              - "Exit status:"
+              - "  pwd "

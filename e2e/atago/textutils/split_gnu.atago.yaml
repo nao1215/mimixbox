@@ -1,0 +1,50 @@
+# Migrated from mimixbox's ShellSpec test/it/spec/split_gnu_spec.sh (+
+# split_test.sh). Each helper pipes input through split then lists the produced
+# pieces (ls | sed | sort | tr | sed), so every scenario runs under shell:true.
+version: "1"
+
+suite:
+  name: mimixbox split (GNU flags)
+
+scenarios:
+  - name: use numeric suffixes with -d
+    steps:
+      - run:
+          shell: true
+          command: printf '1\n2\n3\n4\n5\n' | split -l 2 -d - "${workdir}/num-"; ls "${workdir}"/num-* | sed "s#${workdir}/##" | sort | tr '\n' ' ' | sed 's/ $//'
+      - assert:
+          exit_code: 0
+          stdout:
+            equals: "num-00 num-01 num-02"
+
+  - name: write expected content to the first numeric piece
+    steps:
+      - run:
+          shell: true
+          command: printf '1\n2\n3\n4\n5\n' | split -l 2 -d - "${workdir}/num-"; cat "${workdir}/num-00"
+      - assert:
+          exit_code: 0
+          stdout:
+            equals: |
+              1
+              2
+
+  - name: append an additional suffix to each name
+    steps:
+      - run:
+          shell: true
+          command: printf '1\n2\n3\n' | split -l 2 --additional-suffix=.txt - "${workdir}/add-"; ls "${workdir}"/add-* | sed "s#${workdir}/##" | sort | tr '\n' ' ' | sed 's/ $//'
+      - assert:
+          exit_code: 0
+          stdout:
+            equals: "add-aa.txt add-ab.txt"
+
+  - name: honor a custom suffix length with -a
+    steps:
+      - run:
+          shell: true
+          command: printf '1\n2\n' | split -l 1 -a 3 - "${workdir}/len-"; ls "${workdir}"/len-* | sed "s#${workdir}/##" | sort | tr '\n' ' ' | sed 's/ $//'
+      - assert:
+          exit_code: 0
+          stdout:
+            equals: "len-aaa len-aab"

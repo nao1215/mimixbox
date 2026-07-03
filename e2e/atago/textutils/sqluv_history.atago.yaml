@@ -1,0 +1,26 @@
+# Migrated from mimixbox's ShellSpec test/it/spec/sqluv_history_spec.sh (+
+# sqluv_test.sh SqluvHistory). Runs a query with --history-file then prints the
+# history file to prove it was written there; mktemp + multiple statements need
+# shell:true.
+version: "1"
+
+suite:
+  name: mimixbox sqluv (history file)
+
+scenarios:
+  - name: write query history to the path given by --history-file
+    steps:
+      - run:
+          shell: true
+          command: |
+            dir=$(mktemp -d "${TMPDIR:-/tmp}/sqluv-it.XXXXXX")
+            hist="$dir/sqluv-history.log"
+            printf 'id\n1\n2\n' > "$dir/nums.csv"
+            sqluv "$dir/nums.csv" --history-file "$hist" \
+                --execute 'select count(*) from nums' >/dev/null
+            cat "$hist"
+            rm -rf "$dir"
+      - assert:
+          exit_code: 0
+          stdout:
+            contains: "select count(*) from nums"

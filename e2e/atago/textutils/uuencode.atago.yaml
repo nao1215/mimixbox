@@ -1,0 +1,31 @@
+# Migrated from mimixbox's ShellSpec test/it/spec/uuencode_spec.sh (no helper; inline).
+# Universal --help contract (Issue #477) plus a uuencode-of-stdin behavior case.
+# ShellSpec's `Data 'hello'` feeds "hello\n" on stdin.
+version: "1"
+
+suite:
+  name: mimixbox uuencode
+
+scenarios:
+  - name: describes itself with --help
+    steps:
+      - run:
+          command: uuencode --help
+      - assert:
+          exit_code: 0
+          stdout:
+            contains: "Usage: uuencode"
+          stderr:
+            empty: true
+
+  - name: uuencodes stdin with a begin header
+    steps:
+      - run:
+          command: uuencode hi.txt
+          stdin: "hello\n"
+      - assert:
+          exit_code: 0
+          stdout:
+            contains:
+              - "begin 644 hi.txt"
+              - "end"

@@ -1,0 +1,16 @@
+# Migrated from mimixbox's ShellSpec test/it/spec/ping_spec.sh
+# (+ netutils/ping_test.sh). With no HOST, ping reports a usage error and exits
+# non-zero; this path needs no raw-socket privileges. The ShellSpec captured the
+# exit via 'echo "rc:$?"'; here the non-zero exit is asserted directly.
+version: "1"
+
+suite:
+  name: mimixbox ping usage
+
+scenarios:
+  - name: reports an error when no host is given
+    steps:
+      - run:
+          command: ping
+      - assert:
+          exit_code: { not: 0 }

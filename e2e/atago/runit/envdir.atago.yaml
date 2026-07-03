@@ -1,0 +1,28 @@
+# Migrated from mimixbox's ShellSpec test/it/spec/envdir_spec.sh
+# (+ runit/envdir_test.sh). envdir DIR sets variables from files in DIR and runs
+# a program; the missing-program path is the deterministic failure.
+version: "1"
+
+suite:
+  name: mimixbox envdir
+
+scenarios:
+  - name: sets a variable from a directory file
+    steps:
+      - fixture:
+          file: env/GREETING
+          content: |
+            hello
+      - run:
+          command: envdir env sh -c 'echo "$GREETING"'
+      - assert:
+          exit_code: 0
+          stdout:
+            equals: "hello"
+
+  - name: requires a directory and a program
+    steps:
+      - run:
+          command: envdir /only
+      - assert:
+          exit_code: { not: 0 }

@@ -1,0 +1,45 @@
+# Migrated from mimixbox's ShellSpec test/it/spec/ln_spec.sh (+ fileutils/ln_test.sh).
+# Setup builds ${ROOT}/ln/target.txt; reproduced inside ${workdir}. The
+# no-operand error case is a simple single command, so direct exec.
+version: "1"
+
+suite:
+  name: mimixbox ln
+
+scenarios:
+  - name: ln creates a hard link to the same content
+    steps:
+      - fixture:
+          file: ln/target.txt
+          content: |
+            content
+      - run:
+          shell: true
+          command: ln ${workdir}/ln/target.txt ${workdir}/ln/hardlink.txt && cat ${workdir}/ln/hardlink.txt
+      - assert:
+          exit_code: 0
+          stdout:
+            equals: "content"
+
+  - name: ln -s creates a symbolic link
+    steps:
+      - fixture:
+          file: ln/target.txt
+          content: |
+            content
+      - run:
+          shell: true
+          command: ln -s ${workdir}/ln/target.txt ${workdir}/ln/symlink.txt && test -L ${workdir}/ln/symlink.txt && echo "is symlink"
+      - assert:
+          exit_code: 0
+          stdout:
+            equals: "is symlink"
+
+  - name: ln with no operand reports an error
+    steps:
+      - run:
+          command: ln
+      - assert:
+          exit_code: { not: 0 }
+          stderr:
+            equals: "ln: missing file operand"

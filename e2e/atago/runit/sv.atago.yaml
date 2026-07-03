@@ -1,0 +1,32 @@
+# Migrated from mimixbox's ShellSpec test/it/spec/sv_spec.sh
+# (+ runit/sv_test.sh). sv writes a control character into supervise/control and
+# reports a service's status from its supervise dir.
+version: "1"
+
+suite:
+  name: mimixbox sv
+
+scenarios:
+  - name: writes the up control character
+    steps:
+      - fixture: { file: svc/supervise/control, content: "" }
+      - fixture: { file: svc/supervise/ok, content: "" }
+      # Helper chains 'sv up DIR; cat control' with ';' -> shell:true.
+      - run:
+          shell: true
+          command: sv up svc && cat svc/supervise/control
+      - assert:
+          exit_code: 0
+          stdout:
+            equals: "u"
+
+  - name: reports a running service
+    steps:
+      - fixture: { file: svc2/supervise/ok, content: "" }
+      - fixture: { file: svc2/supervise/pid, content: "99\n" }
+      - run:
+          command: sv status svc2
+      - assert:
+          exit_code: 0
+          stdout:
+            contains: "run"

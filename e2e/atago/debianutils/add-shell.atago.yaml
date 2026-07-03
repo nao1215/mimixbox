@@ -1,0 +1,27 @@
+# Migrated from mimixbox's ShellSpec test/it/spec/add-shell_spec.sh
+# (+ debianutils/add-shell_test.sh). add-shell mutates /etc/shells (privileged),
+# so the ShellSpec only exercises the --help contract and the no-operand error.
+# Both are single commands → direct exec.
+version: "1"
+
+suite:
+  name: mimixbox add-shell
+
+scenarios:
+  - name: prints usage with --help and exits 0
+    steps:
+      - run:
+          command: add-shell --help
+      - assert:
+          exit_code: 0
+          stdout:
+            contains: "Usage: add-shell"
+
+  - name: fails with a message when given no operand
+    steps:
+      - run:
+          command: add-shell
+      - assert:
+          exit_code: { not: 0 }
+          stderr:
+            contains: "add-shell"

@@ -1,0 +1,23 @@
+# Migrated from mimixbox's ShellSpec test/it/spec/pwcrack_spec.sh
+# (+ securityutils/pwcrack_test.sh). Setup writes words.txt; pwcrack is a single
+# command so it runs via direct exec against the workdir-relative wordlist.
+version: "1"
+
+suite:
+  name: mimixbox pwcrack
+
+scenarios:
+  - name: finds a weak password in the wordlist
+    steps:
+      - fixture:
+          file: words.txt
+          content: |
+            alpha
+            secret
+            beta
+      - run:
+          command: pwcrack -w words.txt $6$abcdefgh$ltjgWl6579NluT/Vi1nwEvcil.G5Nbc4NiXZaNGStk8PSwGfQv72N2CKPPrVACtLtip/cZ/1GM/O6IND4WQhG.
+      - assert:
+          exit_code: 0
+          stdout:
+            contains: ": secret"

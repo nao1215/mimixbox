@@ -1,0 +1,36 @@
+# Migrated from mimixbox's ShellSpec test/it/spec/realpath_spec.sh (+ shellutils/realpath_test.sh).
+version: "1"
+
+suite:
+  name: mimixbox realpath
+
+scenarios:
+  - name: resolves an existing file to its absolute path
+    steps:
+      - fixture:
+          file: file.txt
+          content: ""
+      - run:
+          command: realpath file.txt
+      - assert:
+          exit_code: 0
+          stdout:
+            equals: "${workdir}/file.txt"
+
+  - name: prints the cleaned absolute path with -m on a missing path
+    steps:
+      - run:
+          command: realpath -m ${workdir}/does/not/exist
+      - assert:
+          exit_code: 0
+          stdout:
+            equals: "${workdir}/does/not/exist"
+
+  - name: reports an error with no operand
+    steps:
+      - run:
+          command: realpath
+      - assert:
+          exit_code: { not: 0 }
+          stderr:
+            equals: "realpath: missing operand"

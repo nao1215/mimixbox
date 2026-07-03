@@ -1,0 +1,59 @@
+# Migrated from mimixbox's ShellSpec test/it/spec/makedevs_spec.sh
+# (+ embedded/makedevs_test.sh). makedevs -d TABLE ROOTDIR builds a directory and
+# file tree from a device table; without -d it prints a usage error.
+version: "1"
+
+suite:
+  name: mimixbox makedevs
+
+scenarios:
+  - name: creates the directory and file tree from a device table
+    steps:
+      - fixture:
+          file: table.txt
+          content: |
+            # device table
+            /dev d 755 0 0 0 0 0 0 0
+            /etc/hostname f 644 0 0 0 0 0 0 0
+      # Builds the tree, then a shell test reports 1 when both entries exist.
+      - run:
+          shell: true
+          command: |
+            makedevs -d table.txt rootfs
+            if [ -d rootfs/dev ] && [ -f rootfs/etc/hostname ]; then
+                echo 1
+            else
+                echo 0
+            fi
+      - assert:
+          exit_code: 0
+          stdout:
+            equals: "1"
+
+  - name: fails without the -d table option
+    steps:
+      # Error case -> direct exec.
+      - run:
+          command: makedevs ./rootfs
+      - assert:
+          exit_code: { not: 0 }
+          stderr:
+            contains: "usage: makedevs"
+
+  - name: prints usage for --help
+    steps:
+      - run:
+          command: makedevs --help
+      - assert:
+          exit_code: 0
+          stdout:
+            contains: "Usage: makedevs"
+
+  - name: prints the version line for --version
+    steps:
+      - run:
+          command: makedevs --version
+      - assert:
+          exit_code: 0
+          stdout:
+            contains: "makedevs (mimixbox)"

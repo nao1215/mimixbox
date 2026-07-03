@@ -1,0 +1,68 @@
+# Migrated from mimixbox's ShellSpec test/it/spec/xargs_gnu_spec.sh
+# (+ findutils/xargs_gnu_test.sh): GNU xargs -L/-s/-P flags. Every case pipes
+# printf into xargs and post-processes with wc/grep/sort, so all use shell:true.
+version: "1"
+
+suite:
+  name: mimixbox xargs GNU flags
+
+scenarios:
+  - name: runs once per input line with -L 1
+    steps:
+      - run:
+          shell: true
+          command: printf 'a b\nc d\ne f\n' | xargs -L 1 echo | wc -l | tr -d ' '
+      - assert:
+          exit_code: 0
+          stdout:
+            equals: "3"
+
+  - name: groups two input lines per invocation with -L 2
+    steps:
+      - run:
+          shell: true
+          command: printf 'a\nb\nc\n' | xargs -L 2 echo | wc -l | tr -d ' '
+      - assert:
+          exit_code: 0
+          stdout:
+            equals: "2"
+
+  - name: splits a long input into multiple invocations with -s
+    steps:
+      - run:
+          shell: true
+          command: printf '1 2 3 4 5 6 7 8\n' | xargs -s 8 echo | wc -l | tr -d ' '
+      - assert:
+          exit_code: 0
+          stdout:
+            equals: "2"
+
+  - name: keeps every item across the -s split invocations
+    steps:
+      - run:
+          shell: true
+          command: printf '1 2 3 4 5 6 7 8\n' | xargs -s 8 echo | tr ' ' '\n' | grep -c .
+      - assert:
+          exit_code: 0
+          stdout:
+            equals: "8"
+
+  - name: runs all batches concurrently with -P 4
+    steps:
+      - run:
+          shell: true
+          command: printf 'a\nb\nc\nd\n' | xargs -P 4 -n 1 echo | sort | tr '\n' ' ' | sed 's/ $//'
+      - assert:
+          exit_code: 0
+          stdout:
+            equals: "a b c d"
+
+  - name: runs all batches with -P 0
+    steps:
+      - run:
+          shell: true
+          command: printf 'a\nb\nc\nd\n' | xargs -P 0 -n 1 echo | sort | tr '\n' ' ' | sed 's/ $//'
+      - assert:
+          exit_code: 0
+          stdout:
+            equals: "a b c d"

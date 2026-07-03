@@ -1,0 +1,15 @@
+# Migrated from mimixbox's ShellSpec test/it/spec/rdev_spec.sh.
+version: "1"
+
+suite:
+  name: mimixbox rdev
+
+scenarios:
+  - name: prints the root device with the / mountpoint
+    steps:
+      - run:
+          command: rdev
+      - assert:
+          exit_code: 0
+          stdout:
+            contains: " /"

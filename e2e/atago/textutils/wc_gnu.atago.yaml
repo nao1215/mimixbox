@@ -1,0 +1,81 @@
+# Migrated from mimixbox's ShellSpec test/it/spec/wc_gnu_spec.sh (+ wc_test.sh
+# SetupWcGnu). Builds wc_a.txt (a/b/c) and wc_b.txt (x). The --files0-from cases
+# read a NUL-separated list of names; that list is built by a shell:true printf
+# setup step because a declarative fixture cannot embed literal NUL bytes.
+version: "1"
+
+suite:
+  name: mimixbox wc (GNU flags)
+
+scenarios:
+  - name: print only the combined total with --total=only
+    steps:
+      - fixture: { file: wc_a.txt, content: "a\nb\nc\n" }
+      - fixture: { file: wc_b.txt, content: "x\n" }
+      - run:
+          command: wc --total=only wc_a.txt wc_b.txt
+      - assert:
+          exit_code: 0
+          stdout:
+            equals: "4 4 8"
+
+  - name: suppress the total line with --total=never
+    steps:
+      - fixture: { file: wc_a.txt, content: "a\nb\nc\n" }
+      - fixture: { file: wc_b.txt, content: "x\n" }
+      - run:
+          command: wc --total=never "${workdir}/wc_a.txt" "${workdir}/wc_b.txt"
+      - assert:
+          exit_code: 0
+          stdout:
+            equals: "3 3 6 ${workdir}/wc_a.txt\n1 1 2 ${workdir}/wc_b.txt"
+
+  - name: print a total even for one file with --total=always
+    steps:
+      - fixture: { file: wc_a.txt, content: "a\nb\nc\n" }
+      - run:
+          command: wc --total=always "${workdir}/wc_a.txt"
+      - assert:
+          exit_code: 0
+          stdout:
+            equals: "3 3 6 ${workdir}/wc_a.txt\n3 3 6 total"
+
+  - name: read a NUL-separated name list with --files0-from
+    steps:
+      - fixture: { file: wc_a.txt, content: "a\nb\nc\n" }
+      - fixture: { file: wc_b.txt, content: "x\n" }
+      - run:
+          shell: true
+          command: printf '%s\0%s\0' "${workdir}/wc_a.txt" "${workdir}/wc_b.txt" > wc_list.nul
+      - run:
+          command: wc --files0-from=wc_list.nul
+      - assert:
+          exit_code: 0
+          stdout:
+            equals: "3 3 6 ${workdir}/wc_a.txt\n1 1 2 ${workdir}/wc_b.txt\n4 4 8 total"
+
+  - name: read the name list from standard input with --files0-from=-
+    steps:
+      - fixture: { file: wc_a.txt, content: "a\nb\nc\n" }
+      - fixture: { file: wc_b.txt, content: "x\n" }
+      - run:
+          shell: true
+          command: printf '%s\0%s\0' "${workdir}/wc_a.txt" "${workdir}/wc_b.txt" | wc --files0-from=-
+      - assert:
+          exit_code: 0
+          stdout:
+            equals: "3 3 6 ${workdir}/wc_a.txt\n1 1 2 ${workdir}/wc_b.txt\n4 4 8 total"
+
+  - name: combine --files0-from with --total=only
+    steps:
+      - fixture: { file: wc_a.txt, content: "a\nb\nc\n" }
+      - fixture: { file: wc_b.txt, content: "x\n" }
+      - run:
+          shell: true
+          command: printf '%s\0%s\0' "${workdir}/wc_a.txt" "${workdir}/wc_b.txt" > wc_list.nul
+      - run:
+          command: wc --files0-from=wc_list.nul --total=only
+      - assert:
+          exit_code: 0
+          stdout:
+            equals: "4 4 8"

@@ -1,0 +1,28 @@
+# Migrated from mimixbox's ShellSpec test/it/spec/svc_spec.sh
+# (+ runit/svc_test.sh). svc -d writes the 'd' (down) control character into
+# supervise/control; svc with no control command is the deterministic failure.
+version: "1"
+
+suite:
+  name: mimixbox svc
+
+scenarios:
+  - name: writes the down control character
+    steps:
+      - fixture: { file: svc/supervise/control, content: "" }
+      # Helper chains 'svc -d DIR; cat control' with ';' -> shell:true.
+      - run:
+          shell: true
+          command: svc -d svc && cat svc/supervise/control
+      - assert:
+          exit_code: 0
+          stdout:
+            equals: "d"
+
+  - name: requires a control command
+    steps:
+      - fixture: { file: s2/supervise/control, content: "" }
+      - run:
+          command: svc s2
+      - assert:
+          exit_code: { not: 0 }

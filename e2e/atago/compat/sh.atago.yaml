@@ -1,0 +1,29 @@
+# Migrated from mimixbox's ShellSpec test/it/spec/sh_spec.sh (no helper; inline).
+# Universal --help contract (Issue #477) plus a help-content assertion.
+# sh is a compatibility front-end over MimixBox's shell. In this sandbox `sh`
+# resolves to mimixbox's own sh applet, so the help request is run via `env sh`.
+version: "1"
+
+suite:
+  name: mimixbox sh
+
+scenarios:
+  - name: describes itself with --help
+    steps:
+      - run:
+          command: env sh --help
+      - assert:
+          exit_code: 0
+          stdout:
+            contains: "Usage: sh"
+          stderr:
+            empty: true
+
+  - name: documents its purpose in --help
+    steps:
+      - run:
+          command: env sh --help
+      - assert:
+          exit_code: 0
+          stdout:
+            contains: "compatibility front-end over MimixBox"

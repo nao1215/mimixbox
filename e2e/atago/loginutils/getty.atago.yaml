@@ -1,0 +1,30 @@
+# Migrated from mimixbox's ShellSpec test/it/spec/getty_spec.sh
+# (+ loginutils/getty_test.sh). getty prints a login banner then fails without a
+# username; the prompt scenario greps for the 'login: ' prompt line.
+version: "1"
+
+suite:
+  name: mimixbox getty
+
+scenarios:
+  - name: prints the login prompt
+    steps:
+      # Pipe (printf | getty | grep -c) -> shell:true. An empty username makes
+      # getty fail without invoking login, but it still prints the prompt.
+      - run:
+          shell: true
+          command: |
+            printf '\n' | getty tty1 2>/dev/null | grep -c 'login: '
+      - assert:
+          exit_code: 0
+          stdout:
+            equals: "1"
+
+  - name: requires a TTY argument
+    steps:
+      # Error case -> direct exec. getty reads the username from stdin.
+      - run:
+          command: getty
+          stdin: "alice\n"
+      - assert:
+          exit_code: { not: 0 }

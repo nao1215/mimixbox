@@ -1,0 +1,75 @@
+# Migrated from mimixbox's ShellSpec test/it/spec/stat_gnu_spec.sh
+# (+ fileutils/stat_test.sh): GNU stat format flags. Setup writes 'hello'
+# (5 bytes) to stat_file; reproduced inside ${workdir}. Cases whose format
+# argument contains a space (e.g. '%n %s\n') or that pipe through wc/awk need
+# shell:true so the quoting/pipeline is preserved.
+version: "1"
+
+suite:
+  name: mimixbox stat GNU flags
+
+scenarios:
+  - name: prints name and size via --printf with no trailing newline
+    steps:
+      - fixture:
+          file: stat_file
+          content: hello
+      - run:
+          shell: true
+          command: stat --printf '%n=%s' ${workdir}/stat_file
+      - assert:
+          exit_code: 0
+          stdout:
+            equals: "${workdir}/stat_file=5"
+
+  - name: interprets backslash escapes in --printf
+    steps:
+      - fixture:
+          file: stat_file
+          content: hello
+      - run:
+          shell: true
+          command: stat --printf '%n %s\n' ${workdir}/stat_file
+      - assert:
+          exit_code: 0
+          stdout:
+            equals: "${workdir}/stat_file 5"
+
+  - name: appends a trailing newline for --format
+    steps:
+      - fixture:
+          file: stat_file
+          content: hello
+      - run:
+          shell: true
+          command: stat --format '%s' ${workdir}/stat_file | wc -l | tr -d ' '
+      - assert:
+          exit_code: 0
+          stdout:
+            equals: "1"
+
+  - name: prints a single space-separated terse line
+    steps:
+      - fixture:
+          file: stat_file
+          content: hello
+      - run:
+          shell: true
+          command: stat --terse ${workdir}/stat_file | awk '{print NF}'
+      - assert:
+          exit_code: 0
+          stdout:
+            equals: "15"
+
+  - name: reports the size as the second terse field
+    steps:
+      - fixture:
+          file: stat_file
+          content: hello
+      - run:
+          shell: true
+          command: stat --terse ${workdir}/stat_file | awk '{print $2}'
+      - assert:
+          exit_code: 0
+          stdout:
+            equals: "5"

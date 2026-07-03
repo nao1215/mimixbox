@@ -1,0 +1,73 @@
+# Migrated from mimixbox's ShellSpec test/it/spec/env_gnu_spec.sh (no Included helper;
+# inline). GNU env chdir/split-string/ignore-signal flags (Issue #756).
+# `${MIMIXBOX_IT_ROOT}/env_gnu` -> the per-run ${workdir}. Cases that need the
+# sub dir create it with a shell setup; the rest use direct exec.
+version: "1"
+
+suite:
+  name: mimixbox env GNU flags
+
+scenarios:
+  - name: --chdir reports the chdir target via pwd (long flag with =)
+    steps:
+      - run:
+          command: env --chdir=/tmp pwd
+      - assert:
+          exit_code: 0
+          stdout:
+            equals: "/tmp"
+
+  - name: --chdir reports the chdir target via pwd (-C short flag)
+    steps:
+      - run:
+          shell: true
+          command: mkdir -p sub && env -C "${workdir}/sub" pwd
+      - assert:
+          exit_code: 0
+          stdout:
+            equals: "${workdir}/sub"
+
+  - name: --chdir fails when the directory does not exist
+    steps:
+      - run:
+          command: env --chdir=${workdir}/nope pwd
+      - assert:
+          exit_code: 125
+          stderr:
+            contains: "cannot change directory"
+
+  - name: --split-string splits the command and its arguments (-S)
+    steps:
+      - run:
+          command: env -S 'printf %s-%s a b'
+      - assert:
+          exit_code: 0
+          stdout:
+            equals: "a-b"
+
+  - name: --split-string splits with the long flag and whitespace runs
+    steps:
+      - run:
+          command: env --split-string='printf   %s   hi'
+      - assert:
+          exit_code: 0
+          stdout:
+            equals: "hi"
+
+  - name: --ignore-signal accepts known names and still runs the command
+    steps:
+      - run:
+          command: env --ignore-signal=INT,TERM printf '%s' ok
+      - assert:
+          exit_code: 0
+          stdout:
+            equals: "ok"
+
+  - name: --ignore-signal rejects an unknown signal name
+    steps:
+      - run:
+          command: env --ignore-signal=BOGUS printf x
+      - assert:
+          exit_code: 125
+          stderr:
+            contains: "invalid signal"

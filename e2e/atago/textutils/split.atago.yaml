@@ -1,0 +1,20 @@
+# Migrated from mimixbox's ShellSpec test/it/spec/split_spec.sh (+ split_test.sh
+# TestSplitLines). split reads stdin and writes N-line pieces named with the
+# given prefix; the pipe means this runs under shell:true.
+version: "1"
+
+suite:
+  name: mimixbox split
+
+scenarios:
+  - name: split input into files of N lines
+    steps:
+      - run:
+          shell: true
+          command: printf '1\n2\n3\n' | split -l 2 - "${workdir}/part-"; cat "${workdir}/part-aa"
+      - assert:
+          exit_code: 0
+          stdout:
+            equals: |
+              1
+              2

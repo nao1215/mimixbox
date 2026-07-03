@@ -1,0 +1,16 @@
+# Migrated from mimixbox's ShellSpec test/it/spec/whris_spec.sh
+# (+ netutils/whris_test.sh). With no DOMAIN, whris reports a usage error and
+# exits non-zero. The ShellSpec captured the exit via 'echo "rc:$?"'; here the
+# non-zero exit is asserted directly.
+version: "1"
+
+suite:
+  name: mimixbox whris usage
+
+scenarios:
+  - name: reports an error when no domain is given
+    steps:
+      - run:
+          command: whris
+      - assert:
+          exit_code: { not: 0 }

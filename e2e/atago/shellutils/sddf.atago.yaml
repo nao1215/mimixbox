@@ -1,0 +1,24 @@
+# Migrated from mimixbox's ShellSpec test/it/spec/sddf_spec.sh (+ shellutils/sddf_contract_test.sh).
+version: "1"
+
+suite:
+  name: mimixbox sddf
+
+scenarios:
+  - name: prints usage with --help and exits 0
+    steps:
+      - run:
+          command: sddf --help
+      - assert:
+          exit_code: 0
+          stdout:
+            contains: "Usage: sddf"
+
+  - name: fails with a message when given no operand
+    steps:
+      - run:
+          command: sddf
+      - assert:
+          exit_code: { not: 0 }
+          stderr:
+            contains: "sddf"

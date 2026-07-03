@@ -1,0 +1,31 @@
+# Migrated from mimixbox's ShellSpec test/it/spec/zip_spec.sh (+ archival/zip_test.sh).
+# zip builds an archive, unzip -l lists it, unzip -d extracts it. Archive bytes
+# are binary, so we assert the listing and the round-trip payload.
+version: "1"
+
+suite:
+  name: mimixbox zip and unzip
+
+scenarios:
+  - name: lists a zipped file via unzip -l
+    steps:
+      - fixture: { file: a.txt, content: zipped }
+      - run:
+          shell: true
+          command: zip out.zip a.txt >/dev/null && unzip -l out.zip
+      - assert:
+          exit_code: 0
+          stdout: { contains: "a.txt" }
+
+  - name: round-trips a file through zip and unzip
+    steps:
+      - fixture: { file: a.txt, content: zipped }
+      - run:
+          shell: true
+          command: |
+            zip out2.zip a.txt >/dev/null
+            unzip -d dest out2.zip >/dev/null
+            cat dest/a.txt
+      - assert:
+          exit_code: 0
+          stdout: { equals: "zipped" }

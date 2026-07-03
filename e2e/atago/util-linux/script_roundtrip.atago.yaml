@@ -1,0 +1,57 @@
+# Migrated from mimixbox's ShellSpec test/it/spec/script_roundtrip_spec.sh (no helper; inline).
+# Issue #787: end-to-end round-trip for `script` and `scriptreplay`. The
+# ShellSpec BeforeEach records a deterministic transcript+timing pair; here each
+# scenario re-records it inside its isolated ${workdir} (shell: true is needed
+# for the recording step plus the pipe/awk inspection) and asserts the framing,
+# payload, timing-file record shape, and the replayed payload.
+version: "1"
+
+suite:
+  name: mimixbox script / scriptreplay round-trip
+
+scenarios:
+  - name: records the transcript framing
+    steps:
+      - run:
+          shell: true
+          command: "script -c 'printf \"hello\\nworld\\n\"' -T timing transcript >/dev/null 2>&1; cat transcript"
+      - assert:
+          exit_code: 0
+          stdout:
+            contains:
+              - "Script started"
+              - "Script done"
+
+  - name: records the command payload in the transcript
+    steps:
+      - run:
+          shell: true
+          command: "script -c 'printf \"hello\\nworld\\n\"' -T timing transcript >/dev/null 2>&1; cat transcript"
+      - assert:
+          exit_code: 0
+          stdout:
+            contains:
+              - "hello"
+              - "world"
+
+  - name: writes a timing file of "delay bytes" records
+    steps:
+      # Every non-empty line must be two whitespace-separated fields: a float
+      # delay and an integer byte count (and there must be at least one record).
+      - run:
+          shell: true
+          command: "script -c 'printf \"hello\\nworld\\n\"' -T timing transcript >/dev/null 2>&1; awk 'NF && $1 ~ /^[0-9]+\\.[0-9]+$/ && $2 ~ /^[0-9]+$/ { ok++ } END { exit !(NR>0 && ok==NR) }' timing"
+      - assert:
+          exit_code: 0
+
+  - name: replays the captured payload from the timing + transcript
+    steps:
+      - run:
+          shell: true
+          command: "script -c 'printf \"hello\\nworld\\n\"' -T timing transcript >/dev/null 2>&1; scriptreplay timing transcript"
+      - assert:
+          exit_code: 0
+          stdout:
+            contains:
+              - "hello"
+              - "world"

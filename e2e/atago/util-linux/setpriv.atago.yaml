@@ -1,0 +1,27 @@
+# Migrated from mimixbox's ShellSpec test/it/spec/setpriv_spec.sh.
+version: "1"
+
+suite:
+  name: mimixbox setpriv
+
+scenarios:
+  - name: dumps the current privileges
+    steps:
+      # --dump prints uid:/euid: and a no_new_privs: line (3 matches here);
+      # the original asserts the count is non-zero.
+      - run:
+          shell: true
+          command: setpriv --dump | grep -cE 'uid:|no_new_privs:'
+      - assert:
+          exit_code: 0
+          stdout:
+            equals: "3"
+
+  - name: runs a command with --no-new-privs
+    steps:
+      - run:
+          command: setpriv --no-new-privs -- echo ran
+      - assert:
+          exit_code: 0
+          stdout:
+            equals: "ran"

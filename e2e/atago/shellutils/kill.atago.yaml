@@ -1,0 +1,16 @@
+# Migrated from mimixbox's ShellSpec test/it/spec/kill_spec.sh (+ shellutils/kill_test.sh).
+version: "1"
+
+suite:
+  name: mimixbox kill
+
+scenarios:
+  - name: lists signal names with -l
+    steps:
+      - run:
+          shell: true
+          command: kill -l | grep -q KILL && echo ok
+      - assert:
+          exit_code: 0
+          stdout:
+            equals: "ok"

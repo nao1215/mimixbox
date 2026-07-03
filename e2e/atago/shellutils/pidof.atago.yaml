@@ -1,0 +1,41 @@
+# Migrated from mimixbox's ShellSpec test/it/spec/pidof_spec.sh (+ shellutils/pidof_test.sh).
+version: "1"
+
+suite:
+  name: mimixbox pidof
+
+scenarios:
+  - name: finds the PID of a running process via MimixBox pidof
+    steps:
+      # Start a background sleep, then assert mimixbox pidof reports its PID.
+      # GitHub issue #265: invoke mimixbox's own pidof explicitly.
+      - run:
+          shell: true
+          command: |
+            mimixbox pidof mimixbox >/dev/null 2>&1
+            sleep 5 &
+            SLEEP_PID=$!
+            RESULT=$(mimixbox pidof sleep)
+            kill ${SLEEP_PID} 2>/dev/null
+            echo "${RESULT}" | grep -q "${SLEEP_PID}" && echo found
+      - assert:
+          exit_code: 0
+          stdout:
+            equals: "found"
+
+  - name: resolves bare pidof to the MimixBox-installed symlink
+    steps:
+      - run:
+          shell: true
+          command: |
+            pidof_path=$(command -v pidof) || exit 1
+            [ -L "${pidof_path}" ] || exit 1
+            target=$(readlink "${pidof_path}")
+            case "${target}" in
+              *mimixbox) echo linked ;;
+              *) exit 1 ;;
+            esac
+      - assert:
+          exit_code: 0
+          stdout:
+            equals: "linked"

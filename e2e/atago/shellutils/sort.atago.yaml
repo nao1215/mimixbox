@@ -1,0 +1,57 @@
+# Migrated from mimixbox's ShellSpec test/it/spec/sort_spec.sh (+ shellutils/sort_test.sh).
+version: "1"
+
+suite:
+  name: mimixbox sort
+
+scenarios:
+  - name: sorts lines alphabetically
+    steps:
+      - run:
+          shell: true
+          command: printf 'banana\napple\ncherry\n' | sort
+      - assert:
+          exit_code: 0
+          stdout:
+            equals: |
+              apple
+              banana
+              cherry
+
+  - name: sorts by numeric value
+    steps:
+      - run:
+          shell: true
+          command: printf '10\n2\n1\n' | sort -n
+      - assert:
+          exit_code: 0
+          stdout:
+            equals: |
+              1
+              2
+              10
+
+  - name: reverses the order
+    steps:
+      - run:
+          shell: true
+          command: printf 'a\nb\nc\n' | sort -r
+      - assert:
+          exit_code: 0
+          stdout:
+            equals: |
+              c
+              b
+              a
+
+  - name: drops duplicate lines
+    steps:
+      - run:
+          shell: true
+          command: printf 'a\na\nb\n' | sort -u
+      - assert:
+          exit_code: 0
+          stdout:
+            equals: |
+              a
+              b

@@ -1,0 +1,20 @@
+# Migrated from mimixbox's ShellSpec test/it/spec/cmatrix_spec.sh
+# (+ jokeutils/cmatrix_test.sh). The helper runs cmatrix then echoes its rc, so
+# this needs a shell. With no TTY cmatrix exits gracefully (0).
+version: "1"
+
+suite:
+  name: mimixbox cmatrix
+
+scenarios:
+  - name: exits gracefully without a terminal
+    steps:
+      - run:
+          shell: true
+          command: |
+            cmatrix
+            echo "rc:$?"
+      - assert:
+          exit_code: 0
+          stdout:
+            equals: "rc:0"

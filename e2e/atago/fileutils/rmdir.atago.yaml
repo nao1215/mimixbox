@@ -1,0 +1,54 @@
+# Migrated from mimixbox's ShellSpec test/it/spec/rmdir_spec.sh
+# (+ fileutils/rmdir_test.sh). Setup makes an empty ${ROOT}/rmdir dir;
+# reproduced inside ${workdir}. The non-empty error case uses direct exec; the
+# remove-and-verify cases need shell:true for the && test chain.
+version: "1"
+
+suite:
+  name: mimixbox rmdir
+
+scenarios:
+  - name: removes an empty directory
+    steps:
+      - run:
+          shell: true
+          command: mkdir -p ${workdir}/rmdir/empty && rmdir ${workdir}/rmdir/empty && test ! -d ${workdir}/rmdir/empty && echo "removed"
+      - assert:
+          exit_code: 0
+          stdout:
+            equals: "removed"
+
+  - name: fails on a non-empty directory
+    steps:
+      - run:
+          shell: true
+          command: mkdir -p ${workdir}/rmdir/full && touch ${workdir}/rmdir/full/file.txt
+      - run:
+          command: rmdir ${workdir}/rmdir/full
+      - assert:
+          exit_code: { not: 0 }
+          stderr:
+            equals: "rmdir: failed to remove '${workdir}/rmdir/full': Directory not empty"
+
+  - name: rmdir -p removes nested empty directories
+    steps:
+      - run:
+          shell: true
+          command: |
+            mkdir -p ${workdir}/rmdir/a/b/c
+            cd ${workdir}/rmdir
+            rmdir -p a/b/c
+            test ! -d ${workdir}/rmdir/a && echo "removed"
+      - assert:
+          exit_code: 0
+          stdout:
+            equals: "removed"
+
+  - name: rmdir with no operand reports an error
+    steps:
+      - run:
+          command: rmdir
+      - assert:
+          exit_code: { not: 0 }
+          stderr:
+            equals: "rmdir: missing operand"

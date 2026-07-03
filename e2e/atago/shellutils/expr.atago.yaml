@@ -1,0 +1,51 @@
+# Migrated from mimixbox's ShellSpec test/it/spec/expr_spec.sh (+ shellutils/expr_test.sh).
+version: "1"
+
+suite:
+  name: mimixbox expr
+
+scenarios:
+  - name: adds two numbers
+    steps:
+      - run:
+          command: expr 6 + 7
+      - assert:
+          exit_code: 0
+          stdout:
+            equals: "13"
+
+  - name: multiplies two numbers
+    steps:
+      - run:
+          command: expr 3 \* 4
+      - assert:
+          exit_code: 0
+          stdout:
+            equals: "12"
+
+  - name: respects parentheses
+    steps:
+      - run:
+          command: expr \( 1 + 2 \) \* 3
+      - assert:
+          exit_code: 0
+          stdout:
+            equals: "9"
+
+  - name: prints the string length
+    steps:
+      - run:
+          command: expr length abcd
+      - assert:
+          exit_code: 0
+          stdout:
+            equals: "4"
+
+  - name: prints 0 and exits non-zero for a zero result
+    steps:
+      - run:
+          command: expr 0
+      - assert:
+          exit_code: { not: 0 }
+          stdout:
+            equals: "0"

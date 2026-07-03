@@ -7,6 +7,13 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## [Unreleased]
 
+### Changed
+
+- The end-to-end suite is now driven by [atago](https://github.com/nao1215/atago)
+  (`e2e/atago/<category>/<applet>.atago.yaml` + `e2e/run.sh`, `make e2e` /
+  `make it`) instead of ShellSpec; the 540 specs cover the same applet surface
+  as the removed `test/it/` suite and keep the same hermetic PATH staging.
+
 ## [0.42.0] - 2026-06-18
 
 A correctness, robustness, and test-quality release across the 451-command tree.

@@ -1,0 +1,28 @@
+# Migrated from mimixbox's ShellSpec test/it/spec/pgrep_spec.sh.
+version: "1"
+
+suite:
+  name: mimixbox pgrep / pkill
+
+scenarios:
+  - name: finds a running process by name
+    # TestPgrepFindsSleep: start `sleep 30 &`, then pgrep sleep finds its PID.
+    # Needs a backgrounded process and $! plumbing, so shell: true. Assert the
+    # backgrounded PID appears in pgrep's output, then reap it.
+    steps:
+      - run:
+          shell: true
+          command: sleep 30 & p=$!; pgrep sleep | grep -c "^${p}$"; kill $p 2>/dev/null
+      - assert:
+          exit_code: 0
+          stdout:
+            contains: "1"
+
+  - name: exits non-zero when nothing matches
+    # TestPgrepNoMatch: pgrep zzz_no_such_proc_zzz -> rc=1.
+    # Error case uses direct exec.
+    steps:
+      - run:
+          command: pgrep zzz_no_such_proc_zzz
+      - assert:
+          exit_code: { not: 0 }

@@ -1,0 +1,33 @@
+# Migrated from mimixbox's ShellSpec test/it/spec/chroot_spec.sh (+ shellutils/chroot_test.sh).
+version: "1"
+
+suite:
+  name: mimixbox chroot
+
+scenarios:
+  - name: prints usage with --help and exits 0
+    steps:
+      - run:
+          command: chroot --help
+      - assert:
+          exit_code: 0
+          stdout:
+            contains: "Usage: chroot"
+
+  - name: documents the --userspec identity option in --help
+    steps:
+      - run:
+          command: chroot --help
+      - assert:
+          exit_code: 0
+          stdout:
+            contains: "--userspec"
+
+  - name: fails with a message when given no operand
+    steps:
+      - run:
+          command: chroot
+      - assert:
+          exit_code: { not: 0 }
+          stderr:
+            contains: "chroot"

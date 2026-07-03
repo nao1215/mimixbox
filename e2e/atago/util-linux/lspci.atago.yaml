@@ -1,0 +1,13 @@
+# Migrated from mimixbox's ShellSpec test/it/spec/lspci_spec.sh.
+version: "1"
+
+suite:
+  name: mimixbox lspci
+
+scenarios:
+  - name: lists PCI devices and exits successfully
+    steps:
+      - run:
+          command: lspci
+      - assert:
+          exit_code: 0

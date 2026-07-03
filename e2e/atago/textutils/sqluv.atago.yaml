@@ -1,0 +1,84 @@
+# Migrated from mimixbox's ShellSpec test/it/spec/sqluv_spec.sh (+ sqluv_test.sh).
+# Help/version/no-arg/unsupported are single commands run with direct exec so the
+# real exit code and stderr survive. The headless query helpers build CSV
+# fixtures under a private mktemp dir and run multiple statements, so they use
+# shell:true.
+version: "1"
+
+suite:
+  name: mimixbox sqluv
+
+scenarios:
+  - name: print usage with --help and exit 0
+    steps:
+      - run:
+          command: sqluv --help
+      - assert:
+          exit_code: 0
+          stdout:
+            contains:
+              - "Usage: sqluv"
+              - "headless"
+
+  - name: print the version and exit 0
+    steps:
+      - run:
+          command: sqluv --version
+      - assert:
+          exit_code: 0
+          stdout:
+            contains: "sqluv (mimixbox)"
+
+  - name: fail with a message when given no operand
+    steps:
+      - run:
+          command: sqluv
+      - assert:
+          exit_code: { not: 0 }
+          stderr:
+            contains: "sqluv"
+
+  - name: query a CSV fixture in headless mode
+    steps:
+      - run:
+          shell: true
+          command: |
+            dir=$(mktemp -d "${TMPDIR:-/tmp}/sqluv-it.XXXXXX")
+            printf 'id,name\n1,alice\n2,bob\n3,carol\n' > "$dir/data.csv"
+            sqluv "$dir/data.csv" \
+                --history-file "$dir/history.log" \
+                --output csv \
+                --execute 'select name from data order by id limit 2'
+            rm -rf "$dir"
+      - assert:
+          exit_code: 0
+          stdout:
+            contains:
+              - "alice"
+              - "bob"
+
+  - name: query a SQLite-style table as JSON
+    steps:
+      - run:
+          shell: true
+          command: |
+            dir=$(mktemp -d "${TMPDIR:-/tmp}/sqluv-it.XXXXXX")
+            printf 'title\ngo-in-action\nthe-go-programming-language\n' > "$dir/books.csv"
+            sqluv "$dir/books.csv" \
+                --history-file "$dir/history.log" \
+                --output json \
+                --execute 'select title from books order by title'
+            rm -rf "$dir"
+      - assert:
+          exit_code: 0
+          stdout:
+            contains: "go-in-action"
+
+  - name: fail deterministically on an unsupported S3 source
+    steps:
+      - run:
+          command: sqluv --execute 'select 1' 's3://bucket/data.csv'
+      - assert:
+          exit_code: { not: 0 }
+          stderr:
+            contains: "S3 sources are not migrated"

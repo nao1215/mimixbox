@@ -1,0 +1,43 @@
+# Migrated from mimixbox's ShellSpec test/it/spec/mv_gnu_spec.sh
+# (+ fileutils/mv_gnu_test.sh). Setup builds ${ROOT}/mv_gnu/{dst,a.txt,b.txt};
+# reproduced inside ${workdir}. The --update case deliberately sleeps so the
+# destination's mtime is strictly newer than the source's.
+version: "1"
+
+suite:
+  name: mimixbox mv GNU flags
+
+scenarios:
+  - name: mv --target-directory moves each source into the directory
+    steps:
+      - run:
+          shell: true
+          command: |
+            mkdir -p mv_gnu/dst
+            printf 'A\n' > mv_gnu/a.txt
+            printf 'B\n' > mv_gnu/b.txt
+      - run:
+          shell: true
+          command: mv --target-directory ${workdir}/mv_gnu/dst ${workdir}/mv_gnu/a.txt ${workdir}/mv_gnu/b.txt && ls ${workdir}/mv_gnu/dst
+      - assert:
+          exit_code: 0
+          stdout:
+            equals: |
+              a.txt
+              b.txt
+
+  - name: mv --update preserves a newer destination
+    steps:
+      - run:
+          shell: true
+          command: |
+            mkdir -p mv_gnu
+            printf 'source\n' > mv_gnu/src.txt
+            sleep 1
+            printf 'newer-dest\n' > mv_gnu/dest.txt
+            mv --update ${workdir}/mv_gnu/src.txt ${workdir}/mv_gnu/dest.txt
+            cat ${workdir}/mv_gnu/dest.txt
+      - assert:
+          exit_code: 0
+          stdout:
+            equals: "newer-dest"

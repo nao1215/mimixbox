@@ -1,0 +1,33 @@
+# Migrated from mimixbox's ShellSpec test/it/spec/taskset_spec.sh.
+version: "1"
+
+suite:
+  name: mimixbox taskset
+
+scenarios:
+  - name: prints a process affinity mask
+    steps:
+      # taskset -p reports the 'current affinity mask' line; needs $$.
+      - run:
+          shell: true
+          command: taskset -p $$ | grep -c 'affinity mask'
+      - assert:
+          exit_code: 0
+          stdout:
+            equals: "1"
+
+  - name: runs a command bound to a CPU
+    steps:
+      - run:
+          command: taskset -c 0 echo affined
+      - assert:
+          exit_code: 0
+          stdout:
+            equals: "affined"
+
+  - name: rejects an invalid mask
+    steps:
+      - run:
+          command: taskset zzz echo x
+      - assert:
+          exit_code: { not: 0 }

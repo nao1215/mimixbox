@@ -1,0 +1,18 @@
+# Migrated from mimixbox's ShellSpec test/it/spec/truncate_spec.sh
+# (+ fileutils/truncate_test.sh). truncate -s 7 sizes a new file to 7 bytes;
+# wc -c (piped, so shell:true) proves the size.
+version: "1"
+
+suite:
+  name: mimixbox truncate
+
+scenarios:
+  - name: sets the file to the given size
+    steps:
+      - run:
+          shell: true
+          command: truncate -s 7 ${workdir}/tr_file && wc -c < ${workdir}/tr_file | tr -d ' '
+      - assert:
+          exit_code: 0
+          stdout:
+            equals: "7"

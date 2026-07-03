@@ -1,0 +1,101 @@
+# Migrated from mimixbox's ShellSpec test/it/spec/head_spec.sh (+ textutils/head_test.sh).
+# The ShellSpec Setup builds head.txt (lines 1..12) under MIMIXBOX_IT_ROOT; here a
+# fixture builds it in the scenario workdir and head runs against the relative name.
+version: "1"
+
+suite:
+  name: mimixbox head
+
+scenarios:
+  - name: print the first 10 lines
+    steps:
+      - fixture:
+          file: head.txt
+          content: |
+            1
+            2
+            3
+            4
+            5
+            6
+            7
+            8
+            9
+            10
+            11
+            12
+      - run:
+          command: head head.txt
+      - assert:
+          exit_code: 0
+          stdout:
+            equals: |
+              1
+              2
+              3
+              4
+              5
+              6
+              7
+              8
+              9
+              10
+
+  - name: print the first N lines
+    steps:
+      - fixture:
+          file: head.txt
+          content: |
+            1
+            2
+            3
+            4
+            5
+            6
+            7
+            8
+            9
+            10
+            11
+            12
+      - run:
+          command: head -n 3 head.txt
+      - assert:
+          exit_code: 0
+          stdout:
+            equals: |
+              1
+              2
+              3
+
+  - name: print the first N bytes
+    steps:
+      - run:
+          shell: true
+          command: printf 'hello world' | head -c 5
+      - assert:
+          exit_code: 0
+          stdout:
+            equals: "hello"
+
+  - name: print the first N lines of stdin
+    steps:
+      - run:
+          shell: true
+          command: printf 'a\nb\nc\nd\n' | head -n 2
+      - assert:
+          exit_code: 0
+          stdout:
+            equals: |
+              a
+              b
+
+  - name: report an error for a non-existent file
+    steps:
+      # Single failing command: use direct exec to get the real non-zero exit.
+      - run:
+          command: head /no_exist_file
+      - assert:
+          exit_code: { not: 0 }
+          stderr:
+            equals: "head: /no_exist_file: no such file or directory"

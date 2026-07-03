@@ -1,0 +1,59 @@
+# Migrated from mimixbox's ShellSpec test/it/spec/test_spec.sh (+ shellutils/test_test.sh).
+version: "1"
+
+suite:
+  name: mimixbox test
+
+scenarios:
+  - name: string equality is true for equal strings
+    steps:
+      - run:
+          shell: true
+          command: test abc = abc; echo "rc=$?"
+      - assert:
+          exit_code: 0
+          stdout:
+            equals: "rc=0"
+
+  - name: integer comparison is true when 2 > 1
+    steps:
+      - run:
+          shell: true
+          command: test 2 -gt 1; echo "rc=$?"
+      - assert:
+          exit_code: 0
+          stdout:
+            equals: "rc=0"
+
+  - name: integer comparison is false when 1 > 2
+    steps:
+      - run:
+          shell: true
+          command: test 1 -gt 2; echo "rc=$?"
+      - assert:
+          exit_code: 0
+          stdout:
+            equals: "rc=1"
+
+  - name: file existence is true for an existing file
+    steps:
+      - fixture:
+          file: file.txt
+          content: ""
+      - run:
+          shell: true
+          command: test -f ${workdir}/file.txt; echo "rc=$?"
+      - assert:
+          exit_code: 0
+          stdout:
+            equals: "rc=0"
+
+  - name: negation negates the expression
+    steps:
+      - run:
+          shell: true
+          command: test ! -f /no_such_file; echo "rc=$?"
+      - assert:
+          exit_code: 0
+          stdout:
+            equals: "rc=0"

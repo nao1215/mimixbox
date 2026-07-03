@@ -1,0 +1,20 @@
+# Migrated from mimixbox's ShellSpec test/it/spec/runlevel_spec.sh
+# (+ loginutils/runlevel_test.sh). The CI/WSL utmp has no run-level record, so
+# runlevel prints 'unknown' and exits 1 here; with a real record it prints the
+# level and exits 0. The ShellSpec only checked that a line was produced.
+version: "1"
+
+suite:
+  name: mimixbox runlevel
+
+scenarios:
+  - name: reports a runlevel or unknown
+    steps:
+      # runlevel's exit status depends on the host utmp, so only the produced
+      # output line is asserted (matching the ShellSpec 'line 1 matches *').
+      - run:
+          command: runlevel
+      - assert:
+          stdout:
+            line: 1
+            matches: ".+"

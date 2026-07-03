@@ -1,0 +1,19 @@
+# Migrated from mimixbox's ShellSpec test/it/spec/start-stop-daemon_spec.sh (no helper; inline).
+# Universal --help contract (Issue #477): exit 0, "Usage: start-stop-daemon" on stdout,
+# empty stderr. Privileged/networked/destructive applet exercised via --help only.
+version: "1"
+
+suite:
+  name: mimixbox start-stop-daemon
+
+scenarios:
+  - name: describes itself with --help
+    steps:
+      - run:
+          command: start-stop-daemon --help
+      - assert:
+          exit_code: 0
+          stdout:
+            contains: "Usage: start-stop-daemon"
+          stderr:
+            empty: true

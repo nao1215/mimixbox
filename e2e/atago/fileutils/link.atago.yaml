@@ -1,0 +1,21 @@
+# Migrated from mimixbox's ShellSpec test/it/spec/link_spec.sh
+# (+ fileutils/link_test.sh). Setup writes 'data' to link_src; the test hard
+# links it to link_dst and cats the link to prove the content is shared.
+version: "1"
+
+suite:
+  name: mimixbox link
+
+scenarios:
+  - name: creates a hard link sharing contents
+    steps:
+      - fixture:
+          file: link_src
+          content: data
+      - run:
+          shell: true
+          command: link ${workdir}/link_src ${workdir}/link_dst && cat ${workdir}/link_dst
+      - assert:
+          exit_code: 0
+          stdout:
+            equals: "data"

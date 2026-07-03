@@ -1,0 +1,62 @@
+# Migrated from mimixbox's ShellSpec test/it/spec/list_topcli_spec.sh (+ shellutils/mimixbox_test.sh).
+# Top-level list/JSON/filter/suggestion surfaces (issues #781-#783).
+version: "1"
+
+suite:
+  name: mimixbox top-level list/suggestion CLI
+
+scenarios:
+  - name: --list --json emits a JSON array containing cat and ls on stdout
+    steps:
+      - run:
+          command: mimixbox --list --json
+      - assert:
+          exit_code: 0
+          stdout:
+            contains:
+              - '"name": "cat"'
+              - '"name": "ls"'
+              - '"subsystem":'
+              - '"stability":'
+              - "["
+              - "]"
+
+  - name: --list --filter=cat includes cat and excludes ls
+    steps:
+      - run:
+          command: mimixbox --list --filter=cat
+      - assert:
+          exit_code: 0
+          stdout:
+            contains: "cat"
+      - assert:
+          stdout:
+            line: 1
+            contains: "cat"
+
+  - name: --list --subsystem=textutils includes cat and excludes ls
+    steps:
+      - run:
+          command: mimixbox --list --subsystem=textutils
+      - assert:
+          exit_code: 0
+          stdout:
+            contains: "cat"
+      # ls lives in fileutils, so the textutils listing must not name it.
+      - assert:
+          stdout:
+            not_contains: " ls -"
+
+  - name: an unknown command suggests the nearest applet, error-first
+    steps:
+      - run:
+          command: mimixbox lss
+      - assert:
+          exit_code: { not: 0 }
+          stdout:
+            empty: true
+          stderr:
+            contains:
+              - "'lss' is not a mimixbox command."
+              - "Did you mean:"
+              - "ls"

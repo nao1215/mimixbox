@@ -1,0 +1,96 @@
+# Migrated from mimixbox's ShellSpec test/it/spec/rm_spec.sh (+ fileutils/rm_test.sh).
+# Setup builds ${ROOT}/rm/{1,2,3}.txt + ${ROOT}/rm/inner/inner.txt; reproduced
+# inside ${workdir}. The wildcard case needs shell:true for glob expansion;
+# error cases that only assert the applet's diagnostic use direct exec.
+version: "1"
+
+suite:
+  name: mimixbox rm
+
+scenarios:
+  - name: remove one file
+    steps:
+      - run:
+          shell: true
+          command: mkdir -p rm/inner && touch rm/1.txt rm/2.txt rm/3.txt rm/inner/inner.txt
+      - run:
+          shell: true
+          command: rm ${workdir}/rm/1.txt && ls ${workdir}/rm
+      - assert:
+          exit_code: 0
+          stdout:
+            equals: |
+              2.txt
+              3.txt
+              inner
+
+  - name: remove files using a wildcard
+    steps:
+      - run:
+          shell: true
+          command: mkdir -p rm/inner && touch rm/1.txt rm/2.txt rm/3.txt rm/inner/inner.txt
+      - run:
+          shell: true
+          command: rm ${workdir}/rm/*.txt && ls ${workdir}/rm
+      - assert:
+          exit_code: 0
+          stdout:
+            equals: "inner"
+
+  - name: remove three files at the same time
+    steps:
+      - run:
+          shell: true
+          command: mkdir -p rm/inner && touch rm/1.txt rm/2.txt rm/3.txt rm/inner/inner.txt
+      - run:
+          shell: true
+          command: rm ${workdir}/rm/1.txt ${workdir}/rm/2.txt ${workdir}/rm/3.txt && ls ${workdir}/rm
+      - assert:
+          exit_code: 0
+          stdout:
+            equals: "inner"
+
+  - name: remove two files and report the missing one
+    steps:
+      - run:
+          shell: true
+          command: mkdir -p rm/inner && touch rm/1.txt rm/2.txt rm/3.txt rm/inner/inner.txt
+      - run:
+          shell: true
+          command: rm ${workdir}/rm/1.txt ${workdir}/rm/no_exist_file.txt ${workdir}/rm/3.txt; ls ${workdir}/rm
+      - assert:
+          stdout:
+            equals: |
+              2.txt
+              inner
+          stderr:
+            equals: "rm: can't remove ${workdir}/rm/no_exist_file.txt: No such file or directory exists"
+
+  - name: can not remove a directory without the recursive option
+    steps:
+      - run:
+          shell: true
+          command: mkdir -p rm/inner && touch rm/1.txt rm/2.txt rm/3.txt rm/inner/inner.txt
+      - run:
+          shell: true
+          command: rm ${workdir}/rm; ls ${workdir}/rm
+      - assert:
+          stdout:
+            equals: |
+              1.txt
+              2.txt
+              3.txt
+              inner
+          stderr:
+            equals: "rm: can't remove ${workdir}/rm: It's directory"
+
+  - name: remove a directory with the recursive option
+    steps:
+      - run:
+          shell: true
+          command: mkdir -p rm/inner && touch rm/1.txt rm/2.txt rm/3.txt rm/inner/inner.txt
+      - run:
+          shell: true
+          command: rm -rf ${workdir}/rm && ls ${workdir}
+      - assert:
+          exit_code: 0

@@ -3,10 +3,6 @@ PREPARE_UT  := test/ut/prepareUnitTest.sh
 INSTALLER   := scripts/installer.sh
 MK_JAIL     := scripts/mkJailForDebianFamily.sh
 RELEASE     := scripts/release.sh
-# Isolated directory holding the freshly built MimixBox binary and one symlink
-# per applet. The end-to-end suite prepends it to PATH so every applet resolves
-# to MimixBox, never to whatever the host happens to provide.
-E2E_BIN_DIR := $(CURDIR)/test/it/.mbbin
 # Canonical version source: the latest git tag (without its leading "v"),
 # falling back to "dev" outside a tagged checkout. Injected into the binary so
 # `mimixbox --version` matches the tag it was built from.
@@ -56,19 +52,8 @@ test: pre_ut  ## Run unit tests with coverage (writes cover.out / cover.html)
 	rm -rf /tmp/mimixbox/ut/*; \
 	exit $$status
 
-e2e-setup: ## Build MimixBox and stage its applet symlinks in an isolated PATH directory
-	go build -ldflags="$(LDFLAGS)" -trimpath -o $(APP) cmd/mimixbox/main.go
-	rm -rf "$(E2E_BIN_DIR)"
-	mkdir -p "$(E2E_BIN_DIR)"
-	install -m 0755 $(APP) "$(E2E_BIN_DIR)/$(APP)"
-	"$(E2E_BIN_DIR)/$(APP)" --full-install "$(E2E_BIN_DIR)" >/dev/null
-
-test-e2e: e2e-setup ## Run the shellspec end-to-end tests against MimixBox applets in an isolated PATH
-	@set -e; \
-	MIMIXBOX_IT_ROOT=$$(mktemp -d "$${TMPDIR:-/tmp}/mimixbox.XXXXXX"); \
-	export MIMIXBOX_IT_ROOT; \
-	trap 'rm -rf "$$MIMIXBOX_IT_ROOT"' EXIT INT TERM; \
-	cd test/it && PATH="$(E2E_BIN_DIR):$$PATH" shellspec --shell /bin/bash
+e2e: ## Run the atago end-to-end tests against MimixBox applets in an isolated PATH
+	./e2e/run.sh --parallel 8
 
 lint: ## Run golangci-lint
 	golangci-lint run ./...
@@ -112,10 +97,10 @@ pre_ut:
 
 # Backwards-compatible aliases for the previous target names.
 ut: test  ## Alias for "make test"
-it: test-e2e  ## Alias for "make test-e2e"
+it: e2e  ## Alias for "make e2e"
 
 .DEFAULT_GOAL := help
-.PHONY: build clean docker install full-install remove test e2e-setup test-e2e lint generate command-list jail release licenses pre_ut ut it help
+.PHONY: build clean docker install full-install remove test e2e lint generate command-list jail release licenses pre_ut ut it help
 
 help:
 	@grep -E '^[0-9a-zA-Z_-]+[[:blank:]]*:.*?## .*$$' $(MAKEFILE_LIST) | sort \

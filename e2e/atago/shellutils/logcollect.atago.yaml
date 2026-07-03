@@ -1,0 +1,17 @@
+# Migrated from mimixbox's ShellSpec test/it/spec/logcollect_spec.sh (+ shellutils/logcollect_test.sh).
+version: "1"
+
+suite:
+  name: mimixbox log-collect
+
+scenarios:
+  - name: copies log files into the output directory
+    steps:
+      - fixture: { file: src/a.log, content: "log\n" }
+      - run:
+          shell: true
+          command: log-collect -o ${workdir}/out ${workdir}/src >/dev/null && cat ${workdir}/out/a.log
+      - assert:
+          exit_code: 0
+          stdout:
+            equals: "log"

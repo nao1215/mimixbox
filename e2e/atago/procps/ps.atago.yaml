@@ -1,0 +1,28 @@
+# Migrated from mimixbox's ShellSpec test/it/spec/ps_spec.sh.
+version: "1"
+
+suite:
+  name: mimixbox ps
+
+scenarios:
+  - name: prints the standard header
+    # TestPsHeader: ps | sed -n '1p'
+    steps:
+      - run:
+          command: ps
+      - assert:
+          exit_code: 0
+          stdout:
+            line: 1
+            equals: "    PID TTY          TIME CMD"
+
+  - name: lists running processes
+    # TestPsHasProcesses: ps | grep -cE '^ *[0-9]+ ' (must not equal 0).
+    # Assert the real ps output contains at least one numeric PID row.
+    steps:
+      - run:
+          command: ps
+      - assert:
+          exit_code: 0
+          stdout:
+            matches: "(?m)^ *[0-9]+ "

@@ -1,0 +1,31 @@
+# Migrated from mimixbox's ShellSpec test/it/spec/hd_spec.sh (no helper; inline).
+# Universal --help contract (Issue #477) plus a canonical hexdump-of-stdin case.
+# ShellSpec's `Data 'hi'` feeds "hi\n", so the dump shows bytes 68 69 0a.
+version: "1"
+
+suite:
+  name: mimixbox hd
+
+scenarios:
+  - name: describes itself with --help
+    steps:
+      - run:
+          command: hd --help
+      - assert:
+          exit_code: 0
+          stdout:
+            contains: "Usage: hd"
+          stderr:
+            empty: true
+
+  - name: hexdumps stdin in canonical form
+    steps:
+      - run:
+          command: hd
+          stdin: "hi\n"
+      - assert:
+          exit_code: 0
+          stdout:
+            contains:
+              - "68 69 0a"
+              - "|hi.|"

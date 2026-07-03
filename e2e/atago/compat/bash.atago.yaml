@@ -1,0 +1,28 @@
+# Migrated from mimixbox's ShellSpec test/it/spec/bash_spec.sh (no helper; inline).
+# bash is a compatibility front-end over MimixBox's shell (mbsh). Universal
+# --help contract (Issue #477) plus a purpose-paragraph check.
+version: "1"
+
+suite:
+  name: mimixbox bash
+
+scenarios:
+  - name: describes itself with --help
+    steps:
+      - run:
+          command: bash --help
+      - assert:
+          exit_code: 0
+          stdout:
+            contains: "Usage: bash"
+          stderr:
+            empty: true
+
+  - name: documents its purpose in --help
+    steps:
+      - run:
+          command: bash --help
+      - assert:
+          exit_code: 0
+          stdout:
+            contains: "compatibility front-end over MimixBox"

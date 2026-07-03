@@ -1,0 +1,20 @@
+# Migrated from mimixbox's ShellSpec test/it/spec/klogd_spec.sh.
+# Forwarding to syslog needs a running syslogd and kernel-buffer access, so the
+# e2e exercises --help; the parsing and forwarding are covered by unit tests.
+version: "1"
+
+suite:
+  name: mimixbox klogd
+
+scenarios:
+  - name: describes itself with --help
+    # TestKlogdHelp: klogd --help (must include 'Usage: klogd' and 'kernel')
+    steps:
+      - run:
+          command: klogd --help
+      - assert:
+          exit_code: 0
+          stdout:
+            contains:
+              - "Usage: klogd"
+              - "kernel"

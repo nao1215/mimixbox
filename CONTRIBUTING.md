@@ -7,7 +7,7 @@ Thank you for taking the time to contribute. MimixBox welcomes new applets, opti
 - Go 1.25.0 or later (see `go.mod`)
 - `make`
 - `git`
-- `shellspec` for the end-to-end tests (`curl -fsSL https://github.com/shellspec/shellspec/raw/master/install.sh | sh -s -- --yes`)
+- [`atago`](https://github.com/nao1215/atago) for the end-to-end tests (`go install github.com/nao1215/atago@latest`)
 - `golangci-lint` for linting
 
 ## Common Commands
@@ -15,15 +15,15 @@ Thank you for taking the time to contribute. MimixBox welcomes new applets, opti
 ```bash
 make build      # build the mimixbox binary
 make test       # unit tests with coverage (writes cover.out / cover.html)
-make test-e2e   # shellspec end-to-end tests against the built binary
+make e2e        # atago end-to-end tests against a freshly built binary
 make lint       # golangci-lint
 ```
 
 `make test` (and its `make ut` alias) exits non-zero when any unit test fails, so a failing `go test` fails the local build and the `UnitTest` GitHub Actions workflow. Coverage HTML generation and the temporary-directory cleanup still run afterwards, but they never mask a real test failure.
 
-The end-to-end tests live under `test/it/` and exercise the built binary the way a user does (applet name, flags, stdin, exit codes).
+The end-to-end tests live under `e2e/atago/<category>/` as plain-YAML [atago](https://github.com/nao1215/atago) specs (one file per applet) and exercise the built binary the way a user does (applet name, flags, stdin, exit codes).
 
-`make test-e2e` is hermetic: it builds MimixBox, stages one symlink per applet in an isolated directory (`test/it/.mbbin`), and runs ShellSpec with that directory first on `PATH`. Every applet therefore resolves to MimixBox, never to a host command of the same name, so the suite can be run in a clean shell without installing MimixBox system-wide. Specs must invoke applets by bare name (e.g. `cat`, `unix2dos`) and must not hardcode an install prefix such as `/usr/local/bin`. `test/it/spec/hermetic_spec.sh` guards this contract by asserting that common applets resolve to the MimixBox binary.
+`make e2e` is hermetic: `e2e/run.sh` builds MimixBox, stages every applet in an isolated temporary directory, and runs atago with that directory first on `PATH`. Every applet therefore resolves to MimixBox, never to a host command of the same name, so the suite can be run in a clean shell without installing MimixBox system-wide. Specs must invoke applets by bare name (e.g. `cat`, `unix2dos`) and must not hardcode an install prefix such as `/usr/local/bin`. `e2e/atago/shellutils/richhelp.atago.yaml` guards this contract by asserting that common applets resolve to the MimixBox binary. Each scenario runs in its own isolated workdir, so specs create fixtures with relative paths.
 
 ## Architecture
 
@@ -69,7 +69,7 @@ The applet registry is generated. `cmd/genapplets` scans the packages under
 1. Create (or rewrite) the applet package so its type implements `command.Command`, and export a nullary constructor that returns `*Command` (e.g. `func New() *Command`). `cat`, `wc`, `head`, and `basename` are good references.
 2. Run `make generate` to regenerate the registry (`internal/applets/applet_registry_gen.go`) and the README command table. The generator discovers your constructor automatically; there is no hand-maintained registry to edit.
 3. Add table-driven unit tests for the applet (and for any new `internal/...` logic).
-4. Run `make test` and, for behaviour visible from the shell, add a `test/it/` spec.
+4. Run `make test` and, for behaviour visible from the shell, add an `e2e/atago/` spec.
 
 Older applets still use the legacy `Run() (int, error)` entry point; they are being migrated to the framework one group at a time, and new work should use the `Command` interface.
 

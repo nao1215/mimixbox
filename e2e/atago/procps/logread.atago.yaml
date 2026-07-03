@@ -1,0 +1,35 @@
+# Migrated from mimixbox's ShellSpec test/it/spec/logread_spec.sh.
+version: "1"
+
+suite:
+  name: mimixbox logread
+
+scenarios:
+  - name: prints a given log file
+    # TestLogreadFile: write sys.log with two lines, then `logread sys.log`.
+    steps:
+      - fixture:
+          file: sys.log
+          content: |
+            msg one
+            msg two
+      - run:
+          command: logread sys.log
+      - assert:
+          exit_code: 0
+          stdout:
+            line: 1
+            equals: "msg one"
+      - assert:
+          stdout:
+            line: 2
+            equals: "msg two"
+
+  - name: fails when no readable log is found
+    # TestLogreadMissing: logread nope.log -> rc=1.
+    # Error case uses direct exec.
+    steps:
+      - run:
+          command: logread nope.log
+      - assert:
+          exit_code: { not: 0 }

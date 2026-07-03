@@ -1,0 +1,18 @@
+# Migrated from mimixbox's ShellSpec test/it/spec/watch_spec.sh (+ shellutils/watch_test.sh).
+version: "1"
+
+suite:
+  name: mimixbox watch
+
+scenarios:
+  - name: runs the command and shows its output
+    steps:
+      # watch loops forever; bound it with timeout. It exits non-zero (killed),
+      # so the assertion is on the captured output, which contains the command's.
+      - run:
+          shell: true
+          command: timeout 0.6 watch -t -n 0.2 echo tick 2>/dev/null
+      - assert:
+          exit_code: { not: 0 }
+          stdout:
+            contains: "tick"

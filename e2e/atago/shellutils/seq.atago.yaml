@@ -1,0 +1,83 @@
+# Migrated from mimixbox's ShellSpec test/it/spec/seq_spec.sh (+ shellutils/seq_test.sh).
+# `seq` resolves to the mimixbox applet because run.sh puts the applet dir first
+# on PATH. Run with: make e2e   (or e2e/run.sh)
+version: "1"
+
+suite:
+  name: mimixbox seq
+
+scenarios:
+  - name: counts from 1 to LAST
+    steps:
+      - run:
+          shell: true
+          command: seq 3
+      - assert:
+          exit_code: 0
+          stdout:
+            equals: |
+              1
+              2
+              3
+
+  - name: counts from FIRST to LAST
+    steps:
+      - run:
+          shell: true
+          command: seq 2 5
+      - assert:
+          exit_code: 0
+          stdout:
+            equals: |
+              2
+              3
+              4
+              5
+
+  - name: counts by INCREMENT
+    steps:
+      - run:
+          shell: true
+          command: seq 1 2 9
+      - assert:
+          exit_code: 0
+          stdout:
+            equals: |
+              1
+              3
+              5
+              7
+              9
+
+  - name: joins the numbers with the separator
+    steps:
+      - run:
+          shell: true
+          command: seq -s , 1 3
+      - assert:
+          exit_code: 0
+          stdout:
+            equals: "1,2,3"
+
+  - name: pads numbers with leading zeros
+    steps:
+      - run:
+          shell: true
+          command: seq -w 8 10
+      - assert:
+          exit_code: 0
+          stdout:
+            equals: |
+              08
+              09
+              10
+
+  - name: reports an error for an invalid operand
+    steps:
+      - run:
+          shell: true
+          command: seq abc
+      - assert:
+          exit_code: { not: 0 }
+          stderr:
+            equals: "seq: invalid floating point argument: 'abc'"

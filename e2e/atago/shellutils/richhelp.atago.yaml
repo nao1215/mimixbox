@@ -1,0 +1,74 @@
+# Migrated from mimixbox's ShellSpec test/it/spec/richhelp_spec.sh (+ shellutils/richhelp_test.sh).
+# Self-describing --help smoke tests (GitHub issue #237).
+version: "1"
+
+suite:
+  name: mimixbox richhelp
+
+scenarios:
+  - name: cp --help has a description, examples, and exit status
+    steps:
+      - run:
+          command: cp --help
+      - assert:
+          exit_code: 0
+          stdout:
+            contains:
+              - "Examples:"
+              - "Exit status:"
+
+  - name: tail --help documents follow mode with examples
+    steps:
+      - run:
+          command: tail --help
+      - assert:
+          exit_code: 0
+          stdout:
+            contains:
+              - "Examples:"
+              - "Follow the file"
+
+  - name: wget --help has examples and compatibility notes
+    steps:
+      - run:
+          command: wget --help
+      - assert:
+          exit_code: 0
+          stdout:
+            contains:
+              - "Examples:"
+              - "Notes:"
+
+  - name: mbsh --help describes the shell and its limits
+    steps:
+      - run:
+          command: mbsh --help
+      - assert:
+          exit_code: 0
+          stdout:
+            contains:
+              - "Examples:"
+              - "Notes:"
+
+  - name: vi --help lists the supported keys
+    steps:
+      - run:
+          command: vi --help
+      - assert:
+          exit_code: 0
+          stdout:
+            contains: "Motions:"
+
+  # atago spawns the real process, so `find` resolves to mimixbox's own find
+  # applet (first on PATH under the e2e harness) — whose --help carries the
+  # Examples:/Notes: sections — not a shell-aliased bfs.
+  - name: find --help has examples and notes
+    steps:
+      - run:
+          command: find --help
+      - assert:
+          exit_code: 0
+          stdout:
+            contains:
+              - "Examples:"
+              - "Notes:"

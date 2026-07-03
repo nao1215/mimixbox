@@ -1,0 +1,176 @@
+# Migrated from mimixbox's ShellSpec test/it/spec/grep_gnu_spec.sh
+# (+ findutils/grep_gnu_test.sh): GNU grep context/include/exclude/offset flags.
+# Setup builds ${ROOT}/grep_gnu with several fixture files plus src/ and vendor/
+# subtrees; reproduced inside ${workdir} via a setup `run` step. The recursive
+# (-r) cases assert include/exclude via contains/not_contains, matching the
+# original include/exclude expectations.
+version: "1"
+
+suite:
+  name: mimixbox grep GNU flags
+
+scenarios:
+  - name: prints trailing context with -A1
+    steps:
+      - fixture:
+          file: grep_gnu/ctx.txt
+          content: |
+            1
+            2
+            MATCH
+            b
+            c
+      - run:
+          command: grep -A1 MATCH ${workdir}/grep_gnu/ctx.txt
+      - assert:
+          exit_code: 0
+          stdout:
+            equals: |
+              MATCH
+              b
+
+  - name: prints leading context with -B1
+    steps:
+      - fixture:
+          file: grep_gnu/ctx2.txt
+          content: |
+            a
+            MATCH
+            b
+      - run:
+          command: grep -B1 MATCH ${workdir}/grep_gnu/ctx2.txt
+      - assert:
+          exit_code: 0
+          stdout:
+            equals: |
+              a
+              MATCH
+
+  - name: prints surrounding context with -C1
+    steps:
+      - fixture:
+          file: grep_gnu/ctx2.txt
+          content: |
+            a
+            MATCH
+            b
+      - run:
+          command: grep -C1 MATCH ${workdir}/grep_gnu/ctx2.txt
+      - assert:
+          exit_code: 0
+          stdout:
+            equals: |
+              a
+              MATCH
+              b
+
+  - name: separates non-contiguous groups with --
+    steps:
+      - fixture:
+          file: grep_gnu/groups.txt
+          content: |
+            MATCH
+            b
+            c
+            d
+            e
+            f
+            MATCH
+      - run:
+          command: grep -A1 MATCH ${workdir}/grep_gnu/groups.txt
+      - assert:
+          exit_code: 0
+          stdout:
+            line: 3
+            equals: "--"
+
+  - name: searches only included files with --include
+    steps:
+      - run:
+          shell: true
+          command: |
+            mkdir -p grep_gnu
+            printf 'needle\n' > grep_gnu/keep.go
+            printf 'needle\n' > grep_gnu/skip.txt
+      - run:
+          command: grep -r --include=*.go needle ${workdir}/grep_gnu
+      - assert:
+          exit_code: 0
+          stdout:
+            contains: "keep.go"
+      - assert:
+          stdout:
+            not_contains: "skip.txt"
+
+  - name: skips excluded files with --exclude
+    steps:
+      - run:
+          shell: true
+          command: |
+            mkdir -p grep_gnu
+            printf 'needle\n' > grep_gnu/keep.go
+            printf 'needle\n' > grep_gnu/app.log
+      - run:
+          command: grep -r --exclude=*.log needle ${workdir}/grep_gnu
+      - assert:
+          exit_code: 0
+          stdout:
+            not_contains: "app.log"
+
+  - name: skips excluded directories with --exclude-dir
+    steps:
+      - run:
+          shell: true
+          command: |
+            mkdir -p grep_gnu/src grep_gnu/vendor
+            printf 'needle\n' > grep_gnu/src/a.txt
+            printf 'needle\n' > grep_gnu/vendor/b.txt
+      - run:
+          command: grep -r --exclude-dir=vendor needle ${workdir}/grep_gnu
+      - assert:
+          exit_code: 0
+          stdout:
+            not_contains: "vendor"
+
+  - name: highlights matches with --color=always
+    steps:
+      - run:
+          shell: true
+          command: printf 'hello world\n' | grep --color=always world
+      - assert:
+          exit_code: 0
+          stdout:
+            contains: "world"
+
+  - name: prints byte offsets with -b
+    steps:
+      - fixture:
+          file: grep_gnu/off.txt
+          content: |
+            aaa
+            bbb
+            ccc
+      - run:
+          command: grep -b bbb ${workdir}/grep_gnu/off.txt
+      - assert:
+          exit_code: 0
+          stdout:
+            equals: "4:bbb"
+
+  - name: prints files without a match with -L
+    steps:
+      - run:
+          shell: true
+          command: |
+            mkdir -p grep_gnu
+            printf 'needle\n' > grep_gnu/hit.txt
+            printf 'nothing\n' > grep_gnu/miss.txt
+      - run:
+          command: grep -L needle ${workdir}/grep_gnu/hit.txt ${workdir}/grep_gnu/miss.txt
+      - assert:
+          exit_code: 0
+          stdout:
+            contains: "miss.txt"
+      - assert:
+          stdout:
+            not_contains: "hit.txt"

@@ -1,0 +1,28 @@
+# Migrated from mimixbox's ShellSpec test/it/spec/top_spec.sh.
+# top is interactive; the e2e exercises batch mode (-bn1) only.
+version: "1"
+
+suite:
+  name: mimixbox top
+
+scenarios:
+  - name: prints the top summary line
+    # TestTopHeader: top -bn1 | sed -n '1p' | grep -c '^top -'
+    steps:
+      - run:
+          command: top -bn1
+      - assert:
+          exit_code: 0
+          stdout:
+            line: 1
+            matches: "^top -"
+
+  - name: prints the tasks line
+    # TestTopTasks: top -bn1 | grep -c '^Tasks:'
+    steps:
+      - run:
+          command: top -bn1
+      - assert:
+          exit_code: 0
+          stdout:
+            matches: "(?m)^Tasks:"

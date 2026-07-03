@@ -1,0 +1,54 @@
+# Migrated from mimixbox's ShellSpec test/it/spec/man_spec.sh (+ man_test.sh).
+# Setup lays out a man1 directory: foo.1 (plain) and bar.1.gz (gzip-compressed).
+# The plain page is a declarative fixture; the gzipped page is built by a
+# shell:true setup step because a fixture cannot hold real gzip bytes.
+version: "1"
+
+suite:
+  name: mimixbox man
+
+scenarios:
+  - name: show a plain manual page
+    steps:
+      - fixture:
+          file: man/man1/foo.1
+          content: |
+            FOO(1)
+            the foo page
+      - run:
+          command: man -M "${workdir}/man" foo
+      - assert:
+          exit_code: 0
+          stdout:
+            equals: |
+              FOO(1)
+              the foo page
+
+  - name: decompress a gzipped manual page
+    steps:
+      - run:
+          shell: true
+          command: mkdir -p "${workdir}/man/man1"; printf 'BAR(1)\nthe bar page\n' | gzip > "${workdir}/man/man1/bar.1.gz"
+      - run:
+          command: man -M "${workdir}/man" bar
+      - assert:
+          exit_code: 0
+          stdout:
+            equals: |
+              BAR(1)
+              the bar page
+
+  - name: report a missing page with exit 16
+    steps:
+      - fixture:
+          file: man/man1/foo.1
+          content: |
+            FOO(1)
+            the foo page
+      - run:
+          shell: true
+          command: man -M "${workdir}/man" missing 2>/dev/null; echo "exit=$?"
+      - assert:
+          exit_code: 0
+          stdout:
+            equals: "exit=16"

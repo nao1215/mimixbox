@@ -1,0 +1,43 @@
+# Migrated from mimixbox's ShellSpec test/it/spec/awk_spec.sh (+ editors/awk_test.sh).
+# Each helper pipes input into awk, so each run needs a shell.
+version: "1"
+
+suite:
+  name: mimixbox awk
+
+scenarios:
+  - name: prints a field
+    steps:
+      - run:
+          shell: true
+          command: printf 'one two three\n' | awk '{print $2}'
+      - assert:
+          exit_code: 0
+          stdout: { equals: "two" }
+
+  - name: honors -F
+    steps:
+      - run:
+          shell: true
+          command: "printf 'root:x:0\\n' | awk -F: '{print $1}'"
+      - assert:
+          exit_code: 0
+          stdout: { equals: "root" }
+
+  - name: selects a record with NR
+    steps:
+      - run:
+          shell: true
+          command: printf 'a\nb\nc\n' | awk 'NR==2'
+      - assert:
+          exit_code: 0
+          stdout: { equals: "b" }
+
+  - name: counts records in END
+    steps:
+      - run:
+          shell: true
+          command: printf 'a\nb\nc\n' | awk 'END{print NR}'
+      - assert:
+          exit_code: 0
+          stdout: { equals: "3" }

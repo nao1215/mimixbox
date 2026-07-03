@@ -1,0 +1,970 @@
+# Migrated from mimixbox's ShellSpec test/it/spec/help_structured_sections_2_spec.sh
+# (Parameters block, no helper; second alphabet half). Each applet routes --help
+# through the structured renderer: exit 0, line 1 'Usage: <app>', an Examples
+# section, an Exit status section, and an example line starting with the command
+# name. echo/false/kill are shell builtins, run through env. In embedded.
+version: "1"
+
+suite:
+  name: mimixbox structured --help sections (2)
+
+scenarios:
+  - name: add-shell --help exposes the documented sections
+    steps:
+      - run:
+          command: "add-shell --help"
+      - assert:
+          exit_code: 0
+          stdout:
+            line: 1
+            matches: "^Usage: add\\-shell"
+      - assert:
+          stdout:
+            contains:
+              - "Examples:"
+              - "Exit status:"
+              - "  add-shell "
+
+  - name: ar --help exposes the documented sections
+    steps:
+      - run:
+          command: "ar --help"
+      - assert:
+          exit_code: 0
+          stdout:
+            line: 1
+            matches: "^Usage: ar"
+      - assert:
+          stdout:
+            contains:
+              - "Examples:"
+              - "Exit status:"
+              - "  ar "
+
+  - name: arch --help exposes the documented sections
+    steps:
+      - run:
+          command: "arch --help"
+      - assert:
+          exit_code: 0
+          stdout:
+            line: 1
+            matches: "^Usage: arch"
+      - assert:
+          stdout:
+            contains:
+              - "Examples:"
+              - "Exit status:"
+              - "  arch "
+
+  - name: awk --help exposes the documented sections
+    steps:
+      - run:
+          command: "awk --help"
+      - assert:
+          exit_code: 0
+          stdout:
+            line: 1
+            matches: "^Usage: awk"
+      - assert:
+          stdout:
+            contains:
+              - "Examples:"
+              - "Exit status:"
+              - "  awk "
+
+  - name: banner --help exposes the documented sections
+    steps:
+      - run:
+          command: "banner --help"
+      - assert:
+          exit_code: 0
+          stdout:
+            line: 1
+            matches: "^Usage: banner"
+      - assert:
+          stdout:
+            contains:
+              - "Examples:"
+              - "Exit status:"
+              - "  banner "
+
+  - name: base32 --help exposes the documented sections
+    steps:
+      - run:
+          command: "base32 --help"
+      - assert:
+          exit_code: 0
+          stdout:
+            line: 1
+            matches: "^Usage: base32"
+      - assert:
+          stdout:
+            contains:
+              - "Examples:"
+              - "Exit status:"
+              - "  base32 "
+
+  - name: base64 --help exposes the documented sections
+    steps:
+      - run:
+          command: "base64 --help"
+      - assert:
+          exit_code: 0
+          stdout:
+            line: 1
+            matches: "^Usage: base64"
+      - assert:
+          stdout:
+            contains:
+              - "Examples:"
+              - "Exit status:"
+              - "  base64 "
+
+  - name: basename --help exposes the documented sections
+    steps:
+      - run:
+          command: "basename --help"
+      - assert:
+          exit_code: 0
+          stdout:
+            line: 1
+            matches: "^Usage: basename"
+      - assert:
+          stdout:
+            contains:
+              - "Examples:"
+              - "Exit status:"
+              - "  basename "
+
+  - name: bunzip2 --help exposes the documented sections
+    steps:
+      - run:
+          command: "bunzip2 --help"
+      - assert:
+          exit_code: 0
+          stdout:
+            line: 1
+            matches: "^Usage: bunzip2"
+      - assert:
+          stdout:
+            contains:
+              - "Examples:"
+              - "Exit status:"
+              - "  bunzip2 "
+
+  - name: cal --help exposes the documented sections
+    steps:
+      - run:
+          command: "cal --help"
+      - assert:
+          exit_code: 0
+          stdout:
+            line: 1
+            matches: "^Usage: cal"
+      - assert:
+          stdout:
+            contains:
+              - "Examples:"
+              - "Exit status:"
+              - "  cal "
+
+  - name: cat --help exposes the documented sections
+    steps:
+      - run:
+          command: "cat --help"
+      - assert:
+          exit_code: 0
+          stdout:
+            line: 1
+            matches: "^Usage: cat"
+      - assert:
+          stdout:
+            contains:
+              - "Examples:"
+              - "Exit status:"
+              - "  cat "
+
+  - name: chgrp --help exposes the documented sections
+    steps:
+      - run:
+          command: "chgrp --help"
+      - assert:
+          exit_code: 0
+          stdout:
+            line: 1
+            matches: "^Usage: chgrp"
+      - assert:
+          stdout:
+            contains:
+              - "Examples:"
+              - "Exit status:"
+              - "  chgrp "
+
+  - name: chmod --help exposes the documented sections
+    steps:
+      - run:
+          command: "chmod --help"
+      - assert:
+          exit_code: 0
+          stdout:
+            line: 1
+            matches: "^Usage: chmod"
+      - assert:
+          stdout:
+            contains:
+              - "Examples:"
+              - "Exit status:"
+              - "  chmod "
+
+  - name: chown --help exposes the documented sections
+    steps:
+      - run:
+          command: "chown --help"
+      - assert:
+          exit_code: 0
+          stdout:
+            line: 1
+            matches: "^Usage: chown"
+      - assert:
+          stdout:
+            contains:
+              - "Examples:"
+              - "Exit status:"
+              - "  chown "
+
+  - name: cksum --help exposes the documented sections
+    steps:
+      - run:
+          command: "cksum --help"
+      - assert:
+          exit_code: 0
+          stdout:
+            line: 1
+            matches: "^Usage: cksum"
+      - assert:
+          stdout:
+            contains:
+              - "Examples:"
+              - "Exit status:"
+              - "  cksum "
+
+  - name: clear --help exposes the documented sections
+    steps:
+      - run:
+          command: "clear --help"
+      - assert:
+          exit_code: 0
+          stdout:
+            line: 1
+            matches: "^Usage: clear"
+      - assert:
+          stdout:
+            contains:
+              - "Examples:"
+              - "Exit status:"
+              - "  clear "
+
+  - name: cmatrix --help exposes the documented sections
+    steps:
+      - run:
+          command: "cmatrix --help"
+      - assert:
+          exit_code: 0
+          stdout:
+            line: 1
+            matches: "^Usage: cmatrix"
+      - assert:
+          stdout:
+            contains:
+              - "Examples:"
+              - "Exit status:"
+              - "  cmatrix "
+
+  - name: cmp --help exposes the documented sections
+    steps:
+      - run:
+          command: "cmp --help"
+      - assert:
+          exit_code: 0
+          stdout:
+            line: 1
+            matches: "^Usage: cmp"
+      - assert:
+          stdout:
+            contains:
+              - "Examples:"
+              - "Exit status:"
+              - "  cmp "
+
+  - name: comm --help exposes the documented sections
+    steps:
+      - run:
+          command: "comm --help"
+      - assert:
+          exit_code: 0
+          stdout:
+            line: 1
+            matches: "^Usage: comm"
+      - assert:
+          stdout:
+            contains:
+              - "Examples:"
+              - "Exit status:"
+              - "  comm "
+
+  - name: compress --help exposes the documented sections
+    steps:
+      - run:
+          command: "compress --help"
+      - assert:
+          exit_code: 0
+          stdout:
+            line: 1
+            matches: "^Usage: compress"
+      - assert:
+          stdout:
+            contains:
+              - "Examples:"
+              - "Exit status:"
+              - "  compress "
+
+  - name: cowsay --help exposes the documented sections
+    steps:
+      - run:
+          command: "cowsay --help"
+      - assert:
+          exit_code: 0
+          stdout:
+            line: 1
+            matches: "^Usage: cowsay"
+      - assert:
+          stdout:
+            contains:
+              - "Examples:"
+              - "Exit status:"
+              - "  cowsay "
+
+  - name: cowthink --help exposes the documented sections
+    steps:
+      - run:
+          command: "cowthink --help"
+      - assert:
+          exit_code: 0
+          stdout:
+            line: 1
+            matches: "^Usage: cowthink"
+      - assert:
+          stdout:
+            contains:
+              - "Examples:"
+              - "Exit status:"
+              - "  cowthink "
+
+  - name: cpio --help exposes the documented sections
+    steps:
+      - run:
+          command: "cpio --help"
+      - assert:
+          exit_code: 0
+          stdout:
+            line: 1
+            matches: "^Usage: cpio"
+      - assert:
+          stdout:
+            contains:
+              - "Examples:"
+              - "Exit status:"
+              - "  cpio "
+
+  - name: cut --help exposes the documented sections
+    steps:
+      - run:
+          command: "cut --help"
+      - assert:
+          exit_code: 0
+          stdout:
+            line: 1
+            matches: "^Usage: cut"
+      - assert:
+          stdout:
+            contains:
+              - "Examples:"
+              - "Exit status:"
+              - "  cut "
+
+  - name: date --help exposes the documented sections
+    steps:
+      - run:
+          command: "date --help"
+      - assert:
+          exit_code: 0
+          stdout:
+            line: 1
+            matches: "^Usage: date"
+      - assert:
+          stdout:
+            contains:
+              - "Examples:"
+              - "Exit status:"
+              - "  date "
+
+  - name: dd --help exposes the documented sections
+    steps:
+      - run:
+          command: "dd --help"
+      - assert:
+          exit_code: 0
+          stdout:
+            line: 1
+            matches: "^Usage: dd"
+      - assert:
+          stdout:
+            contains:
+              - "Examples:"
+              - "Exit status:"
+              - "  dd "
+
+  - name: df --help exposes the documented sections
+    steps:
+      - run:
+          command: "df --help"
+      - assert:
+          exit_code: 0
+          stdout:
+            line: 1
+            matches: "^Usage: df"
+      - assert:
+          stdout:
+            contains:
+              - "Examples:"
+              - "Exit status:"
+              - "  df "
+
+  - name: diff --help exposes the documented sections
+    steps:
+      - run:
+          command: "diff --help"
+      - assert:
+          exit_code: 0
+          stdout:
+            line: 1
+            matches: "^Usage: diff"
+      - assert:
+          stdout:
+            contains:
+              - "Examples:"
+              - "Exit status:"
+              - "  diff "
+
+  - name: dirname --help exposes the documented sections
+    steps:
+      - run:
+          command: "dirname --help"
+      - assert:
+          exit_code: 0
+          stdout:
+            line: 1
+            matches: "^Usage: dirname"
+      - assert:
+          stdout:
+            contains:
+              - "Examples:"
+              - "Exit status:"
+              - "  dirname "
+
+  - name: dos2unix --help exposes the documented sections
+    steps:
+      - run:
+          command: "dos2unix --help"
+      - assert:
+          exit_code: 0
+          stdout:
+            line: 1
+            matches: "^Usage: dos2unix"
+      - assert:
+          stdout:
+            contains:
+              - "Examples:"
+              - "Exit status:"
+              - "  dos2unix "
+
+  - name: du --help exposes the documented sections
+    steps:
+      - run:
+          command: "du --help"
+      - assert:
+          exit_code: 0
+          stdout:
+            line: 1
+            matches: "^Usage: du"
+      - assert:
+          stdout:
+            contains:
+              - "Examples:"
+              - "Exit status:"
+              - "  du "
+
+  - name: egrep --help exposes the documented sections
+    steps:
+      - run:
+          command: "egrep --help"
+      - assert:
+          exit_code: 0
+          stdout:
+            line: 1
+            matches: "^Usage: egrep"
+      - assert:
+          stdout:
+            contains:
+              - "Examples:"
+              - "Exit status:"
+              - "  egrep "
+
+  - name: env --help exposes the documented sections
+    steps:
+      - run:
+          command: "env --help"
+      - assert:
+          exit_code: 0
+          stdout:
+            line: 1
+            matches: "^Usage: env"
+      - assert:
+          stdout:
+            contains:
+              - "Examples:"
+              - "Exit status:"
+              - "  env "
+
+  - name: expand --help exposes the documented sections
+    steps:
+      - run:
+          command: "expand --help"
+      - assert:
+          exit_code: 0
+          stdout:
+            line: 1
+            matches: "^Usage: expand"
+      - assert:
+          stdout:
+            contains:
+              - "Examples:"
+              - "Exit status:"
+              - "  expand "
+
+  - name: expr --help exposes the documented sections
+    steps:
+      - run:
+          command: "expr --help"
+      - assert:
+          exit_code: 0
+          stdout:
+            line: 1
+            matches: "^Usage: expr"
+      - assert:
+          stdout:
+            contains:
+              - "Examples:"
+              - "Exit status:"
+              - "  expr "
+
+  - name: fakemovie --help exposes the documented sections
+    steps:
+      - run:
+          command: "fakemovie --help"
+      - assert:
+          exit_code: 0
+          stdout:
+            line: 1
+            matches: "^Usage: fakemovie"
+      - assert:
+          stdout:
+            contains:
+              - "Examples:"
+              - "Exit status:"
+              - "  fakemovie "
+
+  - name: fgrep --help exposes the documented sections
+    steps:
+      - run:
+          command: "fgrep --help"
+      - assert:
+          exit_code: 0
+          stdout:
+            line: 1
+            matches: "^Usage: fgrep"
+      - assert:
+          stdout:
+            contains:
+              - "Examples:"
+              - "Exit status:"
+              - "  fgrep "
+
+  - name: fmt --help exposes the documented sections
+    steps:
+      - run:
+          command: "fmt --help"
+      - assert:
+          exit_code: 0
+          stdout:
+            line: 1
+            matches: "^Usage: fmt"
+      - assert:
+          stdout:
+            contains:
+              - "Examples:"
+              - "Exit status:"
+              - "  fmt "
+
+  - name: fold --help exposes the documented sections
+    steps:
+      - run:
+          command: "fold --help"
+      - assert:
+          exit_code: 0
+          stdout:
+            line: 1
+            matches: "^Usage: fold"
+      - assert:
+          stdout:
+            contains:
+              - "Examples:"
+              - "Exit status:"
+              - "  fold "
+
+  - name: fortune --help exposes the documented sections
+    steps:
+      - run:
+          command: "fortune --help"
+      - assert:
+          exit_code: 0
+          stdout:
+            line: 1
+            matches: "^Usage: fortune"
+      - assert:
+          stdout:
+            contains:
+              - "Examples:"
+              - "Exit status:"
+              - "  fortune "
+
+  - name: free --help exposes the documented sections
+    steps:
+      - run:
+          command: "free --help"
+      - assert:
+          exit_code: 0
+          stdout:
+            line: 1
+            matches: "^Usage: free"
+      - assert:
+          stdout:
+            contains:
+              - "Examples:"
+              - "Exit status:"
+              - "  free "
+
+  - name: ghrdc --help exposes the documented sections
+    steps:
+      - run:
+          command: "ghrdc --help"
+      - assert:
+          exit_code: 0
+          stdout:
+            line: 1
+            matches: "^Usage: ghrdc"
+      - assert:
+          stdout:
+            contains:
+              - "Examples:"
+              - "Exit status:"
+              - "  ghrdc "
+
+  - name: grep --help exposes the documented sections
+    steps:
+      - run:
+          command: "grep --help"
+      - assert:
+          exit_code: 0
+          stdout:
+            line: 1
+            matches: "^Usage: grep"
+      - assert:
+          stdout:
+            contains:
+              - "Examples:"
+              - "Exit status:"
+              - "  grep "
+
+  - name: groups --help exposes the documented sections
+    steps:
+      - run:
+          command: "groups --help"
+      - assert:
+          exit_code: 0
+          stdout:
+            line: 1
+            matches: "^Usage: groups"
+      - assert:
+          stdout:
+            contains:
+              - "Examples:"
+              - "Exit status:"
+              - "  groups "
+
+  - name: gunzip --help exposes the documented sections
+    steps:
+      - run:
+          command: "gunzip --help"
+      - assert:
+          exit_code: 0
+          stdout:
+            line: 1
+            matches: "^Usage: gunzip"
+      - assert:
+          stdout:
+            contains:
+              - "Examples:"
+              - "Exit status:"
+              - "  gunzip "
+
+  - name: gzip --help exposes the documented sections
+    steps:
+      - run:
+          command: "gzip --help"
+      - assert:
+          exit_code: 0
+          stdout:
+            line: 1
+            matches: "^Usage: gzip"
+      - assert:
+          stdout:
+            contains:
+              - "Examples:"
+              - "Exit status:"
+              - "  gzip "
+
+  - name: halt --help exposes the documented sections
+    steps:
+      - run:
+          command: "halt --help"
+      - assert:
+          exit_code: 0
+          stdout:
+            line: 1
+            matches: "^Usage: halt"
+      - assert:
+          stdout:
+            contains:
+              - "Examples:"
+              - "Exit status:"
+              - "  halt "
+
+  - name: head --help exposes the documented sections
+    steps:
+      - run:
+          command: "head --help"
+      - assert:
+          exit_code: 0
+          stdout:
+            line: 1
+            matches: "^Usage: head"
+      - assert:
+          stdout:
+            contains:
+              - "Examples:"
+              - "Exit status:"
+              - "  head "
+
+  - name: hostid --help exposes the documented sections
+    steps:
+      - run:
+          command: "hostid --help"
+      - assert:
+          exit_code: 0
+          stdout:
+            line: 1
+            matches: "^Usage: hostid"
+      - assert:
+          stdout:
+            contains:
+              - "Examples:"
+              - "Exit status:"
+              - "  hostid "
+
+  - name: hostname --help exposes the documented sections
+    steps:
+      - run:
+          command: "hostname --help"
+      - assert:
+          exit_code: 0
+          stdout:
+            line: 1
+            matches: "^Usage: hostname"
+      - assert:
+          stdout:
+            contains:
+              - "Examples:"
+              - "Exit status:"
+              - "  hostname "
+
+  - name: http-status-code --help exposes the documented sections
+    steps:
+      - run:
+          command: "http-status-code --help"
+      - assert:
+          exit_code: 0
+          stdout:
+            line: 1
+            matches: "^Usage: http\\-status\\-code"
+      - assert:
+          stdout:
+            contains:
+              - "Examples:"
+              - "Exit status:"
+              - "  http-status-code "
+
+  - name: id --help exposes the documented sections
+    steps:
+      - run:
+          command: "id --help"
+      - assert:
+          exit_code: 0
+          stdout:
+            line: 1
+            matches: "^Usage: id"
+      - assert:
+          stdout:
+            contains:
+              - "Examples:"
+              - "Exit status:"
+              - "  id "
+
+  - name: install --help exposes the documented sections
+    steps:
+      - run:
+          command: "install --help"
+      - assert:
+          exit_code: 0
+          stdout:
+            line: 1
+            matches: "^Usage: install"
+      - assert:
+          stdout:
+            contains:
+              - "Examples:"
+              - "Exit status:"
+              - "  install "
+
+  - name: ischroot --help exposes the documented sections
+    steps:
+      - run:
+          command: "ischroot --help"
+      - assert:
+          exit_code: 0
+          stdout:
+            line: 1
+            matches: "^Usage: ischroot"
+      - assert:
+          stdout:
+            contains:
+              - "Examples:"
+              - "Exit status:"
+              - "  ischroot "
+
+  - name: killall --help exposes the documented sections
+    steps:
+      - run:
+          command: "killall --help"
+      - assert:
+          exit_code: 0
+          stdout:
+            line: 1
+            matches: "^Usage: killall"
+      - assert:
+          stdout:
+            contains:
+              - "Examples:"
+              - "Exit status:"
+              - "  killall "
+
+  - name: lifegame --help exposes the documented sections
+    steps:
+      - run:
+          command: "lifegame --help"
+      - assert:
+          exit_code: 0
+          stdout:
+            line: 1
+            matches: "^Usage: lifegame"
+      - assert:
+          stdout:
+            contains:
+              - "Examples:"
+              - "Exit status:"
+              - "  lifegame "
+
+  - name: link --help exposes the documented sections
+    steps:
+      - run:
+          command: "link --help"
+      - assert:
+          exit_code: 0
+          stdout:
+            line: 1
+            matches: "^Usage: link"
+      - assert:
+          stdout:
+            contains:
+              - "Examples:"
+              - "Exit status:"
+              - "  link "
+
+  - name: echo --help exposes the documented sections
+    steps:
+      - run:
+          command: "env echo --help"
+      - assert:
+          exit_code: 0
+          stdout:
+            line: 1
+            matches: "^Usage: echo"
+      - assert:
+          stdout:
+            contains:
+              - "Examples:"
+              - "Exit status:"
+              - "  echo "
+
+  - name: false --help exposes the documented sections
+    steps:
+      - run:
+          command: "env false --help"
+      - assert:
+          exit_code: 0
+          stdout:
+            line: 1
+            matches: "^Usage: false"
+      - assert:
+          stdout:
+            contains:
+              - "Examples:"
+              - "Exit status:"
+              - "  false "
+
+  - name: kill --help exposes the documented sections
+    steps:
+      - run:
+          command: "env kill --help"
+      - assert:
+          exit_code: 0
+          stdout:
+            line: 1
+            matches: "^Usage: kill"
+      - assert:
+          stdout:
+            contains:
+              - "Examples:"
+              - "Exit status:"
+              - "  kill "

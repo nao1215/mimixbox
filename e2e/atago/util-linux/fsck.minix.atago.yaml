@@ -1,0 +1,18 @@
+# Migrated from mimixbox's ShellSpec test/it/spec/fsck.minix_spec.sh (no helper; inline --help contract).
+# Universal --help contract (Issue #477): exit 0, "Usage: fsck.minix" on stdout, empty stderr.
+version: "1"
+
+suite:
+  name: mimixbox fsck.minix
+
+scenarios:
+  - name: describes itself with --help
+    steps:
+      - run:
+          command: fsck.minix --help
+      - assert:
+          exit_code: 0
+          stdout:
+            contains: "Usage: fsck.minix"
+          stderr:
+            empty: true

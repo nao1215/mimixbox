@@ -1,0 +1,29 @@
+# Migrated from mimixbox's ShellSpec test/it/spec/mkfs_vfat_spec.sh.
+version: "1"
+
+suite:
+  name: mimixbox mkfs.vfat / mkdosfs
+
+scenarios:
+  - name: writes the FAT16 type label
+    steps:
+      - run:
+          shell: true
+          command: >
+            dd if=/dev/zero of=v.img bs=1024 count=8192 2>/dev/null;
+            mkfs.vfat v.img >/dev/null;
+            dd if=v.img bs=1 skip=54 count=5 2>/dev/null
+      - assert:
+          exit_code: 0
+          stdout:
+            equals: "FAT16"
+
+  - name: mkdosfs refuses a too-small image
+    steps:
+      - run:
+          shell: true
+          command: dd if=/dev/zero of=s.img bs=1024 count=512 2>/dev/null
+      - run:
+          command: mkdosfs s.img
+      - assert:
+          exit_code: { not: 0 }

@@ -1,0 +1,49 @@
+# Migrated from mimixbox's ShellSpec test/it/spec/mktemp_spec.sh
+# (+ debianutils/mktemp_test.sh). Each helper captures mktemp's output with $(...)
+# and then probes the result with test, so these need a shell pipeline. The
+# ShellSpec Setup mkdir's ${MIMIXBOX_IT_ROOT}/mktemp; here ${workdir}/mktemp is
+# created inline before each invocation.
+version: "1"
+
+suite:
+  name: mimixbox mktemp
+
+scenarios:
+  - name: creates a regular file under the temp dir
+    steps:
+      - run:
+          shell: true
+          command: |
+            mkdir -p ${workdir}/mktemp
+            f=$(mktemp -p ${workdir}/mktemp)
+            test -f "$f" && echo "created"
+      - assert:
+          exit_code: 0
+          stdout:
+            equals: "created"
+
+  - name: creates a directory
+    steps:
+      - run:
+          shell: true
+          command: |
+            mkdir -p ${workdir}/mktemp
+            d=$(mktemp -d -p ${workdir}/mktemp)
+            test -d "$d" && echo "created"
+      - assert:
+          exit_code: 0
+          stdout:
+            equals: "created"
+
+  - name: mktemp -u only prints a name
+    steps:
+      - run:
+          shell: true
+          command: |
+            mkdir -p ${workdir}/mktemp
+            f=$(mktemp -u -p ${workdir}/mktemp)
+            test ! -e "$f" && echo "not created"
+      - assert:
+          exit_code: 0
+          stdout:
+            equals: "not created"

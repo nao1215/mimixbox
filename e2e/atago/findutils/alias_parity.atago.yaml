@@ -1,0 +1,73 @@
+# Migrated from mimixbox's ShellSpec test/it/spec/alias_parity_spec.sh (no Included
+# helper; inline). Issue #789: real-process alias-parity for thin wrappers.
+#   - egrep == grep -E, fgrep == grep -F (matching parity over a fixture file).
+#   - netcat is an alias of nc; both answer --help with exit 0 + an Examples
+#     section (help short-circuits before any network code, so no sockets open).
+# The ShellSpec compared against `$(grep -E ...)` / `$(grep -F ...)` computed at
+# run time; the expected match output is inlined here (verified to equal the
+# grep -E/-F result over the same fixture).
+version: "1"
+
+suite:
+  name: mimixbox alias parity
+
+scenarios:
+  - name: egrep matches the same lines as grep -E over the same file
+    steps:
+      - fixture:
+          file: fixture.txt
+          content: |
+            apple
+            banana
+            a.b
+            axb
+      - run:
+          command: egrep 'a(p|x)' fixture.txt
+      - assert:
+          exit_code: 0
+          stdout:
+            equals: |
+              apple
+              axb
+
+  - name: fgrep matches the same lines as grep -F over the same file
+    steps:
+      - fixture:
+          file: fixture.txt
+          content: |
+            apple
+            banana
+            a.b
+            axb
+      - run:
+          command: fgrep 'a.b' fixture.txt
+      - assert:
+          exit_code: 0
+          stdout:
+            equals: "a.b"
+
+  - name: netcat answers --help with exit 0 and an Examples section
+    steps:
+      - run:
+          command: netcat --help
+      - assert:
+          exit_code: 0
+          stdout:
+            contains:
+              - "Usage: netcat"
+              - "Examples:"
+          stderr:
+            empty: true
+
+  - name: nc answers --help with exit 0 and an Examples section
+    steps:
+      - run:
+          command: nc --help
+      - assert:
+          exit_code: 0
+          stdout:
+            contains:
+              - "Usage: nc"
+              - "Examples:"
+          stderr:
+            empty: true

@@ -1,0 +1,21 @@
+# Migrated from mimixbox's ShellSpec test/it/spec/switch_root_spec.sh.
+# switch_root needs to run as PID 1 with privilege; e2e tests validation paths.
+version: "1"
+
+suite:
+  name: mimixbox switch_root
+
+scenarios:
+  - name: requires NEW_ROOT and INIT
+    steps:
+      - run:
+          command: switch_root /tmp
+      - assert:
+          exit_code: { not: 0 }
+
+  - name: rejects a non-directory NEW_ROOT
+    steps:
+      - run:
+          command: switch_root /no/such/dir /init
+      - assert:
+          exit_code: { not: 0 }

@@ -1,0 +1,199 @@
+# Migrated from mimixbox's ShellSpec test/it/spec/wc_spec.sh (+ textutils/wc_test.sh).
+# Setup builds game.txt (6 game-name lines), metal.txt (3 lines) and an empty
+# empty.txt in the scenario workdir. wc's columnar output is right-aligned, so
+# the expected values use double-quoted scalars with explicit leading spaces.
+version: "1"
+
+suite:
+  name: mimixbox wc
+
+scenarios:
+  - name: count lines/words/bytes of one file
+    steps:
+      - fixture:
+          file: game.txt
+          content: |
+            NieR Replicant ver.1.22474487139...
+            NieR:Automata
+            The Legend of Zelda: Majora's Mask
+            KICHIKUOU RANCE
+            DARK SOULS
+            SHADOW HEARTS
+      - run:
+          command: wc game.txt
+      - assert:
+          exit_code: 0
+      # wc prints relative "game.txt" when given a relative operand; the
+      # ShellSpec passed an absolute path. Run in the workdir so the operand we
+      # assert matches what wc echoes back.
+      - assert:
+          stdout:
+            equals: "  6  16 126 game.txt"
+
+  - name: count only lines with --lines
+    steps:
+      - fixture:
+          file: game.txt
+          content: |
+            NieR Replicant ver.1.22474487139...
+            NieR:Automata
+            The Legend of Zelda: Majora's Mask
+            KICHIKUOU RANCE
+            DARK SOULS
+            SHADOW HEARTS
+      - run:
+          command: wc -l game.txt
+      - assert:
+          exit_code: 0
+          stdout:
+            equals: "6 game.txt"
+
+  - name: count only bytes with --bytes
+    steps:
+      - fixture:
+          file: game.txt
+          content: |
+            NieR Replicant ver.1.22474487139...
+            NieR:Automata
+            The Legend of Zelda: Majora's Mask
+            KICHIKUOU RANCE
+            DARK SOULS
+            SHADOW HEARTS
+      - run:
+          command: wc -c game.txt
+      - assert:
+          exit_code: 0
+          stdout:
+            equals: "126 game.txt"
+
+  - name: report the longest line with --max-line-length
+    steps:
+      - fixture:
+          file: game.txt
+          content: |
+            NieR Replicant ver.1.22474487139...
+            NieR:Automata
+            The Legend of Zelda: Majora's Mask
+            KICHIKUOU RANCE
+            DARK SOULS
+            SHADOW HEARTS
+      - run:
+          command: wc -L game.txt
+      - assert:
+          exit_code: 0
+          stdout:
+            equals: "35 game.txt"
+
+  - name: count an empty file as all zeros
+    steps:
+      - fixture:
+          file: empty.txt
+          content: ""
+      - run:
+          command: wc empty.txt
+      - assert:
+          exit_code: 0
+          stdout:
+            equals: "0 0 0 empty.txt"
+
+  - name: count three files and print a total
+    steps:
+      - fixture:
+          file: empty.txt
+          content: ""
+      - fixture:
+          file: game.txt
+          content: |
+            NieR Replicant ver.1.22474487139...
+            NieR:Automata
+            The Legend of Zelda: Majora's Mask
+            KICHIKUOU RANCE
+            DARK SOULS
+            SHADOW HEARTS
+      - fixture:
+          file: metal.txt
+          content: |
+            MEGADETH
+            GALNERYUS
+            SYSTEM OF A DOWN
+      - run:
+          command: wc empty.txt game.txt metal.txt
+      - assert:
+          exit_code: 0
+          stdout:
+            equals: "  0   0   0 empty.txt\n  6  16 126 game.txt\n  3   6  36 metal.txt\n  9  22 162 total"
+
+  - name: count piped data
+    steps:
+      # The byte count is the length of the echoed path + newline, which varies
+      # with the per-run workdir, so assert the "1 line 1 word N bytes" shape
+      # rather than a fixed byte total.
+      - run:
+          shell: true
+          command: echo "${workdir}/game.txt" | wc
+      - assert:
+          exit_code: 0
+          stdout:
+            matches: "1 +1 +[0-9]+"
+
+  - name: count only the file operand, ignoring pipe data
+    steps:
+      - fixture:
+          file: game.txt
+          content: |
+            NieR Replicant ver.1.22474487139...
+            NieR:Automata
+            The Legend of Zelda: Majora's Mask
+            KICHIKUOU RANCE
+            DARK SOULS
+            SHADOW HEARTS
+      - run:
+          shell: true
+          command: echo "${workdir}/game.txt" | wc game.txt
+      - assert:
+          exit_code: 0
+          stdout:
+            equals: "  6  16 126 game.txt"
+
+  - name: report a directory as not a regular file
+    steps:
+      # wc on the workdir itself: zero counts on stdout, an error on stderr, and
+      # a failure status. Single command => direct exec for the real exit code.
+      - run:
+          command: wc "${workdir}"
+      - assert:
+          exit_code: { not: 0 }
+          stderr:
+            equals: "wc: ${workdir}: is a directory"
+          stdout:
+            equals: "      0       0       0 ${workdir}"
+
+  - name: count the file but zero the directory when given both
+    steps:
+      - fixture:
+          file: game.txt
+          content: |
+            NieR Replicant ver.1.22474487139...
+            NieR:Automata
+            The Legend of Zelda: Majora's Mask
+            KICHIKUOU RANCE
+            DARK SOULS
+            SHADOW HEARTS
+      - run:
+          command: wc "${workdir}" "${workdir}/game.txt"
+      - assert:
+          exit_code: { not: 0 }
+          stderr:
+            equals: "wc: ${workdir}: is a directory"
+          stdout:
+            equals: "      0       0       0 ${workdir}\n      6      16     126 ${workdir}/game.txt\n      6      16     126 total"
+
+  - name: count a single line piped in with --lines
+    steps:
+      - run:
+          shell: true
+          command: echo "no_exist_file" | wc -l
+      - assert:
+          exit_code: 0
+          stdout:
+            equals: "1"

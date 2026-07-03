@@ -1,0 +1,28 @@
+# Migrated from mimixbox's ShellSpec test/it/spec/hush_spec.sh (no helper; inline).
+# hush is a compatibility front-end over MimixBox's shell (mbsh). Universal
+# --help contract (Issue #477) plus a purpose-paragraph check.
+version: "1"
+
+suite:
+  name: mimixbox hush
+
+scenarios:
+  - name: describes itself with --help
+    steps:
+      - run:
+          command: hush --help
+      - assert:
+          exit_code: 0
+          stdout:
+            contains: "Usage: hush"
+          stderr:
+            empty: true
+
+  - name: documents its purpose in --help
+    steps:
+      - run:
+          command: hush --help
+      - assert:
+          exit_code: 0
+          stdout:
+            contains: "compatibility front-end over MimixBox"

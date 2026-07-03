@@ -1,0 +1,118 @@
+# Migrated from mimixbox's ShellSpec test/it/spec/sha256sum_spec.sh (+ textutils/sha256sum_test.sh).
+# The ShellSpec Setup created files under ${MIMIXBOX_IT_ROOT}/sha256sum/; here fixtures
+# build them under the scenario workdir's sha256sum/ subdir so the absolute paths the
+# applet prints (and the paths embedded in checksum.txt) reproduce exactly via
+# ${workdir}. atago expands ${workdir} in fixture content AND assertion values.
+# Error cases (directory / missing file) use direct exec so the real non-zero exit
+# is preserved (a shell wrapper would mask a single failing command's status).
+# Note: the ShellSpec helper function names are TestMd5sum* even in sha256sum_test.sh;
+# the actual command run is sha256sum.
+version: "1"
+
+suite:
+  name: mimixbox sha256sum
+
+scenarios:
+  - name: get sha256sum of one file
+    steps:
+      - fixture:
+          file: sha256sum/1.txt
+          content: "Dungeon of Regalias\n"
+      - run:
+          command: sha256sum ${workdir}/sha256sum/1.txt
+      - assert:
+          exit_code: 0
+          stdout:
+            equals: "5f2864b5833190b07b0b95228682ff5ec43a13a2a3f31514c57d5c92aa3fb2e7  ${workdir}/sha256sum/1.txt"
+
+  - name: cannot get sha256sum of one directory
+    steps:
+      - fixture:
+          file: sha256sum/1.txt
+          content: "Dungeon of Regalias\n"
+      - run:
+          command: sha256sum ${workdir}/sha256sum
+      - assert:
+          exit_code: { not: 0 }
+          stderr:
+            equals: "sha256sum: ${workdir}/sha256sum: It is directory"
+
+  - name: cannot get sha256sum of not exist file
+    steps:
+      - run:
+          command: sha256sum /not_exist_file
+      - assert:
+          exit_code: { not: 0 }
+          stderr:
+            equals: "sha256sum: /not_exist_file: No such file or directory"
+
+  - name: get sha256sum of three files
+    steps:
+      - fixture:
+          file: sha256sum/1.txt
+          content: "Dungeon of Regalias\n"
+      - fixture:
+          file: sha256sum/2.txt
+          content: "DEMONION\n"
+      - fixture:
+          file: sha256sum/3.txt
+          content: "Dungeon Crusadearz\n"
+      - run:
+          command: sha256sum ${workdir}/sha256sum/1.txt ${workdir}/sha256sum/2.txt ${workdir}/sha256sum/3.txt
+      - assert:
+          exit_code: 0
+          stdout:
+            equals: |
+              5f2864b5833190b07b0b95228682ff5ec43a13a2a3f31514c57d5c92aa3fb2e7  ${workdir}/sha256sum/1.txt
+              833d8136112b60552a0f83165a2ebffeac4b0c0249480d651ea58b9073ec925b  ${workdir}/sha256sum/2.txt
+              8e774f75a5a23c83e6f7d5e92863a2615e0335e06aec18d9c3ec1c5315d1a777  ${workdir}/sha256sum/3.txt
+
+  - name: check sha256sum with --check option
+    steps:
+      - fixture:
+          file: sha256sum/1.txt
+          content: "Dungeon of Regalias\n"
+      - fixture:
+          file: sha256sum/2.txt
+          content: "DEMONION\n"
+      - fixture:
+          file: sha256sum/3.txt
+          content: "Dungeon Crusadearz\n"
+      - fixture:
+          file: sha256sum/checksum.txt
+          content: |
+            5f2864b5833190b07b0b95228682ff5ec43a13a2a3f31514c57d5c92aa3fb2e7  ${workdir}/sha256sum/1.txt
+            833d8136112b60552a0f83165a2ebffeac4b0c0249480d651ea58b9073ec925b  ${workdir}/sha256sum/2.txt
+            8e774f75a5a23c83e6f7d5e92863a2615e0335e06aec18d9c3ec1c5315d1a777  ${workdir}/sha256sum/3.txt
+      - run:
+          command: sha256sum -c ${workdir}/sha256sum/checksum.txt
+      - assert:
+          exit_code: 0
+          stdout:
+            equals: |
+              ${workdir}/sha256sum/1.txt: OK
+              ${workdir}/sha256sum/2.txt: OK
+              ${workdir}/sha256sum/3.txt: OK
+
+  - name: get sha256sum for pipe data
+    steps:
+      - run:
+          shell: true
+          command: echo "test" | sha256sum
+      - assert:
+          exit_code: 0
+          stdout:
+            equals: "f2ca1bb6c7e907d06dafe4687e579fce76b37e4e93b7605022da52e6ccc26fd2  -"
+
+  - name: get sha256sum for pipe data and file at same time
+    steps:
+      - fixture:
+          file: sha256sum/1.txt
+          content: "Dungeon of Regalias\n"
+      - run:
+          shell: true
+          command: echo "test" | sha256sum ${workdir}/sha256sum/1.txt
+      - assert:
+          exit_code: 0
+          stdout:
+            equals: "5f2864b5833190b07b0b95228682ff5ec43a13a2a3f31514c57d5c92aa3fb2e7  ${workdir}/sha256sum/1.txt"

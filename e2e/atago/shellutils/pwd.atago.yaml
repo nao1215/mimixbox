@@ -1,0 +1,16 @@
+# Migrated from mimixbox's ShellSpec test/it/spec/pwd_spec.sh (+ shellutils/pwd_test.sh).
+version: "1"
+
+suite:
+  name: mimixbox pwd
+
+scenarios:
+  - name: prints the working directory
+    steps:
+      - run:
+          shell: true
+          command: cd /tmp && pwd
+      - assert:
+          exit_code: 0
+          stdout:
+            equals: "/tmp"

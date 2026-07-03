@@ -1,0 +1,27 @@
+# Migrated from mimixbox's ShellSpec test/it/spec/help_helpers_findutils_spec.sh
+# (+ findutils/egrep_test.sh, findutils/fgrep_test.sh). The ShellSpec helpers
+# wrap the applet in `env -- '<name>' --help`; here the applet is on PATH so a
+# direct exec of `<name> --help` is equivalent.
+version: "1"
+
+suite:
+  name: mimixbox findutils help helpers
+
+scenarios:
+  - name: egrep --help is structured
+    steps:
+      - run:
+          command: egrep --help
+      - assert:
+          exit_code: 0
+          stdout:
+            contains: "Usage:"
+
+  - name: fgrep --help is structured
+    steps:
+      - run:
+          command: fgrep --help
+      - assert:
+          exit_code: 0
+          stdout:
+            contains: "Usage:"

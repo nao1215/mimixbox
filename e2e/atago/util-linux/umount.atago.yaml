@@ -1,0 +1,20 @@
+# Migrated from mimixbox's ShellSpec test/it/spec/umount_spec.sh.
+version: "1"
+
+suite:
+  name: mimixbox umount
+
+scenarios:
+  - name: fails for a target that is not mounted
+    steps:
+      - run:
+          command: umount /not/a/real/mountpoint
+      - assert:
+          exit_code: { not: 0 }
+
+  - name: requires a target
+    steps:
+      - run:
+          command: umount
+      - assert:
+          exit_code: { not: 0 }

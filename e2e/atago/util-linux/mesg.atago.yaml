@@ -1,0 +1,17 @@
+# Migrated from mimixbox's ShellSpec test/it/spec/mesg_spec.sh.
+# Under the e2e harness stdin is not a terminal, so mesg reports the error and
+# exits 2.
+version: "1"
+
+suite:
+  name: mimixbox mesg
+
+scenarios:
+  - name: reports an error when stdin is not a terminal
+    steps:
+      - run:
+          command: mesg
+      - assert:
+          exit_code: 2
+          stderr:
+            contains: "cannot get terminal name"

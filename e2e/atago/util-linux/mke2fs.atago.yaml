@@ -1,0 +1,31 @@
+# Migrated from mimixbox's ShellSpec test/it/spec/mke2fs_spec.sh.
+version: "1"
+
+suite:
+  name: mimixbox mke2fs / mkfs.ext2
+
+scenarios:
+  - name: writes the ext2 magic
+    steps:
+      # dd + od pipeline reading the superblock magic needs a shell.
+      - run:
+          shell: true
+          command: >
+            dd if=/dev/zero of=e.img bs=1024 count=1024 2>/dev/null;
+            mke2fs e.img >/dev/null;
+            dd if=e.img bs=1 skip=1080 count=2 2>/dev/null | od -An -tx1 | tr -d ' \n'
+      - assert:
+          exit_code: 0
+          stdout:
+            equals: "53ef"
+
+  - name: mkfs.ext2 refuses an oversized image
+    steps:
+      # Direct exec for the error case; the image is created first via a fixture.
+      - run:
+          shell: true
+          command: dd if=/dev/zero of=b.img bs=1024 count=10000 2>/dev/null
+      - run:
+          command: mkfs.ext2 b.img
+      - assert:
+          exit_code: { not: 0 }

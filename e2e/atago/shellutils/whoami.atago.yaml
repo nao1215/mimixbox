@@ -1,0 +1,27 @@
+# Migrated from mimixbox's ShellSpec test/it/spec/whoami_spec.sh (+ shellutils/whoami_test.sh).
+version: "1"
+
+suite:
+  name: mimixbox whoami
+
+scenarios:
+  - name: prints the current user name
+    steps:
+      # The original spec compares whoami's output against `id -un`; we do the
+      # same comparison inside the command so the test stays host-independent.
+      - run:
+          shell: true
+          command: '[ "$(whoami)" = "$(id -un)" ] && echo match'
+      - assert:
+          exit_code: 0
+          stdout:
+            equals: "match"
+
+  - name: reports an error with an extra operand
+    steps:
+      - run:
+          command: whoami extra
+      - assert:
+          exit_code: { not: 0 }
+          stderr:
+            equals: "whoami: extra operand 'extra'"

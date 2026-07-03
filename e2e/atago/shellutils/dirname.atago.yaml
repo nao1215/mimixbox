@@ -1,0 +1,95 @@
+# Migrated from mimixbox's ShellSpec test/it/spec/dirname_spec.sh (+ shellutils/dirname_test.sh).
+version: "1"
+
+suite:
+  name: mimixbox dirname
+
+scenarios:
+  - name: print /home/nao for an absolute file path
+    steps:
+      - run:
+          command: dirname "/home/nao/test.txt"
+      - assert:
+          exit_code: 0
+          stdout:
+            equals: "/home/nao"
+
+  - name: print /home/nao for a filename without extension
+    steps:
+      - run:
+          command: dirname "/home/nao/test"
+      - assert:
+          exit_code: 0
+          stdout:
+            equals: "/home/nao"
+
+  - name: print /home/nao for a hidden file
+    steps:
+      - run:
+          command: dirname "/home/nao/.test"
+      - assert:
+          exit_code: 0
+          stdout:
+            equals: "/home/nao"
+
+  - name: print error without operand
+    steps:
+      - run:
+          command: dirname
+      - assert:
+          exit_code: { not: 0 }
+          stderr:
+            equals: "dirname: missing operand"
+
+  - name: print / for the root directory
+    steps:
+      - run:
+          command: dirname "/"
+      - assert:
+          exit_code: 0
+          stdout:
+            equals: "/"
+
+  - name: print . for an empty string
+    steps:
+      - run:
+          command: dirname ""
+      - assert:
+          exit_code: 0
+          stdout:
+            equals: "."
+
+  - name: print /bin /home / with line feed for three arguments
+    steps:
+      - run:
+          command: dirname /bin/dirname /home/nao /home
+      - assert:
+          exit_code: 0
+          stdout:
+            equals: |
+              /bin
+              /home
+              /
+
+  - name: print NUL-separated dirnames for three arguments with -z
+    steps:
+      - run:
+          command: dirname -z /bin/dirname /home/nao /home
+      - assert:
+          exit_code: 0
+      # -z terminates each name with NUL. ShellSpec saw "/bin/home/" because
+      # $(...) strips NULs; atago captures the raw bytes, so assert the exact
+      # NUL-separated form with a regex.
+      - assert:
+          stdout:
+            matches: "^/bin\\x00/home\\x00/\\x00$"
+
+  - name: print /aaa/bbb/ccc built from an environment variable
+    steps:
+      - run:
+          shell: true
+          command: TEST_DIR="/aaa/bbb/ccc"; dirname $TEST_DIR/ddd.txt
+      - assert:
+          exit_code: 0
+          stdout:
+            equals: "/aaa/bbb/ccc"

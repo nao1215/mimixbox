@@ -1,0 +1,15 @@
+# Migrated from mimixbox's ShellSpec test/it/spec/arch_spec.sh (+ shellutils/arch_test.sh).
+version: "1"
+
+suite:
+  name: mimixbox arch
+
+scenarios:
+  - name: prints a non-empty machine name
+    steps:
+      - run:
+          command: arch
+      - assert:
+          exit_code: 0
+          stdout:
+            empty: false

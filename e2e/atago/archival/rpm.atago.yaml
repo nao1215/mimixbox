@@ -1,0 +1,42 @@
+# Migrated from mimixbox's ShellSpec test/it/spec/rpm_spec.sh (+ archival/rpm_test.sh).
+# Consumes a committed binary fixture sample.rpm (copied from mimixbox's
+# test/it/testdata/sample.rpm): a minimal RPM "hello-2.10-1.fc40.x86_64"
+# containing /usr/bin/hello and /etc/hello.conf with a "RPM-PAYLOAD" payload,
+# materialized into the workdir via fixture.from.
+version: "1"
+
+suite:
+  name: mimixbox rpm and rpm2cpio
+
+scenarios:
+  - name: queries the package identity with rpm -qp
+    steps:
+      - fixture: { file: sample.rpm, from: sample.rpm }
+      - run:
+          shell: true
+          command: rpm -qp sample.rpm
+      - assert:
+          exit_code: 0
+          stdout: { equals: "hello-2.10-1.fc40.x86_64" }
+
+  - name: lists package files with rpm -qpl
+    steps:
+      - fixture: { file: sample.rpm, from: sample.rpm }
+      - run:
+          shell: true
+          command: rpm -qpl sample.rpm
+      - assert:
+          exit_code: 0
+          stdout: { line: 1, equals: "/usr/bin/hello" }
+      - assert:
+          stdout: { line: 2, equals: "/etc/hello.conf" }
+
+  - name: extracts the payload with rpm2cpio
+    steps:
+      - fixture: { file: sample.rpm, from: sample.rpm }
+      - run:
+          shell: true
+          command: rpm2cpio sample.rpm
+      - assert:
+          exit_code: 0
+          stdout: { equals: "RPM-PAYLOAD" }

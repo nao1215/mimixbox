@@ -1,0 +1,23 @@
+# Migrated from mimixbox's ShellSpec test/it/spec/beep_spec.sh.
+# The console speaker needs a console and privilege; only the deterministic
+# invalid-option paths are exercised here.
+version: "1"
+
+suite:
+  name: mimixbox beep
+
+scenarios:
+  - name: rejects a non-positive frequency
+    steps:
+      # Error case → direct exec.
+      - run:
+          command: beep -f 0
+      - assert:
+          exit_code: 1
+
+  - name: rejects a zero repeat count
+    steps:
+      - run:
+          command: beep -r 0
+      - assert:
+          exit_code: 1

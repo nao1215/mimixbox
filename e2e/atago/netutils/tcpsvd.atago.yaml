@@ -1,0 +1,19 @@
+# Migrated from mimixbox's ShellSpec test/it/spec/tcpsvd_spec.sh (no helper; inline).
+# Universal --help contract (Issue #477): exit 0, "Usage: tcpsvd" on stdout,
+# empty stderr. Privileged/networked/destructive applet exercised via --help only.
+version: "1"
+
+suite:
+  name: mimixbox tcpsvd
+
+scenarios:
+  - name: describes itself with --help
+    steps:
+      - run:
+          command: tcpsvd --help
+      - assert:
+          exit_code: 0
+          stdout:
+            contains: "Usage: tcpsvd"
+          stderr:
+            empty: true

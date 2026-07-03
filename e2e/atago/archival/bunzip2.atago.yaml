@@ -1,0 +1,18 @@
+# Migrated from mimixbox's ShellSpec test/it/spec/bunzip2_spec.sh (+ archival/bunzip2_test.sh).
+# Setup bzip2-compresses a payload; bunzip2 -c decompresses it back to stdout.
+# Compressed bytes are binary, so build the .bz2 in-pipeline and assert the
+# decompressed payload (round-trip).
+version: "1"
+
+suite:
+  name: mimixbox bunzip2
+
+scenarios:
+  - name: decompresses a .bz2 file to stdout with -c
+    steps:
+      - run:
+          shell: true
+          command: printf 'bunzip2 payload' | bzip2 -c > data.bz2 && bunzip2 -c data.bz2
+      - assert:
+          exit_code: 0
+          stdout: { equals: "bunzip2 payload" }

@@ -1,0 +1,20 @@
+# Migrated from mimixbox's ShellSpec test/it/spec/killall5_spec.sh.
+# killall5 signals every process, so the e2e only exercises the non-destructive
+# --help path; the signal dispatch is covered by Go unit tests.
+version: "1"
+
+suite:
+  name: mimixbox killall5
+
+scenarios:
+  - name: describes itself with --help
+    # TestKillall5Help: killall5 --help (must include 'Usage: killall5' and 'signal')
+    steps:
+      - run:
+          command: killall5 --help
+      - assert:
+          exit_code: 0
+          stdout:
+            contains:
+              - "Usage: killall5"
+              - "signal"

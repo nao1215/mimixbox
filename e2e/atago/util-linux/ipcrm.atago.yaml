@@ -1,0 +1,21 @@
+# Migrated from mimixbox's ShellSpec test/it/spec/ipcrm_spec.sh.
+version: "1"
+
+suite:
+  name: mimixbox ipcrm
+
+scenarios:
+  - name: fails when nothing is requested
+    steps:
+      # ShellSpec asserted rc=1; direct exec on the error path.
+      - run:
+          command: ipcrm
+      - assert:
+          exit_code: { not: 0 }
+
+  - name: fails to remove a non-existent id
+    steps:
+      - run:
+          command: ipcrm -q 2147483647
+      - assert:
+          exit_code: { not: 0 }

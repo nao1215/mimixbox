@@ -1,0 +1,46 @@
+# Migrated from mimixbox's ShellSpec test/it/spec/bc_spec.sh (+ shellutils/bc_test.sh).
+version: "1"
+
+suite:
+  name: mimixbox bc
+
+scenarios:
+  - name: respects operator precedence
+    steps:
+      - run:
+          shell: true
+          command: echo '2 + 3 * 4' | bc
+      - assert:
+          exit_code: 0
+          stdout:
+            equals: "14"
+
+  - name: honors scale for division
+    steps:
+      - run:
+          shell: true
+          command: echo 'scale=2; 7/3' | bc
+      - assert:
+          exit_code: 0
+          stdout:
+            equals: "2.33"
+
+  - name: supports variables
+    steps:
+      - run:
+          shell: true
+          command: printf 'x = 5\nx * x\n' | bc
+      - assert:
+          exit_code: 0
+          stdout:
+            equals: "25"
+
+  - name: computes powers
+    steps:
+      - run:
+          shell: true
+          command: echo '2^10' | bc
+      - assert:
+          exit_code: 0
+          stdout:
+            equals: "1024"

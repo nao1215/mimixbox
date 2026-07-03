@@ -1,0 +1,24 @@
+# Migrated from mimixbox's ShellSpec test/it/spec/clear_spec.sh.
+version: "1"
+
+suite:
+  name: mimixbox clear
+
+scenarios:
+  - name: prints usage with --help and exits 0
+    steps:
+      - run:
+          command: clear --help
+      - assert:
+          exit_code: 0
+          stdout:
+            contains: "Usage: clear"
+
+  - name: exits 0 when clearing the screen
+    steps:
+      # The screen-clearing escape sequence is discarded; only the exit status
+      # matters for this contract test.
+      - run:
+          command: clear
+      - assert:
+          exit_code: 0

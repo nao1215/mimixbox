@@ -1,0 +1,18 @@
+# Migrated from mimixbox's ShellSpec test/it/spec/smemcap_spec.sh.
+version: "1"
+
+suite:
+  name: mimixbox smemcap
+
+scenarios:
+  - name: captures a tar containing meminfo
+    # TestSmemcap: smemcap > cap.tar; tar -tf cap.tar | grep -c '^meminfo$' -> '1'.
+    # Needs a redirect and a pipe, so shell: true. Assert the tar lists meminfo.
+    steps:
+      - run:
+          shell: true
+          command: smemcap > cap.tar; tar -tf cap.tar
+      - assert:
+          exit_code: 0
+          stdout:
+            matches: "(?m)^meminfo$"

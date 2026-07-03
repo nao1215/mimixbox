@@ -1,0 +1,64 @@
+# Migrated from mimixbox's ShellSpec test/it/spec/cmp_gnu_spec.sh (+ shellutils/cmp_gnu_test.sh).
+version: "1"
+
+suite:
+  name: mimixbox cmp (GNU options)
+
+scenarios:
+  - name: -n reports equality when the difference is past the byte limit
+    steps:
+      - fixture: { file: cmp_gnu/a.txt, content: "abcXdef" }
+      - fixture: { file: cmp_gnu/b.txt, content: "abcYdef" }
+      - run:
+          shell: true
+          command: cmp -n 3 cmp_gnu/a.txt cmp_gnu/b.txt; echo "rc=$?"
+      - assert:
+          exit_code: 0
+          stdout:
+            equals: "rc=0"
+
+  - name: --bytes reports the difference within the byte limit
+    steps:
+      - fixture: { file: cmp_gnu/a.txt, content: "abcXdef" }
+      - fixture: { file: cmp_gnu/b.txt, content: "abcYdef" }
+      # Direct exec so the failing single command surfaces its real exit code.
+      - run:
+          command: cmp --bytes=4 ${workdir}/cmp_gnu/a.txt ${workdir}/cmp_gnu/b.txt
+      - assert:
+          exit_code: { not: 0 }
+          stdout:
+            contains: "differ: byte 4, line 1"
+
+  - name: -i skips the first N bytes of both files
+    steps:
+      - fixture: { file: cmp_gnu/skip_a.txt, content: "XXXcommon" }
+      - fixture: { file: cmp_gnu/skip_b.txt, content: "YYYcommon" }
+      - run:
+          shell: true
+          command: cmp -i 3 cmp_gnu/skip_a.txt cmp_gnu/skip_b.txt; echo "rc=$?"
+      - assert:
+          exit_code: 0
+          stdout:
+            equals: "rc=0"
+
+  - name: -i N:M skips N bytes of file1 and M of file2
+    steps:
+      - fixture: { file: cmp_gnu/pair_a.txt, content: "_abZ" }
+      - fixture: { file: cmp_gnu/pair_b.txt, content: "___abQ" }
+      - run:
+          command: cmp -i 1:3 ${workdir}/cmp_gnu/pair_a.txt ${workdir}/cmp_gnu/pair_b.txt
+      - assert:
+          exit_code: { not: 0 }
+          stdout:
+            contains: "differ: byte 3, line 1"
+
+  - name: -b prints the differing byte values in the message
+    steps:
+      - fixture: { file: cmp_gnu/pb_a.txt, content: "first\nsecond\n" }
+      - fixture: { file: cmp_gnu/pb_b.txt, content: "first\nSECOND\n" }
+      - run:
+          command: cmp -b ${workdir}/cmp_gnu/pb_a.txt ${workdir}/cmp_gnu/pb_b.txt
+      - assert:
+          exit_code: { not: 0 }
+          stdout:
+            contains: "differ: byte 7, line 2 is 163 s 123 S"

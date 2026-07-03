@@ -1,0 +1,49 @@
+# Migrated from mimixbox's ShellSpec test/it/spec/tree_spec.sh (+ shellutils/tree_test.sh).
+version: "1"
+
+suite:
+  name: mimixbox tree / nice
+
+scenarios:
+  - name: tree counts directories and files in its summary
+    steps:
+      # tree's body uses multibyte box-drawing chars; we assert only the ASCII
+      # summary line, which confirms the traversal counted every entry.
+      - fixture:
+          file: sub/leaf.txt
+          content: ""
+      - fixture:
+          file: root.txt
+          content: ""
+      - run:
+          shell: true
+          command: tree ${workdir} | grep directories
+      - assert:
+          exit_code: 0
+          stdout:
+            equals: "2 directories, 2 files"
+
+  - name: tree exits successfully on a readable directory
+    steps:
+      - fixture:
+          file: sub/leaf.txt
+          content: ""
+      - fixture:
+          file: root.txt
+          content: ""
+      - run:
+          shell: true
+          command: tree ${workdir} > /dev/null; echo $?
+      - assert:
+          exit_code: 0
+          stdout:
+            equals: "0"
+
+  - name: nice prints a numeric niceness
+    steps:
+      - run:
+          command: nice
+      - assert:
+          exit_code: 0
+          stdout:
+            matches: "[0-9]"

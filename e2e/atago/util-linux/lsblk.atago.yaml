@@ -1,0 +1,29 @@
+# Migrated from mimixbox's ShellSpec test/it/spec/lsblk_spec.sh.
+version: "1"
+
+suite:
+  name: mimixbox lsblk
+
+scenarios:
+  - name: prints the column header
+    steps:
+      # lsblk | sed -n '1p' → the header line. Pipe requires shell:true.
+      - run:
+          shell: true
+          command: lsblk | sed -n '1p'
+      - assert:
+          exit_code: 0
+          stdout:
+            contains:
+              - "NAME"
+              - "SIZE"
+              - "TYPE"
+
+  - name: runs and exits successfully
+    steps:
+      # lsblk >/dev/null 2>&1 — redirect requires shell:true.
+      - run:
+          shell: true
+          command: lsblk >/dev/null 2>&1
+      - assert:
+          exit_code: 0

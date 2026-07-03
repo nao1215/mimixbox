@@ -1,0 +1,48 @@
+# Migrated from mimixbox's ShellSpec test/it/spec/halt_spec.sh
+# (+ pmutils/halt_test.sh). Running halt/poweroff/reboot without flags would stop
+# the machine, so the ShellSpec (and this port) only exercise --help / --version.
+# All helpers are single commands → direct exec.
+version: "1"
+
+suite:
+  name: mimixbox halt
+
+scenarios:
+  - name: halt --help prints usage and lists the options
+    steps:
+      - run:
+          command: halt --help
+      - assert:
+          exit_code: 0
+          stdout:
+            contains:
+              - "Usage: halt"
+              - "--poweroff"
+              - "--wtmp-only"
+
+  - name: poweroff --help prints usage
+    steps:
+      - run:
+          command: poweroff --help
+      - assert:
+          exit_code: 0
+          stdout:
+            contains: "Usage: poweroff"
+
+  - name: reboot --help prints usage
+    steps:
+      - run:
+          command: reboot --help
+      - assert:
+          exit_code: 0
+          stdout:
+            contains: "Usage: reboot"
+
+  - name: halt --version prints the version
+    steps:
+      - run:
+          command: halt --version
+      - assert:
+          exit_code: 0
+          stdout:
+            contains: "halt (mimixbox)"

@@ -1,0 +1,18 @@
+# Migrated from mimixbox's ShellSpec test/it/spec/depmod_spec.sh (no helper; inline --help contract).
+# Universal --help contract (Issue #477): exit 0, "Usage: depmod" on stdout, empty stderr.
+version: "1"
+
+suite:
+  name: mimixbox depmod
+
+scenarios:
+  - name: describes itself with --help
+    steps:
+      - run:
+          command: depmod --help
+      - assert:
+          exit_code: 0
+          stdout:
+            contains: "Usage: depmod"
+          stderr:
+            empty: true

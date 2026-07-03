@@ -1,0 +1,33 @@
+# Migrated from mimixbox's ShellSpec test/it/spec/lsof_spec.sh.
+version: "1"
+
+suite:
+  name: mimixbox lsof
+
+scenarios:
+  - name: lists the working directory of a process
+    # TestLsofSelf: lsof -p $$ | grep -c 'cwd' -> '1'
+    steps:
+      - run:
+          shell: true
+          command: lsof -p $$
+      - assert:
+          exit_code: 0
+          stdout:
+            contains: "cwd"
+
+  - name: prints the column header
+    # TestLsofHeader: lsof -p $$ | sed -n '1p' (must include 'COMMAND' and 'NAME')
+    steps:
+      - run:
+          shell: true
+          command: lsof -p $$
+      - assert:
+          exit_code: 0
+          stdout:
+            line: 1
+            contains: "COMMAND"
+      - assert:
+          stdout:
+            line: 1
+            contains: "NAME"

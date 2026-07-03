@@ -1,0 +1,33 @@
+# Migrated from mimixbox's ShellSpec test/it/spec/patch_spec.sh (+ editors/patch_test.sh).
+# Setup builds f.txt and a unified diff p.diff whose ---/+++ headers carry the
+# absolute path of f.txt; here fixtures build both, with ${workdir} expanded into
+# the diff headers so patch opens the file in the scenario workdir. patch is then
+# a simple single command -> direct exec.
+version: "1"
+
+suite:
+  name: mimixbox patch
+
+scenarios:
+  - name: applies a unified diff
+    steps:
+      - fixture: { file: f.txt, content: "one\ntwo\nthree\n" }
+      - fixture:
+          file: p.diff
+          content: |
+            --- ${workdir}/f.txt
+            +++ ${workdir}/f.txt
+            @@ -1,3 +1,3 @@
+             one
+            -two
+            +2
+             three
+      - run: { command: "patch -i p.diff" }
+      - assert:
+          exit_code: 0
+      - run:
+          shell: true
+          command: cat f.txt
+      - assert:
+          exit_code: 0
+          stdout: { equals: "one\n2\nthree" }

@@ -1,0 +1,39 @@
+# Migrated from mimixbox's ShellSpec test/it/spec/blkid_spec.sh.
+version: "1"
+
+suite:
+  name: mimixbox blkid
+
+scenarios:
+  - name: identifies an ext filesystem
+    steps:
+      # Craft an image with the ext superblock magic (0xEF53 at offset 1080).
+      - run:
+          shell: true
+          command: >-
+            dd if=/dev/zero of=ext.img bs=1024 count=2 2>/dev/null;
+            printf '\123\357' | dd of=ext.img bs=1 seek=1080 conv=notrunc 2>/dev/null;
+            blkid ext.img
+      - assert:
+          exit_code: 0
+          stdout:
+            contains: 'TYPE="ext2"'
+
+  - name: identifies an xfs filesystem
+    steps:
+      - run:
+          shell: true
+          command: printf 'XFSB' > xfs.img; blkid xfs.img
+      - assert:
+          exit_code: 0
+          stdout:
+            contains: 'TYPE="xfs"'
+
+  - name: exits 2 when nothing is identified
+    steps:
+      # ShellSpec captured "rc=2" via echo; here assert the exit code directly.
+      - run:
+          shell: true
+          command: printf 'nothing here' > blank.img; blkid blank.img
+      - assert:
+          exit_code: 2

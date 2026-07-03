@@ -7,29 +7,30 @@ on:
     branches: [main]
   workflow_dispatch:
 
+permissions:
+  contents: read
+
 jobs:
   integration_test:
     runs-on: ubuntu-latest
     timeout-minutes: 20
-    env:
-      SHELLSPEC_VERSION: "0.28.1"
     steps:
       - uses: actions/checkout@v6
+        with:
+          persist-credentials: false
 
       - name: Set up Go
         uses: actions/setup-go@v6
         with:
           go-version-file: go.mod
 
-      # Pin ShellSpec to a tagged release (instead of an unpinned `curl | sh`
-      # against master) so the integration job is reproducible.
-      - name: SetupShellScript
-        run: |
-          git clone --depth 1 --branch "${SHELLSPEC_VERSION}" https://github.com/shellspec/shellspec.git "$HOME/shellspec"
-          echo "$HOME/shellspec/bin" >> "$GITHUB_PATH"
+      - name: Install atago
+        uses: nao1215/setup-atago@e4b6719aea547a68e6c15252222babab7f492a88 # v0.1.1
+        with:
+          version: v0.2.0
 
-      # `make it` (test-e2e) builds MimixBox and stages its applet symlinks in an
-      # isolated PATH directory itself, so the workflow and the local target
-      # exercise the exact same hermetic environment.
+      # `make it` (e2e) builds MimixBox and stages its applets in an isolated
+      # PATH directory itself, so the workflow and the local target exercise
+      # the exact same hermetic environment.
       - name: IntegrationTest
         run: make it

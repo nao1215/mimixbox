@@ -1,0 +1,62 @@
+# Migrated from mimixbox's ShellSpec test/it/spec/touch_gnu_spec.sh (no helper; inline).
+# Issue #733: GNU flags for touch (--reference/-r, --date/-d, --time=WORD,
+# --no-dereference/-h). The mtime-comparison cases need a multi-step pipeline
+# (touch + stat + a test), so they use shell: true and run inside the isolated
+# ${workdir}. They read mtimes with the SYSTEM stat (/usr/bin/stat) and SYSTEM
+# date (/bin/date) by absolute path so the mimixbox applets on PATH don't shadow
+# them. The plain accept/reject flag cases use direct exec for faithful exit codes.
+version: "1"
+
+suite:
+  name: mimixbox touch GNU flags
+
+scenarios:
+  - name: copies the reference file mtime (--reference)
+    steps:
+      - run:
+          shell: true
+          command: ": > ref && : > dst && touch -d '2001-02-03 04:05:06' ref && touch --reference=ref dst && [ \"$(/usr/bin/stat -c '%Y' ref)\" = \"$(/usr/bin/stat -c '%Y' dst)\" ] && printf 'match'"
+      - assert:
+          exit_code: 0
+          stdout:
+            equals: "match"
+
+  - name: sets a known time with --date
+    steps:
+      - run:
+          shell: true
+          command: ": > f && touch -d '2020-06-15 12:34:56' f && [ \"$(/bin/date -d '2020-06-15 12:34:56' '+%s')\" = \"$(/usr/bin/stat -c '%Y' f)\" ] && printf 'match'"
+      - assert:
+          exit_code: 0
+          stdout:
+            equals: "match"
+
+  - name: accepts --time=atime without error
+    steps:
+      - run:
+          command: touch --time=atime g
+      - assert:
+          exit_code: 0
+          file:
+            path: g
+            exists: true
+
+  - name: rejects an invalid --time word
+    steps:
+      - run:
+          command: touch --time=bogus h
+      - assert:
+          exit_code:
+            not: 0
+          stderr:
+            contains: "invalid argument"
+
+  - name: changes the symlink itself with --no-dereference (-h)
+    steps:
+      - run:
+          shell: true
+          command: ": > target && touch -d '2005-05-05 05:05:05' target && ln -s target link && touch -h -d '2030-01-01 00:00:00' link && [ \"$(/bin/date -d '2005-05-05 05:05:05' '+%s')\" = \"$(/usr/bin/stat -c '%Y' target)\" ] && printf 'target-unchanged'"
+      - assert:
+          exit_code: 0
+          stdout:
+            equals: "target-unchanged"

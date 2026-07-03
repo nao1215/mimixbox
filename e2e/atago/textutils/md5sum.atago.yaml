@@ -1,0 +1,116 @@
+# Migrated from mimixbox's ShellSpec test/it/spec/md5sum_spec.sh (+ textutils/md5sum_test.sh).
+# The ShellSpec Setup created files under ${MIMIXBOX_IT_ROOT}/md5sum/; here fixtures
+# build them under the scenario workdir's md5sum/ subdir so the absolute paths the
+# applet prints (and the paths embedded in checksum.txt) reproduce exactly via
+# ${workdir}. atago expands ${workdir} in fixture content AND assertion values.
+# Error cases (directory / missing file) use direct exec so the real non-zero exit
+# is preserved (a shell wrapper would mask a single failing command's status).
+version: "1"
+
+suite:
+  name: mimixbox md5sum
+
+scenarios:
+  - name: get md5sum of one file
+    steps:
+      - fixture:
+          file: md5sum/1.txt
+          content: "Dungeon of Regalias\n"
+      - run:
+          command: md5sum ${workdir}/md5sum/1.txt
+      - assert:
+          exit_code: 0
+          stdout:
+            equals: "d0d8ffef81b3c7160ac655d5939548c5  ${workdir}/md5sum/1.txt"
+
+  - name: cannot get md5sum of one directory
+    steps:
+      - fixture:
+          file: md5sum/1.txt
+          content: "Dungeon of Regalias\n"
+      - run:
+          command: md5sum ${workdir}/md5sum
+      - assert:
+          exit_code: { not: 0 }
+          stderr:
+            equals: "md5sum: ${workdir}/md5sum: It is directory"
+
+  - name: cannot get md5sum of not exist file
+    steps:
+      - run:
+          command: md5sum /not_exist_file
+      - assert:
+          exit_code: { not: 0 }
+          stderr:
+            equals: "md5sum: /not_exist_file: No such file or directory"
+
+  - name: get md5sum of three files
+    steps:
+      - fixture:
+          file: md5sum/1.txt
+          content: "Dungeon of Regalias\n"
+      - fixture:
+          file: md5sum/2.txt
+          content: "DEMONION\n"
+      - fixture:
+          file: md5sum/3.txt
+          content: "Dungeon Crusadearz\n"
+      - run:
+          command: md5sum ${workdir}/md5sum/1.txt ${workdir}/md5sum/2.txt ${workdir}/md5sum/3.txt
+      - assert:
+          exit_code: 0
+          stdout:
+            equals: |
+              d0d8ffef81b3c7160ac655d5939548c5  ${workdir}/md5sum/1.txt
+              07e280ad4bd77b9321f0ce3386775019  ${workdir}/md5sum/2.txt
+              15e924f84517598e828f49dc85765bc5  ${workdir}/md5sum/3.txt
+
+  - name: check md5sum with --check option
+    steps:
+      - fixture:
+          file: md5sum/1.txt
+          content: "Dungeon of Regalias\n"
+      - fixture:
+          file: md5sum/2.txt
+          content: "DEMONION\n"
+      - fixture:
+          file: md5sum/3.txt
+          content: "Dungeon Crusadearz\n"
+      - fixture:
+          file: md5sum/checksum.txt
+          content: |
+            d0d8ffef81b3c7160ac655d5939548c5  ${workdir}/md5sum/1.txt
+            07e280ad4bd77b9321f0ce3386775019  ${workdir}/md5sum/2.txt
+            15e924f84517598e828f49dc85765bc5  ${workdir}/md5sum/3.txt
+      - run:
+          command: md5sum -c ${workdir}/md5sum/checksum.txt
+      - assert:
+          exit_code: 0
+          stdout:
+            equals: |
+              ${workdir}/md5sum/1.txt: OK
+              ${workdir}/md5sum/2.txt: OK
+              ${workdir}/md5sum/3.txt: OK
+
+  - name: get md5sum for pipe data
+    steps:
+      - run:
+          shell: true
+          command: echo "test" | md5sum
+      - assert:
+          exit_code: 0
+          stdout:
+            equals: "d8e8fca2dc0f896fd7cb4cb0031ba249  -"
+
+  - name: get md5sum for pipe data and file at same time
+    steps:
+      - fixture:
+          file: md5sum/1.txt
+          content: "Dungeon of Regalias\n"
+      - run:
+          shell: true
+          command: echo "test" | md5sum ${workdir}/md5sum/1.txt
+      - assert:
+          exit_code: 0
+          stdout:
+            equals: "d0d8ffef81b3c7160ac655d5939548c5  ${workdir}/md5sum/1.txt"

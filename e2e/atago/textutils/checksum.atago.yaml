@@ -1,0 +1,38 @@
+# Migrated from mimixbox's ShellSpec test/it/spec/checksum_spec.sh (+ textutils/checksum_test.sh).
+# These exercise the legacy/BSD-style checksum applets over stdin. Each helper is a
+# pipeline (printf | <applet>), so every run step needs shell: true.
+version: "1"
+
+suite:
+  name: mimixbox checksum
+
+scenarios:
+  - name: sum prints the BSD checksum and block count
+    steps:
+      - run:
+          shell: true
+          command: printf 'hello\n' | sum
+      - assert:
+          exit_code: 0
+          stdout:
+            equals: "36979     1"
+
+  - name: crc32 prints the CRC-32 of stdin
+    steps:
+      - run:
+          shell: true
+          command: printf 'hello\n' | crc32
+      - assert:
+          exit_code: 0
+          stdout:
+            equals: "363a3020  -"
+
+  - name: sha384sum prints the SHA-384 digest
+    steps:
+      - run:
+          shell: true
+          command: printf 'hello\n' | sha384sum
+      - assert:
+          exit_code: 0
+          stdout:
+            contains: "1d0f284efe3edea4b9ca3bd514fa134b17eae361ccc7a1eefeff801b9bd6604e"

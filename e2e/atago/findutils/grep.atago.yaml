@@ -1,0 +1,57 @@
+# Migrated from mimixbox's ShellSpec test/it/spec/grep_spec.sh (+ findutils/grep_test.sh).
+# Setup builds ${ROOT}/grep/fruits.txt; reproduced inline as a fixture. The
+# stdin cases pipe printf into grep, so they need shell:true. The no-match case
+# (exit 1) is a single pipeline.
+version: "1"
+
+suite:
+  name: mimixbox grep
+
+scenarios:
+  - name: matches lines from stdin
+    steps:
+      - run:
+          shell: true
+          command: printf 'one\ntwo\nthree\n' | grep two
+      - assert:
+          exit_code: 0
+          stdout:
+            equals: "two"
+
+  - name: matches lines from a file
+    steps:
+      - fixture:
+          file: fruits.txt
+          content: |
+            apple
+            banana
+            cherry
+      - run:
+          command: grep an ${workdir}/fruits.txt
+      - assert:
+          exit_code: 0
+          stdout:
+            equals: "banana"
+
+  - name: counts matching lines with -c
+    steps:
+      - fixture:
+          file: fruits.txt
+          content: |
+            apple
+            banana
+            cherry
+      - run:
+          command: grep -c a ${workdir}/fruits.txt
+      - assert:
+          exit_code: 0
+          stdout:
+            equals: "2"
+
+  - name: exits 1 when nothing matches
+    steps:
+      - run:
+          shell: true
+          command: printf 'x\n' | grep zzz
+      - assert:
+          exit_code: 1

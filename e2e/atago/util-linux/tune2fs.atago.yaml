@@ -1,0 +1,27 @@
+# Migrated from mimixbox's ShellSpec test/it/spec/tune2fs_spec.sh.
+version: "1"
+
+suite:
+  name: mimixbox tune2fs
+
+scenarios:
+  - name: rejects a non-ext image
+    steps:
+      - fixture:
+          file: bad.img
+          content: "not a filesystem"
+      - run:
+          command: tune2fs -l bad.img
+      - assert:
+          exit_code: { not: 0 }
+
+  - name: describes itself with --help
+    steps:
+      - run:
+          command: tune2fs --help
+      - assert:
+          exit_code: 0
+          stdout:
+            contains:
+              - "Usage: tune2fs"
+              - "filesystem"

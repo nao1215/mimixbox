@@ -1,0 +1,17 @@
+# Migrated from mimixbox's ShellSpec test/it/spec/logname_spec.sh (+ shellutils/logname_test.sh).
+version: "1"
+
+suite:
+  name: mimixbox logname
+
+scenarios:
+  - name: prints the login name from LOGNAME
+    steps:
+      # VAR=val prefix requires a shell.
+      - run:
+          shell: true
+          command: LOGNAME=mimixuser logname
+      - assert:
+          exit_code: 0
+          stdout:
+            equals: "mimixuser"

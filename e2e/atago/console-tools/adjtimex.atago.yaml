@@ -1,0 +1,18 @@
+# Migrated from mimixbox's ShellSpec test/it/spec/adjtimex_spec.sh (no helper; inline --help contract).
+# Universal --help contract (Issue #477): exit 0, "Usage: adjtimex" on stdout, empty stderr.
+version: "1"
+
+suite:
+  name: mimixbox adjtimex
+
+scenarios:
+  - name: describes itself with --help
+    steps:
+      - run:
+          command: adjtimex --help
+      - assert:
+          exit_code: 0
+          stdout:
+            contains: "Usage: adjtimex"
+          stderr:
+            empty: true

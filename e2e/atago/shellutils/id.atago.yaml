@@ -1,0 +1,29 @@
+# Migrated from mimixbox's ShellSpec test/it/spec/id_spec.sh (no helper; inline).
+# Universal --help contract (Issue #477) plus the current uid/gid line.
+version: "1"
+
+suite:
+  name: mimixbox id
+
+scenarios:
+  - name: describes itself with --help
+    steps:
+      - run:
+          command: id --help
+      - assert:
+          exit_code: 0
+          stdout:
+            contains: "Usage: id"
+          stderr:
+            empty: true
+
+  - name: prints the current uid/gid line
+    steps:
+      - run:
+          command: id
+      - assert:
+          exit_code: 0
+          stdout:
+            contains:
+              - "uid="
+              - "gid="

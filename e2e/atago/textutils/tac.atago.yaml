@@ -1,0 +1,49 @@
+# Migrated from mimixbox's ShellSpec test/it/spec/tac_spec.sh (+ textutils/tac_test.sh).
+# The ShellSpec Setup builds tac.txt (first/second/third) under MIMIXBOX_IT_ROOT;
+# here a fixture builds it in the scenario workdir and tac runs against it.
+version: "1"
+
+suite:
+  name: mimixbox tac
+
+scenarios:
+  - name: print the lines in reverse order
+    steps:
+      - fixture:
+          file: tac.txt
+          content: |
+            first
+            second
+            third
+      - run:
+          command: tac tac.txt
+      - assert:
+          exit_code: 0
+          stdout:
+            equals: |
+              third
+              second
+              first
+
+  - name: reverse standard input
+    steps:
+      - run:
+          shell: true
+          command: printf 'a\nb\nc\n' | tac
+      - assert:
+          exit_code: 0
+          stdout:
+            equals: |
+              c
+              b
+              a
+
+  - name: report an error for a non-existent file
+    steps:
+      # Single failing command: use direct exec to get the real non-zero exit.
+      - run:
+          command: tac /no_exist_file
+      - assert:
+          exit_code: { not: 0 }
+          stderr:
+            equals: "tac: /no_exist_file: no such file or directory"

@@ -1,0 +1,18 @@
+# Migrated from mimixbox's ShellSpec test/it/spec/posixer_spec.sh (+ shellutils/posixer_test.sh).
+version: "1"
+
+suite:
+  name: mimixbox posixer
+
+scenarios:
+  - name: prints a table header
+    steps:
+      - run:
+          shell: true
+          command: posixer | head -n 1
+      - assert:
+          exit_code: 0
+          stdout:
+            contains:
+              - "NAME"
+              - "INSTALLED"

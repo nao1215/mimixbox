@@ -1,0 +1,27 @@
+# Migrated from mimixbox's ShellSpec test/it/spec/kbd_mode_spec.sh.
+# Reading/setting the keyboard mode needs a console; only the deterministic
+# conflicting-options path and --help are exercised here.
+version: "1"
+
+suite:
+  name: mimixbox kbd_mode
+
+scenarios:
+  - name: rejects conflicting mode options
+    steps:
+      # Error case → direct exec.
+      - run:
+          command: kbd_mode -a -u
+      - assert:
+          exit_code: 1
+
+  - name: describes itself with --help
+    steps:
+      - run:
+          command: kbd_mode --help
+      - assert:
+          exit_code: 0
+          stdout:
+            contains:
+              - "Usage: kbd_mode"
+              - "keyboard"

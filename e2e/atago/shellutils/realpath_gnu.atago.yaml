@@ -1,0 +1,28 @@
+# Migrated from mimixbox's ShellSpec test/it/spec/realpath_gnu_spec.sh.
+# GNU relative/logical flags (issue #757): --relative-to, -L -m.
+version: "1"
+
+suite:
+  name: mimixbox realpath_gnu
+
+scenarios:
+  - name: prints a path relative to --relative-to
+    steps:
+      - fixture:
+          file: a/b/.keep
+          content: ""
+      - run:
+          command: realpath --relative-to ${workdir}/a ${workdir}/a/b
+      - assert:
+          exit_code: 0
+          stdout:
+            equals: "b"
+
+  - name: resolves .. lexically with -L -m
+    steps:
+      - run:
+          command: realpath -L -m /tmp/../etc/./hosts
+      - assert:
+          exit_code: 0
+          stdout:
+            equals: "/etc/hosts"

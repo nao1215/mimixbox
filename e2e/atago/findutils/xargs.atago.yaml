@@ -1,0 +1,37 @@
+# Migrated from mimixbox's ShellSpec test/it/spec/xargs_spec.sh (+ findutils/xargs_test.sh).
+# Every case pipes printf into xargs, so all use shell:true.
+version: "1"
+
+suite:
+  name: mimixbox xargs
+
+scenarios:
+  - name: appends stdin items to the command
+    steps:
+      - run:
+          shell: true
+          command: printf 'a b c\n' | xargs echo
+      - assert:
+          exit_code: 0
+          stdout:
+            equals: "a b c"
+
+  - name: splits into groups with -n
+    steps:
+      - run:
+          shell: true
+          command: printf '1 2 3 4\n' | xargs -n 2 echo | wc -l | tr -d ' '
+      - assert:
+          exit_code: 0
+          stdout:
+            equals: "2"
+
+  - name: substitutes with -I
+    steps:
+      - run:
+          shell: true
+          command: printf 'world\n' | xargs -I {} echo hello {}
+      - assert:
+          exit_code: 0
+          stdout:
+            equals: "hello world"

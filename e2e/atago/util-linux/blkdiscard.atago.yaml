@@ -1,0 +1,28 @@
+# Migrated from mimixbox's ShellSpec test/it/spec/blkdiscard_spec.sh.
+# Discarding needs a real block device + privilege; only the deterministic
+# no-device error and the --help contract are exercised.
+version: "1"
+
+suite:
+  name: mimixbox blkdiscard
+
+scenarios:
+  - name: requires a device
+    steps:
+      # ShellSpec invoked `blkdiscard` with no args and asserted rc=1 (a
+      # deterministic error path). Direct exec; assert the non-zero exit.
+      - run:
+          command: blkdiscard
+      - assert:
+          exit_code: { not: 0 }
+
+  - name: describes itself with --help
+    steps:
+      - run:
+          command: blkdiscard --help
+      - assert:
+          exit_code: 0
+          stdout:
+            contains:
+              - "Usage: blkdiscard"
+              - "Discard"

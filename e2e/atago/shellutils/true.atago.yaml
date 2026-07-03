@@ -1,0 +1,16 @@
+# Migrated from mimixbox's ShellSpec test/it/spec/true_spec.sh.
+version: "1"
+
+suite:
+  name: mimixbox true
+
+scenarios:
+  - name: prints nothing and exits 0
+    steps:
+      - run:
+          shell: true
+          command: true
+      - assert:
+          exit_code: 0
+          stdout:
+            empty: true

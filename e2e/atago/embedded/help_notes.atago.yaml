@@ -1,0 +1,166 @@
+# Migrated from mimixbox's ShellSpec test/it/spec/help_notes_spec.sh
+# (Parameters block, no helper). Issues #709-#720: every listed applet routes
+# --help through the structured renderer, exits 0, with line 1 'Usage: <app>'
+# and a 'Notes:' section. `[` and `[[` collide with shell builtins, so they
+# run through env to force the PATH applet. Cross-cutting spec; in embedded.
+version: "1"
+
+suite:
+  name: mimixbox --help Notes contract
+
+scenarios:
+  - name: acpid --help exposes the documented sections
+    steps:
+      - run:
+          command: "acpid --help"
+      - assert:
+          exit_code: 0
+          stdout:
+            line: 1
+            matches: "^Usage: acpid"
+      - assert:
+          stdout:
+            contains: "Notes:"
+
+  - name: brctl --help exposes the documented sections
+    steps:
+      - run:
+          command: "brctl --help"
+      - assert:
+          exit_code: 0
+          stdout:
+            line: 1
+            matches: "^Usage: brctl"
+      - assert:
+          stdout:
+            contains: "Notes:"
+
+  - name: crond --help exposes the documented sections
+    steps:
+      - run:
+          command: "crond --help"
+      - assert:
+          exit_code: 0
+          stdout:
+            line: 1
+            matches: "^Usage: crond"
+      - assert:
+          stdout:
+            contains: "Notes:"
+
+  - name: ifenslave --help exposes the documented sections
+    steps:
+      - run:
+          command: "ifenslave --help"
+      - assert:
+          exit_code: 0
+          stdout:
+            line: 1
+            matches: "^Usage: ifenslave"
+      - assert:
+          stdout:
+            contains: "Notes:"
+
+  - name: mkfs.reiser --help exposes the documented sections
+    steps:
+      - run:
+          command: "mkfs.reiser --help"
+      - assert:
+          exit_code: 0
+          stdout:
+            line: 1
+            matches: "^Usage: mkfs\\.reiser"
+      - assert:
+          stdout:
+            contains: "Notes:"
+
+  - name: nbd-client --help exposes the documented sections
+    steps:
+      - run:
+          command: "nbd-client --help"
+      - assert:
+          exit_code: 0
+          stdout:
+            line: 1
+            matches: "^Usage: nbd\\-client"
+      - assert:
+          stdout:
+            contains: "Notes:"
+
+  - name: ssl_server --help exposes the documented sections
+    steps:
+      - run:
+          command: "ssl_server --help"
+      - assert:
+          exit_code: 0
+          stdout:
+            line: 1
+            matches: "^Usage: ssl_server"
+      - assert:
+          stdout:
+            contains: "Notes:"
+
+  - name: tunctl --help exposes the documented sections
+    steps:
+      - run:
+          command: "tunctl --help"
+      - assert:
+          exit_code: 0
+          stdout:
+            line: 1
+            matches: "^Usage: tunctl"
+      - assert:
+          stdout:
+            contains: "Notes:"
+
+  - name: vconfig --help exposes the documented sections
+    steps:
+      - run:
+          command: "vconfig --help"
+      - assert:
+          exit_code: 0
+          stdout:
+            line: 1
+            matches: "^Usage: vconfig"
+      - assert:
+          stdout:
+            contains: "Notes:"
+
+  - name: zcip --help exposes the documented sections
+    steps:
+      - run:
+          command: "zcip --help"
+      - assert:
+          exit_code: 0
+          stdout:
+            line: 1
+            matches: "^Usage: zcip"
+      - assert:
+          stdout:
+            contains: "Notes:"
+
+  - name: "[ --help exposes the documented sections"
+    steps:
+      - run:
+          command: "env [ --help"
+      - assert:
+          exit_code: 0
+          stdout:
+            line: 1
+            matches: "^Usage: \\["
+      - assert:
+          stdout:
+            contains: "Notes:"
+
+  - name: "[[ --help exposes the documented sections"
+    steps:
+      - run:
+          command: "env [[ --help"
+      - assert:
+          exit_code: 0
+          stdout:
+            line: 1
+            matches: "^Usage: \\[\\["
+      - assert:
+          stdout:
+            contains: "Notes:"

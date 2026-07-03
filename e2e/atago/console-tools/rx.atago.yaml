@@ -1,0 +1,19 @@
+# Migrated from mimixbox's ShellSpec test/it/spec/rx_spec.sh (no helper; inline).
+# Universal --help contract (Issue #477): exit 0, "Usage: rx" on stdout,
+# empty stderr. Privileged/networked/destructive applet exercised via --help only.
+version: "1"
+
+suite:
+  name: mimixbox rx
+
+scenarios:
+  - name: describes itself with --help
+    steps:
+      - run:
+          command: rx --help
+      - assert:
+          exit_code: 0
+          stdout:
+            contains: "Usage: rx"
+          stderr:
+            empty: true

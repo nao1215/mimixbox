@@ -1,0 +1,27 @@
+# Migrated from mimixbox's ShellSpec test/it/spec/hostid_spec.sh (+ shellutils/hostid_test.sh).
+version: "1"
+
+suite:
+  name: mimixbox hostid
+
+scenarios:
+  - name: prints 8 hexadecimal digits
+    steps:
+      - run:
+          command: hostid
+      - assert:
+          exit_code: 0
+      # ShellSpec glob "[0-9a-f]{8}*" -> Go regex.
+      - assert:
+          stdout:
+            matches: "^[0-9a-f]{8}"
+
+  - name: prints the same value on repeated calls
+    steps:
+      - run:
+          shell: true
+          command: a=$(hostid); b=$(hostid); test "$a" = "$b" && echo "stable"
+      - assert:
+          exit_code: 0
+          stdout:
+            equals: "stable"

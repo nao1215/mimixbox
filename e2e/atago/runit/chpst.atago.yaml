@@ -1,0 +1,28 @@
+# Migrated from mimixbox's ShellSpec test/it/spec/chpst_spec.sh
+# (+ runit/chpst_test.sh). chpst -e DIR loads an environment directory and runs
+# a program with it; the no-program path is the deterministic failure.
+version: "1"
+
+suite:
+  name: mimixbox chpst
+
+scenarios:
+  - name: loads an environment directory
+    steps:
+      - fixture:
+          file: env/HELLO
+          content: |
+            world
+      - run:
+          command: chpst -e env sh -c 'echo "$HELLO"'
+      - assert:
+          exit_code: 0
+          stdout:
+            equals: "world"
+
+  - name: requires a program
+    steps:
+      - run:
+          command: chpst -o 64
+      - assert:
+          exit_code: { not: 0 }

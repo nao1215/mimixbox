@@ -1,0 +1,18 @@
+# Migrated from mimixbox's ShellSpec test/it/spec/httpd_spec.sh (no helper; inline --help contract).
+# Universal --help contract (Issue #477): exit 0, "Usage: httpd" on stdout, empty stderr.
+version: "1"
+
+suite:
+  name: mimixbox httpd
+
+scenarios:
+  - name: describes itself with --help
+    steps:
+      - run:
+          command: httpd --help
+      - assert:
+          exit_code: 0
+          stdout:
+            contains: "Usage: httpd"
+          stderr:
+            empty: true

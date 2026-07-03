@@ -1,0 +1,75 @@
+# Migrated from mimixbox's ShellSpec test/it/spec/mkfifo_spec.sh
+# (+ fileutils/mkfifo_test.sh). Setup makes an empty ${ROOT}/mkfifo dir (mode
+# 775); reproduced inside ${workdir}. The "permission string" assertions pipe
+# `ls -al | cut`, so they need shell:true. Error cases that only assert the
+# applet's own diagnostic use direct exec.
+version: "1"
+
+suite:
+  name: mimixbox mkfifo
+
+scenarios:
+  - name: make one named pipe with mode prw-r--r--
+    steps:
+      - run:
+          shell: true
+          command: mkdir -p mkfifo && chmod 775 mkfifo && mkfifo ${workdir}/mkfifo/1 && ls -al ${workdir}/mkfifo/1 | cut -f 1 -d " "
+      - assert:
+          exit_code: 0
+          stdout:
+            equals: "prw-r--r--"
+
+  - name: make three named pipes with mode prw-r--r--
+    steps:
+      - run:
+          shell: true
+          command: |
+            mkdir -p mkfifo && chmod 775 mkfifo
+            mkfifo ${workdir}/mkfifo/1 ${workdir}/mkfifo/2 ${workdir}/mkfifo/3
+            ls -al ${workdir}/mkfifo/1 | cut -f 1 -d " "
+            ls -al ${workdir}/mkfifo/2 | cut -f 1 -d " "
+            ls -al ${workdir}/mkfifo/3 | cut -f 1 -d " "
+      - assert:
+          exit_code: 0
+          stdout:
+            equals: |
+              prw-r--r--
+              prw-r--r--
+              prw-r--r--
+
+  - name: print error for a non-existent path
+    steps:
+      - run:
+          command: mkfifo /no_exist_path/fifo
+      - assert:
+          exit_code: { not: 0 }
+          stderr:
+            equals: "mkfifo: /no_exist_path/fifo: no such file or directory"
+
+  - name: print error when the same name already exists
+    steps:
+      - run:
+          shell: true
+          command: mkdir -p mkfifo && chmod 775 mkfifo && mkfifo ${workdir}/mkfifo/1
+      - run:
+          command: mkfifo ${workdir}/mkfifo/1
+      - assert:
+          exit_code: { not: 0 }
+          stderr:
+            equals: "mkfifo: can't make ${workdir}/mkfifo/1: already exist"
+
+  - name: make two pipes and report the one that failed
+    steps:
+      - run:
+          shell: true
+          command: |
+            mkdir -p mkfifo && chmod 775 mkfifo
+            mkfifo ${workdir}/mkfifo/1 /no_exist_path/fifo ${workdir}/mkfifo/3
+            ls ${workdir}/mkfifo
+      - assert:
+          stdout:
+            equals: |
+              1
+              3
+          stderr:
+            equals: "mkfifo: /no_exist_path/fifo: no such file or directory"

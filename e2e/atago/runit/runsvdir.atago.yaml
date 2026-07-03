@@ -1,0 +1,26 @@
+# Migrated from mimixbox's ShellSpec test/it/spec/runsvdir_spec.sh
+# (+ runit/runsvdir_test.sh). runsvdir supervises in the foreground until
+# interrupted; the e2e exercises the no-directory path and --help.
+version: "1"
+
+suite:
+  name: mimixbox runsvdir
+
+scenarios:
+  - name: requires a services directory
+    steps:
+      - run:
+          command: runsvdir
+      - assert:
+          exit_code: { not: 0 }
+
+  - name: describes itself with --help
+    steps:
+      - run:
+          command: runsvdir --help
+      - assert:
+          exit_code: 0
+          stdout:
+            contains:
+              - "Usage: runsvdir"
+              - "service"

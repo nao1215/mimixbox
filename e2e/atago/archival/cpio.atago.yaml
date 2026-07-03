@@ -1,0 +1,39 @@
+# Migrated from mimixbox's ShellSpec test/it/spec/cpio_spec.sh (+ archival/cpio_test.sh).
+# cpio -o builds an archive from a name list on stdin; cpio -i extracts it and
+# cpio -i -t lists it. Archive bytes are binary, so we assert the round-trip
+# payload and the listing.
+version: "1"
+
+suite:
+  name: mimixbox cpio
+
+scenarios:
+  - name: round-trips a file through -o and -i
+    steps:
+      - fixture: { file: in/file.txt, content: payload }
+      - run:
+          shell: true
+          command: |
+            cd in
+            printf 'file.txt\n' | cpio -o > ../arch.cpio
+            cd ..
+            mkdir -p out && cd out
+            cpio -i < ../arch.cpio
+            cat file.txt
+      - assert:
+          exit_code: 0
+          stdout: { equals: "payload" }
+
+  - name: lists archive contents with -i -t
+    steps:
+      - fixture: { file: in/file.txt, content: payload }
+      - run:
+          shell: true
+          command: |
+            cd in
+            printf 'file.txt\n' | cpio -o > ../arch2.cpio
+            cd ..
+            cpio -i -t < arch2.cpio
+      - assert:
+          exit_code: 0
+          stdout: { equals: "file.txt" }

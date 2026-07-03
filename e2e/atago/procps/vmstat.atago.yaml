@@ -1,0 +1,30 @@
+# Migrated from mimixbox's ShellSpec test/it/spec/vmstat_spec.sh.
+version: "1"
+
+suite:
+  name: mimixbox vmstat
+
+scenarios:
+  - name: prints the column header
+    # TestVmstatHeader: vmstat | sed -n '2p' (must include 'swpd' and 'free')
+    steps:
+      - run:
+          command: vmstat
+      - assert:
+          exit_code: 0
+          stdout:
+            contains:
+              - "swpd"
+              - "free"
+
+  - name: prints a numeric data row
+    # TestVmstatData: vmstat | sed -n '3p' | grep -cE '^[ 0-9]+$'
+    # The third line is the data row, all spaces/digits.
+    steps:
+      - run:
+          command: vmstat
+      - assert:
+          exit_code: 0
+          stdout:
+            line: 3
+            matches: "^[ 0-9]+$"

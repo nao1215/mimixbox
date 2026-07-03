@@ -1,0 +1,13 @@
+# Migrated from mimixbox's ShellSpec test/it/spec/lifegame_spec.sh (+ games/lifegame_test.sh).
+# lifegame --help prints usage and exits 0. Simple single command -> direct exec.
+version: "1"
+
+suite:
+  name: mimixbox lifegame CLI contract
+
+scenarios:
+  - name: prints usage with --help and exits 0
+    steps:
+      - run: { command: "lifegame --help" }
+      - assert: { exit_code: 0 }
+      - assert: { stdout: { contains: "Usage: lifegame" } }

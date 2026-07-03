@@ -1,0 +1,27 @@
+# Migrated from mimixbox's ShellSpec test/it/spec/fdformat_spec.sh.
+# Formatting needs a real floppy drive + privilege; the e2e exercises the
+# no-device path and --help. The format sequence is unit-tested.
+version: "1"
+
+suite:
+  name: mimixbox fdformat
+
+scenarios:
+  - name: requires a device
+    steps:
+      # ShellSpec asserted rc=1; direct exec on the error path.
+      - run:
+          command: fdformat
+      - assert:
+          exit_code: { not: 0 }
+
+  - name: describes itself with --help
+    steps:
+      - run:
+          command: fdformat --help
+      - assert:
+          exit_code: 0
+          stdout:
+            contains:
+              - "Usage: fdformat"
+              - "floppy"

@@ -1,0 +1,46 @@
+# Migrated from mimixbox's ShellSpec test/it/spec/cut_gnu_spec.sh (+ shellutils/cut_test.sh).
+version: "1"
+
+suite:
+  name: mimixbox cut (GNU options)
+
+scenarios:
+  - name: --complement keeps the fields not selected
+    steps:
+      - run:
+          shell: true
+          command: printf 'a,b,c\n' | cut -f 2 -d , --complement
+      - assert:
+          exit_code: 0
+          stdout:
+            equals: "a,c"
+
+  - name: --complement keeps the bytes not selected
+    steps:
+      - run:
+          shell: true
+          command: printf 'abcde\n' | cut -b 2-3 --complement
+      - assert:
+          exit_code: 0
+          stdout:
+            equals: "ade"
+
+  - name: -z splits and joins records on NUL (fields)
+    steps:
+      - run:
+          shell: true
+          command: printf 'a,b,c\000d,e,f\000' | cut -f 2 -d , -z | tr '\000' '|'
+      - assert:
+          exit_code: 0
+          stdout:
+            equals: "b|e|"
+
+  - name: -z cuts bytes from each NUL-delimited record
+    steps:
+      - run:
+          shell: true
+          command: printf 'abc\000def\000' | cut -b 1-2 -z | tr '\000' '|'
+      - assert:
+          exit_code: 0
+          stdout:
+            equals: "ab|de|"

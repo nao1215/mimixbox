@@ -1,0 +1,30 @@
+# Migrated from mimixbox's ShellSpec test/it/spec/tail_zero_spec.sh (no helper; inline).
+# Exercises tail's -z / --zero-terminated NUL-record splitting. The pipeline
+# renders the trailing NUL separator as '|' via tr so the result is text-safe,
+# so these scenarios need a real pipe (shell: true). The fixture holds two
+# NUL-delimited records, each with an embedded newline: "a\nb" and "c\nd".
+version: "1"
+
+suite:
+  name: mimixbox tail --zero-terminated
+
+scenarios:
+  - name: prints the last NUL-delimited record, preserving the embedded newline
+    steps:
+      - run:
+          shell: true
+          command: "printf 'a\\nb\\0c\\nd\\0' | tail -z -n 1 | tr '\\0' '|'"
+      - assert:
+          exit_code: 0
+          stdout:
+            equals: "c\nd|"
+
+  - name: prints two NUL-delimited records with embedded newlines preserved
+    steps:
+      - run:
+          shell: true
+          command: "printf 'a\\nb\\0c\\nd\\0' | tail --zero-terminated -n 2 | tr '\\0' '|'"
+      - assert:
+          exit_code: 0
+          stdout:
+            equals: "a\nb|c\nd|"

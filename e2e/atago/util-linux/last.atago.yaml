@@ -1,0 +1,26 @@
+# Migrated from mimixbox's ShellSpec test/it/spec/last_spec.sh.
+version: "1"
+
+suite:
+  name: mimixbox last
+
+scenarios:
+  - name: treats an empty wtmp as no history and exits 0
+    steps:
+      # An empty wtmp (/dev/null) means no history: last exits 0 with no output.
+      # ShellSpec wrapped it as "[$out] rc=$?"; reproduce with shell:true.
+      - run:
+          shell: true
+          command: out=$(last /dev/null); echo "[$out] rc=$?"
+      - assert:
+          exit_code: 0
+          stdout:
+            equals: "[] rc=0"
+
+  - name: fails on a missing wtmp file
+    steps:
+      # ShellSpec captured rc=1; assert the exit code directly.
+      - run:
+          command: last /no/such/mimixbox/wtmp
+      - assert:
+          exit_code: { not: 0 }

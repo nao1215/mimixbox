@@ -1,0 +1,26 @@
+# Migrated from mimixbox's ShellSpec test/it/spec/crond_spec.sh
+# (+ loginutils/crond_test.sh). crond -f runs until interrupted; the e2e
+# exercises the no-foreground rejection path and --help.
+version: "1"
+
+suite:
+  name: mimixbox crond
+
+scenarios:
+  - name: requires foreground mode
+    steps:
+      - run:
+          command: crond
+      - assert:
+          exit_code: { not: 0 }
+
+  - name: describes itself with --help
+    steps:
+      - run:
+          command: crond --help
+      - assert:
+          exit_code: 0
+          stdout:
+            contains:
+              - "Usage: crond"
+              - "cron"

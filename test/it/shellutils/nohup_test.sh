@@ -1,3 +1,0 @@
-TestNohupRuns() {
-    nohup echo hello
-}

@@ -1,0 +1,138 @@
+# Migrated from mimixbox's ShellSpec test/it/spec/nl_spec.sh (+ textutils/nl_test.sh).
+# The ShellSpec Setup builds nl.txt (sh/ash/csh/bash) and nl2.txt (fish/zsh) under
+# MIMIXBOX_IT_ROOT; here fixtures build them in the scenario workdir and nl runs
+# against the relative names. nl's "     N\t" numbering has leading spaces and a
+# tab, so exact output is a double-quoted scalar with \t/\n escapes.
+version: "1"
+
+suite:
+  name: mimixbox nl
+
+scenarios:
+  - name: number each line of a file
+    steps:
+      - fixture:
+          file: nl.txt
+          content: |
+            sh
+            ash
+            csh
+            bash
+      - run:
+          command: nl nl.txt
+      - assert:
+          exit_code: 0
+          stdout:
+            equals: "     1\tsh\n     2\tash\n     3\tcsh\n     4\tbash"
+
+  - name: number the single line read from pipe data
+    steps:
+      - fixture:
+          file: nl.txt
+          content: |
+            sh
+            ash
+            csh
+            bash
+      # echo the path into nl from a pipe; nl numbers that one line.
+      - run:
+          shell: true
+          command: echo "${workdir}/nl.txt" | nl
+      - assert:
+          exit_code: 0
+          stdout:
+            equals: "     1\t${workdir}/nl.txt"
+
+  - name: number only the file operand, ignoring pipe data
+    steps:
+      - fixture:
+          file: nl.txt
+          content: |
+            sh
+            ash
+            csh
+            bash
+      - run:
+          shell: true
+          command: echo "${workdir}/nl.txt" | nl nl.txt
+      - assert:
+          exit_code: 0
+          stdout:
+            equals: "     1\tsh\n     2\tash\n     3\tcsh\n     4\tbash"
+
+  - name: number lines across two files
+    steps:
+      - fixture:
+          file: nl.txt
+          content: |
+            sh
+            ash
+            csh
+            bash
+      - fixture:
+          file: nl2.txt
+          content: |
+            fish
+            zsh
+      - run:
+          command: nl nl.txt nl2.txt
+      - assert:
+          exit_code: 0
+          stdout:
+            equals: "     1\tsh\n     2\tash\n     3\tcsh\n     4\tbash\n     5\tfish\n     6\tzsh"
+
+  - name: number heredoc then file via a redirect
+    steps:
+      - fixture:
+          file: nl.txt
+          content: |
+            sh
+            ash
+            csh
+            bash
+      # nl reads stdin (the heredoc) plus the file operand, redirecting the
+      # numbered output to nl2.txt; cat then shows it. Needs shell:true for the
+      # heredoc + redirect.
+      - run:
+          shell: true
+          command: |
+            nl - << EOS nl.txt > nl2.txt
+            fish
+            zsh
+            EOS
+            cat nl2.txt
+      - assert:
+          stdout:
+            equals: "     1\tfish\n     2\tzsh\n     3\tsh\n     4\tash\n     5\tcsh\n     6\tbash"
+
+  - name: number heredoc then file via a redirect with success status
+    steps:
+      - fixture:
+          file: nl.txt
+          content: |
+            sh
+            ash
+            csh
+            bash
+      - run:
+          shell: true
+          command: |
+            nl - << EOS nl.txt > nl2.txt
+            fish
+            zsh
+            EOS
+            cat nl2.txt
+      - assert:
+          exit_code: 0
+          stdout:
+            equals: "     1\tfish\n     2\tzsh\n     3\tsh\n     4\tash\n     5\tcsh\n     6\tbash"
+
+  - name: report an error for a non-existent file
+    steps:
+      # Single failing command: use direct exec to get the real non-zero exit.
+      - run:
+          command: nl no_exist_file
+      - assert:
+          exit_code: { not: 0 }
+          stderr:
+            equals: "nl: no_exist_file: no such file or directory"

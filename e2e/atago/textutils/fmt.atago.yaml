@@ -1,0 +1,18 @@
+# Migrated from mimixbox's ShellSpec test/it/spec/fmt_spec.sh (+ textutils/fmt_test.sh).
+version: "1"
+
+suite:
+  name: mimixbox fmt
+
+scenarios:
+  - name: reflows text to the given width
+    steps:
+      - run:
+          shell: true
+          command: printf 'aa bb cc dd\n' | fmt -w 5
+      - assert:
+          exit_code: 0
+          stdout:
+            equals: |
+              aa bb
+              cc dd

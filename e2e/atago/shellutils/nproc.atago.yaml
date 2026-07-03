@@ -1,0 +1,15 @@
+# Migrated from mimixbox's ShellSpec test/it/spec/nproc_spec.sh (+ shellutils/nproc_test.sh).
+version: "1"
+
+suite:
+  name: mimixbox nproc
+
+scenarios:
+  - name: prints a positive number
+    steps:
+      - run:
+          command: nproc
+      - assert:
+          exit_code: 0
+          stdout:
+            matches: "^[0-9]+\\n?$"

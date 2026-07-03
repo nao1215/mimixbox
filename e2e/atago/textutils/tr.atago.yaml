@@ -1,0 +1,16 @@
+# Migrated from mimixbox's ShellSpec test/it/spec/tr_spec.sh (+ textutils/tr_test.sh).
+version: "1"
+
+suite:
+  name: mimixbox tr
+
+scenarios:
+  - name: translates lowercase to uppercase
+    steps:
+      - run:
+          shell: true
+          command: printf 'abc\n' | tr a-z A-Z
+      - assert:
+          exit_code: 0
+          stdout:
+            equals: "ABC"

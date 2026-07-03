@@ -1,0 +1,21 @@
+# Migrated from mimixbox's ShellSpec test/it/spec/pipe_progress_spec.sh.
+# Universal --help contract (Issue #477): exit 0, "Usage: pipe_progress" on stdout,
+# empty stderr. Privileged/networked/destructive applets are exercised via
+# --help only so the suite never reboots, formats, loads modules, or touches
+# the network.
+version: "1"
+
+suite:
+  name: mimixbox pipe_progress
+
+scenarios:
+  - name: describes itself with --help
+    steps:
+      - run:
+          command: pipe_progress --help
+      - assert:
+          exit_code: 0
+          stdout:
+            contains: "Usage: pipe_progress"
+          stderr:
+            empty: true

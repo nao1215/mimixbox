@@ -1,0 +1,111 @@
+# Migrated from mimixbox's ShellSpec test/it/spec/help_helpers_archival_spec.sh
+# (+ archival/<cmd>_test.sh). Each helper runs `<cmd> --help` (the ShellSpec
+# `env -- '<cmd>' --help`) and asserts a structured help banner. Simple single
+# commands -> direct exec, no shell.
+version: "1"
+
+suite:
+  name: mimixbox archival commands expose a dedicated --help helper
+
+scenarios:
+  - name: bzcat --help is structured
+    steps:
+      - run: { command: "bzcat --help" }
+      - assert: { exit_code: 0 }
+      - assert: { stdout: { contains: "Usage:" } }
+
+  - name: bzip2 --help is structured
+    steps:
+      - run: { command: "bzip2 --help" }
+      - assert: { exit_code: 0 }
+      - assert: { stdout: { contains: "Usage:" } }
+
+  - name: dpkg --help is structured
+    steps:
+      - run: { command: "dpkg --help" }
+      - assert: { exit_code: 0 }
+      - assert: { stdout: { contains: "Usage:" } }
+
+  - name: dpkg-deb --help is structured
+    steps:
+      - run: { command: "dpkg-deb --help" }
+      - assert: { exit_code: 0 }
+      - assert: { stdout: { contains: "Usage:" } }
+
+  - name: lzcat --help is structured
+    steps:
+      - run: { command: "lzcat --help" }
+      - assert: { exit_code: 0 }
+      - assert: { stdout: { contains: "Usage:" } }
+
+  - name: lzma --help is structured
+    steps:
+      - run: { command: "lzma --help" }
+      - assert: { exit_code: 0 }
+      - assert: { stdout: { contains: "Usage:" } }
+
+  - name: lzopcat --help is structured
+    steps:
+      - run: { command: "lzopcat --help" }
+      - assert: { exit_code: 0 }
+      - assert: { stdout: { contains: "Usage:" } }
+
+  - name: pipe_progress --help is structured
+    steps:
+      - run: { command: "pipe_progress --help" }
+      - assert: { exit_code: 0 }
+      - assert: { stdout: { contains: "Usage:" } }
+
+  - name: rpm2cpio --help is structured
+    steps:
+      - run: { command: "rpm2cpio --help" }
+      - assert: { exit_code: 0 }
+      - assert: { stdout: { contains: "Usage:" } }
+
+  - name: uncompress --help is structured
+    steps:
+      - run: { command: "uncompress --help" }
+      - assert: { exit_code: 0 }
+      - assert: { stdout: { contains: "Usage:" } }
+
+  - name: unlzma --help is structured
+    steps:
+      - run: { command: "unlzma --help" }
+      - assert: { exit_code: 0 }
+      - assert: { stdout: { contains: "Usage:" } }
+
+  - name: unlzop --help is structured
+    steps:
+      - run: { command: "unlzop --help" }
+      - assert: { exit_code: 0 }
+      - assert: { stdout: { contains: "Usage:" } }
+
+  - name: unxz --help is structured
+    steps:
+      - run: { command: "unxz --help" }
+      - assert: { exit_code: 0 }
+      - assert: { stdout: { contains: "Usage:" } }
+
+  - name: unzip --help is structured
+    steps:
+      - run: { command: "unzip --help" }
+      - assert: { exit_code: 0 }
+      - assert: { stdout: { contains: "Usage:" } }
+
+  - name: xz --help is structured
+    steps:
+      - run: { command: "xz --help" }
+      - assert: { exit_code: 0 }
+      - assert: { stdout: { contains: "Usage:" } }
+
+  - name: xzcat --help is structured
+    steps:
+      - run: { command: "xzcat --help" }
+      - assert: { exit_code: 0 }
+      - assert: { stdout: { contains: "Usage:" } }
+
+  - name: zcat --help is structured
+    steps:
+      - run: { command: "zcat --help" }
+      - assert: { exit_code: 0 }
+      - assert: { stdout: { contains: "Usage:" } }

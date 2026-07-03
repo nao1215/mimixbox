@@ -1,0 +1,27 @@
+# Migrated from mimixbox's ShellSpec test/it/spec/seedrng_spec.sh (no helper; inline).
+# Universal --help contract (Issue #477) plus a help-content assertion.
+version: "1"
+
+suite:
+  name: mimixbox seedrng
+
+scenarios:
+  - name: describes itself with --help
+    steps:
+      - run:
+          command: seedrng --help
+      - assert:
+          exit_code: 0
+          stdout:
+            contains: "Usage: seedrng"
+          stderr:
+            empty: true
+
+  - name: documents its purpose in --help
+    steps:
+      - run:
+          command: seedrng --help
+      - assert:
+          exit_code: 0
+          stdout:
+            contains: "boot seed"

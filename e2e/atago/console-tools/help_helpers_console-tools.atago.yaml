@@ -1,0 +1,108 @@
+# Migrated from mimixbox's ShellSpec test/it/spec/help_helpers_console-tools_spec.sh.
+# Per-command --help contract specs for console-tools commands (issue #489).
+# Each helper runs `env -- <cmd> --help` and asserts the structured --help
+# (status success, output includes 'Usage:').
+version: "1"
+
+suite:
+  name: mimixbox console-tools --help contract
+
+scenarios:
+  - name: adjtimex --help is structured
+    steps:
+      - run:
+          command: adjtimex --help
+      - assert:
+          exit_code: 0
+          stdout:
+            contains: "Usage:"
+
+  - name: conspy --help is structured
+    steps:
+      - run:
+          command: conspy --help
+      - assert:
+          exit_code: 0
+          stdout:
+            contains: "Usage:"
+
+  - name: dumpkmap --help is structured
+    steps:
+      - run:
+          command: dumpkmap --help
+      - assert:
+          exit_code: 0
+          stdout:
+            contains: "Usage:"
+
+  - name: less --help is structured
+    steps:
+      - run:
+          command: less --help
+      - assert:
+          exit_code: 0
+          stdout:
+            contains: "Usage:"
+
+  - name: loadfont --help is structured
+    steps:
+      - run:
+          command: loadfont --help
+      - assert:
+          exit_code: 0
+          stdout:
+            contains: "Usage:"
+
+  - name: loadkmap --help is structured
+    steps:
+      - run:
+          command: loadkmap --help
+      - assert:
+          exit_code: 0
+          stdout:
+            contains: "Usage:"
+
+  - name: microcom --help is structured
+    steps:
+      - run:
+          command: microcom --help
+      - assert:
+          exit_code: 0
+          stdout:
+            contains: "Usage:"
+
+  - name: more --help is structured
+    steps:
+      - run:
+          command: more --help
+      - assert:
+          exit_code: 0
+          stdout:
+            contains: "Usage:"
+
+  - name: openvt --help is structured
+    steps:
+      - run:
+          command: openvt --help
+      - assert:
+          exit_code: 0
+          stdout:
+            contains: "Usage:"
+
+  - name: rx --help is structured
+    steps:
+      - run:
+          command: rx --help
+      - assert:
+          exit_code: 0
+          stdout:
+            contains: "Usage:"
+
+  - name: setfont --help is structured
+    steps:
+      - run:
+          command: setfont --help
+      - assert:
+          exit_code: 0
+          stdout:
+            contains: "Usage:"

@@ -1,0 +1,19 @@
+# Migrated from mimixbox's ShellSpec test/it/spec/xzcat_spec.sh (no helper; inline).
+# Universal --help contract (Issue #477): exit 0, "Usage: xzcat" on stdout,
+# empty stderr. Privileged/networked/destructive applet exercised via --help only.
+version: "1"
+
+suite:
+  name: mimixbox xzcat
+
+scenarios:
+  - name: describes itself with --help
+    steps:
+      - run:
+          command: xzcat --help
+      - assert:
+          exit_code: 0
+          stdout:
+            contains: "Usage: xzcat"
+          stderr:
+            empty: true

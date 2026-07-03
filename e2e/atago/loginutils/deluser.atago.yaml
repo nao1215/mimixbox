@@ -1,0 +1,26 @@
+# Migrated from mimixbox's ShellSpec test/it/spec/deluser_spec.sh
+# (+ loginutils/deluser_test.sh). Writing the account databases needs privilege;
+# the e2e exercises the no-argument path and --help.
+version: "1"
+
+suite:
+  name: mimixbox deluser
+
+scenarios:
+  - name: requires a user name
+    steps:
+      - run:
+          command: deluser
+      - assert:
+          exit_code: { not: 0 }
+
+  - name: describes itself with --help
+    steps:
+      - run:
+          command: deluser --help
+      - assert:
+          exit_code: 0
+          stdout:
+            contains:
+              - "Usage: deluser"
+              - "user"

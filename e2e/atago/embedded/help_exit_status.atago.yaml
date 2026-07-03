@@ -1,0 +1,490 @@
+# Migrated from mimixbox's ShellSpec test/it/spec/help_exit_status_spec.sh
+# (Parameters block, no helper). Issues #661-#697: every listed applet routes
+# --help through the structured renderer, exits 0, with line 1 'Usage: <app>'
+# and an 'Exit status:' section. Cross-cutting spec kept in embedded.
+version: "1"
+
+suite:
+  name: mimixbox --help exit-status contract
+
+scenarios:
+  - name: ash --help exposes the documented sections
+    steps:
+      - run:
+          command: "ash --help"
+      - assert:
+          exit_code: 0
+          stdout:
+            line: 1
+            matches: "^Usage: ash"
+      - assert:
+          stdout:
+            contains: "Exit status:"
+
+  - name: bash --help exposes the documented sections
+    steps:
+      - run:
+          command: "bash --help"
+      - assert:
+          exit_code: 0
+          stdout:
+            line: 1
+            matches: "^Usage: bash"
+      - assert:
+          stdout:
+            contains: "Exit status:"
+
+  - name: bc --help exposes the documented sections
+    steps:
+      - run:
+          command: "bc --help"
+      - assert:
+          exit_code: 0
+          stdout:
+            line: 1
+            matches: "^Usage: bc"
+      - assert:
+          stdout:
+            contains: "Exit status:"
+
+  - name: busybox --help exposes the documented sections
+    steps:
+      - run:
+          command: "busybox --help"
+      - assert:
+          exit_code: 0
+          stdout:
+            line: 1
+            matches: "^Usage: busybox"
+      - assert:
+          stdout:
+            contains: "Exit status:"
+
+  - name: cttyhack --help exposes the documented sections
+    steps:
+      - run:
+          command: "cttyhack --help"
+      - assert:
+          exit_code: 0
+          stdout:
+            line: 1
+            matches: "^Usage: cttyhack"
+      - assert:
+          stdout:
+            contains: "Exit status:"
+
+  - name: dc --help exposes the documented sections
+    steps:
+      - run:
+          command: "dc --help"
+      - assert:
+          exit_code: 0
+          stdout:
+            line: 1
+            matches: "^Usage: dc"
+      - assert:
+          stdout:
+            contains: "Exit status:"
+
+  - name: ed --help exposes the documented sections
+    steps:
+      - run:
+          command: "ed --help"
+      - assert:
+          exit_code: 0
+          stdout:
+            line: 1
+            matches: "^Usage: ed"
+      - assert:
+          stdout:
+            contains: "Exit status:"
+
+  - name: hd --help exposes the documented sections
+    steps:
+      - run:
+          command: "hd --help"
+      - assert:
+          exit_code: 0
+          stdout:
+            line: 1
+            matches: "^Usage: hd"
+      - assert:
+          stdout:
+            contains: "Exit status:"
+
+  - name: hexdump --help exposes the documented sections
+    steps:
+      - run:
+          command: "hexdump --help"
+      - assert:
+          exit_code: 0
+          stdout:
+            line: 1
+            matches: "^Usage: hexdump"
+      - assert:
+          stdout:
+            contains: "Exit status:"
+
+  - name: hush --help exposes the documented sections
+    steps:
+      - run:
+          command: "hush --help"
+      - assert:
+          exit_code: 0
+          stdout:
+            line: 1
+            matches: "^Usage: hush"
+      - assert:
+          stdout:
+            contains: "Exit status:"
+
+  - name: iostat --help exposes the documented sections
+    steps:
+      - run:
+          command: "iostat --help"
+      - assert:
+          exit_code: 0
+          stdout:
+            line: 1
+            matches: "^Usage: iostat"
+      - assert:
+          stdout:
+            contains: "Exit status:"
+
+  - name: ipcs --help exposes the documented sections
+    steps:
+      - run:
+          command: "ipcs --help"
+      - assert:
+          exit_code: 0
+          stdout:
+            line: 1
+            matches: "^Usage: ipcs"
+      - assert:
+          stdout:
+            contains: "Exit status:"
+
+  - name: last --help exposes the documented sections
+    steps:
+      - run:
+          command: "last --help"
+      - assert:
+          exit_code: 0
+          stdout:
+            line: 1
+            matches: "^Usage: last"
+      - assert:
+          stdout:
+            contains: "Exit status:"
+
+  - name: less --help exposes the documented sections
+    steps:
+      - run:
+          command: "less --help"
+      - assert:
+          exit_code: 0
+          stdout:
+            line: 1
+            matches: "^Usage: less"
+      - assert:
+          stdout:
+            contains: "Exit status:"
+
+  - name: lsblk --help exposes the documented sections
+    steps:
+      - run:
+          command: "lsblk --help"
+      - assert:
+          exit_code: 0
+          stdout:
+            line: 1
+            matches: "^Usage: lsblk"
+      - assert:
+          stdout:
+            contains: "Exit status:"
+
+  - name: lspci --help exposes the documented sections
+    steps:
+      - run:
+          command: "lspci --help"
+      - assert:
+          exit_code: 0
+          stdout:
+            line: 1
+            matches: "^Usage: lspci"
+      - assert:
+          stdout:
+            contains: "Exit status:"
+
+  - name: lsusb --help exposes the documented sections
+    steps:
+      - run:
+          command: "lsusb --help"
+      - assert:
+          exit_code: 0
+          stdout:
+            line: 1
+            matches: "^Usage: lsusb"
+      - assert:
+          stdout:
+            contains: "Exit status:"
+
+  - name: mbsh --help exposes the documented sections
+    steps:
+      - run:
+          command: "mbsh --help"
+      - assert:
+          exit_code: 0
+          stdout:
+            line: 1
+            matches: "^Usage: mbsh"
+      - assert:
+          stdout:
+            contains: "Exit status:"
+
+  - name: minips --help exposes the documented sections
+    steps:
+      - run:
+          command: "minips --help"
+      - assert:
+          exit_code: 0
+          stdout:
+            line: 1
+            matches: "^Usage: minips"
+      - assert:
+          stdout:
+            contains: "Exit status:"
+
+  - name: more --help exposes the documented sections
+    steps:
+      - run:
+          command: "more --help"
+      - assert:
+          exit_code: 0
+          stdout:
+            line: 1
+            matches: "^Usage: more"
+      - assert:
+          stdout:
+            contains: "Exit status:"
+
+  - name: mpstat --help exposes the documented sections
+    steps:
+      - run:
+          command: "mpstat --help"
+      - assert:
+          exit_code: 0
+          stdout:
+            line: 1
+            matches: "^Usage: mpstat"
+      - assert:
+          stdout:
+            contains: "Exit status:"
+
+  - name: nmeter --help exposes the documented sections
+    steps:
+      - run:
+          command: "nmeter --help"
+      - assert:
+          exit_code: 0
+          stdout:
+            line: 1
+            matches: "^Usage: nmeter"
+      - assert:
+          stdout:
+            contains: "Exit status:"
+
+  - name: pipe_progress --help exposes the documented sections
+    steps:
+      - run:
+          command: "pipe_progress --help"
+      - assert:
+          exit_code: 0
+          stdout:
+            line: 1
+            matches: "^Usage: pipe_progress"
+      - assert:
+          stdout:
+            contains: "Exit status:"
+
+  - name: powertop --help exposes the documented sections
+    steps:
+      - run:
+          command: "powertop --help"
+      - assert:
+          exit_code: 0
+          stdout:
+            line: 1
+            matches: "^Usage: powertop"
+      - assert:
+          stdout:
+            contains: "Exit status:"
+
+  - name: ps --help exposes the documented sections
+    steps:
+      - run:
+          command: "ps --help"
+      - assert:
+          exit_code: 0
+          stdout:
+            line: 1
+            matches: "^Usage: ps"
+      - assert:
+          stdout:
+            contains: "Exit status:"
+
+  - name: pstree --help exposes the documented sections
+    steps:
+      - run:
+          command: "pstree --help"
+      - assert:
+          exit_code: 0
+          stdout:
+            line: 1
+            matches: "^Usage: pstree"
+      - assert:
+          stdout:
+            contains: "Exit status:"
+
+  - name: sh --help exposes the documented sections
+    steps:
+      - run:
+          command: "sh --help"
+      - assert:
+          exit_code: 0
+          stdout:
+            line: 1
+            matches: "^Usage: sh"
+      - assert:
+          stdout:
+            contains: "Exit status:"
+
+  - name: smemcap --help exposes the documented sections
+    steps:
+      - run:
+          command: "smemcap --help"
+      - assert:
+          exit_code: 0
+          stdout:
+            line: 1
+            matches: "^Usage: smemcap"
+      - assert:
+          stdout:
+            contains: "Exit status:"
+
+  - name: top --help exposes the documented sections
+    steps:
+      - run:
+          command: "top --help"
+      - assert:
+          exit_code: 0
+          stdout:
+            line: 1
+            matches: "^Usage: top"
+      - assert:
+          stdout:
+            contains: "Exit status:"
+
+  - name: uptime --help exposes the documented sections
+    steps:
+      - run:
+          command: "uptime --help"
+      - assert:
+          exit_code: 0
+          stdout:
+            line: 1
+            matches: "^Usage: uptime"
+      - assert:
+          stdout:
+            contains: "Exit status:"
+
+  - name: users --help exposes the documented sections
+    steps:
+      - run:
+          command: "users --help"
+      - assert:
+          exit_code: 0
+          stdout:
+            line: 1
+            matches: "^Usage: users"
+      - assert:
+          stdout:
+            contains: "Exit status:"
+
+  - name: uudecode --help exposes the documented sections
+    steps:
+      - run:
+          command: "uudecode --help"
+      - assert:
+          exit_code: 0
+          stdout:
+            line: 1
+            matches: "^Usage: uudecode"
+      - assert:
+          stdout:
+            contains: "Exit status:"
+
+  - name: uuencode --help exposes the documented sections
+    steps:
+      - run:
+          command: "uuencode --help"
+      - assert:
+          exit_code: 0
+          stdout:
+            line: 1
+            matches: "^Usage: uuencode"
+      - assert:
+          stdout:
+            contains: "Exit status:"
+
+  - name: vi --help exposes the documented sections
+    steps:
+      - run:
+          command: "vi --help"
+      - assert:
+          exit_code: 0
+          stdout:
+            line: 1
+            matches: "^Usage: vi"
+      - assert:
+          stdout:
+            contains: "Exit status:"
+
+  - name: vmstat --help exposes the documented sections
+    steps:
+      - run:
+          command: "vmstat --help"
+      - assert:
+          exit_code: 0
+          stdout:
+            line: 1
+            matches: "^Usage: vmstat"
+      - assert:
+          stdout:
+            contains: "Exit status:"
+
+  - name: w --help exposes the documented sections
+    steps:
+      - run:
+          command: "w --help"
+      - assert:
+          exit_code: 0
+          stdout:
+            line: 1
+            matches: "^Usage: w"
+      - assert:
+          stdout:
+            contains: "Exit status:"
+
+  - name: wall --help exposes the documented sections
+    steps:
+      - run:
+          command: "wall --help"
+      - assert:
+          exit_code: 0
+          stdout:
+            line: 1
+            matches: "^Usage: wall"
+      - assert:
+          stdout:
+            contains: "Exit status:"

@@ -1,0 +1,38 @@
+# Migrated from mimixbox's ShellSpec test/it/spec/sum_spec.sh (no helper; inline).
+# Universal --help contract (Issue #477) plus the BSD checksum behavior.
+# ShellSpec's `Data 'hello'` feeds "hello\n" on stdin, so sum checksums 6 bytes.
+version: "1"
+
+suite:
+  name: mimixbox sum
+
+scenarios:
+  - name: describes itself with --help
+    steps:
+      - run:
+          command: sum --help
+      - assert:
+          exit_code: 0
+          stdout:
+            contains: "Usage: sum"
+          stderr:
+            empty: true
+
+  - name: documents its purpose in --help
+    steps:
+      - run:
+          command: sum --help
+      - assert:
+          exit_code: 0
+          stdout:
+            contains: "BSD algorithm"
+
+  - name: prints a BSD checksum and block count for stdin
+    steps:
+      - run:
+          command: sum
+          stdin: "hello\n"
+      - assert:
+          exit_code: 0
+          stdout:
+            equals: "36979     1"

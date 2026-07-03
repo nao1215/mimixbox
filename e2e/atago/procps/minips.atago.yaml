@@ -1,0 +1,28 @@
+# Migrated from mimixbox's ShellSpec test/it/spec/minips_spec.sh.
+version: "1"
+
+suite:
+  name: mimixbox minips
+
+scenarios:
+  - name: prints the PID/USER/COMMAND header
+    # TestMinipsHeader: minips | sed -n '1p' | grep -c 'COMMAND'
+    steps:
+      - run:
+          command: minips
+      - assert:
+          exit_code: 0
+          stdout:
+            line: 1
+            contains: "COMMAND"
+
+  - name: lists processes
+    # TestMinipsRows: minips | grep -cE '^[0-9]+' (must not equal 0).
+    # Assert the real output contains at least one numeric PID row.
+    steps:
+      - run:
+          command: minips
+      - assert:
+          exit_code: 0
+          stdout:
+            matches: "(?m)^[0-9]+"

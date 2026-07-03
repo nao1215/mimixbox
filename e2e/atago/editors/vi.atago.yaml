@@ -1,0 +1,109 @@
+# Migrated from mimixbox's ShellSpec test/it/spec/vi_spec.sh (+ editors/vi_test.sh).
+# Setup builds a.txt/b.txt; per-scenario fixtures build the files each case edits.
+# Each helper drives vi with a keystroke script containing ESC (\033) and CR (\r)
+# control bytes, then reads the edited file back. The pipe + control-byte printf +
+# `cat` chain needs a shell; printf produces the exact bytes ShellSpec sent.
+version: "1"
+
+suite:
+  name: mimixbox vi
+
+scenarios:
+  - name: deletes a character and writes the file
+    steps:
+      - fixture: { file: a.txt, content: "hello\nworld\n" }
+      - run:
+          shell: true
+          command: |
+            printf 'x:wq\r' | vi a.txt
+            cat a.txt
+      - assert:
+          exit_code: 0
+          stdout: { equals: "ello\nworld" }
+
+  - name: inserts text and writes the file
+    steps:
+      - fixture: { file: b.txt, content: "bar\n" }
+      - run:
+          shell: true
+          command: |
+            printf 'ifoo\033:wq\r' | vi b.txt
+            cat b.txt
+      - assert:
+          exit_code: 0
+          stdout: { equals: "foobar" }
+
+  - name: creates a new file
+    steps:
+      - run:
+          shell: true
+          command: |
+            printf 'icreated\033:wq\r' | vi new.txt
+            cat new.txt
+      - assert:
+          exit_code: 0
+          stdout: { equals: "created" }
+
+  - name: treats an arrow-key escape sequence as a motion, not an edit
+    steps:
+      # Up-arrow (ESC [ A) must not be treated as 'A' (append); the file with the
+      # following '!' must stay unchanged after :wq.
+      - fixture: { file: a.txt, content: "hello\nworld\n" }
+      - run:
+          shell: true
+          command: |
+            printf '\033[A!\033:wq\r' | vi a.txt
+            cat a.txt
+      - assert:
+          exit_code: 0
+          stdout: { equals: "hello\nworld" }
+
+  - name: duplicates a line with yy then p
+    steps:
+      - fixture: { file: yp.txt, content: "one\ntwo\n" }
+      - run:
+          shell: true
+          command: |
+            printf 'yyp:wq\r' | vi yp.txt
+            cat yp.txt
+      - assert:
+          exit_code: 0
+          stdout: { equals: "one\none\ntwo" }
+
+  - name: applies a count to an edit (2x)
+    steps:
+      - fixture: { file: cd.txt, content: "abcdef\n" }
+      - run:
+          shell: true
+          command: |
+            printf '2x:wq\r' | vi cd.txt
+            cat cd.txt
+      - assert:
+          exit_code: 0
+          stdout: { equals: "cdef" }
+
+  - name: undoes the last change with u
+    steps:
+      - fixture: { file: u.txt, content: "keepme\n" }
+      - run:
+          shell: true
+          command: |
+            printf 'xu:wq\r' | vi u.txt
+            cat u.txt
+      - assert:
+          exit_code: 0
+          stdout: { equals: "keepme" }
+
+  - name: searches with /pattern and moves to the next match with n
+    steps:
+      # /foo lands on the first match (line 2); n moves to the next (line 4); dd
+      # deletes that line.
+      - fixture: { file: sn.txt, content: "x\nfoo\ny\nfoo\nz\n" }
+      - run:
+          shell: true
+          command: |
+            printf '/foo\rndd:wq\r' | vi sn.txt
+            cat sn.txt
+      - assert:
+          exit_code: 0
+          stdout: { equals: "x\nfoo\ny\nz" }

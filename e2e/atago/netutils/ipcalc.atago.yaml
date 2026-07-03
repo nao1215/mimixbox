@@ -1,0 +1,28 @@
+# Migrated from mimixbox's ShellSpec test/it/spec/ipcalc_spec.sh.
+# Universal --help contract (Issue #477) plus a check that --help documents the
+# applet's purpose.
+version: "1"
+
+suite:
+  name: mimixbox ipcalc
+
+scenarios:
+  - name: describes itself with --help
+    steps:
+      - run:
+          command: ipcalc --help
+      - assert:
+          exit_code: 0
+          stdout:
+            contains: "Usage: ipcalc"
+          stderr:
+            empty: true
+
+  - name: documents its purpose in --help
+    steps:
+      - run:
+          command: ipcalc --help
+      - assert:
+          exit_code: 0
+          stdout:
+            contains: "IPv4 network parameters"

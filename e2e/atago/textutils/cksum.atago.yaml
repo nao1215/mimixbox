@@ -1,0 +1,16 @@
+# Migrated from mimixbox's ShellSpec test/it/spec/cksum_spec.sh (+ textutils/cksum_test.sh).
+version: "1"
+
+suite:
+  name: mimixbox cksum
+
+scenarios:
+  - name: prints the CRC checksum and byte count
+    steps:
+      - run:
+          shell: true
+          command: printf 'hello\n' | cksum
+      - assert:
+          exit_code: 0
+          stdout:
+            equals: "3015617425 6"

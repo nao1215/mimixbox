@@ -1,0 +1,32 @@
+# Migrated from mimixbox's ShellSpec test/it/spec/fdisk_spec.sh.
+version: "1"
+
+suite:
+  name: mimixbox fdisk
+
+scenarios:
+  - name: lists an MBR Linux partition
+    steps:
+      # Build a tiny MBR with one Linux partition using printf, then list it.
+      - run:
+          shell: true
+          command: >-
+            dd if=/dev/zero of=disk.img bs=512 count=1 2>/dev/null;
+            printf '\203' | dd of=disk.img bs=1 seek=450 count=1 conv=notrunc 2>/dev/null;
+            printf '\000\010\000\000' | dd of=disk.img bs=1 seek=454 count=4 conv=notrunc 2>/dev/null;
+            printf '\144\000\000\000' | dd of=disk.img bs=1 seek=458 count=4 conv=notrunc 2>/dev/null;
+            printf '\125\252' | dd of=disk.img bs=1 seek=510 count=2 conv=notrunc 2>/dev/null;
+            fdisk -l disk.img | grep -c 'Linux'
+      - assert:
+          exit_code: 0
+          stdout:
+            equals: "1"
+
+  - name: rejects an image without an MBR signature
+    steps:
+      # ShellSpec captured rc=1; assert the exit code directly.
+      - run:
+          shell: true
+          command: dd if=/dev/zero of=n.img bs=512 count=1 2>/dev/null; fdisk -l n.img
+      - assert:
+          exit_code: { not: 0 }

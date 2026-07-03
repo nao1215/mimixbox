@@ -1,0 +1,26 @@
+# Migrated from mimixbox's ShellSpec test/it/spec/df_spec.sh (+ shellutils/df_test.sh).
+version: "1"
+
+suite:
+  name: mimixbox df
+
+scenarios:
+  - name: shows the column header
+    steps:
+      - run:
+          shell: true
+          command: df . | head -n 1
+      - assert:
+          exit_code: 0
+          stdout:
+            contains: "Filesystem"
+
+  - name: exits zero for the current directory
+    steps:
+      - run:
+          shell: true
+          command: df . > /dev/null; echo "rc=$?"
+      - assert:
+          exit_code: 0
+          stdout:
+            equals: "rc=0"

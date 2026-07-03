@@ -1,1 +1,0 @@
-TestPwd() { cd /tmp && pwd; }

@@ -1,0 +1,55 @@
+# Migrated from mimixbox's ShellSpec test/it/spec/touch_spec.sh (+ fileutils/touch_test.sh).
+# Setup makes an empty ${ROOT}/touch dir; reproduced inside ${workdir}. The
+# multi-file cases ls each created file in turn (shell:true). The failing case
+# tries to touch an unwritable absolute /touch/2.txt; direct exec on that single
+# failing command is not possible because it is preceded by setup, so shell:true.
+version: "1"
+
+suite:
+  name: mimixbox touch
+
+scenarios:
+  - name: make one file
+    steps:
+      - run:
+          shell: true
+          command: mkdir -p touch && touch ${workdir}/touch/touch.txt && ls ${workdir}/touch/touch.txt
+      - assert:
+          exit_code: 0
+          stdout:
+            equals: "${workdir}/touch/touch.txt"
+
+  - name: make three files at the same time
+    steps:
+      - run:
+          shell: true
+          command: |
+            mkdir -p touch
+            touch ${workdir}/touch/1.txt ${workdir}/touch/2.txt ${workdir}/touch/3.txt
+            ls ${workdir}/touch/1.txt
+            ls ${workdir}/touch/2.txt
+            ls ${workdir}/touch/3.txt
+      - assert:
+          exit_code: 0
+          stdout:
+            equals: |
+              ${workdir}/touch/1.txt
+              ${workdir}/touch/2.txt
+              ${workdir}/touch/3.txt
+
+  - name: make two files and fail to make one at an unwritable path
+    steps:
+      - run:
+          shell: true
+          command: |
+            mkdir -p touch
+            touch ${workdir}/touch/1.txt /touch/2.txt ${workdir}/touch/3.txt
+            ls ${workdir}/touch/1.txt
+            ls ${workdir}/touch/3.txt
+      - assert:
+          stdout:
+            equals: |
+              ${workdir}/touch/1.txt
+              ${workdir}/touch/3.txt
+          stderr:
+            equals: "touch: open /touch/2.txt: no such file or directory"

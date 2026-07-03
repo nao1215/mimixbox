@@ -1,0 +1,19 @@
+# Migrated from mimixbox's ShellSpec test/it/spec/scriptreplay_spec.sh (no helper; inline).
+# Universal --help contract (Issue #477): exit 0, "Usage: scriptreplay" on stdout,
+# empty stderr. Privileged/networked/destructive applet exercised via --help only.
+version: "1"
+
+suite:
+  name: mimixbox scriptreplay
+
+scenarios:
+  - name: describes itself with --help
+    steps:
+      - run:
+          command: scriptreplay --help
+      - assert:
+          exit_code: 0
+          stdout:
+            contains: "Usage: scriptreplay"
+          stderr:
+            empty: true

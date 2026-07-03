@@ -1,0 +1,57 @@
+# Migrated from mimixbox's ShellSpec test/it/spec/getfattr_spec.sh
+# (+ embedded/getfattr_test.sh). getfattr dumps extended attributes; the
+# round-trip sets a user attr with setfattr first. On a filesystem without xattr
+# support the helper prints a 'user.demo (skipped: ...)' line, so 'user.demo' is
+# present either way.
+version: "1"
+
+suite:
+  name: mimixbox getfattr
+
+scenarios:
+  - name: dumps a user attribute set by setfattr (or skips without xattr support)
+    steps:
+      - fixture: { file: file.txt, content: "" }
+      # Helper falls back to a printed 'skipped' line when xattrs are unsupported;
+      # the '||' / fallback makes this a shell pipeline -> shell:true. Either path
+      # produces a line containing 'user.demo'.
+      - run:
+          shell: true
+          command: |
+            if ! setfattr -n user.demo -v hello file.txt 2>/dev/null; then
+                echo "user.demo (skipped: filesystem has no xattr support)"
+            else
+                getfattr -d file.txt | grep 'user.demo'
+            fi
+      - assert:
+          exit_code: 0
+          stdout:
+            contains: "user.demo"
+
+  - name: fails when no file operand is given
+    steps:
+      # Error case -> direct exec.
+      - run:
+          command: getfattr
+      - assert:
+          exit_code: { not: 0 }
+          stderr:
+            contains: "file operand"
+
+  - name: prints usage for --help
+    steps:
+      - run:
+          command: getfattr --help
+      - assert:
+          exit_code: 0
+          stdout:
+            contains: "Usage: getfattr"
+
+  - name: prints the version line for --version
+    steps:
+      - run:
+          command: getfattr --version
+      - assert:
+          exit_code: 0
+          stdout:
+            contains: "getfattr (mimixbox)"

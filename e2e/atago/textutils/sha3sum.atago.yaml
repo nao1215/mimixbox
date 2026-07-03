@@ -1,0 +1,28 @@
+# Migrated from mimixbox's ShellSpec test/it/spec/sha3sum_spec.sh (helper:
+# textutils/checksum_test.sh, TestSha3Default / TestSha3_512). Both helpers are
+# pipelines (printf | sha3sum | cut), so every run step needs shell: true.
+version: "1"
+
+suite:
+  name: mimixbox sha3sum
+
+scenarios:
+  - name: defaults to SHA3-256
+    steps:
+      - run:
+          shell: true
+          command: printf 'hello\n' | sha3sum | cut -d' ' -f1
+      - assert:
+          exit_code: 0
+          stdout:
+            equals: "b314e28493eae9dab57ac4f0c6d887bddbbeb810e900d818395ace558e96516d"
+
+  - name: selects SHA3-512 with -a
+    steps:
+      - run:
+          shell: true
+          command: printf 'hello\n' | sha3sum -a 512 | cut -c1-16
+      - assert:
+          exit_code: 0
+          stdout:
+            equals: "ac766ba623301e0a"

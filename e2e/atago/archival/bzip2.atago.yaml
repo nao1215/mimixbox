@@ -1,0 +1,18 @@
+# Migrated from mimixbox's ShellSpec test/it/spec/bzip2_spec.sh (no helper; inline --help contract).
+# Universal --help contract (Issue #477): exit 0, "Usage: bzip2" on stdout, empty stderr.
+version: "1"
+
+suite:
+  name: mimixbox bzip2
+
+scenarios:
+  - name: describes itself with --help
+    steps:
+      - run:
+          command: bzip2 --help
+      - assert:
+          exit_code: 0
+          stdout:
+            contains: "Usage: bzip2"
+          stderr:
+            empty: true

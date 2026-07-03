@@ -1,0 +1,51 @@
+# Migrated from mimixbox's ShellSpec test/it/spec/expand_spec.sh (+ textutils/expand_test.sh).
+# The ShellSpec Setup builds expand.txt under MIMIXBOX_IT_ROOT; here a fixture
+# builds it in the scenario workdir and expand runs against the relative name.
+version: "1"
+
+suite:
+  name: mimixbox expand
+
+scenarios:
+  - name: converts tabs to spaces (default tab stop 8)
+    steps:
+      - run:
+          shell: true
+          command: printf 'a\tb\n' | expand
+      - assert:
+          exit_code: 0
+          stdout:
+            equals: "a       b"
+
+  - name: converts tabs to the given width
+    steps:
+      - run:
+          shell: true
+          command: printf 'a\tb\n' | expand -t 4
+      - assert:
+          exit_code: 0
+          stdout:
+            equals: "a   b"
+
+  - name: converts tabs in the file
+    steps:
+      - fixture:
+          file: expand.txt
+          content: "a\tb\n"
+      - run:
+          shell: true
+          command: expand expand.txt
+      - assert:
+          exit_code: 0
+          stdout:
+            equals: "a       b"
+
+  # Error case: direct exec so the real non-zero exit code surfaces.
+  - name: reports an error for a non-existent file
+    steps:
+      - run:
+          command: expand /no_exist_file
+      - assert:
+          exit_code: { not: 0 }
+          stderr:
+            equals: "expand: /no_exist_file: no such file or directory"

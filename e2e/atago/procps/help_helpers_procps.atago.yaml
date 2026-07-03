@@ -1,0 +1,89 @@
+# Migrated from mimixbox's ShellSpec test/it/spec/help_helpers_procps_spec.sh.
+# Per-command --help contract specs (issue #489): each helper runs
+# `env -- '<cmd>' --help` and asserts the output includes 'Usage:'.
+version: "1"
+
+suite:
+  name: mimixbox procps --help contract
+
+scenarios:
+  - name: depmod --help is structured
+    steps:
+      - run:
+          command: depmod --help
+      - assert:
+          exit_code: 0
+          stdout:
+            contains: "Usage:"
+
+  - name: insmod --help is structured
+    steps:
+      - run:
+          command: insmod --help
+      - assert:
+          exit_code: 0
+          stdout:
+            contains: "Usage:"
+
+  - name: lsmod --help is structured
+    steps:
+      - run:
+          command: lsmod --help
+      - assert:
+          exit_code: 0
+          stdout:
+            contains: "Usage:"
+
+  - name: modinfo --help is structured
+    steps:
+      - run:
+          command: modinfo --help
+      - assert:
+          exit_code: 0
+          stdout:
+            contains: "Usage:"
+
+  - name: modprobe --help is structured
+    steps:
+      - run:
+          command: modprobe --help
+      - assert:
+          exit_code: 0
+          stdout:
+            contains: "Usage:"
+
+  - name: pkill --help is structured
+    steps:
+      - run:
+          command: pkill --help
+      - assert:
+          exit_code: 0
+          stdout:
+            contains: "Usage:"
+
+  - name: pwdx --help is structured
+    steps:
+      - run:
+          command: pwdx --help
+      - assert:
+          exit_code: 0
+          stdout:
+            contains: "Usage:"
+
+  - name: rmmod --help is structured
+    steps:
+      - run:
+          command: rmmod --help
+      - assert:
+          exit_code: 0
+          stdout:
+            contains: "Usage:"
+
+  - name: uptime --help is structured
+    steps:
+      - run:
+          command: uptime --help
+      - assert:
+          exit_code: 0
+          stdout:
+            contains: "Usage:"

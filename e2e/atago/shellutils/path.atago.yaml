@@ -1,0 +1,51 @@
+# Migrated from mimixbox's ShellSpec test/it/spec/path_spec.sh (+ shellutils/path_test.sh).
+version: "1"
+
+suite:
+  name: mimixbox path
+
+scenarios:
+  - name: prints the base name with --basename
+    steps:
+      - run:
+          command: path -b /home/nao/test.txt
+      - assert:
+          exit_code: 0
+          stdout:
+            equals: "test.txt"
+
+  - name: prints the directory with --dirname
+    steps:
+      - run:
+          command: path -d /home/nao/test.txt
+      - assert:
+          exit_code: 0
+          stdout:
+            equals: "/home/nao"
+
+  - name: prints the extension with --extension
+    steps:
+      - run:
+          command: path -e /home/nao/test.txt
+      - assert:
+          exit_code: 0
+          stdout:
+            equals: ".txt"
+
+  - name: prints the cleaned path with --canonical
+    steps:
+      - run:
+          command: path -c /home/nao/../nao/./test.txt
+      - assert:
+          exit_code: 0
+          stdout:
+            equals: "/home/nao/test.txt"
+
+  - name: reports an error with no operand
+    steps:
+      - run:
+          command: path
+      - assert:
+          exit_code: { not: 0 }
+          stderr:
+            equals: "path: missing operand"

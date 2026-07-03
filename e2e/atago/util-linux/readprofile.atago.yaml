@@ -1,0 +1,18 @@
+# Migrated from mimixbox's ShellSpec test/it/spec/readprofile_spec.sh.
+# /proc/profile is absent unless booted with profiling, so e2e tests --help.
+version: "1"
+
+suite:
+  name: mimixbox readprofile
+
+scenarios:
+  - name: describes itself with --help
+    steps:
+      - run:
+          command: readprofile --help
+      - assert:
+          exit_code: 0
+          stdout:
+            contains:
+              - "Usage: readprofile"
+              - "profiling"

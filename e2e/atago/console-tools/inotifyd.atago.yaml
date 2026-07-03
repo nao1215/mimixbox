@@ -1,0 +1,48 @@
+# Migrated from mimixbox's ShellSpec test/it/spec/inotifyd_spec.sh.
+version: "1"
+
+suite:
+  name: mimixbox inotifyd
+
+scenarios:
+  - name: runs the handler on a create event
+    steps:
+      # inotifyd watches a dir and runs a handler on events. The ShellSpec test
+      # backgrounds inotifyd, recreates the watched file until the handler logs
+      # the create event, then kills the process. This is inherently a shell
+      # script (background job + poll loop + kill) → shell: true.
+      - run:
+          shell: true
+          command: |
+            TEST_DIR="${workdir}/inotifyd"; mkdir -p "$TEST_DIR"
+            d="$TEST_DIR/w"; mkdir -p "$d"
+            printf '#!/bin/sh\necho "$1 $3" >> %s/events\n' "$TEST_DIR" > "$TEST_DIR/h"
+            chmod +x "$TEST_DIR/h"
+            : > "$TEST_DIR/events"
+            inotifyd "$TEST_DIR/h" "$d:n" &
+            pid=$!
+            found=missing
+            for _ in $(seq 1 50); do
+                rm -f "$d/created.txt"
+                touch "$d/created.txt"
+                if grep -q 'n created.txt' "$TEST_DIR/events" 2>/dev/null; then
+                    found=ok
+                    break
+                fi
+                sleep 0.1
+            done
+            kill "$pid" 2>/dev/null
+            wait "$pid" 2>/dev/null
+            echo "$found"
+      - assert:
+          exit_code: 0
+          stdout:
+            equals: "ok"
+
+  - name: requires a handler and a file
+    steps:
+      # Error case → direct exec.
+      - run:
+          command: inotifyd ./h
+      - assert:
+          exit_code: 1

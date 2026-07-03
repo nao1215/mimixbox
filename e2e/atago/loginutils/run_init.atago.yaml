@@ -1,0 +1,22 @@
+# Migrated from mimixbox's ShellSpec test/it/spec/run_init_spec.sh
+# (+ loginutils/run_init_test.sh). run-init must run as PID 1 with privilege; the
+# e2e exercises the deterministic validation failures.
+version: "1"
+
+suite:
+  name: mimixbox run-init
+
+scenarios:
+  - name: requires NEW_ROOT and INIT
+    steps:
+      - run:
+          command: run-init /tmp
+      - assert:
+          exit_code: { not: 0 }
+
+  - name: rejects a non-directory NEW_ROOT
+    steps:
+      - run:
+          command: run-init /no/such/dir /init
+      - assert:
+          exit_code: { not: 0 }

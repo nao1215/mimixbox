@@ -1,0 +1,27 @@
+# Migrated from mimixbox's ShellSpec test/it/spec/zippwcrack_spec.sh
+# (+ securityutils/zippwcrack_test.sh). Setup base64-decodes a ZipCrypto archive
+# into enc.zip and writes words.txt; here the binary archive is materialized via a
+# base64 fixture and zip-pwcrack runs via direct exec against the workdir files.
+version: "1"
+
+suite:
+  name: mimixbox zip-pwcrack
+
+scenarios:
+  - name: recovers the ZIP password from the wordlist
+    steps:
+      - fixture:
+          file: words.txt
+          content: |
+            alpha
+            hunter2
+            beta
+      - fixture:
+          file: enc.zip
+          base64: UEsDBAoACQAAAPeJyFzf7VBXIAAAABQAAAAIABwAZGF0YS50eHRVVAkAAzF6JmoxeiZqdXgLAAEE6AMAAAToAwAAEbWyZmDC+DuePSekzjycZ7l/UpFToIZ+b2pmJIB3fahQSwcI3+1QVyAAAAAUAAAAUEsBAh4DCgAJAAAA94nIXN/tUFcgAAAAFAAAAAgAGAAAAAAAAQAAAKSBAAAAAGRhdGEudHh0VVQFAAMxeiZqdXgLAAEE6AMAAAToAwAAUEsFBgAAAAABAAEATgAAAHIAAAAAAA==
+      - run:
+          command: zip-pwcrack enc.zip -w words.txt
+      - assert:
+          exit_code: 0
+          stdout:
+            contains: "password found: hunter2"

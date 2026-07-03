@@ -1,0 +1,26 @@
+# Migrated from mimixbox's ShellSpec test/it/spec/runsv_spec.sh
+# (+ runit/runsv_test.sh). runsv supervises in the foreground until interrupted;
+# the e2e exercises the no-directory path and --help.
+version: "1"
+
+suite:
+  name: mimixbox runsv
+
+scenarios:
+  - name: requires a service directory
+    steps:
+      - run:
+          command: runsv
+      - assert:
+          exit_code: { not: 0 }
+
+  - name: describes itself with --help
+    steps:
+      - run:
+          command: runsv --help
+      - assert:
+          exit_code: 0
+          stdout:
+            contains:
+              - "Usage: runsv"
+              - "service"

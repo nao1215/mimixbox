@@ -1,0 +1,23 @@
+# Migrated from mimixbox's ShellSpec test/it/spec/chattr_spec.sh.
+# Setting immutable/append needs privilege + ext2/4; the e2e exercises the
+# deterministic mode-validation paths. The flag math is unit-tested.
+version: "1"
+
+suite:
+  name: mimixbox chattr
+
+scenarios:
+  - name: rejects a malformed mode
+    steps:
+      # ShellSpec asserted rc=1; direct exec on the error path.
+      - run:
+          command: chattr xi /tmp/f
+      - assert:
+          exit_code: { not: 0 }
+
+  - name: rejects an unknown attribute
+    steps:
+      - run:
+          command: chattr +Z /tmp/f
+      - assert:
+          exit_code: { not: 0 }

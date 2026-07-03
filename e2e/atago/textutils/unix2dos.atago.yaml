@@ -1,0 +1,126 @@
+# Migrated from mimixbox's ShellSpec test/it/spec/unix2dos_spec.sh
+# (+ textutils/unix2dos_test.sh). Setup builds 1.txt/2.txt/3.txt under a
+# unix2dos/ subdir, each "abc/def/ghi" with LF line endings; here fixtures build
+# them under unix2dos/ in the scenario workdir.
+#
+# The "change LF" bodies run two commands (`unix2dos file; file file`), so they
+# use shell: true. Both unix2dos's "converting..." message AND the `file`
+# classification go to stdout (verified against the real applet). After
+# conversion `file` reports "ASCII text, with CRLF line terminators". The
+# directory / mixed failure cases are single unix2dos commands -> direct exec for
+# the real non-zero exit; their "skip ... not regular file" line goes to stderr.
+version: "1"
+
+suite:
+  name: mimixbox unix2dos
+
+scenarios:
+  - name: convert an LF file to CRLF and reclassify it
+    steps:
+      - fixture:
+          file: unix2dos/1.txt
+          content: "abc\ndef\nghi\n"
+      - run:
+          shell: true
+          command: |
+            unix2dos "${workdir}/unix2dos/1.txt"
+            file "${workdir}/unix2dos/1.txt"
+      - assert:
+          stdout:
+            equals: |
+              unix2dos: converting file ${workdir}/unix2dos/1.txt to DOS format...
+              ${workdir}/unix2dos/1.txt: ASCII text, with CRLF line terminators
+
+  - name: convert an LF file and exit success
+    steps:
+      - fixture:
+          file: unix2dos/1.txt
+          content: "abc\ndef\nghi\n"
+      - run:
+          shell: true
+          command: unix2dos "${workdir}/unix2dos/1.txt"
+      - assert:
+          exit_code: 0
+          stdout:
+            equals: "unix2dos: converting file ${workdir}/unix2dos/1.txt to DOS format..."
+
+  - name: convert three LF files at once and reclassify each
+    steps:
+      - fixture:
+          file: unix2dos/1.txt
+          content: "abc\ndef\nghi\n"
+      - fixture:
+          file: unix2dos/2.txt
+          content: "abc\ndef\nghi\n"
+      - fixture:
+          file: unix2dos/3.txt
+          content: "abc\ndef\nghi\n"
+      - run:
+          shell: true
+          command: |
+            unix2dos "${workdir}/unix2dos/1.txt" "${workdir}/unix2dos/2.txt" "${workdir}/unix2dos/3.txt"
+            file "${workdir}/unix2dos/1.txt"
+            file "${workdir}/unix2dos/2.txt"
+            file "${workdir}/unix2dos/3.txt"
+      - assert:
+          stdout:
+            equals: |
+              unix2dos: converting file ${workdir}/unix2dos/1.txt to DOS format...
+              unix2dos: converting file ${workdir}/unix2dos/2.txt to DOS format...
+              unix2dos: converting file ${workdir}/unix2dos/3.txt to DOS format...
+              ${workdir}/unix2dos/1.txt: ASCII text, with CRLF line terminators
+              ${workdir}/unix2dos/2.txt: ASCII text, with CRLF line terminators
+              ${workdir}/unix2dos/3.txt: ASCII text, with CRLF line terminators
+
+  - name: convert three LF files at once and exit success
+    steps:
+      - fixture:
+          file: unix2dos/1.txt
+          content: "abc\ndef\nghi\n"
+      - fixture:
+          file: unix2dos/2.txt
+          content: "abc\ndef\nghi\n"
+      - fixture:
+          file: unix2dos/3.txt
+          content: "abc\ndef\nghi\n"
+      - run:
+          shell: true
+          command: unix2dos "${workdir}/unix2dos/1.txt" "${workdir}/unix2dos/2.txt" "${workdir}/unix2dos/3.txt"
+      - assert:
+          exit_code: 0
+          stdout:
+            equals: |
+              unix2dos: converting file ${workdir}/unix2dos/1.txt to DOS format...
+              unix2dos: converting file ${workdir}/unix2dos/2.txt to DOS format...
+              unix2dos: converting file ${workdir}/unix2dos/3.txt to DOS format...
+
+  - name: refuse a directory with a not-regular-file error
+    steps:
+      - fixture:
+          file: unix2dos/1.txt
+          content: "abc\ndef\nghi\n"
+      - run:
+          command: unix2dos ${workdir}/unix2dos
+      - assert:
+          exit_code: { not: 0 }
+          stderr:
+            equals: "unix2dos: skip ${workdir}/unix2dos: not regular file"
+
+  - name: convert the two files but fail on the directory operand
+    steps:
+      - fixture:
+          file: unix2dos/1.txt
+          content: "abc\ndef\nghi\n"
+      - fixture:
+          file: unix2dos/3.txt
+          content: "abc\ndef\nghi\n"
+      - run:
+          command: unix2dos ${workdir}/unix2dos/1.txt ${workdir}/unix2dos ${workdir}/unix2dos/3.txt
+      - assert:
+          exit_code: { not: 0 }
+          stdout:
+            equals: |
+              unix2dos: converting file ${workdir}/unix2dos/1.txt to DOS format...
+              unix2dos: converting file ${workdir}/unix2dos/3.txt to DOS format...
+          stderr:
+            equals: "unix2dos: skip ${workdir}/unix2dos: not regular file"

@@ -1,0 +1,21 @@
+# Migrated from mimixbox's ShellSpec test/it/spec/pwdx_spec.sh.
+# Universal --help contract (Issue #477): exit 0, "Usage: pwdx" on stdout,
+# empty stderr. Privileged/networked/destructive applets are exercised via
+# --help only so the suite never reboots, formats, loads modules, or touches
+# the network.
+version: "1"
+
+suite:
+  name: mimixbox pwdx
+
+scenarios:
+  - name: describes itself with --help
+    steps:
+      - run:
+          command: pwdx --help
+      - assert:
+          exit_code: 0
+          stdout:
+            contains: "Usage: pwdx"
+          stderr:
+            empty: true

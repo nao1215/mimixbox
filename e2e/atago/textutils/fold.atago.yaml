@@ -1,0 +1,19 @@
+# Migrated from mimixbox's ShellSpec test/it/spec/fold_spec.sh (+ textutils/fold_test.sh).
+version: "1"
+
+suite:
+  name: mimixbox fold
+
+scenarios:
+  - name: wraps lines to the given width
+    steps:
+      - run:
+          shell: true
+          command: printf 'abcdefgh\n' | fold -w 3
+      - assert:
+          exit_code: 0
+          stdout:
+            equals: |
+              abc
+              def
+              gh

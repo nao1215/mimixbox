@@ -1,0 +1,59 @@
+# Migrated from mimixbox's ShellSpec test/it/spec/base64_spec.sh (+ shellutils/base64_test.sh).
+version: "1"
+
+suite:
+  name: mimixbox base64
+
+scenarios:
+  - name: encodes standard input
+    steps:
+      - run:
+          shell: true
+          command: printf 'hello\n' | base64
+      - assert:
+          exit_code: 0
+          stdout:
+            equals: "aGVsbG8K"
+
+  - name: encodes the file contents
+    steps:
+      - fixture:
+          file: base64.txt
+          content: "hello\n"
+      - run:
+          shell: true
+          command: base64 base64.txt
+      - assert:
+          exit_code: 0
+          stdout:
+            equals: "aGVsbG8K"
+
+  - name: decodes standard input
+    steps:
+      - run:
+          shell: true
+          command: printf 'aGVsbG8K\n' | base64 -d
+      - assert:
+          exit_code: 0
+          stdout:
+            equals: "hello"
+
+  - name: returns the original text (round trip)
+    steps:
+      - run:
+          shell: true
+          command: printf 'MimixBox\n' | base64 | base64 -d
+      - assert:
+          exit_code: 0
+          stdout:
+            equals: "MimixBox"
+
+  - name: reports an error for a non-existent file
+    steps:
+      # Direct exec: a single failing command must surface its real non-zero exit.
+      - run:
+          command: base64 /no_exist_file
+      - assert:
+          exit_code: { not: 0 }
+          stderr:
+            equals: "base64: /no_exist_file: no such file or directory"

@@ -1,0 +1,34 @@
+# Migrated from mimixbox's ShellSpec test/it/spec/tar_spec.sh (+ archival/tar_test.sh).
+# tar -c archives src/, tar -x extracts it, tar -t lists it. Archive bytes are
+# binary, so we assert the round-trip payload and the listing.
+version: "1"
+
+suite:
+  name: mimixbox tar
+
+scenarios:
+  - name: creates and extracts an archive
+    steps:
+      - fixture: { file: src/a.txt, content: alpha }
+      - run:
+          shell: true
+          command: |
+            tar -c -f out.tar -C "${workdir}" src
+            mkdir -p dest
+            tar -x -f out.tar -C "${workdir}/dest"
+            cat dest/src/a.txt
+      - assert:
+          exit_code: 0
+          stdout: { equals: "alpha" }
+
+  - name: lists archive contents
+    steps:
+      - fixture: { file: src/a.txt, content: alpha }
+      - run:
+          shell: true
+          command: |
+            tar -c -f list.tar -C "${workdir}" src
+            tar -t -f list.tar
+      - assert:
+          exit_code: 0
+          stdout: { contains: "src/a.txt" }

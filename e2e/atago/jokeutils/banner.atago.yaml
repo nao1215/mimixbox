@@ -1,0 +1,18 @@
+# Migrated from mimixbox's ShellSpec test/it/spec/banner_spec.sh
+# (+ jokeutils/banner_test.sh). The helper pipes banner into `wc -l | tr -d`,
+# so this needs a shell pipeline.
+version: "1"
+
+suite:
+  name: mimixbox banner
+
+scenarios:
+  - name: prints five rows of art
+    steps:
+      - run:
+          shell: true
+          command: banner HI | wc -l | tr -d ' '
+      - assert:
+          exit_code: 0
+          stdout:
+            equals: "5"

@@ -1,0 +1,43 @@
+# Migrated from mimixbox's ShellSpec test/it/spec/lsscsi_spec.sh
+# (+ embedded/lsscsi_test.sh). lsscsi reads the real /sys tree; an empty list is
+# still success. The helper prints 'ok' on success and is robust whether or not
+# /sys/bus/scsi/devices exists.
+version: "1"
+
+suite:
+  name: mimixbox lsscsi
+
+scenarios:
+  - name: lists SCSI devices from sysfs without error (empty is allowed)
+    steps:
+      # Conditional shell logic mirrors the helper -> shell:true.
+      - run:
+          shell: true
+          command: |
+            if [ -d /sys/bus/scsi/devices ]; then
+                lsscsi >/dev/null && echo ok
+            else
+                echo ok
+            fi
+      - assert:
+          exit_code: 0
+          stdout:
+            equals: "ok"
+
+  - name: prints usage for --help
+    steps:
+      - run:
+          command: lsscsi --help
+      - assert:
+          exit_code: 0
+          stdout:
+            contains: "Usage: lsscsi"
+
+  - name: prints the version line for --version
+    steps:
+      - run:
+          command: lsscsi --version
+      - assert:
+          exit_code: 0
+          stdout:
+            contains: "lsscsi (mimixbox)"

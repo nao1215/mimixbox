@@ -1,0 +1,41 @@
+# Migrated from mimixbox's ShellSpec test/it/spec/tee_spec.sh (+ shellutils/tee_test.sh).
+version: "1"
+
+suite:
+  name: mimixbox tee
+
+scenarios:
+  - name: echoes standard input to stdout
+    steps:
+      - run:
+          shell: true
+          command: printf 'hello\n' | tee ${workdir}/out.txt
+      - assert:
+          exit_code: 0
+          stdout:
+            equals: "hello"
+
+  - name: also writes the input to the file
+    steps:
+      - run:
+          shell: true
+          command: printf 'hello\n' | tee ${workdir}/out.txt > /dev/null; cat ${workdir}/out.txt
+      - assert:
+          exit_code: 0
+          stdout:
+            equals: "hello"
+
+  - name: appends to a file with -a keeping the existing content
+    steps:
+      - run:
+          shell: true
+          command: |
+            printf 'one\n' | tee ${workdir}/log.txt > /dev/null
+            printf 'two\n' | tee -a ${workdir}/log.txt > /dev/null
+            cat ${workdir}/log.txt
+      - assert:
+          exit_code: 0
+          stdout:
+            equals: |
+              one
+              two

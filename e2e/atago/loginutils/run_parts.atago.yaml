@@ -1,0 +1,43 @@
+# Migrated from mimixbox's ShellSpec test/it/spec/run_parts_spec.sh
+# (+ loginutils/run_parts_test.sh). run-parts runs the executables in a directory
+# in alphabetical order; the no-directory path is the deterministic failure.
+version: "1"
+
+suite:
+  name: mimixbox run-parts
+
+scenarios:
+  - name: runs executables in alphabetical order
+    steps:
+      # ShellSpec created 20-b before 10-a to prove alphabetical ordering, not
+      # creation order, drives execution.
+      - fixture:
+          file: parts/20-b
+          mode: "0755"
+          content: |
+            #!/bin/sh
+            echo B
+      - fixture:
+          file: parts/10-a
+          mode: "0755"
+          content: |
+            #!/bin/sh
+            echo A
+      - run:
+          command: run-parts parts
+      - assert:
+          exit_code: 0
+          stdout:
+            line: 1
+            equals: "A"
+      - assert:
+          stdout:
+            line: 2
+            equals: "B"
+
+  - name: requires a directory
+    steps:
+      - run:
+          command: run-parts
+      - assert:
+          exit_code: { not: 0 }

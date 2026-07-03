@@ -1,0 +1,35 @@
+# Migrated from mimixbox's ShellSpec test/it/spec/setsid_fallocate_spec.sh.
+version: "1"
+
+suite:
+  name: mimixbox setsid / fallocate
+
+scenarios:
+  - name: setsid runs a program in a new session
+    steps:
+      - run:
+          command: setsid echo "session ok"
+      - assert:
+          exit_code: 0
+          stdout:
+            equals: "session ok"
+
+  - name: fallocate sizes a file to the requested length
+    steps:
+      - run:
+          command: fallocate -l 4096 f
+      - assert:
+          exit_code: 0
+      - run:
+          shell: true
+          command: wc -c < f
+      - assert:
+          stdout:
+            contains: "4096"
+
+  - name: fallocate without -l fails
+    steps:
+      - run:
+          command: fallocate x
+      - assert:
+          exit_code: { not: 0 }

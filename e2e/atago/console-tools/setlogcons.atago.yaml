@@ -1,0 +1,25 @@
+# Migrated from mimixbox's ShellSpec test/it/spec/setlogcons_spec.sh.
+version: "1"
+
+suite:
+  name: mimixbox setlogcons
+
+scenarios:
+  - name: rejects a non-numeric VT
+    steps:
+      # Error case → direct exec.
+      - run:
+          command: setlogcons notanumber
+      - assert:
+          exit_code: 1
+
+  - name: describes itself with --help
+    steps:
+      - run:
+          command: setlogcons --help
+      - assert:
+          exit_code: 0
+          stdout:
+            contains:
+              - "Usage: setlogcons"
+              - "kernel"

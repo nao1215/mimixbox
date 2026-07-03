@@ -1,0 +1,16 @@
+# Migrated from mimixbox's ShellSpec test/it/spec/sync_spec.sh (+ shellutils/sync_test.sh).
+version: "1"
+
+suite:
+  name: mimixbox sync
+
+scenarios:
+  - name: flushes filesystem buffers
+    steps:
+      - run:
+          shell: true
+          command: sync && echo synced
+      - assert:
+          exit_code: 0
+          stdout:
+            equals: "synced"

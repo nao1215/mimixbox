@@ -1,0 +1,38 @@
+# Migrated from mimixbox's ShellSpec test/it/spec/tsort_spec.sh (no helper; inline).
+# Universal --help contract (Issue #477) plus a topological-sort behavior case.
+# ShellSpec's `Data` block feeds "a b\nb c\n" on stdin.
+version: "1"
+
+suite:
+  name: mimixbox tsort
+
+scenarios:
+  - name: describes itself with --help
+    steps:
+      - run:
+          command: tsort --help
+      - assert:
+          exit_code: 0
+          stdout:
+            contains: "Usage: tsort"
+          stderr:
+            empty: true
+
+  - name: documents its purpose in --help
+    steps:
+      - run:
+          command: tsort --help
+      - assert:
+          exit_code: 0
+          stdout:
+            contains: "total ordering"
+
+  - name: produces a topological order
+    steps:
+      - run:
+          command: tsort
+          stdin: "a b\nb c\n"
+      - assert:
+          exit_code: 0
+          stdout:
+            equals: "a\nb\nc"

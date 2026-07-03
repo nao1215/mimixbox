@@ -1,0 +1,18 @@
+# Migrated from mimixbox's ShellSpec test/it/spec/getsebool_spec.sh (no helper; inline --help contract).
+# Universal --help contract (Issue #477): exit 0, "Usage: getsebool" on stdout, empty stderr.
+version: "1"
+
+suite:
+  name: mimixbox getsebool
+
+scenarios:
+  - name: describes itself with --help
+    steps:
+      - run:
+          command: getsebool --help
+      - assert:
+          exit_code: 0
+          stdout:
+            contains: "Usage: getsebool"
+          stderr:
+            empty: true

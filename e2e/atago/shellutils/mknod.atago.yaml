@@ -1,0 +1,25 @@
+# Migrated from mimixbox's ShellSpec test/it/spec/mknod_spec.sh (+ shellutils/mknod_test.sh).
+version: "1"
+
+suite:
+  name: mimixbox mknod
+
+scenarios:
+  - name: creates a FIFO with type p
+    steps:
+      - run:
+          shell: true
+          command: mknod ${workdir}/pipe p && [ -p ${workdir}/pipe ] && echo fifo
+      - assert:
+          exit_code: 0
+          stdout:
+            equals: "fifo"
+
+  - name: rejects an invalid device type
+    steps:
+      - run:
+          command: mknod ${workdir}/x z
+      - assert:
+          exit_code: { not: 0 }
+          stderr:
+            contains: "invalid device type"

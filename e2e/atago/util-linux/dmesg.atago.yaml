@@ -1,0 +1,19 @@
+# Migrated from mimixbox's ShellSpec test/it/spec/dmesg_spec.sh.
+# Reading the kernel ring buffer can require privilege; the e2e exercises the
+# --help path. The read and priority-stripping are covered by Go unit tests.
+version: "1"
+
+suite:
+  name: mimixbox dmesg
+
+scenarios:
+  - name: describes itself with --help
+    steps:
+      - run:
+          command: dmesg --help
+      - assert:
+          exit_code: 0
+          stdout:
+            contains:
+              - "Usage: dmesg"
+              - "kernel ring buffer"

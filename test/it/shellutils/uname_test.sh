@@ -1,3 +1,0 @@
-TestUnameKernel() {
-    uname -s
-}

@@ -1,0 +1,64 @@
+# Migrated from mimixbox's ShellSpec test/it/spec/help_helpers_loginutils_spec.sh
+# (+ loginutils/{addgroup,delgroup,linuxrc,run-init,run-parts,start-stop-daemon}_test.sh).
+# Per-command --help contract specs (issue #489): each command's --help exits 0
+# and prints a 'Usage:' line. The ShellSpec wrapped each in 'env -- CMD --help';
+# direct exec of CMD --help is the equivalent.
+version: "1"
+
+suite:
+  name: mimixbox loginutils --help helpers
+
+scenarios:
+  - name: addgroup --help is structured
+    steps:
+      - run:
+          command: addgroup --help
+      - assert:
+          exit_code: 0
+          stdout:
+            contains: "Usage:"
+
+  - name: delgroup --help is structured
+    steps:
+      - run:
+          command: delgroup --help
+      - assert:
+          exit_code: 0
+          stdout:
+            contains: "Usage:"
+
+  - name: linuxrc --help is structured
+    steps:
+      - run:
+          command: linuxrc --help
+      - assert:
+          exit_code: 0
+          stdout:
+            contains: "Usage:"
+
+  - name: run-init --help is structured
+    steps:
+      - run:
+          command: run-init --help
+      - assert:
+          exit_code: 0
+          stdout:
+            contains: "Usage:"
+
+  - name: run-parts --help is structured
+    steps:
+      - run:
+          command: run-parts --help
+      - assert:
+          exit_code: 0
+          stdout:
+            contains: "Usage:"
+
+  - name: start-stop-daemon --help is structured
+    steps:
+      - run:
+          command: start-stop-daemon --help
+      - assert:
+          exit_code: 0
+          stdout:
+            contains: "Usage:"

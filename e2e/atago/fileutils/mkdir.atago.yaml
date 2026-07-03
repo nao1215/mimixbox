@@ -1,0 +1,83 @@
+# Migrated from mimixbox's ShellSpec test/it/spec/mkdir_spec.sh
+# (+ fileutils/mkdir_test.sh). Setup makes an empty ${ROOT}/mkdir working dir;
+# reproduced inside ${workdir}. Error cases that exercise the applet's own
+# diagnostics use direct exec; the pipe case needs shell:true.
+version: "1"
+
+suite:
+  name: mimixbox mkdir
+
+scenarios:
+  - name: make a single directory
+    steps:
+      - run:
+          shell: true
+          command: mkdir -p mkdir && mkdir ${workdir}/mkdir/single && ls ${workdir}/mkdir
+      - assert:
+          exit_code: 0
+          stdout:
+            equals: "single"
+
+  - name: make three directories
+    steps:
+      - run:
+          shell: true
+          command: mkdir -p mkdir && mkdir ${workdir}/mkdir/1 ${workdir}/mkdir/2 ${workdir}/mkdir/3 && ls ${workdir}/mkdir
+      - assert:
+          exit_code: 0
+          stdout:
+            equals: |
+              1
+              2
+              3
+
+  - name: make a parent/child directory with -p
+    steps:
+      - run:
+          shell: true
+          command: mkdir -p mkdir && mkdir -p ${workdir}/mkdir/parents/child && ls ${workdir}/mkdir/parents/
+      - assert:
+          exit_code: 0
+          stdout:
+            equals: "child"
+
+  - name: make a directory from a pipe
+    steps:
+      - run:
+          shell: true
+          command: mkdir -p mkdir && echo "${workdir}/mkdir/pipe" | xargs mkdir && ls ${workdir}/mkdir
+      - assert:
+          exit_code: 0
+          stdout:
+            equals: "pipe"
+
+  - name: print error without operand
+    steps:
+      - run:
+          command: mkdir
+      - assert:
+          exit_code: { not: 0 }
+          stderr:
+            equals: "mkdir: no operand"
+
+  - name: print error with --parents and no operand
+    steps:
+      - run:
+          command: mkdir -p
+      - assert:
+          exit_code: { not: 0 }
+          stderr:
+            equals: "mkdir: no operand"
+
+  - name: make 1 and 3 but fail to make 2 at an unwritable path
+    steps:
+      - run:
+          shell: true
+          command: mkdir -p mkdir && mkdir ${workdir}/mkdir/1 /mkdir/2 ${workdir}/mkdir/3; ls ${workdir}/mkdir/
+      - assert:
+          stdout:
+            equals: |
+              1
+              3
+          stderr:
+            equals: "mkdir /mkdir/2: no such file or directory"

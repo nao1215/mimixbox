@@ -560,11 +560,10 @@ The table below shows the tools used when developing commands in the MimixBox pr
 |:-----|:------|
 | go-licenses | License management of dependent libraries |
 | make | Build, test, release, etc. |
-| curl | Install ShellSpec |
 | install | Install the MimixBox binary on the system |
 | docker | Test MimixBox inside Docker |
 | debootstrap | Test MimixBox inside a jail environment |
-| shellspec | End-to-end test |
+| [atago](https://github.com/nao1215/atago) | End-to-end test |
 | golangci-lint | Lint Go code |
 
 On a Debian-based distribution (e.g. Debian／Ubuntu／Kali Linux／Raspberry Pi OS), install the tools with:
@@ -572,7 +571,7 @@ On a Debian-based distribution (e.g. Debian／Ubuntu／Kali Linux／Raspberry Pi
 ```shell
 $ sudo apt install build-essential curl git docker.io debootstrap
 $ go install github.com/google/go-licenses@latest
-$ curl -fsSL https://github.com/shellspec/shellspec/raw/master/install.sh | sh -s -- --yes
+$ go install github.com/nao1215/atago@latest
 ```
 
 ### How to build

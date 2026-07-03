@@ -1,0 +1,42 @@
+# Migrated from mimixbox's ShellSpec test/it/spec/setarch_spec.sh.
+version: "1"
+
+suite:
+  name: mimixbox setarch / linux32 / linux64
+
+scenarios:
+  - name: linux32 makes uname report a 32-bit machine
+    steps:
+      - run:
+          command: linux32 uname -m
+      - assert:
+          exit_code: 0
+          stdout:
+            equals: "i686"
+
+  - name: linux64 reports the native machine
+    steps:
+      - run:
+          command: linux64 uname -m
+      - assert:
+          exit_code: 0
+          stdout:
+            equals: "x86_64"
+
+  - name: linux32 passes the command output through
+    steps:
+      - run:
+          command: linux32 echo passed
+      - assert:
+          exit_code: 0
+          stdout:
+            equals: "passed"
+
+  - name: setarch selects the personality from ARCH
+    steps:
+      - run:
+          command: setarch i686 uname -m
+      - assert:
+          exit_code: 0
+          stdout:
+            equals: "i686"

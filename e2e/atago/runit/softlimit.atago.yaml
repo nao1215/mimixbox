@@ -1,0 +1,22 @@
+# Migrated from mimixbox's ShellSpec test/it/spec/softlimit_spec.sh
+# (+ runit/softlimit_test.sh). softlimit runs a program under resource limits;
+# the e2e confirms it runs 'true' (exit 0) and fails with no program.
+version: "1"
+
+suite:
+  name: mimixbox softlimit
+
+scenarios:
+  - name: runs a program under the limits
+    steps:
+      - run:
+          command: softlimit -o 64 true
+      - assert:
+          exit_code: 0
+
+  - name: requires a program
+    steps:
+      - run:
+          command: softlimit -o 64
+      - assert:
+          exit_code: { not: 0 }

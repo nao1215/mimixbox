@@ -1,0 +1,15 @@
+# Migrated from mimixbox's ShellSpec test/it/spec/hostname_spec.sh (+ shellutils/hostname_test.sh).
+version: "1"
+
+suite:
+  name: mimixbox hostname
+
+scenarios:
+  - name: prints a non-empty host name
+    steps:
+      - run:
+          command: hostname
+      - assert:
+          exit_code: 0
+          stdout:
+            empty: false

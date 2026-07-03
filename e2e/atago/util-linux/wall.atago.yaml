@@ -1,0 +1,15 @@
+# Migrated from mimixbox's ShellSpec test/it/spec/wall_spec.sh.
+# With no terminals recorded for the harness, wall writes nothing and exits 0.
+version: "1"
+
+suite:
+  name: mimixbox wall
+
+scenarios:
+  - name: runs and exits successfully
+    steps:
+      - run:
+          shell: true
+          command: echo "broadcast" | wall
+      - assert:
+          exit_code: 0

@@ -1,0 +1,19 @@
+# Migrated from mimixbox's ShellSpec test/it/spec/resume_spec.sh (no helper; inline).
+# Universal --help contract (Issue #477): exit 0, "Usage: resume" on stdout,
+# empty stderr. Privileged/networked/destructive applet exercised via --help only.
+version: "1"
+
+suite:
+  name: mimixbox resume
+
+scenarios:
+  - name: describes itself with --help
+    steps:
+      - run:
+          command: resume --help
+      - assert:
+          exit_code: 0
+          stdout:
+            contains: "Usage: resume"
+          stderr:
+            empty: true

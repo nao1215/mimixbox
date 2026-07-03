@@ -1,0 +1,46 @@
+# Migrated from mimixbox's ShellSpec test/it/spec/factor_spec.sh (no helper; inline).
+# Universal --help contract (Issue #477) plus prime-factoring behavior cases.
+version: "1"
+
+suite:
+  name: mimixbox factor
+
+scenarios:
+  - name: describes itself with --help
+    steps:
+      - run:
+          command: factor --help
+      - assert:
+          exit_code: 0
+          stdout:
+            contains: "Usage: factor"
+          stderr:
+            empty: true
+
+  - name: documents its purpose in --help
+    steps:
+      - run:
+          command: factor --help
+      - assert:
+          exit_code: 0
+          stdout:
+            contains: "Print the prime factors"
+
+  - name: factors a small integer
+    steps:
+      - run:
+          command: factor 12
+      - assert:
+          exit_code: 0
+          stdout:
+            equals: "12: 2 2 3"
+
+  - name: fails on a non-numeric operand
+    steps:
+      - run:
+          command: factor notanumber
+      - assert:
+          exit_code:
+            not: 0
+          stderr:
+            contains: "factor:"

@@ -1,0 +1,19 @@
+# Migrated from mimixbox's ShellSpec test/it/spec/swapon_spec.sh (no helper; inline).
+# Universal --help contract (Issue #477): exit 0, "Usage: swapon" on stdout,
+# empty stderr. Privileged/networked/destructive applet exercised via --help only.
+version: "1"
+
+suite:
+  name: mimixbox swapon
+
+scenarios:
+  - name: describes itself with --help
+    steps:
+      - run:
+          command: swapon --help
+      - assert:
+          exit_code: 0
+          stdout:
+            contains: "Usage: swapon"
+          stderr:
+            empty: true

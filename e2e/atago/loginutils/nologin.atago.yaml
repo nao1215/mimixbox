@@ -1,0 +1,31 @@
+# Migrated from mimixbox's ShellSpec test/it/spec/nologin_spec.sh
+# (+ loginutils/nologin_test.sh). nologin prints a refusal, exits non-zero, and
+# never runs a command passed with -c.
+version: "1"
+
+suite:
+  name: mimixbox nologin
+
+scenarios:
+  - name: prints a refusal and exits non-zero
+    steps:
+      # Error case -> direct exec. The ShellSpec echoed 'rc=1' on a second line;
+      # here the non-zero exit is asserted directly.
+      - run:
+          command: nologin
+      - assert:
+          exit_code: { not: 0 }
+          stdout:
+            contains: "not available"
+
+  - name: never runs a passed command
+    steps:
+      # Pipe (nologin -c ... | grep -c) -> shell:true. The injected command must
+      # not run, so grep finds zero matches.
+      - run:
+          shell: true
+          command: count=$(nologin -c "echo pwned" 2>/dev/null | grep -c pwned); echo "$count"
+      - assert:
+          exit_code: 0
+          stdout:
+            equals: "0"

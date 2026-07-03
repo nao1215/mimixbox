@@ -1,4 +1,0 @@
-TestCmatrixNoTTY() {
-    cmatrix
-    echo "rc:$?"
-}

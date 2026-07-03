@@ -1,0 +1,15 @@
+# Migrated from mimixbox's ShellSpec test/it/spec/printf_spec.sh (+ shellutils/printf_test.sh).
+version: "1"
+
+suite:
+  name: mimixbox printf
+
+scenarios:
+  - name: formats arguments
+    steps:
+      - run:
+          command: printf %s-%s\n foo bar
+      - assert:
+          exit_code: 0
+          stdout:
+            equals: "foo-bar"

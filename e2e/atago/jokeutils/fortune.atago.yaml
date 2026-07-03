@@ -1,0 +1,18 @@
+# Migrated from mimixbox's ShellSpec test/it/spec/fortune_spec.sh
+# (+ jokeutils/fortune_test.sh). The helper pipes fortune into `wc -l | tr -d`,
+# so this needs a shell pipeline. The adage is a single line.
+version: "1"
+
+suite:
+  name: mimixbox fortune
+
+scenarios:
+  - name: prints a single adage line
+    steps:
+      - run:
+          shell: true
+          command: fortune | wc -l | tr -d ' '
+      - assert:
+          exit_code: 0
+          stdout:
+            equals: "1"

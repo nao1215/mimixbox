@@ -1,0 +1,73 @@
+# Migrated from mimixbox's ShellSpec test/it/spec/compat_spec.sh (+ compat/compat_test.sh).
+# The bracket aliases are invoked through the mimixbox dispatcher (bash's own
+# builtins would otherwise shadow "["). The compound `&& echo / || echo`,
+# pipes, and command substitution need a shell.
+version: "1"
+
+suite:
+  name: mimixbox compat front-ends
+
+scenarios:
+  - name: the [ alias returns true for an existing file
+    steps:
+      - run:
+          shell: true
+          command: mimixbox '[' -f /etc/hosts ']' && echo yes || echo no
+      - assert:
+          exit_code: 0
+          stdout: { equals: "yes" }
+
+  - name: the [ alias returns false for a missing file
+    steps:
+      - run:
+          shell: true
+          command: mimixbox '[' -f /no/such/mimixbox/file ']' && echo yes || echo no
+      - assert:
+          exit_code: 0
+          stdout: { equals: "no" }
+
+  - name: busybox dispatches to an applet
+    steps:
+      - fixture: { file: f, content: "hello\n" }
+      - run:
+          shell: true
+          command: busybox cat f
+      - assert:
+          exit_code: 0
+          stdout: { equals: "hello" }
+
+  - name: busybox --list shows applets
+    steps:
+      - run:
+          shell: true
+          command: busybox --list
+      - assert:
+          exit_code: 0
+          stdout: { contains: "cat" }
+      - assert:
+          stdout: { contains: "busybox" }
+
+  - name: sh -c runs a command without a prompt
+    steps:
+      - run:
+          shell: true
+          command: sh -c 'echo from-sh'
+      - assert:
+          exit_code: 0
+          stdout: { equals: "from-sh" }
+
+  - name: bash reads a non-interactive script from stdin without a prompt
+    steps:
+      # ShellSpec captures bash's stdin output and maps a missing prompt to "ok".
+      - run:
+          shell: true
+          command: |
+            out=$(printf 'echo via-bash\n' | bash 2>/dev/null)
+            case "$out" in
+                *"mbsh:"*) echo prompted ;;
+                *via-bash*) echo ok ;;
+                *) echo "$out" ;;
+            esac
+      - assert:
+          exit_code: 0
+          stdout: { equals: "ok" }

@@ -1,0 +1,40 @@
+# Migrated from mimixbox's ShellSpec test/it/spec/od_spec.sh (+ shellutils/od_test.sh).
+version: "1"
+
+suite:
+  name: mimixbox od
+
+scenarios:
+  - name: dumps characters with C escapes
+    steps:
+      - run:
+          shell: true
+          command: printf 'ABC\n' | od -c
+      - assert:
+          exit_code: 0
+          stdout:
+            equals: |
+              0000000   A   B   C  \n
+              0000004
+
+  - name: dumps hex bytes with hex addresses
+    steps:
+      - run:
+          shell: true
+          command: printf 'AB' | od -A x -t x1
+      - assert:
+          exit_code: 0
+          stdout:
+            equals: |
+              000000 41 42
+              000002
+
+  - name: suppresses the address column
+    steps:
+      - run:
+          shell: true
+          command: printf 'A' | od -A n -t o1
+      - assert:
+          exit_code: 0
+          stdout:
+            equals: " 101"

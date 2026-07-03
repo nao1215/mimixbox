@@ -1,0 +1,25 @@
+# Migrated from mimixbox's ShellSpec test/it/spec/mount_spec.sh.
+version: "1"
+
+suite:
+  name: mimixbox mount
+
+scenarios:
+  - name: lists the root filesystem
+    steps:
+      # `mount` with no args lists current mounts; the root entry must appear.
+      - run:
+          shell: true
+          command: mount | grep -cE ' on / type '
+      - assert:
+          exit_code: 0
+          stdout:
+            equals: "1"
+
+  - name: refuses to perform a mount
+    steps:
+      # Performing a mount needs privilege/device; the error case is direct exec.
+      - run:
+          command: mount /dev/sda1 /mnt
+      - assert:
+          exit_code: { not: 0 }

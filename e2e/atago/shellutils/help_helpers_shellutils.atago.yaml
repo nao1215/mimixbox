@@ -1,0 +1,53 @@
+# Migrated from mimixbox's ShellSpec test/it/spec/help_helpers_shellutils_spec.sh
+# (+ shellutils/{fsync,log-collect,sddf,time,usleep}_test.sh).
+# Per-command --help contract specs backed by dedicated shellutils helpers (issue #489).
+version: "1"
+
+suite:
+  name: mimixbox shellutils --help helpers
+
+scenarios:
+  - name: fsync --help is structured
+    steps:
+      - run:
+          command: env -- fsync --help
+      - assert:
+          exit_code: 0
+          stdout:
+            contains: "Usage:"
+
+  - name: log-collect --help is structured
+    steps:
+      - run:
+          command: env -- log-collect --help
+      - assert:
+          exit_code: 0
+          stdout:
+            contains: "Usage:"
+
+  - name: sddf --help is structured
+    steps:
+      - run:
+          command: env -- sddf --help
+      - assert:
+          exit_code: 0
+          stdout:
+            contains: "Usage:"
+
+  - name: time --help is structured
+    steps:
+      - run:
+          command: env -- time --help
+      - assert:
+          exit_code: 0
+          stdout:
+            contains: "Usage:"
+
+  - name: usleep --help is structured
+    steps:
+      - run:
+          command: env -- usleep --help
+      - assert:
+          exit_code: 0
+          stdout:
+            contains: "Usage:"

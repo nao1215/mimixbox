@@ -1,0 +1,31 @@
+# Migrated from mimixbox's ShellSpec test/it/spec/tail_pid_spec.sh
+# (+ textutils/tail_test.sh: TestTailFollowPid).
+# tail --follow --pid must exit on its own once the watched process dies, before
+# the generous timeout fires. A success exit proves --pid stopped the follow loop
+# itself (timeout would have yielded 124). Needs shell:true for the background
+# jobs, $!, VAR=val, and ;.
+version: "1"
+
+suite:
+  name: mimixbox tail --pid
+
+scenarios:
+  - name: stop following once the watched process exits
+    steps:
+      - fixture:
+          file: follow_pid.txt
+          content: |
+            start
+      - run:
+          shell: true
+          command: |
+            sleep 1 &
+            sleeper_pid=$!
+            ( sleep 0.2; printf 'appended\n' >> follow_pid.txt ) &
+            timeout 5 tail -f -s 0.1 --pid="${sleeper_pid}" follow_pid.txt
+      - assert:
+          exit_code: 0
+          stdout:
+            contains:
+              - "start"
+              - "appended"

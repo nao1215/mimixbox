@@ -1,0 +1,28 @@
+# Migrated from mimixbox's ShellSpec test/it/spec/sulogin_spec.sh
+# (+ loginutils/sulogin_test.sh). sulogin authenticates root (privileged); the
+# e2e exercises the wrong-password path and --help.
+version: "1"
+
+suite:
+  name: mimixbox sulogin
+
+scenarios:
+  - name: rejects a wrong root password
+    steps:
+      # Error case -> direct exec. sulogin reads the password from stdin.
+      - run:
+          command: sulogin
+          stdin: "definitely_wrong_password\n"
+      - assert:
+          exit_code: { not: 0 }
+
+  - name: describes itself with --help
+    steps:
+      - run:
+          command: sulogin --help
+      - assert:
+          exit_code: 0
+          stdout:
+            contains:
+              - "Usage: sulogin"
+              - "root"

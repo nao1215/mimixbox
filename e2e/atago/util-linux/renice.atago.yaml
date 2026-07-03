@@ -1,0 +1,25 @@
+# Migrated from mimixbox's ShellSpec test/it/spec/renice_spec.sh.
+version: "1"
+
+suite:
+  name: mimixbox renice
+
+scenarios:
+  - name: reports the priority change
+    steps:
+      # No-op renice of the current shell; needs $$ so use a shell, and confirm
+      # the GNU-style report line.
+      - run:
+          shell: true
+          command: renice -n 0 -p $$ | grep -c 'process ID'
+      - assert:
+          exit_code: 0
+          stdout:
+            equals: "1"
+
+  - name: rejects a non-numeric PID
+    steps:
+      - run:
+          command: renice 5 notapid
+      - assert:
+          exit_code: { not: 0 }

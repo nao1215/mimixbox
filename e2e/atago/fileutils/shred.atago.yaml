@@ -1,0 +1,21 @@
+# Migrated from mimixbox's ShellSpec test/it/spec/shred_spec.sh
+# (+ fileutils/shred_test.sh). Setup writes 'secret' to shred_file; the test
+# shreds with -u (overwrite + remove) and proves the file is gone.
+version: "1"
+
+suite:
+  name: mimixbox shred
+
+scenarios:
+  - name: overwrites and removes the file
+    steps:
+      - fixture:
+          file: shred_file
+          content: secret
+      - run:
+          shell: true
+          command: shred -u ${workdir}/shred_file && test ! -e ${workdir}/shred_file && echo gone
+      - assert:
+          exit_code: 0
+          stdout:
+            equals: "gone"

@@ -1,0 +1,36 @@
+# Migrated from mimixbox's ShellSpec test/it/spec/bbconfig_spec.sh.
+version: "1"
+
+suite:
+  name: mimixbox bbconfig
+
+scenarios:
+  - name: prints the version line
+    steps:
+      # bbconfig prints the build configuration; pipe to grep -c.
+      - run:
+          shell: true
+          command: bbconfig | grep -c 'CONFIG_MIMIXBOX_VERSION='
+      - assert:
+          exit_code: 0
+          stdout:
+            equals: "1"
+
+  - name: lists itself among the applets
+    steps:
+      # Every applet line is CONFIG_<NAME>=y; bbconfig must list itself.
+      - run:
+          shell: true
+          command: bbconfig --names | grep -c '^bbconfig$'
+      - assert:
+          exit_code: 0
+          stdout:
+            equals: "1"
+
+  - name: rejects an unexpected argument
+    steps:
+      # An unexpected operand is a deterministic error. Error case → direct exec.
+      - run:
+          command: bbconfig extra
+      - assert:
+          exit_code: 1

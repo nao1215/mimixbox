@@ -1,0 +1,19 @@
+# Migrated from mimixbox's ShellSpec test/it/spec/hwclock_spec.sh.
+# Reading /dev/rtc requires privilege; the e2e exercises the --help path. The
+# RTC read and time formatting are covered by Go unit tests.
+version: "1"
+
+suite:
+  name: mimixbox hwclock
+
+scenarios:
+  - name: describes itself with --help
+    steps:
+      - run:
+          command: hwclock --help
+      - assert:
+          exit_code: 0
+          stdout:
+            contains:
+              - "Usage: hwclock"
+              - "RTC"

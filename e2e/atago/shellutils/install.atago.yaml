@@ -1,0 +1,48 @@
+# Migrated from mimixbox's ShellSpec test/it/spec/install_spec.sh (+ shellutils/install_test.sh).
+version: "1"
+
+suite:
+  name: mimixbox install
+
+scenarios:
+  - name: copies the file content
+    steps:
+      - fixture: { file: install/src, content: "hello" }
+      - run:
+          shell: true
+          command: install -m 640 install/src install/dst && printf '%s' "$(cat install/dst)"
+      - assert:
+          exit_code: 0
+          stdout:
+            equals: "hello"
+
+  - name: sets the requested mode
+    steps:
+      - fixture: { file: install/src, content: "hello" }
+      - run:
+          shell: true
+          command: install -m 640 install/src install/dst2 && stat -c '%a' install/dst2
+      - assert:
+          exit_code: 0
+          stdout:
+            equals: "640"
+
+  - name: creates directories with -d
+    steps:
+      - run:
+          shell: true
+          command: install -d install/a/b/c && [ -d install/a/b/c ] && echo ok
+      - assert:
+          exit_code: 0
+          stdout:
+            equals: "ok"
+
+  - name: fails without a destination
+    steps:
+      # Direct exec so the single failing command surfaces its real exit code.
+      - run:
+          command: install only-source
+      - assert:
+          exit_code: { not: 0 }
+          stderr:
+            contains: "missing destination"

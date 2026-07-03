@@ -1,0 +1,51 @@
+# Migrated from mimixbox's ShellSpec test/it/spec/uniq_spec.sh (+ shellutils/uniq_test.sh).
+version: "1"
+
+suite:
+  name: mimixbox uniq
+
+scenarios:
+  - name: collapses repeated adjacent lines
+    steps:
+      - run:
+          shell: true
+          command: printf 'a\na\nb\nc\nc\nc\n' | uniq
+      - assert:
+          exit_code: 0
+          stdout:
+            equals: |
+              a
+              b
+              c
+
+  - name: -c prefixes each line with its count
+    steps:
+      - run:
+          shell: true
+          command: printf 'a\na\nb\nc\nc\nc\n' | uniq -c
+      - assert:
+          exit_code: 0
+          stdout:
+            equals: "      2 a\n      1 b\n      3 c"
+
+  - name: -d prints only repeated lines once
+    steps:
+      - run:
+          shell: true
+          command: printf 'a\na\nb\nc\nc\n' | uniq -d
+      - assert:
+          exit_code: 0
+          stdout:
+            equals: |
+              a
+              c
+
+  - name: -u prints only lines that never repeat
+    steps:
+      - run:
+          shell: true
+          command: printf 'a\na\nb\nc\nc\n' | uniq -u
+      - assert:
+          exit_code: 0
+          stdout:
+            equals: "b"

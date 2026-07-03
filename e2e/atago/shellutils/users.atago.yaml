@@ -1,0 +1,26 @@
+# Migrated from mimixbox's ShellSpec test/it/spec/users_spec.sh (+ shellutils/users_test.sh).
+version: "1"
+
+suite:
+  name: mimixbox users
+
+scenarios:
+  - name: runs and exits successfully
+    steps:
+      - run:
+          shell: true
+          command: users >/dev/null 2>&1; echo $?
+      - assert:
+          exit_code: 0
+          stdout:
+            equals: "0"
+
+  - name: treats a missing utmp as nobody logged in
+    steps:
+      - run:
+          shell: true
+          command: out=$(users /no/such/mimixbox/utmp); echo "[$out] rc=$?"
+      - assert:
+          exit_code: 0
+          stdout:
+            equals: "[] rc=0"

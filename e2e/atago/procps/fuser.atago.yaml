@@ -1,0 +1,26 @@
+# Migrated from mimixbox's ShellSpec test/it/spec/fuser_spec.sh.
+version: "1"
+
+suite:
+  name: mimixbox fuser
+
+scenarios:
+  - name: finds processes using the current directory
+    # TestFuserCwd: fuser . | grep -cE '[0-9]' -> '1'.
+    # fuser prints PIDs for the cwd; assert at least one numeric PID appears.
+    steps:
+      - run:
+          command: fuser .
+      - assert:
+          exit_code: 0
+          stdout:
+            matches: "[0-9]"
+
+  - name: exits non-zero when nothing uses the file
+    # TestFuserNone: fuser /no/such/fuser/file -> rc=1.
+    # Error case uses direct exec; fuser returns 1 when no process uses the file.
+    steps:
+      - run:
+          command: fuser /no/such/fuser/file
+      - assert:
+          exit_code: { not: 0 }

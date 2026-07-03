@@ -1,0 +1,255 @@
+# Migrated from mimixbox's ShellSpec test/it/spec/ls_gnu_spec.sh
+# (+ fileutils/ls_gnu_test.sh): GNU ls presentation flags (#722-#726). GnuSetup
+# builds ${ROOT}/ls_gnu with adir/, small.txt (10B), big.txt (5000B), a.log,
+# tmpfile, run.sh (0755) and a symlink 'link' -> small.txt. Reproduced inside
+# ${workdir} via a setup `run` step. Output of ls is environment-sensitive for
+# ordering/inode/escape bytes, so these mirror the original include/exclude and
+# line-N assertions rather than pinning whole-listing bytes.
+version: "1"
+
+suite:
+  name: mimixbox ls GNU flags
+
+scenarios:
+  - name: colors directories with --color=always
+    steps:
+      - run:
+          shell: true
+          command: |
+            mkdir -p ls_gnu/adir
+            printf 'xxxxxxxxxx' > ls_gnu/small.txt
+            dd if=/dev/zero of=ls_gnu/big.txt bs=1 count=5000 2>/dev/null
+            : > ls_gnu/a.log
+            : > ls_gnu/tmpfile
+            printf '#!/bin/sh\n' > ls_gnu/run.sh
+            chmod 0755 ls_gnu/run.sh
+            ln -s small.txt ls_gnu/link
+      - run:
+          command: ls --color=always ${workdir}/ls_gnu
+      - assert:
+          exit_code: 0
+          stdout:
+            contains: "adir"
+      # The directory color is the GNU default ESC[01;34m; match the raw bytes.
+      - assert:
+          stdout:
+            matches: "\\x1b\\[01;34m"
+
+  - name: emits no escapes with --color=never
+    steps:
+      - run:
+          shell: true
+          command: |
+            mkdir -p ls_gnu/adir
+            printf 'xxxxxxxxxx' > ls_gnu/small.txt
+            dd if=/dev/zero of=ls_gnu/big.txt bs=1 count=5000 2>/dev/null
+            : > ls_gnu/a.log
+            : > ls_gnu/tmpfile
+            printf '#!/bin/sh\n' > ls_gnu/run.sh
+            chmod 0755 ls_gnu/run.sh
+            ln -s small.txt ls_gnu/link
+      - run:
+          command: ls --color=never ${workdir}/ls_gnu
+      - assert:
+          exit_code: 0
+          stdout:
+            not_contains: "\e"
+
+  - name: appends / * @ with -F
+    steps:
+      - run:
+          shell: true
+          command: |
+            mkdir -p ls_gnu/adir
+            printf 'xxxxxxxxxx' > ls_gnu/small.txt
+            dd if=/dev/zero of=ls_gnu/big.txt bs=1 count=5000 2>/dev/null
+            : > ls_gnu/a.log
+            : > ls_gnu/tmpfile
+            printf '#!/bin/sh\n' > ls_gnu/run.sh
+            chmod 0755 ls_gnu/run.sh
+            ln -s small.txt ls_gnu/link
+      - run:
+          command: ls -F ${workdir}/ls_gnu
+      - assert:
+          exit_code: 0
+          stdout:
+            contains:
+              - "adir/"
+              - "run.sh*"
+              - "link@"
+
+  - name: omits * for executables with --file-type
+    steps:
+      - run:
+          shell: true
+          command: |
+            mkdir -p ls_gnu/adir
+            printf 'xxxxxxxxxx' > ls_gnu/small.txt
+            dd if=/dev/zero of=ls_gnu/big.txt bs=1 count=5000 2>/dev/null
+            : > ls_gnu/a.log
+            : > ls_gnu/tmpfile
+            printf '#!/bin/sh\n' > ls_gnu/run.sh
+            chmod 0755 ls_gnu/run.sh
+            ln -s small.txt ls_gnu/link
+      - run:
+          command: ls --file-type ${workdir}/ls_gnu
+      - assert:
+          exit_code: 0
+          stdout:
+            contains: "adir/"
+      - assert:
+          stdout:
+            not_contains: "run.sh*"
+
+  - name: marks only dirs with --indicator-style=slash
+    steps:
+      - run:
+          shell: true
+          command: |
+            mkdir -p ls_gnu/adir
+            printf 'xxxxxxxxxx' > ls_gnu/small.txt
+            dd if=/dev/zero of=ls_gnu/big.txt bs=1 count=5000 2>/dev/null
+            : > ls_gnu/a.log
+            : > ls_gnu/tmpfile
+            printf '#!/bin/sh\n' > ls_gnu/run.sh
+            chmod 0755 ls_gnu/run.sh
+            ln -s small.txt ls_gnu/link
+      - run:
+          command: ls --indicator-style=slash ${workdir}/ls_gnu
+      - assert:
+          exit_code: 0
+          stdout:
+            contains: "adir/"
+      - assert:
+          stdout:
+            not_contains: "link@"
+
+  - name: lists largest first with --sort=size
+    steps:
+      - run:
+          shell: true
+          command: |
+            mkdir -p ls_gnu/adir
+            printf 'xxxxxxxxxx' > ls_gnu/small.txt
+            dd if=/dev/zero of=ls_gnu/big.txt bs=1 count=5000 2>/dev/null
+            : > ls_gnu/a.log
+            : > ls_gnu/tmpfile
+            printf '#!/bin/sh\n' > ls_gnu/run.sh
+            chmod 0755 ls_gnu/run.sh
+            ln -s small.txt ls_gnu/link
+      - run:
+          command: ls --sort=size ${workdir}/ls_gnu
+      - assert:
+          exit_code: 0
+          stdout:
+            line: 1
+            equals: "big.txt"
+
+  - name: lists directories first with --group-directories-first
+    steps:
+      - run:
+          shell: true
+          command: |
+            mkdir -p ls_gnu/adir
+            printf 'xxxxxxxxxx' > ls_gnu/small.txt
+            dd if=/dev/zero of=ls_gnu/big.txt bs=1 count=5000 2>/dev/null
+            : > ls_gnu/a.log
+            : > ls_gnu/tmpfile
+            printf '#!/bin/sh\n' > ls_gnu/run.sh
+            chmod 0755 ls_gnu/run.sh
+            ln -s small.txt ls_gnu/link
+      - run:
+          command: ls --group-directories-first ${workdir}/ls_gnu
+      - assert:
+          exit_code: 0
+          stdout:
+            line: 1
+            equals: "adir"
+
+  - name: drops matches with --ignore
+    steps:
+      - run:
+          shell: true
+          command: |
+            mkdir -p ls_gnu/adir
+            printf 'xxxxxxxxxx' > ls_gnu/small.txt
+            dd if=/dev/zero of=ls_gnu/big.txt bs=1 count=5000 2>/dev/null
+            : > ls_gnu/a.log
+            : > ls_gnu/tmpfile
+            printf '#!/bin/sh\n' > ls_gnu/run.sh
+            chmod 0755 ls_gnu/run.sh
+            ln -s small.txt ls_gnu/link
+      - run:
+          command: ls --ignore=*.log ${workdir}/ls_gnu
+      - assert:
+          exit_code: 0
+          stdout:
+            not_contains: "a.log"
+
+  - name: drops matches with --hide
+    steps:
+      - run:
+          shell: true
+          command: |
+            mkdir -p ls_gnu/adir
+            printf 'xxxxxxxxxx' > ls_gnu/small.txt
+            dd if=/dev/zero of=ls_gnu/big.txt bs=1 count=5000 2>/dev/null
+            : > ls_gnu/a.log
+            : > ls_gnu/tmpfile
+            printf '#!/bin/sh\n' > ls_gnu/run.sh
+            chmod 0755 ls_gnu/run.sh
+            ln -s small.txt ls_gnu/link
+      - run:
+          command: ls --hide=tmp* ${workdir}/ls_gnu
+      - assert:
+          exit_code: 0
+          stdout:
+            not_contains: "tmpfile"
+
+  - name: keeps hidden matches when -a is given
+    steps:
+      - run:
+          shell: true
+          command: |
+            mkdir -p ls_gnu/adir
+            printf 'xxxxxxxxxx' > ls_gnu/small.txt
+            dd if=/dev/zero of=ls_gnu/big.txt bs=1 count=5000 2>/dev/null
+            : > ls_gnu/a.log
+            : > ls_gnu/tmpfile
+            printf '#!/bin/sh\n' > ls_gnu/run.sh
+            chmod 0755 ls_gnu/run.sh
+            ln -s small.txt ls_gnu/link
+      - run:
+          command: ls -a --hide=tmp* ${workdir}/ls_gnu
+      - assert:
+          exit_code: 0
+          stdout:
+            contains: "tmpfile"
+
+  - name: prints an inode number with -i
+    steps:
+      - run:
+          shell: true
+          command: |
+            mkdir -p ls_gnu/adir
+            printf 'xxxxxxxxxx' > ls_gnu/small.txt
+      - run:
+          command: ls -i ${workdir}/ls_gnu/small.txt
+      - assert:
+          exit_code: 0
+          stdout:
+            matches: "[0-9]+ +.*small.txt"
+
+  - name: scales sizes to 1024-byte blocks with -k
+    steps:
+      - run:
+          shell: true
+          command: |
+            mkdir -p ls_gnu/adir
+            dd if=/dev/zero of=ls_gnu/big.txt bs=1 count=5000 2>/dev/null
+      - run:
+          command: ls -l -k ${workdir}/ls_gnu/big.txt
+      - assert:
+          exit_code: 0
+          stdout:
+            contains: " 5 "

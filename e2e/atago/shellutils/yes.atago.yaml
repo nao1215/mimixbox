@@ -1,0 +1,31 @@
+# Migrated from mimixbox's ShellSpec test/it/spec/yes_spec.sh.
+version: "1"
+
+suite:
+  name: mimixbox yes
+
+scenarios:
+  - name: repeats y until the reader closes
+    steps:
+      - run:
+          shell: true
+          command: yes | head -n 3
+      - assert:
+          exit_code: 0
+          stdout:
+            equals: |
+              y
+              y
+              y
+
+  - name: repeats the given string
+    steps:
+      - run:
+          shell: true
+          command: yes mimix | head -n 2
+      - assert:
+          exit_code: 0
+          stdout:
+            equals: |
+              mimix
+              mimix

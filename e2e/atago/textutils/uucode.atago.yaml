@@ -1,0 +1,44 @@
+# Migrated from mimixbox's ShellSpec test/it/spec/uucode_spec.sh (+ checksum_test.sh
+# TestUuRoundTrip/TestUuBase64/TestUsleep). The uuencode|uudecode pipelines and
+# mktemp need shell:true; usleep uses '&&' so it does too.
+version: "1"
+
+suite:
+  name: mimixbox uuencode/uudecode/usleep
+
+scenarios:
+  - name: uuencode then uudecode round-trips (traditional)
+    steps:
+      - run:
+          shell: true
+          command: |
+            d=$(mktemp -d); printf 'round trip data\n' > "$d/in"
+            uuencode "$d/in" out | uudecode -o -
+            rm -rf "$d"
+      - assert:
+          exit_code: 0
+          stdout:
+            equals: "round trip data"
+
+  - name: uuencode -m then uudecode round-trips (base64)
+    steps:
+      - run:
+          shell: true
+          command: |
+            d=$(mktemp -d); printf 'base64 round trip\n' > "$d/in"
+            uuencode -m "$d/in" out | uudecode -o -
+            rm -rf "$d"
+      - assert:
+          exit_code: 0
+          stdout:
+            equals: "base64 round trip"
+
+  - name: usleep waits and exits 0
+    steps:
+      - run:
+          shell: true
+          command: usleep 1000 && echo slept
+      - assert:
+          exit_code: 0
+          stdout:
+            equals: "slept"

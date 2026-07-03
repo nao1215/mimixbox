@@ -1,0 +1,17 @@
+# Migrated from mimixbox's ShellSpec test/it/spec/ischroot_spec.sh
+# (+ debianutils/ischroot_test.sh). Only the --help contract is exercised; a real
+# chroot detection result depends on the environment. Single command → direct exec.
+version: "1"
+
+suite:
+  name: mimixbox ischroot
+
+scenarios:
+  - name: prints usage with --help and exits 0
+    steps:
+      - run:
+          command: ischroot --help
+      - assert:
+          exit_code: 0
+          stdout:
+            contains: "Usage: ischroot"

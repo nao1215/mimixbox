@@ -1,0 +1,72 @@
+# Migrated from mimixbox's ShellSpec test/it/spec/readlink_gnu_spec.sh.
+# GNU flags added to readlink (issue #734): --canonicalize-existing/-e,
+# --canonicalize-missing/-m, --zero/-z. Each scenario sets up a symlink
+# (link -> target) in its isolated ${workdir}.
+version: "1"
+
+suite:
+  name: mimixbox readlink_gnu
+
+scenarios:
+  - name: fails when -e is given a missing path
+    steps:
+      - fixture:
+          file: target
+          content: ""
+      - fixture:
+          file: link
+          symlink: "${workdir}/target"
+      - run:
+          command: readlink -e ${workdir}/does-not-exist
+      - assert:
+          exit_code:
+            not: 0
+          stdout:
+            empty: true
+
+  - name: succeeds when -e is given an existing symlink
+    steps:
+      - fixture:
+          file: target
+          content: ""
+      - fixture:
+          file: link
+          symlink: "${workdir}/target"
+      - run:
+          command: readlink -e ${workdir}/link
+      - assert:
+          exit_code: 0
+          stdout:
+            equals: "${workdir}/target"
+
+  - name: succeeds with -m on a missing path
+    steps:
+      - fixture:
+          file: target
+          content: ""
+      - fixture:
+          file: link
+          symlink: "${workdir}/target"
+      - run:
+          command: readlink -m ${workdir}/a/b/c
+      - assert:
+          exit_code: 0
+          stdout:
+            equals: "${workdir}/a/b/c"
+
+  - name: terminates output with NUL under -z
+    # atago captures raw bytes, so the trailing NUL (and absence of a newline)
+    # can be asserted directly with a regex.
+    steps:
+      - fixture:
+          file: target
+          content: ""
+      - fixture:
+          file: link
+          symlink: "${workdir}/target"
+      - run:
+          command: readlink -z ${workdir}/link
+      - assert:
+          exit_code: 0
+          stdout:
+            matches: "target\\x00$"

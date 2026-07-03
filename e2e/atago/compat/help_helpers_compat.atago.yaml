@@ -1,0 +1,56 @@
+# Migrated from mimixbox's ShellSpec test/it/spec/help_helpers_compat_spec.sh
+# (+ compat/<cmd>_test.sh). Each helper runs `<cmd> --help` and asserts a
+# structured help banner. Simple single commands -> direct exec, no shell.
+version: "1"
+
+suite:
+  name: mimixbox compat commands expose a dedicated --help helper
+
+scenarios:
+  - name: "[ --help is structured"
+    steps:
+      - run: { command: "[ --help" }
+      - assert: { exit_code: 0 }
+      - assert: { stdout: { contains: "Usage:" } }
+
+  - name: "[[ --help is structured"
+    steps:
+      - run: { command: "[[ --help" }
+      - assert: { exit_code: 0 }
+      - assert: { stdout: { contains: "Usage:" } }
+
+  - name: ash --help is structured
+    steps:
+      - run: { command: "ash --help" }
+      - assert: { exit_code: 0 }
+      - assert: { stdout: { contains: "Usage:" } }
+
+  - name: bash --help is structured
+    steps:
+      - run: { command: "bash --help" }
+      - assert: { exit_code: 0 }
+      - assert: { stdout: { contains: "Usage:" } }
+
+  - name: busybox --help is structured
+    steps:
+      - run: { command: "busybox --help" }
+      - assert: { exit_code: 0 }
+      - assert: { stdout: { contains: "Usage:" } }
+
+  - name: cttyhack --help is structured
+    steps:
+      - run: { command: "cttyhack --help" }
+      - assert: { exit_code: 0 }
+      - assert: { stdout: { contains: "Usage:" } }
+
+  - name: hush --help is structured
+    steps:
+      - run: { command: "hush --help" }
+      - assert: { exit_code: 0 }
+      - assert: { stdout: { contains: "Usage:" } }
+
+  - name: unit --help is structured
+    steps:
+      - run: { command: "unit --help" }
+      - assert: { exit_code: 0 }
+      - assert: { stdout: { contains: "Usage:" } }

@@ -1,0 +1,26 @@
+# Migrated from mimixbox's ShellSpec test/it/spec/xxd_spec.sh (+ textutils/xxd_test.sh).
+version: "1"
+
+suite:
+  name: mimixbox xxd
+
+scenarios:
+  - name: prints a hex dump
+    steps:
+      - run:
+          shell: true
+          command: printf 'hello\n' | xxd
+      - assert:
+          exit_code: 0
+          stdout:
+            equals: "00000000: 6865 6c6c 6f0a                           hello."
+
+  - name: reverses a hex dump
+    steps:
+      - run:
+          shell: true
+          command: printf 'hello\n' | xxd | xxd -r
+      - assert:
+          exit_code: 0
+          stdout:
+            equals: "hello"

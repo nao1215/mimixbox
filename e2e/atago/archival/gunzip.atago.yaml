@@ -1,0 +1,18 @@
+# Migrated from mimixbox's ShellSpec test/it/spec/gunzip_spec.sh (+ archival/gunzip_test.sh).
+# Setup gzip-compresses a payload to data.gz; gunzip -c decompresses it to
+# stdout. Compressed bytes are binary, so we build the .gz then assert the
+# round-trip payload.
+version: "1"
+
+suite:
+  name: mimixbox gunzip
+
+scenarios:
+  - name: decompresses a .gz file to stdout with -c
+    steps:
+      - run:
+          shell: true
+          command: printf 'gunzip payload' > data && gzip data && gunzip -c data.gz
+      - assert:
+          exit_code: 0
+          stdout: { equals: "gunzip payload" }

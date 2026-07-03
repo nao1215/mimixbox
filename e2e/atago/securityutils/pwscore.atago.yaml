@@ -1,0 +1,18 @@
+# Migrated from mimixbox's ShellSpec test/it/spec/pwscore_spec.sh
+# (+ securityutils/pwscore_test.sh). The helper pipes pwscore into `head -n 1`,
+# so this needs a shell pipeline.
+version: "1"
+
+suite:
+  name: mimixbox pwscore
+
+scenarios:
+  - name: scores a common password as zero
+    steps:
+      - run:
+          shell: true
+          command: pwscore password | head -n 1
+      - assert:
+          exit_code: 0
+          stdout:
+            contains: "Score: 0/100"

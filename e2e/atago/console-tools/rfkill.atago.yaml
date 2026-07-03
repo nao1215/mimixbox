@@ -1,0 +1,23 @@
+# Migrated from mimixbox's ShellSpec test/it/spec/rfkill_spec.sh.
+# Real rfkill devices vary by host; only 'list' running cleanly and the error
+# path are confirmed here.
+version: "1"
+
+suite:
+  name: mimixbox rfkill
+
+scenarios:
+  - name: lists devices cleanly
+    steps:
+      - run:
+          command: rfkill list
+      - assert:
+          exit_code: 0
+
+  - name: rejects an unknown command
+    steps:
+      # Error case → direct exec.
+      - run:
+          command: rfkill bogus
+      - assert:
+          exit_code: 1

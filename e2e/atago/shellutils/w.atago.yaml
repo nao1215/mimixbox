@@ -1,0 +1,30 @@
+# Migrated from mimixbox's ShellSpec test/it/spec/w_spec.sh (+ shellutils/w_test.sh).
+version: "1"
+
+suite:
+  name: mimixbox w
+
+scenarios:
+  - name: prints a summary header with the load averages
+    steps:
+      - run:
+          shell: true
+          command: w | sed -n '1p'
+      - assert:
+          exit_code: 0
+          stdout:
+            contains:
+              - "load average:"
+              - "up "
+
+  - name: prints the column header
+    steps:
+      - run:
+          shell: true
+          command: w | sed -n '2p'
+      - assert:
+          exit_code: 0
+          stdout:
+            contains:
+              - "USER"
+              - "LOGIN@"

@@ -1,0 +1,25 @@
+# Migrated from mimixbox's ShellSpec test/it/spec/cowsay_spec.sh
+# (+ jokeutils/cowsay_test.sh). Both helpers are single commands → direct exec.
+version: "1"
+
+suite:
+  name: mimixbox cowsay
+
+scenarios:
+  - name: prints usage with --help and exits 0
+    steps:
+      - run:
+          command: cowsay --help
+      - assert:
+          exit_code: 0
+          stdout:
+            contains: "Usage: cowsay"
+
+  - name: renders the message in the speech bubble
+    steps:
+      - run:
+          command: cowsay hello
+      - assert:
+          exit_code: 0
+          stdout:
+            contains: "hello"
