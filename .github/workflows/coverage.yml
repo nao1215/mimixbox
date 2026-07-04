@@ -9,21 +9,31 @@ on:
 
 jobs:
   coverage:
-    name: Unit test (linux)
+    name: Coverage (unit + e2e)
     runs-on: ubuntu-latest
-    timeout-minutes: 10
+    timeout-minutes: 20
     steps:
       - uses: actions/checkout@v6
+        with:
+          persist-credentials: false
 
       - uses: actions/setup-go@v6
         with:
           go-version-file: go.mod
 
-      - name: Prepare test fixtures
-        run: make pre_ut
+      # The E2E half of `make coverage` runs the atago suite against a
+      # coverage-instrumented mimixbox. atago is the runner; install it with the
+      # same pinned action ref the integration_test workflow uses.
+      - name: Install atago
+        uses: nao1215/setup-atago@e4b6719aea547a68e6c15252222babab7f492a88 # v0.1.1
+        with:
+          version: v0.2.0
 
-      - name: Run tests with coverage report output
-        run: go test -cover -coverpkg=./... -coverprofile=cover.out ./...
+      # Combines unit-test coverage with self-hosted E2E coverage (the E2E suite
+      # runs a `go build -cover` mimixbox and collects covdata via GOCOVERDIR),
+      # then merges both into cover.out.
+      - name: Run combined unit + E2E coverage
+        run: make coverage
 
       - uses: k1LoW/octocov-action@v1
         with:

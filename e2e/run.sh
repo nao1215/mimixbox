@@ -31,8 +31,17 @@ cleanup() { rm -rf "$TMP"; }
 trap cleanup EXIT
 mkdir -p "$TMP/applets"
 
-echo "e2e: building the mimixbox binary..."
-(cd "$REPO_ROOT" && go build -trimpath -o "$TMP/applets/mimixbox" ./cmd/mimixbox)
+# COVER=1 (used by scripts/coverage.sh) builds a coverage-instrumented binary
+# so every applet invocation writes covdata to GOCOVERDIR. The default path is
+# byte-for-byte the plain build, keeping `make e2e` fast and unchanged.
+if [ -n "${COVER:-}" ]; then
+	: "${GOCOVERDIR:?COVER=1 requires GOCOVERDIR to be set}"
+	echo "e2e: building the coverage-instrumented mimixbox binary..."
+	(cd "$REPO_ROOT" && go build -cover -covermode=atomic -coverpkg=./... -trimpath -o "$TMP/applets/mimixbox" ./cmd/mimixbox)
+else
+	echo "e2e: building the mimixbox binary..."
+	(cd "$REPO_ROOT" && go build -trimpath -o "$TMP/applets/mimixbox" ./cmd/mimixbox)
+fi
 
 echo "e2e: installing applets via --full-install..."
 "$TMP/applets/mimixbox" --full-install "$TMP/applets" >/dev/null

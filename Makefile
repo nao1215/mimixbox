@@ -22,6 +22,7 @@ clean: ## Clean project
 	-rm -rf dist
 	-rm -rf licenses
 	-rm -rf $(E2E_BIN_DIR)
+	-rm -rf .coverage
 
 docker: ## Run container for testing mimixbox
 	docker image build -t mimixbox/test:latest .
@@ -58,6 +59,14 @@ test: pre_ut  ## Run unit tests with coverage (writes cover.out / cover.html)
 # (ShellSpec was sequential too).
 e2e: ## Run the atago end-to-end tests against MimixBox applets in an isolated PATH
 	./e2e/run.sh --parallel 1
+
+# Combine unit-test coverage with self-hosted E2E coverage into one cover.out.
+# Builds a `go build -cover` mimixbox, runs the atago E2E suite so every applet
+# invocation contributes covdata, then merges it with unit covdata. Scratch
+# under .coverage/ (gitignored); only cover.out / cover.html are kept. Override
+# scenario concurrency with PARALLEL (defaults to 1, matching `make e2e`).
+coverage: ## Combine unit + self-hosted E2E coverage into cover.out / cover.html
+	env PARALLEL=$(PARALLEL) sh ./scripts/coverage.sh
 
 lint: ## Run golangci-lint
 	golangci-lint run ./...
@@ -104,7 +113,7 @@ ut: test  ## Alias for "make test"
 it: e2e  ## Alias for "make e2e"
 
 .DEFAULT_GOAL := help
-.PHONY: build clean docker install full-install remove test e2e lint generate command-list jail release licenses pre_ut ut it help
+.PHONY: build clean docker install full-install remove test e2e coverage lint generate command-list jail release licenses pre_ut ut it help
 
 help:
 	@grep -E '^[0-9a-zA-Z_-]+[[:blank:]]*:.*?## .*$$' $(MAKEFILE_LIST) | sort \

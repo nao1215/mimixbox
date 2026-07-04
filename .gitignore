@@ -29,6 +29,11 @@ dist/
 cover.out
 cover.html
 
+# `make coverage` scratch: raw covdata (unit + e2e), the instrumented binary,
+# and the merged dir. The final cover.out / cover.html are the only kept
+# artifacts.
+.coverage/
+
 # Man-pages
 *.1.gz
 
