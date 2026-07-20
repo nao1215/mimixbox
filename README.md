@@ -6,7 +6,7 @@
 [![UnitTest](https://github.com/nao1215/mimixbox/actions/workflows/unit_test.yml/badge.svg?branch=main&event=push)](https://github.com/nao1215/mimixbox/actions/workflows/unit_test.yml)
 [![IntegrationTest](https://github.com/nao1215/mimixbox/actions/workflows/integration_test.yml/badge.svg?event=push)](https://github.com/nao1215/mimixbox/actions/workflows/integration_test.yml)
 ![GitHub](https://img.shields.io/github/license/nao1215/mimixbox)
-![GitHub all releases](https://img.shields.io/github/downloads/nao1215/mimixbox/total)
+[![GitHub Downloads (all assets, all releases)](https://img.shields.io/github/downloads/nao1215/mimixbox/total)](https://github.com/nao1215/mimixbox/releases)
 
 ![mimixbox-logo](./doc/image/mimixbox-logo-truss.jpg)
 
