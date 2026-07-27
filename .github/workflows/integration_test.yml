@@ -27,7 +27,7 @@ jobs:
       - name: Install atago
         uses: nao1215/setup-atago@e4b6719aea547a68e6c15252222babab7f492a88 # v0.1.1
         with:
-          version: v0.15.0
+          version: v0.16.0
 
       # `make it` (e2e) builds MimixBox and stages its applets in an isolated
       # PATH directory itself, so the workflow and the local target exercise
