@@ -5,7 +5,7 @@ FROM golang:1.25-bookworm AS builder
 ENV ROOT=/go/app
 ENV IT_SHELL=/home/mimixbox/do_integration_test.sh
 # Pin atago to a tagged release for reproducible integration tests.
-ENV ATAGO_VERSION=v0.2.0
+ENV ATAGO_VERSION=v0.17.0
 WORKDIR ${ROOT}
 
 # 1) Setting root user password
