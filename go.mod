@@ -10,7 +10,7 @@ require (
 	github.com/nsf/termbox-go v1.1.1
 	github.com/rasky/go-lzo v0.0.0-20200203143853-96a758eda86e
 	github.com/spf13/pflag v1.0.10
-	github.com/stretchr/testify v1.11.1
+	github.com/stretchr/testify v1.12.0
 	github.com/ulikunitz/xz v0.5.15
 	golang.org/x/crypto v0.53.0
 	golang.org/x/sys v0.46.0
@@ -19,7 +19,6 @@ require (
 )
 
 require (
-	github.com/davecgh/go-spew v1.1.1 // indirect
 	github.com/dustin/go-humanize v1.0.1 // indirect
 	github.com/golang/freetype v0.0.0-20170609003504-e2365dfdc4a0 // indirect
 	github.com/google/uuid v1.6.0 // indirect
@@ -27,7 +26,6 @@ require (
 	github.com/mattn/go-isatty v0.0.20 // indirect
 	github.com/mattn/go-runewidth v0.0.16 // indirect
 	github.com/ncruces/go-strftime v1.0.0 // indirect
-	github.com/pmezard/go-difflib v1.0.0 // indirect
 	github.com/remyoudompheng/bigfft v0.0.0-20230129092748-24d4a6f8daec // indirect
 	github.com/rivo/uniseg v0.4.7 // indirect
 	golang.org/x/image v0.0.0-20211028202545-6944b10bf410 // indirect
