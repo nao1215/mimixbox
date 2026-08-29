@@ -7,6 +7,13 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## [Unreleased]
 
+### Fixed
+
+- **paste**: repeated `-` operands now interleave standard input across the
+  columns of one row, matching GNU paste. `printf 'a\nb\n' | paste - -` prints
+  `a<TAB>b`; previously the first `-` consumed the whole stream and every later
+  column came out empty.
+
 ### Changed
 
 - Dependencies updated (`modernc.org/sqlite`, `golang.org/x/crypto`,
