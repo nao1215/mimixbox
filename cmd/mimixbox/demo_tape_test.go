@@ -2,6 +2,7 @@ package main
 
 import (
 	"context"
+	"errors"
 	"os"
 	"os/exec"
 	"path/filepath"
@@ -51,8 +52,7 @@ func TestDemoTapeCommandsStillWork(t *testing.T) {
 			// head's status, so a broken applet at the head of a pipeline would
 			// pass here. The tape's own shell does not set it -- that is the
 			// point, since a demo whose first command errors still renders a
-			// clean-looking GIF. There is no SIGPIPE risk: --list writes ~26KB,
-			// well inside the pipe buffer, so mimixbox exits before head closes.
+			// clean-looking GIF.
 			cmd := exec.CommandContext(t.Context(), bash, "-o", "pipefail", "-c", command)
 			// A per-scenario workdir keeps a stray applet write out of the
 			// repository, and the staged binary shadows any host mimixbox.
@@ -60,11 +60,29 @@ func TestDemoTapeCommandsStillWork(t *testing.T) {
 			cmd.Env = append(os.Environ(), "PATH="+binDir+string(os.PathListSeparator)+os.Getenv("PATH"))
 
 			out, err := cmd.CombinedOutput()
-			if err != nil {
+			if err != nil && !isSIGPIPE(err) {
 				t.Errorf("%q failed: %v\noutput: %s", command, err, out)
 			}
 		})
 	}
+}
+
+// sigpipeStatus is what bash reports for a command killed by SIGPIPE.
+const sigpipeStatus = 141
+
+// isSIGPIPE reports whether a pipeline failed only because its producer was
+// killed once the consumer had taken what it wanted.
+//
+// `mimixbox --list | head -n 4` is exactly that: --list writes one line per
+// applet, head closes the pipe after four, and whether the remaining ~26KB is
+// still in flight at that moment is a race. Under pipefail that surfaces as
+// exit 141 on a run that is behaving correctly, so treating it as a failure
+// would make this test flaky rather than strict. Every other nonzero status --
+// including the exit 1 a renamed applet produces, which is what this test
+// exists to catch -- is still a failure.
+func isSIGPIPE(err error) bool {
+	var exit *exec.ExitError
+	return errors.As(err, &exit) && exit.ExitCode() == sigpipeStatus
 }
 
 // buildMimixboxForTape builds the multi-call binary from this package and
