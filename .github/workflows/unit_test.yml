@@ -7,29 +7,65 @@ on:
     branches: [main]
 
 jobs:
-  unit-test:
+  # The matrix is the floor and the ceiling of the supported Go range. The floor
+  # is the lowest Go that builds MimixBox without source changes (it is what
+  # go.mod declares); running it here is the only place that claim is checked.
+  # The ceiling catches new vet checks and runtime behavior changes early.
+  # Every other job uses "stable" on purpose - go.mod declares the floor users
+  # may build from, not the toolchain this repo's CI should ship artifacts with.
+  unit-test-matrix:
+    name: Unit test (Go ${{ matrix.go }})
     runs-on: ubuntu-latest
     timeout-minutes: 15
+    strategy:
+      fail-fast: false
+      matrix:
+        go: ["1.25", "1.27"]
     steps:
-      - uses: actions/checkout@v6
-
-      - uses: actions/setup-go@v6
+      - uses: actions/checkout@v7
         with:
-          go-version-file: go.mod
+          persist-credentials: false
+
+      - uses: actions/setup-go@v7
+        with:
+          go-version: ${{ matrix.go }}
 
       - name: UnitTest
         run: make ut
+
+  # main's branch protection requires a status check literally named
+  # "unit-test". A matrix publishes one context per leg ("Unit test (Go 1.25)"),
+  # so that required check would never appear again and every PR would sit
+  # blocked. This job keeps the name stable while the matrix grows or shrinks
+  # underneath it, which is also why the protection rule does not have to be
+  # edited every time the supported Go range moves.
+  unit-test:
+    name: unit-test
+    needs: [unit-test-matrix]
+    if: always()
+    runs-on: ubuntu-latest
+    timeout-minutes: 5
+    steps:
+      - name: Fail unless every matrix leg succeeded
+        # `needs` alone does not gate on the result when `if: always()` is set,
+        # and "skipped" must count as a failure too -- a cancelled or skipped
+        # leg means the floor was never actually tested.
+        run: |
+          echo "unit-test-matrix result: ${{ needs.unit-test-matrix.result }}"
+          test "${{ needs.unit-test-matrix.result }}" = "success"
 
   unit-test-race:
     name: Unit test (race)
     runs-on: ubuntu-latest
     timeout-minutes: 20
     steps:
-      - uses: actions/checkout@v6
-
-      - uses: actions/setup-go@v6
+      - uses: actions/checkout@v7
         with:
-          go-version-file: go.mod
+          persist-credentials: false
+
+      - uses: actions/setup-go@v7
+        with:
+          go-version: "stable"
 
       - name: Prepare test fixtures
         run: make pre_ut

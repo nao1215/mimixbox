@@ -7,7 +7,7 @@ Thank you for taking the time to contribute. MimixBox welcomes new applets, opti
 - Go 1.25.0 or later (see `go.mod`)
 - `make`
 - `git`
-- [`atago`](https://github.com/nao1215/atago) for the end-to-end tests (`go install github.com/nao1215/atago@latest`)
+- [`atago`](https://github.com/nao1215/atago) for the end-to-end tests (`make tools`)
 - `golangci-lint` for linting
 
 ## Common Commands
@@ -17,6 +17,8 @@ make build      # build the mimixbox binary
 make test       # unit tests with coverage (writes cover.out / cover.html)
 make e2e        # atago end-to-end tests against a freshly built binary
 make lint       # golangci-lint
+make tools      # install atago, the end-to-end test runner
+make demo       # re-record assets/demo.gif from assets/demo.tape (needs vhs)
 ```
 
 `make test` (and its `make ut` alias) exits non-zero when any unit test fails, so a failing `go test` fails the local build and the `UnitTest` GitHub Actions workflow. Coverage HTML generation and the temporary-directory cleanup still run afterwards, but they never mask a real test failure.
@@ -81,6 +83,6 @@ Contributions must be compatible with the Apache License 2.0. GPLv2-or-later cod
 
 - follow GNU coreutils option behaviour for applets that mirror a system command
 - add or update tests for new behaviour
-- run `make test` (and `make test-e2e` for CLI changes) before opening a PR
+- run `make test` (and `make e2e` for CLI changes) before opening a PR
 - run `make lint` when changing Go code
 - record user-facing changes in `CHANGELOG.md` under `[Unreleased]`

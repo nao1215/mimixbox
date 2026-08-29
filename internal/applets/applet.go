@@ -284,13 +284,3 @@ func SortApplet() []string {
 	sort.Strings(keys)
 	return keys
 }
-
-func longestAppletLength() int {
-	max := 0
-	for _, key := range SortApplet() {
-		if max < len(key) {
-			max = len(key)
-		}
-	}
-	return max
-}
