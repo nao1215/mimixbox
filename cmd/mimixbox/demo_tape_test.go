@@ -47,7 +47,13 @@ func TestDemoTapeCommandsStillWork(t *testing.T) {
 		t.Run(command, func(t *testing.T) {
 			t.Parallel()
 
-			cmd := exec.CommandContext(t.Context(), bash, "-c", command)
+			// -o pipefail: without it `mimixbox --list | head -n 4` reports
+			// head's status, so a broken applet at the head of a pipeline would
+			// pass here. The tape's own shell does not set it -- that is the
+			// point, since a demo whose first command errors still renders a
+			// clean-looking GIF. There is no SIGPIPE risk: --list writes ~26KB,
+			// well inside the pipe buffer, so mimixbox exits before head closes.
+			cmd := exec.CommandContext(t.Context(), bash, "-o", "pipefail", "-c", command)
 			// A per-scenario workdir keeps a stray applet write out of the
 			// repository, and the staged binary shadows any host mimixbox.
 			cmd.Dir = t.TempDir()
