@@ -14,3 +14,37 @@ scenarios:
           exit_code: 0
           stdout:
             equals: "a,b,c"
+
+  # Every `-` operand names the same standard input, so with N of them
+  # consecutive stdin lines fill the N columns of one row. Reading each operand
+  # to EOF in turn instead handed every line to the first `-` and left the rest
+  # blank, which is what these pin against.
+  - name: repeated - operands interleave stdin across the columns
+    steps:
+      - run:
+          shell: true
+          command: printf 'a\nb\n' | paste - -
+      - assert:
+          exit_code: 0
+          stdout:
+            equals: "a\tb"
+
+  - name: an odd stdin line leaves the last column of the final row empty
+    steps:
+      - run:
+          shell: true
+          command: printf 'a\nb\nc\n' | paste - -
+      - assert:
+          exit_code: 0
+          stdout:
+            equals: "a\tb\nc\t"
+
+  - name: three - operands take three stdin lines per row
+    steps:
+      - run:
+          shell: true
+          command: printf 'a\nb\nc\nd\ne\n' | paste - - -
+      - assert:
+          exit_code: 0
+          stdout:
+            equals: "a\tb\tc\nd\te\t"

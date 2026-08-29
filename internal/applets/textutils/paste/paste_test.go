@@ -78,6 +78,100 @@ func TestParallelUnevenLength(t *testing.T) {
 	}
 }
 
+// TestParallelRepeatedStdin covers the whole family of "- appears more than
+// once" cases against GNU paste's behavior. Every `-` names the same stream, so
+// consecutive stdin lines fill consecutive columns of one row; reading each
+// operand to EOF in turn instead gives the first `-` everything and leaves the
+// rest blank.
+//
+// The uneven cases are the boundary: the last row is short, and paste still
+// emits it with the exhausted columns empty rather than dropping it.
+func TestParallelRepeatedStdin(t *testing.T) {
+	t.Parallel()
+
+	tests := map[string]struct {
+		stdin string
+		args  []string
+		want  string
+	}{
+		"two columns consume two lines per row": {
+			stdin: "a\nb\n",
+			args:  []string{"-", "-"},
+			want:  "a\tb\n",
+		},
+		"an odd line leaves the last column empty": {
+			stdin: "a\nb\nc\n",
+			args:  []string{"-", "-"},
+			want:  "a\tb\nc\t\n",
+		},
+		"three columns consume three lines per row": {
+			stdin: "a\nb\nc\nd\ne\n",
+			args:  []string{"-", "-", "-"},
+			want:  "a\tb\tc\nd\te\t\n",
+		},
+		"a custom delimiter still cycles across the columns": {
+			stdin: "a\nb\nc\nd\n",
+			args:  []string{"-d", ",", "-", "-"},
+			want:  "a,b\nc,d\n",
+		},
+		"empty stdin produces no rows": {
+			stdin: "",
+			args:  []string{"-", "-"},
+			want:  "",
+		},
+		"a single line fills only the first column": {
+			stdin: "a\n",
+			args:  []string{"-", "-"},
+			want:  "a\t\n",
+		},
+	}
+
+	for name, tt := range tests {
+		t.Run(name, func(t *testing.T) {
+			t.Parallel()
+
+			out, _, err := run(t, tt.stdin, tt.args...)
+			if err != nil {
+				t.Fatalf("Run error = %v", err)
+			}
+			if out != tt.want {
+				t.Errorf("out = %q, want %q", out, tt.want)
+			}
+		})
+	}
+}
+
+// TestParallelFileAndRepeatedStdin pins the mixed form: a real file supplies one
+// column while the `-` operands share stdin, so the file's line count and the
+// stdin line count advance independently.
+func TestParallelFileAndRepeatedStdin(t *testing.T) {
+	t.Parallel()
+
+	file := writeFile(t, "x\ny\n")
+	out, _, err := run(t, "a\nb\n", file, "-", "-")
+	if err != nil {
+		t.Fatalf("Run error = %v", err)
+	}
+	if want := "x\ta\tb\ny\t\t\n"; out != want {
+		t.Errorf("out = %q, want %q", out, want)
+	}
+}
+
+// TestSerialRepeatedStdin pins that -s is unaffected: it joins each operand's
+// whole stream onto one line, so the first `-` consumes stdin and the second
+// contributes an empty line. That already matched GNU and must stay that way.
+func TestSerialRepeatedStdin(t *testing.T) {
+	t.Parallel()
+
+	out, _, err := run(t, "a\nb\n", "-s", "-", "-")
+	if err != nil {
+		t.Fatalf("Run error = %v", err)
+	}
+	if want := "a\tb\n\n"; out != want {
+		t.Errorf("out = %q, want %q", out, want)
+	}
+}
+
 func TestDelimiterEscape(t *testing.T) {
 	t.Parallel()
 	out, _, err := run(t, "a\nb\n", "-s", "-d", `\n`)
