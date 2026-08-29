@@ -482,8 +482,8 @@ There are 451 commands. Run `mimixbox --list` to see them on the terminal.
 MimixBox targets Linux only. The [Release Page](https://github.com/nao1215/mimixbox/releases) distributes a `tar.gz` archive for `linux/amd64` and `linux/arm64`, plus `.deb`, `.rpm`, and `.apk` packages for the same two architectures. The archive is named `mimixbox_<version>_linux_<arch>.tar.gz` and extracts into a directory containing the `mimixbox` binary, `LICENSE`, `README.md`, and a self-contained `installer.sh` (with its `libshell.sh` helper). For example, on Linux (amd64):
 
 ```shell
-$ tar xf mimixbox_0.39.0_linux_amd64.tar.gz
-$ cd mimixbox_0.39.0_linux_amd64
+$ tar xf mimixbox_0.42.0_linux_amd64.tar.gz
+$ cd mimixbox_0.42.0_linux_amd64
 $ sudo ./installer.sh
 ```
 

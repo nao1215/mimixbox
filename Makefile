@@ -71,6 +71,17 @@ coverage: ## Combine unit + self-hosted E2E coverage into cover.out / cover.html
 lint: ## Run golangci-lint
 	golangci-lint run ./...
 
+tools: ## Install the development tools this repo drives (atago)
+	# @latest on purpose: locally we want to find out immediately when a new
+	# atago breaks a spec. CI pins an exact version (see the "Install atago"
+	# step in .github/workflows/) so a build stays reproducible.
+	go install github.com/nao1215/atago@latest
+
+demo: build ## Re-record assets/demo.gif from assets/demo.tape (needs vhs)
+	# `vhs` exits 0 even when every command on screen fails, so what keeps the
+	# demo honest is TestDemoTapeCommandsStillWork, not this target.
+	PATH="$(CURDIR):$$PATH" vhs assets/demo.tape
+
 generate: ## Regenerate code (applet registry) and the README command list
 	go generate ./...
 	$(MAKE) command-list
@@ -113,7 +124,7 @@ ut: test  ## Alias for "make test"
 it: e2e  ## Alias for "make e2e"
 
 .DEFAULT_GOAL := help
-.PHONY: build clean docker install full-install remove test e2e coverage lint generate command-list jail release licenses pre_ut ut it help
+.PHONY: build clean docker install full-install remove test e2e coverage lint tools demo generate command-list jail release licenses pre_ut ut it help
 
 help:
 	@grep -E '^[0-9a-zA-Z_-]+[[:blank:]]*:.*?## .*$$' $(MAKEFILE_LIST) | sort \

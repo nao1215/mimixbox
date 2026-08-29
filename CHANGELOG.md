@@ -9,10 +9,27 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ### Changed
 
+- Dependencies updated (`modernc.org/sqlite`, `golang.org/x/crypto`,
+  `golang.org/x/sys`, `golang.org/x/term`, `github.com/klauspost/compress`,
+  `github.com/ulikunitz/xz`, `github.com/nsf/termbox-go`,
+  `github.com/stretchr/testify`) and the GitHub Actions pins moved to
+  `actions/checkout@v7` / `actions/setup-go@v7`.
+- The end-to-end suite now runs against atago v0.21.0, and `make tools`
+  installs the runner locally.
+- CI runs the unit tests on both ends of the supported Go range (1.25 and
+  1.27) instead of a single go.mod-derived version; every other job builds
+  with the current stable toolchain so release artifacts carry the newest
+  runtime fixes.
 - The end-to-end suite is now driven by [atago](https://github.com/nao1215/atago)
   (`e2e/atago/<category>/<applet>.atago.yaml` + `e2e/run.sh`, `make e2e` /
-  `make it`) instead of ShellSpec; the 540 specs cover the same applet surface
-  as the removed `test/it/` suite and keep the same hermetic PATH staging.
+  `make it`) instead of ShellSpec; the specs cover the same applet surface as
+  the removed `test/it/` suite and keep the same hermetic PATH staging.
+
+### Tests
+
+- `assets/demo.tape` is now covered by a test that runs every command the
+  demo types and pins the GIF path the README embeds, so a renamed applet
+  fails CI instead of being silently re-recorded into the demo.
 
 ## [0.42.0] - 2026-06-18
 
