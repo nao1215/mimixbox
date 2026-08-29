@@ -13,13 +13,13 @@ jobs:
     runs-on: ubuntu-latest
     timeout-minutes: 20
     steps:
-      - uses: actions/checkout@v6
+      - uses: actions/checkout@v7
         with:
           persist-credentials: false
 
-      - uses: actions/setup-go@v6
+      - uses: actions/setup-go@v7
         with:
-          go-version-file: go.mod
+          go-version: "stable"
 
       # The E2E half of `make coverage` runs the atago suite against a
       # coverage-instrumented mimixbox. atago is the runner; install it with the
@@ -27,7 +27,7 @@ jobs:
       - name: Install atago
         uses: nao1215/setup-atago@e4b6719aea547a68e6c15252222babab7f492a88 # v0.1.1
         with:
-          version: v0.20.0
+          version: v0.21.0
 
       # Combines unit-test coverage with self-hosted E2E coverage (the E2E suite
       # runs a `go build -cover` mimixbox and collects covdata via GOCOVERDIR),

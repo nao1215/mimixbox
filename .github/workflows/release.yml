@@ -12,13 +12,17 @@ jobs:
     timeout-minutes: 30
     steps:
       - name: Checkout code
-        uses: actions/checkout@v6
+        uses: actions/checkout@v7
         with:
           fetch-depth: 0
       - name: Setup Go
-        uses: actions/setup-go@v6
+        # "stable", not go-version-file: go.mod. go.mod declares the oldest Go a
+        # user may build MimixBox from; the binaries we ship should carry the
+        # newest runtime and security fixes instead. The unit-test workflow is
+        # where the go.mod floor is actually exercised.
+        uses: actions/setup-go@v7
         with:
-          go-version-file: go.mod
+          go-version: "stable"
       - name: Generate dependency licenses
         # Produce the licenses/ directory bundled into the release archives.
         # Uses the same invocation as the Makefile "licenses" target so local
