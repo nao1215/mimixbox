@@ -36,6 +36,15 @@
       "contributions": [
         "code"
       ]
+    },
+    {
+      "login": "Dominiquini",
+      "name": "Rafael Baboni Dominiquini",
+      "avatar_url": "https://avatars.githubusercontent.com/u/1180808?v=4",
+      "profile": "https://rafaeldominiquini.ddns.net/",
+      "contributions": [
+        "platform"
+      ]
     }
   ],
   "contributorsPerLine": 7,
