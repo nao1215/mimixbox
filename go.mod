@@ -1,6 +1,6 @@
 module github.com/nao1215/mimixbox
 
-go 1.25.0
+go 1.26.0
 
 require (
 	github.com/GehirnInc/crypt v0.0.0-20230320061759-8cc1b52080c5
@@ -13,7 +13,7 @@ require (
 	github.com/stretchr/testify v1.12.1
 	github.com/ulikunitz/xz v0.5.16
 	golang.org/x/crypto v0.55.0
-	golang.org/x/sys v0.47.0
+	golang.org/x/sys v0.48.0
 	golang.org/x/term v0.45.0
 	modernc.org/sqlite v1.57.0
 )
