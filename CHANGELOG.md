@@ -7,6 +7,8 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## [Unreleased]
 
+## [0.42.2] - 2026-09-12
+
 ### Changed
 
 - Dependencies updated: github.com/klauspost/compress 1.20.0, modernc.org/sqlite 1.58.0, github.com/mattn/go-runewidth 0.0.30, github.com/klauspost/cpuid 1.3.1 and modernc.org/libc 1.75.7. The golang.org/x bumps are deliberately not taken: that whole family now declares `go 1.26.0`, and this module's floor is 1.25.0 — the oldest Go its own code compiles under, which is what the floor is for. Nothing in the advisory database affects the versions in use.
