@@ -20,7 +20,11 @@ jobs:
     strategy:
       fail-fast: false
       matrix:
-        go: ["1.25", "1.27"]
+        # The floor go.mod declares, and the newest release. "stable" rather
+        # than a pinned newest: a pin stops being the newest the day after it is
+        # written, and "1" would not do either, since setup-go resolves it from
+        # a manifest that lags a fresh Go release.
+        go: ["1.25", "stable"]
     steps:
       - uses: actions/checkout@v7
         with:
