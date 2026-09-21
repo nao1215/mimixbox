@@ -11,6 +11,12 @@ jobs:
   coverage:
     name: Coverage (unit + e2e)
     runs-on: ubuntu-latest
+    # octocov comments on the pull request and keeps its report in an artifact
+    # datastore; everything else only reads the checkout.
+    permissions:
+      contents: read
+      actions: write
+      pull-requests: write
     timeout-minutes: 20
     steps:
       - uses: actions/checkout@v7
