@@ -24,7 +24,7 @@ jobs:
         # than a pinned newest: a pin stops being the newest the day after it is
         # written, and "1" would not do either, since setup-go resolves it from
         # a manifest that lags a fresh Go release.
-        go: ["1.25", "stable"]
+        go: ["1.26", "stable"]
     steps:
       - uses: actions/checkout@v7
         with:
@@ -38,7 +38,7 @@ jobs:
         run: make ut
 
   # main's branch protection requires a status check literally named
-  # "unit-test". A matrix publishes one context per leg ("Unit test (Go 1.25)"),
+  # "unit-test". A matrix publishes one context per leg ("Unit test (Go 1.26)"),
   # so that required check would never appear again and every PR would sit
   # blocked. This job keeps the name stable while the matrix grows or shrinks
   # underneath it, which is also why the protection rule does not have to be

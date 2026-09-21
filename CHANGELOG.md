@@ -7,6 +7,11 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## [Unreleased]
 
+### Changed
+
+- Building from source now needs Go 1.26 or later (was 1.25). golang.org/x/crypto, x/sys and x/term, which this update takes, declare `go 1.26.0`, and Go 1.26 and 1.27 are the two releases the Go team still supports. The integration-test image builds with `golang:1.26-bookworm` to match. Dependencies: modernc.org/sqlite v1.59.0, ulikunitz/xz v0.5.17, golang.org/x/crypto v0.57.0.
+- The README lists the AUR package `mimixbox-bin`.
+
 ## [0.42.2] - 2026-09-12
 
 ### Changed

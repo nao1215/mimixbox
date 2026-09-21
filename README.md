@@ -496,9 +496,19 @@ $ sudo mimixbox --install /usr/local/bin
 
 ### Use "go install"
 
+Building from source needs Go 1.26 or later.
+
 ```shell
 $ go install github.com/nao1215/mimixbox/cmd/mimixbox@latest
 $ sudo mimixbox --install /usr/local/bin
+```
+
+### Use AUR (Arch Linux)
+
+[mimixbox-bin](https://aur.archlinux.org/packages/mimixbox-bin) is maintained by [Dominiquini](https://github.com/Dominiquini) and installs the release binary.
+
+```shell
+$ yay -S mimixbox-bin
 ```
 
 ## Original commands
