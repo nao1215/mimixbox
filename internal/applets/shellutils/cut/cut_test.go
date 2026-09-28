@@ -3,6 +3,7 @@ package cut_test
 import (
 	"bytes"
 	"context"
+	"strconv"
 	"strings"
 	"testing"
 
@@ -364,4 +365,108 @@ func TestRunHelpAndVersion(t *testing.T) {
 	if !strings.Contains(out, "cut (mimixbox)") {
 		t.Errorf("--version out = %q", out)
 	}
+}
+
+// TestRunRejectsMalformedPositions pins list items GNU cut rejects: a signed
+// position and a bare "-" with no endpoint. Both used to be accepted, "-"
+// selecting the whole line.
+func TestRunRejectsMalformedPositions(t *testing.T) {
+	t.Parallel()
+	for _, list := range []string{"+1", "1-+3", "-+2", "-", "1,-"} {
+		out, _, err := runStdin(t, "abcdef\n", "-c", list)
+		if err == nil {
+			t.Errorf("cut -c %q = %q, want an error", list, out)
+		}
+	}
+}
+
+// cutLine is the input for FuzzParseRanges: 62 distinct single-byte characters,
+// so every selected position is visible in the output.
+const cutLine = "0123456789abcdefghijklmnopqrstuvwxyzABCDEFGHIJKLMNOPQRSTUVWXYZ"
+
+// listModel parses a cut LIST the way GNU does (N, N-, -M or N-M, digits only,
+// positions from 1, never decreasing) and reports which 1-based positions of
+// cutLine it selects. ok is false when the list is invalid.
+func listModel(list string) (selected [len(cutLine) + 1]bool, ok bool) {
+	for _, item := range strings.Split(list, ",") {
+		item = strings.TrimSpace(item)
+		loStr, hiStr, isRange := strings.Cut(item, "-")
+		if item == "" || (isRange && loStr == "" && hiStr == "") {
+			return selected, false
+		}
+		lo, hi := 1, len(cutLine)
+		for _, part := range []struct {
+			s   string
+			dst *int
+		}{{loStr, &lo}, {hiStr, &hi}} {
+			if part.s == "" {
+				continue
+			}
+			if strings.Trim(part.s, "0123456789") != "" {
+				return selected, false
+			}
+			n, err := strconv.Atoi(part.s)
+			if err != nil || n < 1 {
+				return selected, false
+			}
+			*part.dst = n
+		}
+		if !isRange {
+			hi = lo
+		}
+		if isRange && hiStr != "" && loStr != "" && lo > hi {
+			return selected, false
+		}
+		for p := lo; p <= hi && p <= len(cutLine); p++ {
+			selected[p] = true
+		}
+	}
+	return selected, true
+}
+
+// FuzzParseRanges drives cut -c with arbitrary LISTs over cutLine and compares
+// the result with listModel. An accepted list must be one the model accepts,
+// and the output (with and without --complement) must be exactly the positions
+// the model selects, however the ranges overlap, repeat or come out of order.
+func FuzzParseRanges(f *testing.F) {
+	for _, list := range []string{
+		"1", "1,3-5,7-", "-3", "2-", "1-3,2-4", "1-2,3-4", "2-,4-5", "1-,3", "2,2,2", "5-2", "1,,3",
+		"a-b", "0", "+1", "-", "1-+3", "01-003", "9223372036854775808", " 1 , 2 ", "70-80", "62-",
+	} {
+		f.Add(list)
+	}
+	f.Fuzz(func(t *testing.T, list string) {
+		if strings.ContainsAny(list, "\x00") {
+			return // not representable as a command-line argument
+		}
+		out, _, err := runStdin(t, cutLine+"\n", "-c", list)
+		model, ok := listModel(list)
+		if err != nil {
+			if ok {
+				t.Fatalf("cut -c %q failed, but the list is valid", list)
+			}
+			return
+		}
+		if !ok {
+			t.Fatalf("cut -c %q = %q, but the list is invalid", list, out)
+		}
+		var want, wantComplement strings.Builder
+		for p := 1; p <= len(cutLine); p++ {
+			if model[p] {
+				want.WriteByte(cutLine[p-1])
+			} else {
+				wantComplement.WriteByte(cutLine[p-1])
+			}
+		}
+		if out != want.String()+"\n" {
+			t.Fatalf("cut -c %q = %q, want %q", list, out, want.String()+"\n")
+		}
+		out, _, err = runStdin(t, cutLine+"\n", "-c", list, "--complement")
+		if err != nil {
+			t.Fatalf("cut -c %q --complement error = %v", list, err)
+		}
+		if out != wantComplement.String()+"\n" {
+			t.Fatalf("cut -c %q --complement = %q, want %q", list, out, wantComplement.String()+"\n")
+		}
+	})
 }

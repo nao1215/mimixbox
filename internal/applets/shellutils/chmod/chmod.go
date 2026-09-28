@@ -228,7 +228,7 @@ func applyMode(cur os.FileMode, mode string, isDir bool) (os.FileMode, error) {
 
 	if isOctal(mode) {
 		v, err := strconv.ParseUint(mode, 8, 32)
-		if err != nil {
+		if err != nil || v > 0o7777 {
 			return cur, fmt.Errorf("invalid octal mode: %q", mode)
 		}
 		return modeFromBits(cur, uint32(v)), nil
@@ -305,7 +305,9 @@ whoLoop:
 	if hasO {
 		rwxMask |= 0o007
 	}
-	// specMask is the special bits (setuid/setgid/sticky) that this who can set.
+	// specMask is the special bits that belong to this who, as in GNU chmod:
+	// setuid to u, setgid to g and sticky to o, so "u=rw" keeps the sticky
+	// bit and "u+t" does nothing.
 	var specMask uint32
 	if hasU {
 		specMask |= 0o4000
@@ -313,14 +315,16 @@ whoLoop:
 	if hasG {
 		specMask |= 0o2000
 	}
-	// Sticky (t) is conventionally tied to "other"/all rather than a who letter.
+	if hasO {
+		specMask |= 0o1000
+	}
 
 	perm, err := permMask(clause[i:], bits, isDir, hasU, hasG, allWho)
 	if err != nil {
 		return bits, err
 	}
 
-	set := perm & (rwxMask | specMask | 0o1000)
+	set := perm & (rwxMask | specMask)
 	switch op {
 	case '+':
 		bits |= set
@@ -328,7 +332,7 @@ whoLoop:
 		bits &^= set
 	case '=':
 		// Clear the affected who's ordinary and special bits, then apply.
-		bits &^= rwxMask | specMask | 0o1000
+		bits &^= rwxMask | specMask
 		bits |= set
 	}
 	return bits, nil

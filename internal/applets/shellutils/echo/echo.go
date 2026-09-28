@@ -127,9 +127,15 @@ func expandEscapes(s string) (string, bool) {
 		case '\\':
 			b.WriteByte('\\')
 		case '0':
+			// \0NNN: up to three octal digits after the zero.
 			n, consumed := octal(s[i+1:])
 			b.WriteByte(n)
 			i += consumed
+		case '1', '2', '3', '4', '5', '6', '7':
+			// \NNN: GNU echo also takes one to three digits without the zero.
+			n, consumed := octal(s[i:])
+			b.WriteByte(n)
+			i += consumed - 1
 		case 'x':
 			n, consumed := hex(s[i+1:])
 			if consumed == 0 {

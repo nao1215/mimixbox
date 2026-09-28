@@ -1,13 +1,15 @@
 package printf_test
 
 import (
+	"fmt"
+	"strings"
 	"testing"
 
 	"github.com/nao1215/mimixbox/internal/applets/shellutils/printf"
 )
 
 // TestFormatEscapes drives the backslash escapes interpreted directly in the
-// FORMAT string by formatEscape (including octal \0NNN and hex \xHH), plus the
+// FORMAT string by formatEscape (including octal \NNN and hex \xHH), plus the
 // "unknown escape" fall-through that emits a literal backslash. Outputs match
 // GNU printf.
 func TestFormatEscapes(t *testing.T) {
@@ -23,7 +25,10 @@ func TestFormatEscapes(t *testing.T) {
 		{"carriage return", []string{`\r`}, "\r"},
 		{"vertical tab", []string{`\v`}, "\v"},
 		{"literal backslash", []string{`\\`}, "\\"},
-		{"octal escape", []string{`\0101`}, "A"},      // 0101 octal = 65 = 'A'
+		{"octal escape", []string{`\101`}, "A"},        // 101 octal = 65 = 'A'
+		{"octal one digit", []string{`\1x`}, "\x01x"},   // \1, then a literal x
+		{"octal leading zero", []string{`\0101`}, "\b1"}, // \010, then a literal 1
+		{"eight is not octal", []string{`\8`}, `\8`},
 		{"bare null escape", []string{`\0`}, "\x00"},  // \0 with no digits = NUL
 		{"hex escape", []string{`\x41`}, "A"},         // 0x41 = 'A'
 		{"hex single digit", []string{`\x9z`}, "\tz"}, // \x9 = tab, then literal z
@@ -64,6 +69,8 @@ func TestPercentBEscapes(t *testing.T) {
 		{"vertical tab", []string{"%b", `\v`}, "\v"},
 		{"backslash", []string{"%b", `\\`}, "\\"},
 		{"octal", []string{"%b", `\0101`}, "A"},
+		{"octal without leading zero", []string{"%b", `\101`}, "A"},
+		{"octal one digit", []string{"%b", `\1x`}, "\x01x"},
 		{"hex", []string{"%b", `\x41`}, "A"},
 		{"bad hex keeps literal", []string{"%b", `\xz`}, `\xz`},
 		{"unknown escape literal", []string{"%b", `\q`}, `\q`},
@@ -155,4 +162,85 @@ func TestSynopsis(t *testing.T) {
 	if c.Name() != "printf" {
 		t.Errorf("Name() = %q", c.Name())
 	}
+}
+
+// encodeEscapes writes every byte of data as a printf escape (or a literal),
+// choosing the form per byte from styles. inFormat selects the FORMAT dialect
+// (\NNN only, and '%' written as %%) instead of the %b one (\0NNN or \NNN).
+// Every form is written at full width so a following literal digit is never
+// absorbed, and decoding must give data back.
+func encodeEscapes(data, styles []byte, inFormat bool) string {
+	named := map[byte]string{'\a': `\a`, '\b': `\b`, '\f': `\f`, '\n': `\n`, '\r': `\r`, '\t': `\t`, '\v': `\v`, '\\': `\\`}
+	var b strings.Builder
+	for i, d := range data {
+		style := byte(0)
+		if len(styles) > 0 {
+			style = styles[i%len(styles)] % 5
+		}
+		switch {
+		case inFormat && d == '%' && style == 0:
+			b.WriteString("%%")
+		case style == 0 && d != '\\' && d != '%':
+			b.WriteByte(d)
+		case style == 2 && (inFormat || d >= 0o100):
+			fmt.Fprintf(&b, `\%03o`, d)
+		case style == 3:
+			fmt.Fprintf(&b, `\x%02x`, d)
+		case style == 4 && named[d] != "":
+			b.WriteString(named[d])
+		case inFormat:
+			fmt.Fprintf(&b, `\%03o`, d)
+		default:
+			fmt.Fprintf(&b, `\0%03o`, d)
+		}
+	}
+	return b.String()
+}
+
+// FuzzEscapes checks the escapes printf interprets in its FORMAT and in %b
+// arguments. Arbitrary input must never panic; a FORMAT without '\' or '%'
+// prints unchanged; %b never grows its argument. Bytes encoded with the
+// octal, hex and named escapes GNU printf accepts in each place must decode
+// back to themselves.
+func FuzzEscapes(f *testing.F) {
+	f.Add(`a\tb%%\101\0101\1x\8`, []byte("A\x00\\%\n\xff7"), []byte{0, 1, 2, 3, 4})
+	f.Add(`\x9z\xz\c%b%5s%`, []byte("0101"), []byte{2})
+	f.Add(`end\`, []byte{}, []byte{})
+	f.Fuzz(func(t *testing.T, raw string, data, styles []byte) {
+		out, _, err := run(t, raw)
+		if err != nil {
+			t.Fatalf("Run(%q) error = %v", raw, err)
+		}
+		if !strings.ContainsAny(raw, `\%`) && out != raw {
+			t.Fatalf("Run(%q) = %q, want the format unchanged", raw, out)
+		}
+		out, _, err = run(t, "%b", raw)
+		if err != nil {
+			t.Fatalf("Run(%%b, %q) error = %v", raw, err)
+		}
+		if len(out) > len(raw) {
+			t.Fatalf("Run(%%b, %q) = %q grew the argument", raw, out)
+		}
+		if !strings.Contains(raw, `\`) && out != raw {
+			t.Fatalf("Run(%%b, %q) = %q, want the argument unchanged", raw, out)
+		}
+
+		if enc := encodeEscapes(data, styles, true); len(enc) > 0 {
+			out, _, err = run(t, enc)
+			if err != nil {
+				t.Fatalf("Run(%q) error = %v", enc, err)
+			}
+			if out != string(data) {
+				t.Fatalf("Run(%q) = %q, want %q", enc, out, data)
+			}
+		}
+		enc := encodeEscapes(data, styles, false)
+		out, _, err = run(t, "%b", enc)
+		if err != nil {
+			t.Fatalf("Run(%%b, %q) error = %v", enc, err)
+		}
+		if out != string(data) {
+			t.Fatalf("Run(%%b, %q) = %q, want %q", enc, out, data)
+		}
+	})
 }

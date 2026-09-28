@@ -3,6 +3,7 @@ package echo_test
 import (
 	"bytes"
 	"context"
+	"fmt"
 	"strings"
 	"testing"
 
@@ -77,6 +78,11 @@ func TestEscapeExpansion(t *testing.T) {
 		{"octal full", `\0101`, "A\n"},
 		{"octal short", `\007`, "\a\n"},
 		{"octal zero only", `\0`, "\x00\n"},
+		// GNU echo also takes \NNN without the leading zero.
+		{"octal without leading zero", `\101`, "A\n"},
+		{"octal one digit", `\1x`, "\x01x\n"},
+		{"octal stops after three digits", `\1011`, "A1\n"},
+		{"eight is not octal", `\8`, "\\8\n"},
 		{"text around escape", `a\tb\tc`, "a\tb\tc\n"},
 	}
 	for _, tt := range tests {
@@ -153,4 +159,68 @@ func TestHelpSections(t *testing.T) {
 			t.Errorf("--help missing %q: %q", want, out.String())
 		}
 	}
+}
+
+// encodeEscapes writes every byte of data as an echo -e escape (or a literal),
+// choosing the form per byte from styles. Each form is self-delimiting (\0NNN,
+// \NNN and \xHH always use their full width), so a following literal digit is
+// never absorbed and decoding must give data back.
+func encodeEscapes(data, styles []byte) string {
+	named := map[byte]string{'\a': `\a`, '\b': `\b`, '\f': `\f`, '\n': `\n`, '\r': `\r`, '\t': `\t`, '\v': `\v`, '\\': `\\`}
+	var b strings.Builder
+	for i, d := range data {
+		style := byte(0)
+		if len(styles) > 0 {
+			style = styles[i%len(styles)] % 5
+		}
+		if i == 0 && d == '-' {
+			style = 1 // a leading "-n" would be read as a flag, not text
+		}
+		switch {
+		case style == 0 && d != '\\':
+			b.WriteByte(d)
+		case style == 2 && d >= 0o100:
+			fmt.Fprintf(&b, `\%03o`, d)
+		case style == 3:
+			fmt.Fprintf(&b, `\x%02x`, d)
+		case style == 4 && named[d] != "":
+			b.WriteString(named[d])
+		default:
+			fmt.Fprintf(&b, `\0%03o`, d)
+		}
+	}
+	return b.String()
+}
+
+// FuzzEscapeExpansion checks echo -e on arbitrary text and on encoded bytes.
+// Arbitrary text must never panic, never grow (every escape is at least as long
+// as the byte it stands for) and pass through unchanged when it has no
+// backslash. Bytes encoded with the octal, hex and named escapes GNU echo
+// accepts must decode back to themselves.
+func FuzzEscapeExpansion(f *testing.F) {
+	f.Add(`a\tb\tc`, []byte("A\x00\\-\n\xff7"), []byte{0, 1, 2, 3, 4})
+	f.Add(`\0101\101\1x\8\x9z\xz\c`, []byte("-n"), []byte{0})
+	f.Add(`end\`, []byte{}, []byte{})
+	f.Fuzz(func(t *testing.T, raw string, data, styles []byte) {
+		in := "x" + raw // keep the operand from looking like -n/-e/-E
+		out, err := run(t, "-e", in)
+		if err != nil {
+			t.Fatalf("Run(-e, %q) error = %v", in, err)
+		}
+		if len(strings.TrimSuffix(out, "\n")) > len(in) {
+			t.Fatalf("Run(-e, %q) = %q grew the input", in, out)
+		}
+		if !strings.Contains(in, `\`) && out != in+"\n" {
+			t.Fatalf("Run(-e, %q) = %q, want the input unchanged", in, out)
+		}
+
+		enc := encodeEscapes(data, styles)
+		out, err = run(t, "-n", "-e", enc)
+		if err != nil {
+			t.Fatalf("Run(-n, -e, %q) error = %v", enc, err)
+		}
+		if out != string(data) {
+			t.Fatalf("Run(-n, -e, %q) = %q, want %q", enc, out, data)
+		}
+	})
 }

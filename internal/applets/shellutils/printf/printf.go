@@ -143,10 +143,13 @@ func formatEscape(b *strings.Builder, s string) int {
 	case '\\':
 		b.WriteByte('\\')
 		return 1
-	case '0':
-		n, consumed := octal(s[1:])
+	case '0', '1', '2', '3', '4', '5', '6', '7':
+		// \NNN: one to three octal digits, the zero counting as one of them.
+		// Unlike %b and echo -e, the FORMAT has no \0NNN form, so "\0101" is
+		// \010 followed by a literal "1", as in GNU printf.
+		n, consumed := octal(s)
 		b.WriteByte(n)
-		return 1 + consumed
+		return consumed
 	case 'x':
 		n, consumed := hex(s[1:])
 		if consumed == 0 {
@@ -281,9 +284,15 @@ func expandEscapes(s string) (string, bool) {
 		case '\\':
 			b.WriteByte('\\')
 		case '0':
+			// \0NNN: up to three octal digits after the zero.
 			n, consumed := octal(s[i+1:])
 			b.WriteByte(n)
 			i += consumed
+		case '1', '2', '3', '4', '5', '6', '7':
+			// \NNN: GNU %b also takes one to three digits without the zero.
+			n, consumed := octal(s[i:])
+			b.WriteByte(n)
+			i += consumed - 1
 		case 'x':
 			n, consumed := hex(s[i+1:])
 			if consumed == 0 {
