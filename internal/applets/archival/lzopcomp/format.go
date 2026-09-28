@@ -8,7 +8,7 @@ import (
 	"hash/adler32"
 	"io"
 
-	lzo "github.com/rasky/go-lzo"
+	"github.com/woozymasta/lzo"
 )
 
 // The lzop container format (file extension ".lzo") frames LZO1X-compressed
@@ -106,7 +106,11 @@ func writeHeader(w io.Writer) error {
 // shrink the data, the block stores the data uncompressed (compressed length
 // equals uncompressed length), exactly as lzop does.
 func writeBlock(w io.Writer, src []byte) error {
-	comp := lzo.Compress1X(src)
+	// Level 1 is LZO1X-1, the method the file header advertises.
+	comp, err := lzo.Compress(src, &lzo.CompressOptions{Level: 1})
+	if err != nil {
+		return err
+	}
 	dAdler := adler32.Checksum(src)
 
 	var payload []byte
@@ -136,7 +140,7 @@ func writeBlock(w io.Writer, src []byte) error {
 			return err
 		}
 	}
-	_, err := w.Write(payload)
+	_, err = w.Write(payload)
 	return err
 }
 
@@ -196,7 +200,7 @@ func decompressStream(r io.Reader, w io.Writer) error {
 
 		var out []byte
 		if srcLen < dstLen {
-			out, err = lzo.Decompress1X(bytes.NewReader(payload), int(srcLen), int(dstLen))
+			out, err = lzo.DecompressInto(payload, make([]byte, dstLen))
 			if err != nil {
 				return fmt.Errorf("%w: %v", errCorrupt, err)
 			}

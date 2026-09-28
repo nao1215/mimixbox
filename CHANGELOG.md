@@ -7,6 +7,10 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## [Unreleased]
 
+### Fixed
+
+- lzop, unlzop and lzopcat no longer link GPL-2.0 code. Their LZO1X codec came from github.com/rasky/go-lzo, a GPL-2.0 port of the LZO library, which an Apache-2.0 binary cannot ship. The codec is now github.com/woozymasta/lzo (MIT, written from the MIT-licensed lzokay). The `.lzo` format is unchanged: files written by earlier releases and by the upstream lzop at every level still decompress, and upstream lzop decompresses what mimixbox writes. Compressed output may differ byte for byte from earlier releases.
+
 ## [0.42.4] - 2026-09-28
 
 ### Changed

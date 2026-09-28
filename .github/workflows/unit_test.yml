@@ -37,6 +37,11 @@ jobs:
         with:
           go-version: ${{ matrix.go }}
 
+      # The lzop applet's tests compare its output with the upstream lzop in
+      # both directions and skip when lzop is absent, which it is on the runner.
+      - name: Install upstream lzop for the lzop compatibility tests
+        run: sudo apt-get update && sudo apt-get install -y --no-install-recommends lzop
+
       - name: UnitTest
         run: make ut
 
