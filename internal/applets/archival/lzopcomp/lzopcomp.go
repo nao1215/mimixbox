@@ -1,8 +1,9 @@
 // Package lzopcomp implements the lzop family of applets (lzop, unlzop and
 // lzopcat). lzop compresses and decompresses files in the ".lzo" container
 // format, which frames LZO1X-compressed blocks with per-file and per-block
-// metadata. The LZO1X codec itself comes from github.com/rasky/go-lzo; this
-// package adds the lzop container (magic, file header with header checksum, and
+// metadata. The LZO1X codec itself comes from github.com/woozymasta/lzo (MIT;
+// the reference LZO library and its Go ports such as github.com/rasky/go-lzo
+// are GPL-2.0, which an Apache-2.0 binary cannot link); this package adds the lzop container (magic, file header with header checksum, and
 // length-prefixed compressed blocks with Adler-32 checksums) so the output is
 // interoperable with the upstream lzop utility.
 //
