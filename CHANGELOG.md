@@ -11,6 +11,11 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 - lzop, unlzop and lzopcat no longer link GPL-2.0 code. Their LZO1X codec came from github.com/rasky/go-lzo, a GPL-2.0 port of the LZO library, which an Apache-2.0 binary cannot ship. The codec is now github.com/woozymasta/lzo (MIT, written from the MIT-licensed lzokay). The `.lzo` format is unchanged: files written by earlier releases and by the upstream lzop at every level still decompress, and upstream lzop decompresses what mimixbox writes. Compressed output may differ byte for byte from earlier releases.
 
+### Changed
+
+- The dependency license texts in the release archives move from `licenses/` to `THIRD_PARTY_LICENSES/` (installer.sh installs them to `/usr/share/doc/mimixbox/THIRD_PARTY_LICENSES`), and the `.deb`, `.rpm` and `.apk` packages now carry them too, together with `LICENSE`. They are collected with go-licenses v2 per shipped GOOS. The FreeType License text of github.com/golang/freetype, which earlier releases left out, is now included, and the README carries the acknowledgement that license asks for.
+- A `licenses` workflow fails a pull request that links a dependency under GPL, LGPL, AGPL or another forbidden license, or one whose license cannot be identified.
+
 ## [0.42.4] - 2026-09-28
 
 ### Changed

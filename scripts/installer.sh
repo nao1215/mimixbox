@@ -38,7 +38,7 @@ function installMimixBox() {
 function installLicense() {
     local license licenses_dir
     license=$(resolveAsset LICENSE)
-    licenses_dir=$(resolveAsset licenses)
+    licenses_dir=$(resolveAsset THIRD_PARTY_LICENSES)
     mkdir -p "${DOC_INSTALL_DIR}"
     if [ -n "${license}" ]; then
         warnMsg "Install LICENSE at ${DOC_INSTALL_DIR}"

@@ -37,18 +37,10 @@ jobs:
         uses: actions/setup-go@b7ad1dad31e06c5925ef5d2fc7ad053ef454303e # v7.0.0
         with:
           go-version: "stable"
-      - name: Generate dependency licenses
-        # Produce the licenses/ directory bundled into the release archives.
-        # Uses the same invocation as the Makefile "licenses" target so local
-        # and release output stay in sync. The --ignore prefixes skip a few
-        # transitive deps whose license files go-licenses cannot auto-classify
-        # (freetype uses a non-standard file name; modernc.org/mathutil lacks a
-        # recognized one), which would otherwise abort the release.
-        run: |
-          go install github.com/google/go-licenses@v1.6.0
-          go-licenses save ./cmd/mimixbox --force --save_path "licenses/" \
-            --ignore github.com/golang/freetype \
-            --ignore modernc.org/mathutil
+      # GoReleaser's before hook (scripts/third_party_licenses.sh) runs
+      # go-licenses to collect the dependency license texts it ships.
+      - name: Install go-licenses
+        run: go install github.com/google/go-licenses/v2@v2.0.1
       - name: Install cosign
         uses: sigstore/cosign-installer@6f9f17788090df1f26f669e9d70d6ae9567deba6 # v4.1.2
       - name: Install Syft (SBOM generator)

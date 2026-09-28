@@ -6,6 +6,9 @@ before:
   hooks:
     - go mod tidy
     - go generate ./...
+    # Dependency license texts into third_party_licenses/linux (needs
+    # go-licenses v2; the release workflow installs it).
+    - ./scripts/third_party_licenses.sh
 builds:
   - main: ./cmd/mimixbox
     ldflags:
@@ -27,11 +30,10 @@ archives:
     files:
       - LICENSE
       - README.md
-      # Dependency-license output produced by `go-licenses save` before
-      # GoReleaser runs (see the Makefile "licenses" target and the
-      # release workflow). installer.sh installs this into
-      # /usr/share/doc/mimixbox when the archive is extracted.
-      - licenses/**/*
+      # License texts of the linked dependencies, written by the before hook
+      # above. installer.sh installs them into /usr/share/doc/mimixbox.
+      - src: "third_party_licenses/{{ .Os }}/**/*"
+        dst: THIRD_PARTY_LICENSES
       - src: scripts/installer.sh
         strip_parent: true
         info:
@@ -74,3 +76,9 @@ nfpms:
       - deb
       - rpm
       - apk
+    contents:
+      - src: ./LICENSE
+        dst: /usr/share/doc/mimixbox/LICENSE
+      - src: ./third_party_licenses/linux
+        dst: /usr/share/doc/mimixbox/THIRD_PARTY_LICENSES
+        type: tree

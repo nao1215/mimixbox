@@ -95,24 +95,8 @@ jail:  ## Make jail environment for testing chroot/ischroot
 release: ## Make release files.
 	$(RELEASE)
 
-licenses: ## Get licenses for dependent libraries
-	# Generate dependency-license output. If go-licenses is installed, a failure
-	# is fatal so broken release artifacts (missing/partial licenses) are caught.
-	# If the tool is absent, warn and continue so developers without it can still
-	# build; the release workflow (.github/workflows/release.yml) installs and
-	# runs go-licenses with this exact invocation before GoReleaser packages the
-	# licenses/ directory into the shipped archives.
-	# The --ignore prefixes skip transitive deps whose license files
-	# go-licenses cannot auto-classify (freetype uses a non-standard file name;
-	# modernc.org/mathutil lacks a recognized one), which would otherwise abort.
-	@if command -v go-licenses >/dev/null 2>&1; then \
-		go-licenses save ./cmd/mimixbox --force --save_path "licenses/" \
-			--ignore github.com/golang/freetype \
-			--ignore modernc.org/mathutil; \
-	else \
-		echo "WARNING: go-licenses not found; skipping dependency-license generation."; \
-		echo "         Install it with: go install github.com/google/go-licenses@latest"; \
-	fi
+licenses: ## Collect dependency license texts into third_party_licenses/ (needs go-licenses v2)
+	./scripts/third_party_licenses.sh
 
 pre_ut:
 	@echo "Make files for test at test directory."

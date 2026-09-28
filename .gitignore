@@ -37,8 +37,8 @@ cover.html
 # Man-pages
 *.1.gz
 
-# Directory that manages licenses for dependent libraries
-licenses
+# Dependency license texts written by scripts/third_party_licenses.sh
+/third_party_licenses/
 
 # Isolated applet staging directory built by `make e2e-setup`
 test/it/.mbbin/

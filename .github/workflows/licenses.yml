@@ -1,0 +1,76 @@
+name: licenses
+
+# Dependency license gate. Every module linked into the mimixbox binary must
+# carry a license that go-licenses can identify, and that license must not be
+# copyleft that reaches the whole binary (GPL, LGPL: a statically linked Go
+# binary cannot be relinked, so LGPL's exception does not help) or forbidden
+# outright (AGPL, non-commercial Creative Commons, Commons Clause).
+#
+# Reciprocal licenses (MPL-2.0, EPL) are allowed: they bind only the files they
+# cover, and scripts/third_party_licenses.sh ships those modules' source next
+# to the binary, which is what they ask for.
+#
+# The matrix lists the GOOS values .goreleaser.yml builds (MimixBox is Linux
+# only). There is no schedule: go.sum pins every version, so the verdict only
+# changes when a pull request changes the dependencies.
+
+on:
+  workflow_dispatch:
+  push:
+    branches: [main]
+  pull_request:
+    branches: [main]
+
+permissions:
+  contents: read
+
+jobs:
+  licenses:
+    name: licenses (${{ matrix.goos }})
+    runs-on: ubuntu-latest
+    timeout-minutes: 10
+
+    strategy:
+      fail-fast: false
+      matrix:
+        goos: [linux]
+
+    steps:
+      - uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7.0.1
+        with:
+          persist-credentials: false
+
+      # stable, not the go.mod minimum: go-licenses needs Go 1.23 to build and
+      # the module graph it reads does not depend on the toolchain version.
+      - uses: actions/setup-go@b7ad1dad31e06c5925ef5d2fc7ad053ef454303e # v7.0.0
+        with:
+          go-version: stable
+          check-latest: true
+
+      # Pinned so a classifier update cannot change the verdict on its own.
+      # Installed before GOOS is set: the tool itself runs on the runner.
+      - name: Install go-licenses
+        run: go install github.com/google/go-licenses/v2@v2.0.1
+
+      # IGNORED lists package paths whose license go-licenses cannot classify
+      # but a human has read:
+      #   github.com/golang/freetype - dual FreeType License / GPL-2.0-or-later;
+      #     LICENSE only points at licenses/ftl.txt and licenses/gpl.txt.
+      #     MimixBox uses it under the FreeType License, whose text
+      #     scripts/third_party_licenses.sh bundles by hand and whose
+      #     acknowledgement is in the README.
+      #
+      # GOROOT is set explicitly because go-licenses recognises the standard
+      # library by path prefix: after a toolchain switch it would otherwise
+      # report every stdlib package as "does not have module info".
+      - name: Check dependency licenses
+        env:
+          GOOS: ${{ matrix.goos }}
+          CGO_ENABLED: "0"
+          IGNORED: github.com/golang/freetype
+        run: |
+          GOROOT="$(go env GOROOT)"
+          export GOROOT
+          args=()
+          for m in $IGNORED; do args+=(--ignore "$m"); done
+          go-licenses check --disallowed_types=forbidden,restricted,unknown "${args[@]}" ./cmd/mimixbox
