@@ -269,6 +269,9 @@ func parseRange(item string) (rng, error) {
 
 	loStr := item[:dash]
 	hiStr := item[dash+1:]
+	if loStr == "" && hiStr == "" {
+		return rng{}, fmt.Errorf("invalid range with no endpoint: -")
+	}
 
 	var lo, hi int
 	var err error
@@ -290,8 +293,12 @@ func parseRange(item string) (rng, error) {
 	return rng{lo: lo, hi: hi}, nil
 }
 
-// parsePos parses a positive (>= 1) integer position from a list.
+// parsePos parses a positive (>= 1) integer position from a list. Only digits
+// are accepted: GNU cut rejects a sign, so "+1" is not a position.
 func parsePos(s string) (int, error) {
+	if strings.Trim(s, "0123456789") != "" {
+		return 0, fmt.Errorf("invalid byte, character or field list")
+	}
 	n, err := strconv.Atoi(s)
 	if err != nil {
 		return 0, fmt.Errorf("invalid byte, character or field list")

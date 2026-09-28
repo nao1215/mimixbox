@@ -7,6 +7,12 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## [Unreleased]
 
+### Fixed
+
+- chmod: each special bit now belongs to one class, as in GNU chmod: setuid to `u`, setgid to `g` and sticky to `o`. `chmod u=rw` no longer clears the sticky bit, and `chmod u+t` / `g+t` no longer set it. An octal mode above 7777 such as `12345` is rejected instead of losing its high bits.
+- echo -e and printf `%b` accept `\NNN` octal escapes without the leading zero (`\101` prints `A`), as GNU does. printf's FORMAT reads `\NNN` as one to three octal digits including a leading zero, so `printf '\101'` prints `A` and `printf '\0101'` prints a backspace followed by `1`, matching GNU printf.
+- cut rejects a signed position such as `+1` and a bare `-` in the LIST, as GNU cut does. A bare `-` used to select the whole line.
+
 ## [0.42.3] - 2026-09-21
 
 ### Changed
