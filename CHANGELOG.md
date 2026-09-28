@@ -7,6 +7,10 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## [Unreleased]
 
+### Changed
+
+- Release artifacts are now signed and ship with SLSA build provenance. `checksums.txt` is signed with cosign (keyless), producing `checksums.txt.sigstore.json`, and the release carries `multiple.intoto.jsonl`, which `slsa-verifier verify-artifact` checks offline against a downloaded archive. The release run verifies every published archive against it before finishing.
+
 ### Fixed
 
 - chmod: each special bit now belongs to one class, as in GNU chmod: setuid to `u`, setgid to `g` and sticky to `o`. `chmod u=rw` no longer clears the sticky bit, and `chmod u+t` / `g+t` no longer set it. An octal mode above 7777 such as `12345` is rejected instead of losing its high bits.
