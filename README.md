@@ -480,7 +480,7 @@ There are 451 commands. Run `mimixbox --list` to see them on the terminal.
 
 ## Install
 
-MimixBox targets Linux only. The [Release Page](https://github.com/nao1215/mimixbox/releases) distributes a `tar.gz` archive for `linux/amd64` and `linux/arm64`, plus `.deb`, `.rpm`, and `.apk` packages for the same two architectures. The archive is named `mimixbox_<version>_linux_<arch>.tar.gz` and extracts into a directory containing the `mimixbox` binary, `LICENSE`, `README.md`, and a self-contained `installer.sh` (with its `libshell.sh` helper). For example, on Linux (amd64):
+MimixBox targets Linux only. The [Release Page](https://github.com/nao1215/mimixbox/releases) distributes a `tar.gz` archive for `linux/amd64` and `linux/arm64`, plus `.deb`, `.rpm`, and `.apk` packages for the same two architectures. The archive is named `mimixbox_<version>_linux_<arch>.tar.gz` and extracts into a directory containing the `mimixbox` binary, `LICENSE`, `README.md`, the dependency license texts under `THIRD_PARTY_LICENSES/`, and a self-contained `installer.sh` (with its `libshell.sh` helper). For example, on Linux (amd64):
 
 ```shell
 $ tar xf mimixbox_0.42.4_linux_amd64.tar.gz
@@ -616,7 +616,7 @@ On a Debian-based distribution (e.g. Debian／Ubuntu／Kali Linux／Raspberry Pi
 
 ```shell
 $ sudo apt install build-essential curl git docker.io debootstrap
-$ go install github.com/google/go-licenses@latest
+$ go install github.com/google/go-licenses/v2@latest
 $ go install github.com/nao1215/atago@latest
 ```
 
@@ -661,6 +661,8 @@ To report a bug or request a feature, please use [GitHub Issue](https://github.c
 ## License
 
 The MimixBox project is licensed under the [Apache License 2.0](./LICENSE). It also incorporates portions of third-party code distributed under the MIT License (for example the `nc`, `whris`, and `fakemovie` applets), whose original copyright and license notices are preserved in the corresponding source files.
+
+The release archives and the `.deb` / `.rpm` / `.apk` packages include the license texts of every linked dependency under `THIRD_PARTY_LICENSES/` (installed to `/usr/share/doc/mimixbox/THIRD_PARTY_LICENSES`). The `fakemovie` applet renders text with Freetype-Go, which MimixBox uses under the FreeType License: portions of this software are based in part on the work of the FreeType Team (https://freetype.org/).
 
 ## Contributors
 

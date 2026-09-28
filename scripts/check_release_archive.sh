@@ -4,11 +4,11 @@
 #  installer.sh needs to install MimixBox and its license documentation.
 #
 #  The release contract (see .goreleaser.yml archives, scripts/installer.sh,
-#  and the Makefile "licenses" target) requires each extracted archive to
+#  and scripts/third_party_licenses.sh) requires each extracted archive to
 #  contain:
 #    - mimixbox            (the binary, built by GoReleaser)
 #    - LICENSE             (MimixBox's own license)
-#    - licenses/           (dependency-license output from go-licenses)
+#    - THIRD_PARTY_LICENSES/ (dependency license texts from go-licenses)
 #    - installer.sh        (self-contained installer)
 #    - libshell.sh         (helpers sourced by installer.sh)
 #
@@ -31,9 +31,11 @@ if [ ! -d "${TARGET_DIR}" ]; then
 fi
 
 # Files that must be present at the root of every extracted archive.
-# "licenses" is a directory; the rest are regular files.
-REQUIRED_FILES="mimixbox LICENSE installer.sh libshell.sh"
-REQUIRED_DIRS="licenses"
+# "THIRD_PARTY_LICENSES" is a directory; the rest are regular files. The
+# FreeType License text is copied by hand (go-licenses cannot classify it), so
+# it is checked by name.
+REQUIRED_FILES="mimixbox LICENSE installer.sh libshell.sh THIRD_PARTY_LICENSES/github.com/golang/freetype/ftl.txt"
+REQUIRED_DIRS="THIRD_PARTY_LICENSES"
 
 # checkExtractedDir verifies a single extracted archive root contains every
 # installer-required asset. Returns non-zero on the first missing asset.

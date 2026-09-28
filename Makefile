@@ -95,23 +95,16 @@ jail:  ## Make jail environment for testing chroot/ischroot
 release: ## Make release files.
 	$(RELEASE)
 
-licenses: ## Get licenses for dependent libraries
-	# Generate dependency-license output. If go-licenses is installed, a failure
-	# is fatal so broken release artifacts (missing/partial licenses) are caught.
-	# If the tool is absent, warn and continue so developers without it can still
-	# build; the release workflow (.github/workflows/release.yml) installs and
-	# runs go-licenses with this exact invocation before GoReleaser packages the
-	# licenses/ directory into the shipped archives.
-	# The --ignore prefixes skip transitive deps whose license files
-	# go-licenses cannot auto-classify (freetype uses a non-standard file name;
-	# modernc.org/mathutil lacks a recognized one), which would otherwise abort.
+licenses: ## Collect dependency license texts into third_party_licenses/ (needs go-licenses v2)
+	# `make build` runs this, so a machine without go-licenses (the Docker test
+	# image, a contributor's checkout) only gets a warning. A release cannot ship
+	# without the texts: GoReleaser runs the script itself as a before hook, and
+	# scripts/check_release_archive.sh fails an archive that lacks them.
 	@if command -v go-licenses >/dev/null 2>&1; then \
-		go-licenses save ./cmd/mimixbox --force --save_path "licenses/" \
-			--ignore github.com/golang/freetype \
-			--ignore modernc.org/mathutil; \
+		./scripts/third_party_licenses.sh; \
 	else \
-		echo "WARNING: go-licenses not found; skipping dependency-license generation."; \
-		echo "         Install it with: go install github.com/google/go-licenses@latest"; \
+		echo "WARNING: go-licenses not found; skipping dependency license collection."; \
+		echo "         Install it with: go install github.com/google/go-licenses/v2@v2.0.1"; \
 	fi
 
 pre_ut:
