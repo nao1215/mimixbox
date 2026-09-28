@@ -6,7 +6,7 @@ require (
 	github.com/GehirnInc/crypt v0.0.0-20230320061759-8cc1b52080c5
 	github.com/dsnet/compress v0.0.1
 	github.com/fogleman/gg v1.3.0
-	github.com/klauspost/compress v1.20.0
+	github.com/klauspost/compress v1.20.1
 	github.com/nsf/termbox-go v1.1.2
 	github.com/spf13/pflag v1.0.10
 	github.com/stretchr/testify v1.12.1
