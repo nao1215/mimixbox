@@ -38,15 +38,21 @@ function installMimixBox() {
 function installLicense() {
     local license licenses_dir
     license=$(resolveAsset LICENSE)
+    # THIRD_PARTY_LICENSES in a release archive; third_party_licenses/linux in
+    # a Git checkout after `make build` (scripts/third_party_licenses.sh).
     licenses_dir=$(resolveAsset THIRD_PARTY_LICENSES)
+    if [ -z "${licenses_dir}" ]; then
+        licenses_dir=$(resolveAsset third_party_licenses/linux)
+    fi
     mkdir -p "${DOC_INSTALL_DIR}"
     if [ -n "${license}" ]; then
         warnMsg "Install LICENSE at ${DOC_INSTALL_DIR}"
         cp -f "${license}" "${DOC_INSTALL_DIR}/."
     fi
     if [ -n "${licenses_dir}" ]; then
-        warnMsg "Install dependency licenses at ${DOC_INSTALL_DIR}"
-        cp -rf "${licenses_dir}" "${DOC_INSTALL_DIR}/."
+        warnMsg "Install dependency licenses at ${DOC_INSTALL_DIR}/THIRD_PARTY_LICENSES"
+        mkdir -p "${DOC_INSTALL_DIR}/THIRD_PARTY_LICENSES"
+        cp -rf "${licenses_dir}/." "${DOC_INSTALL_DIR}/THIRD_PARTY_LICENSES/"
     fi
 }
 

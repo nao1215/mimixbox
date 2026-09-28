@@ -60,7 +60,7 @@ jobs:
       #     scripts/third_party_licenses.sh bundles by hand and whose
       #     acknowledgement is in the README.
       #
-      # GOROOT is set explicitly because go-licenses recognises the standard
+      # GOROOT is set explicitly because go-licenses recognizes the standard
       # library by path prefix: after a toolchain switch it would otherwise
       # report every stdlib package as "does not have module info".
       - name: Check dependency licenses

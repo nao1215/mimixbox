@@ -96,7 +96,16 @@ release: ## Make release files.
 	$(RELEASE)
 
 licenses: ## Collect dependency license texts into third_party_licenses/ (needs go-licenses v2)
-	./scripts/third_party_licenses.sh
+	# `make build` runs this, so a machine without go-licenses (the Docker test
+	# image, a contributor's checkout) only gets a warning. A release cannot ship
+	# without the texts: GoReleaser runs the script itself as a before hook, and
+	# scripts/check_release_archive.sh fails an archive that lacks them.
+	@if command -v go-licenses >/dev/null 2>&1; then \
+		./scripts/third_party_licenses.sh; \
+	else \
+		echo "WARNING: go-licenses not found; skipping dependency license collection."; \
+		echo "         Install it with: go install github.com/google/go-licenses/v2@v2.0.1"; \
+	fi
 
 pre_ut:
 	@echo "Make files for test at test directory."

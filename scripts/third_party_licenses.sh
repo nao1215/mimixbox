@@ -6,7 +6,7 @@
 #  release archives and packages; `make licenses` runs it locally.
 #
 #  go-licenses v2 is required (go install github.com/google/go-licenses/v2@v2.0.1).
-#  GOROOT is set from `go env GOROOT` because go-licenses recognises the
+#  GOROOT is set from `go env GOROOT` because go-licenses recognizes the
 #  standard library by path prefix, and a toolchain switch (go.mod asking for a
 #  newer patch than the installed Go) would otherwise make it treat every
 #  standard package as an unlicensed dependency.
