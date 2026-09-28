@@ -40,6 +40,18 @@ archives:
         strip_parent: true
 checksum:
   name_template: "checksums.txt"
+# Keyless artifact signing with cosign. Signing the checksums file transitively
+# covers every published artifact.
+signs:
+  - cmd: cosign
+    signature: "${artifact}.sigstore.json"
+    args:
+      - sign-blob
+      - "--bundle=${signature}"
+      - "${artifact}"
+      - "--yes"
+    artifacts: checksum
+    output: true
 snapshot:
   version_template: "{{ incpatch .Version }}-next"
 changelog:
