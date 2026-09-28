@@ -4,7 +4,7 @@ Thank you for taking the time to contribute. MimixBox welcomes new applets, opti
 
 ## Development Environment
 
-- Go 1.26.0 or later (see `go.mod`)
+- Go 1.26.6 or later (see `go.mod`)
 - `make`
 - `git`
 - [`atago`](https://github.com/nao1215/atago) for the end-to-end tests (`make tools`)
