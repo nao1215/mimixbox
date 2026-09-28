@@ -512,6 +512,40 @@ $ sudo mimixbox --install /usr/local/bin
 $ yay -S mimixbox-bin
 ```
 
+### Verifying release integrity
+
+Releases after v0.42.3 ship supply-chain metadata so you can verify what you download:
+
+- Signed checksums: `checksums.txt` is signed with [cosign](https://github.com/sigstore/cosign) (keyless), producing `checksums.txt.sigstore.json`.
+- SBOM: an SPDX Software Bill of Materials (`*.sbom.json`) is attached for each release archive.
+- Build provenance: SLSA build provenance is attested via GitHub OIDC, and is also attached to the release as `multiple.intoto.jsonl`.
+
+Verify the signed checksums (then check your download against `checksums.txt`):
+
+```shell
+cosign verify-blob \
+  --bundle checksums.txt.sigstore.json \
+  --certificate-identity-regexp 'https://github.com/nao1215/mimixbox/\.github/workflows/release\.yml@refs/tags/.*' \
+  --certificate-oidc-issuer 'https://token.actions.githubusercontent.com' \
+  checksums.txt
+sha256sum --check --ignore-missing checksums.txt
+```
+
+Verify the build provenance of a downloaded artifact with the GitHub CLI:
+
+```shell
+gh attestation verify mimixbox_<version>_linux_<arch>.tar.gz --repo nao1215/mimixbox
+```
+
+Or download the `multiple.intoto.jsonl` release asset and verify the archive against it with [slsa-verifier](https://github.com/slsa-framework/slsa-verifier), which checks the provenance signature against the Sigstore transparency log:
+
+```shell
+slsa-verifier verify-artifact mimixbox_<version>_linux_<arch>.tar.gz \
+  --provenance-path multiple.intoto.jsonl \
+  --source-uri github.com/nao1215/mimixbox \
+  --source-tag v<version>
+```
+
 ## Original commands
 
 MimixBox has its own commands that do not exist in packages like Coreutils.

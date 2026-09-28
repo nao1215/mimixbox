@@ -18,9 +18,11 @@ jobs:
       hashes: ${{ steps.hash.outputs.hashes }}
     # contents: GoReleaser creates the GitHub release and uploads the archives.
     # id-token: keyless cosign signing of checksums.txt via GitHub OIDC.
+    # attestations: publish GitHub build provenance for the release artifacts.
     permissions:
       contents: write
       id-token: write
+      attestations: write
     steps:
       - name: Checkout code
         uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7.0.1
@@ -49,6 +51,8 @@ jobs:
             --ignore modernc.org/mathutil
       - name: Install cosign
         uses: sigstore/cosign-installer@6f9f17788090df1f26f669e9d70d6ae9567deba6 # v4.1.2
+      - name: Install Syft (SBOM generator)
+        uses: anchore/sbom-action/download-syft@3ad7283483fc7af8ff2b4ea19663c2d5ca935e26 # v0.24.2
       - name: Run GoReleaser
         id: run-goreleaser
         uses: goreleaser/goreleaser-action@f06c13b6b1a9625abc9e6e439d9c05a8f2190e94 # v7.2.3
@@ -59,6 +63,17 @@ jobs:
           GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
       - name: Verify release archives bundle every installer-required file
         run: scripts/check_release_archive.sh dist
+      # GitHub build provenance for `gh attestation verify`. It is not a
+      # release asset, which is why the SLSA provenance job below also runs.
+      - name: Attest build provenance
+        uses: actions/attest-build-provenance@4d101475d8b20a2381f78447822ac1eab6504dd8 # v4.2.2
+        with:
+          subject-path: |
+            dist/*.tar.gz
+            dist/*.deb
+            dist/*.rpm
+            dist/*.apk
+            dist/checksums.txt
       - name: Generate subject
         id: hash
         env:
@@ -108,8 +123,8 @@ jobs:
           gh -R "$GITHUB_REPOSITORY" release download "$GITHUB_REF_NAME" -p "*.tar.gz"
           gh -R "$GITHUB_REPOSITORY" release download "$GITHUB_REF_NAME" -p "$PROVENANCE"
 
-      # checksums.txt also lists the .deb/.rpm/.apk packages; only the archives
-      # are downloaded above, so only they are verified here.
+      # checksums.txt also lists the .deb/.rpm/.apk packages and the SBOMs;
+      # only the archives are downloaded above, so only they are verified here.
       - name: Verify assets
         env:
           CHECKSUMS: ${{ needs.release.outputs.hashes }}
