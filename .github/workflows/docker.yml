@@ -7,6 +7,9 @@ on:
     branches: [main]
   workflow_dispatch:
 
+permissions:
+  contents: read
+
 # Builds the Docker image from the local source tree to guarantee that
 # "build mimixbox in Docker" keeps working (GitHub issue #4). The image's
 # Dockerfile compiles MimixBox inside the golang toolchain image, so a broken
@@ -16,7 +19,7 @@ jobs:
     runs-on: ubuntu-latest
     timeout-minutes: 20
     steps:
-      - uses: actions/checkout@v7
+      - uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7.0.1
         with:
           persist-credentials: false
 

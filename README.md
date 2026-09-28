@@ -8,6 +8,7 @@
 [![IntegrationTest](https://github.com/nao1215/mimixbox/actions/workflows/integration_test.yml/badge.svg?event=push)](https://github.com/nao1215/mimixbox/actions/workflows/integration_test.yml)
 ![GitHub](https://img.shields.io/github/license/nao1215/mimixbox)
 [![GitHub Downloads (all assets, all releases)](https://img.shields.io/github/downloads/nao1215/mimixbox/total)](https://github.com/nao1215/mimixbox/releases)
+[![OpenSSF Scorecard](https://api.scorecard.dev/projects/github.com/nao1215/mimixbox/badge)](https://scorecard.dev/viewer/?uri=github.com/nao1215/mimixbox)
 
 ![mimixbox-logo](./doc/image/mimixbox-logo-truss.jpg)
 
