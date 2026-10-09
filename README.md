@@ -497,7 +497,7 @@ $ sudo mimixbox --install /usr/local/bin
 
 ### Use "go install"
 
-Building from source needs Go 1.26.6 or later.
+Building from source needs Go 1.26.9 or later.
 
 ```shell
 $ go install github.com/nao1215/mimixbox/cmd/mimixbox@latest
