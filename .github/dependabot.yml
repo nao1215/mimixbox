@@ -12,6 +12,10 @@ updates:
     schedule:
       interval: "daily"
   # Keep the digest-pinned base image in the Dockerfile current
+    groups:
+      codeql:
+        patterns:
+          - "github/codeql-action/*"
   - package-ecosystem: "docker"
     directory: "/"
     schedule:
