@@ -6,15 +6,15 @@ require (
 	github.com/GehirnInc/crypt v0.0.0-20230320061759-8cc1b52080c5
 	github.com/dsnet/compress v0.0.1
 	github.com/fogleman/gg v1.3.0
-	github.com/klauspost/compress v1.20.1
+	github.com/klauspost/compress v1.20.3
 	github.com/nsf/termbox-go v1.1.2
 	github.com/spf13/pflag v1.0.10
 	github.com/stretchr/testify v1.12.1
 	github.com/ulikunitz/xz v0.5.17
 	github.com/woozymasta/lzo v0.3.2
-	golang.org/x/crypto v0.57.0
-	golang.org/x/sys v0.48.0
-	golang.org/x/term v0.46.0
+	golang.org/x/crypto v0.58.0
+	golang.org/x/sys v0.49.0
+	golang.org/x/term v0.47.0
 	modernc.org/sqlite v1.60.1
 )
 
