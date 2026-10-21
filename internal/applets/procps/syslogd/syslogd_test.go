@@ -60,7 +60,10 @@ func TestReceivesAndLogs(t *testing.T) {
 
 	cancel()
 	select {
-	case <-done:
+	case err := <-done:
+		if err != nil {
+			t.Errorf("syslogd returned %v after cancellation", err)
+		}
 	case <-time.After(2 * time.Second):
 		t.Fatal("syslogd did not stop after cancellation")
 	}

@@ -61,7 +61,9 @@ func TestStartsEachService(t *testing.T) {
 		time.Sleep(time.Millisecond)
 	}
 	cancel()
-	<-done
+	if err := <-done; err != nil {
+		t.Errorf("runsvdir returned %v after cancellation", err)
+	}
 
 	got := snapshot()
 	sort.Strings(got)

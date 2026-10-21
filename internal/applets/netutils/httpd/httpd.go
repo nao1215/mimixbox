@@ -103,7 +103,9 @@ func serve(ctx context.Context, srv *http.Server, ln net.Listener) error {
 		shutCtx, cancel := context.WithTimeout(context.Background(), 5*time.Second)
 		defer cancel()
 		_ = srv.Shutdown(shutCtx)
-		<-errCh
+		if err := <-errCh; err != nil {
+			return command.Failure(err)
+		}
 		return nil
 	case err := <-errCh:
 		if err != nil {
