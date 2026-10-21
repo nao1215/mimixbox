@@ -115,7 +115,10 @@ func TestStopsOnCancel(t *testing.T) {
 	}()
 	cancel()
 	select {
-	case <-done:
+	case err := <-done:
+		if err != nil {
+			t.Errorf("inotifyd returned %v after cancellation", err)
+		}
 	case <-time.After(2 * time.Second):
 		t.Fatal("inotifyd did not stop after cancellation")
 	}

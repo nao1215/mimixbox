@@ -53,7 +53,10 @@ func TestRestartsUntilCancelled(t *testing.T) {
 	}
 	cancel()
 	select {
-	case <-done:
+	case err := <-done:
+		if err != nil {
+			t.Errorf("runsv returned %v after cancellation", err)
+		}
 	case <-time.After(2 * time.Second):
 		t.Fatal("runsv did not stop after cancellation")
 	}
@@ -84,7 +87,10 @@ func TestDownFileLeavesServiceStopped(t *testing.T) {
 	}
 	cancel()
 	select {
-	case <-done:
+	case err := <-done:
+		if err != nil {
+			t.Errorf("runsv returned %v after cancellation", err)
+		}
 	case <-time.After(2 * time.Second):
 		t.Fatal("runsv did not stop after cancellation")
 	}
@@ -135,7 +141,9 @@ func TestChildPidRecorded(t *testing.T) {
 		time.Sleep(2 * time.Millisecond)
 	}
 	cancel()
-	<-done
+	if err := <-done; err != nil {
+		t.Errorf("runsv returned %v after cancellation", err)
+	}
 
 	n, err := strconv.Atoi(pid)
 	if err != nil || n == os.Getpid() {

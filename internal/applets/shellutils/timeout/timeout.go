@@ -113,17 +113,18 @@ func (c *Command) runWithTimeout(stdio command.IO, dur, killGrace time.Duration,
 	select {
 	case <-timer.C:
 		signalGroup(cmd.Process.Pid, sig)
+		var waitErr error
 		if killGrace > 0 {
 			select {
-			case <-done:
+			case waitErr = <-done:
 			case <-time.After(killGrace):
 				signalGroup(cmd.Process.Pid, syscall.SIGKILL)
-				<-done
+				waitErr = <-done
 			}
 		} else {
-			<-done
+			waitErr = <-done
 		}
-		return &command.ExitError{Code: exitTimedOut}
+		return timedOut(waitErr)
 	case err := <-done:
 		if err == nil {
 			return nil
@@ -180,4 +181,16 @@ func parseSignal(name string) (syscall.Signal, error) {
 		return 0, err
 	}
 	return syscall.Signal(n), nil
+}
+
+// timedOut is the result of a command that was signalled for running past its
+// duration. Wait then reports how the signal ended it, which is the expected
+// outcome and leaves the exit status at 124; any other failure of Wait is
+// reported alongside it.
+func timedOut(waitErr error) error {
+	var ee *exec.ExitError
+	if waitErr == nil || errors.As(waitErr, &ee) {
+		return &command.ExitError{Code: exitTimedOut}
+	}
+	return &command.ExitError{Code: exitTimedOut, Err: waitErr}
 }

@@ -52,7 +52,10 @@ func TestRelayContextCancel(t *testing.T) {
 	time.Sleep(10 * time.Millisecond)
 	cancel()
 	select {
-	case <-done:
+	case err := <-done:
+		if err != nil {
+			t.Errorf("microcom returned %v after cancellation", err)
+		}
 	case <-time.After(time.Second):
 		t.Fatal("Relay did not return after cancel")
 	}
