@@ -183,7 +183,7 @@ func parseSignal(name string) (syscall.Signal, error) {
 	return syscall.Signal(n), nil
 }
 
-// timedOut is the result of a command that was signalled for running past its
+// timedOut is the result of a command that was signaled for running past its
 // duration. Wait then reports how the signal ended it, which is the expected
 // outcome and leaves the exit status at 124; any other failure of Wait is
 // reported alongside it.
