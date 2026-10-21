@@ -9,7 +9,7 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ### Changed
 
-- Building from source now needs Go 1.26.9 or later (was 1.26.6). Go 1.26.9 fixes standard library advisories reachable from mimixbox in `net/http`, `mime/multipart` and `crypto/tls` (GO-2026-6603, GO-2026-6605, GO-2026-6607 to GO-2026-6613 and GO-2026-6617). Prebuilt binaries are unaffected. The integration-test image builds with `golang:1.27-bookworm`. Dependencies: modernc.org/sqlite v1.60.1, klauspost/compress v1.20.1.
+- Building from source now needs Go 1.26.10 or later (was 1.26.6). Go 1.26.9 fixes standard library advisories reachable from mimixbox in `net/http`, `mime/multipart` and `crypto/tls` (GO-2026-6603, GO-2026-6605, GO-2026-6607 to GO-2026-6613 and GO-2026-6617), and Go 1.26.10 adds the `crypto/x509` intermediate-certificate denylist (GO-2026-6809). Prebuilt binaries are unaffected. The integration-test image builds with `golang:1.27-bookworm`. Dependencies: modernc.org/sqlite v1.60.1, modernc.org/libc v1.79.0, klauspost/compress v1.20.1, golang.org/x/image v0.47.0, woozymasta/lzo v0.3.3.
 
 ## [0.42.5] - 2026-09-28
 
