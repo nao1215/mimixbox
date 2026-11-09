@@ -6,7 +6,9 @@ permissions:
 
 jobs:
   golangci-lint:
-    name: golangci-lint
+    # Advisory: named apart from golangci-lint.yml, whose "golangci-lint" job is
+    # the required status check, so a flaky run here cannot block a pull request.
+    name: reviewdog / golangci-lint
     # reviewdog posts its findings as pull request review comments.
     permissions:
       contents: read
