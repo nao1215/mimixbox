@@ -1,7 +1,7 @@
 # Pin the base image to a specific tag and digest so builds are reproducible and not
 # affected by a silently moving `golang:latest`. Matches the toolchain declared
 # in go.mod (go 1.26.x).
-FROM golang:1.27-bookworm@sha256:69a7b9788769bec032d238959b61854e9ae87f57be9029ec04e9885fabf99195 AS builder
+FROM golang:1.27-bookworm@sha256:dc0963f32053e4bc451d24d87e3892d42d01021b61f093e98eb95c0352bb84b0 AS builder
 ENV ROOT=/go/app
 ENV IT_SHELL=/home/mimixbox/do_integration_test.sh
 # Pin atago to a tagged release for reproducible integration tests.
