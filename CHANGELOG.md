@@ -7,6 +7,10 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## [Unreleased]
 
+### Changed
+
+- Building from source now needs Go 1.26.11 or later (was 1.26.10). Go 1.26.11 fixes the `net/http` advisory GO-2026-6859, which govulncheck finds reachable from mimixbox on the earlier patch.
+
 ## [0.42.6] - 2026-11-09
 
 ### Changed
