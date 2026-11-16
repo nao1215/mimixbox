@@ -46,7 +46,7 @@ var (
 		if shell == "" {
 			shell = "/bin/sh"
 		}
-		cmd := exec.Command(shell) //nolint:gosec // starting the user's login shell is the point
+		cmd := exec.Command(shell) // #nosec G204 -- starting the user's login shell is the point
 		cmd.Args = []string{"-" + filepath.Base(shell)}
 		cmd.Dir = acc.home
 		cmd.Env = append(os.Environ(), "HOME="+acc.home, "USER="+acc.name, "SHELL="+shell)

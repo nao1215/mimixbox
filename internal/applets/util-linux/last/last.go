@@ -107,8 +107,8 @@ func build(data []byte) ([]session, int64) {
 
 	for off := 0; off+recordSize <= len(data); off += recordSize {
 		rec := data[off : off+recordSize]
-		typ := int16(binary.LittleEndian.Uint16(rec[typeOffset:]))
-		tv := int64(int32(binary.LittleEndian.Uint32(rec[tvSecOffset:])))
+		typ := int16(binary.LittleEndian.Uint16(rec[typeOffset:]))        // #nosec G115 -- utmp ut_type is a C short
+		tv := int64(int32(binary.LittleEndian.Uint32(rec[tvSecOffset:]))) // #nosec G115 -- utmp ut_tv.tv_sec is a signed 32-bit field
 		if tv > 0 && (first == 0 || tv < first) {
 			first = tv
 		}

@@ -76,7 +76,7 @@ func (c *Command) Run(_ context.Context, stdio command.IO, args []string) error 
 		return nil
 	}
 	for _, f := range files {
-		data, rerr := os.ReadFile(f) //nolint:gosec // user-named file
+		data, rerr := os.ReadFile(f) // #nosec G304 -- user-named file
 		if rerr != nil {
 			_, _ = fmt.Fprintf(stdio.Err, "bc: %s\n", command.FileError(f, rerr))
 			return command.SilentFailure()
@@ -163,9 +163,9 @@ type parser struct {
 	err  bool
 }
 
-func (p *parser) peek() token  { return p.toks[p.pos] }
-func (p *parser) next() token  { t := p.toks[p.pos]; p.pos++; return t }
-func (p *parser) atEnd() bool  { return p.peek().kind == tEOF }
+func (p *parser) peek() token { return p.toks[p.pos] }
+func (p *parser) next() token { t := p.toks[p.pos]; p.pos++; return t }
+func (p *parser) atEnd() bool { return p.peek().kind == tEOF }
 func (p *parser) fail(msg string) {
 	if !p.err {
 		_, _ = fmt.Fprintf(p.m.errw, "bc: %s\n", msg)

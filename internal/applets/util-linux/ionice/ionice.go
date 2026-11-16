@@ -124,7 +124,7 @@ func (c *Command) Run(ctx context.Context, stdio command.IO, args []string) erro
 	if err := ioprioSet(0, ioprio); err != nil {
 		return command.Failuref("failed to set priority: %v", err)
 	}
-	cmd := exec.CommandContext(ctx, rest[0], rest[1:]...) //nolint:gosec // running the user's command is the point
+	cmd := exec.CommandContext(ctx, rest[0], rest[1:]...) // #nosec G204 -- running the user's command is the point
 	cmd.Stdin, cmd.Stdout, cmd.Stderr = stdio.In, stdio.Out, stdio.Err
 	if err := cmd.Run(); err != nil {
 		var exitErr *exec.ExitError

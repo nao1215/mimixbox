@@ -26,7 +26,7 @@ func Open(stdio IO, name string) (io.ReadCloser, error) {
 	if name == "-" {
 		return io.NopCloser(stdio.In), nil
 	}
-	return os.Open(name) //nolint:gosec // operating on a user-named file is the whole point
+	return os.Open(name) // #nosec G304 -- operating on a user-named file is the whole point
 }
 
 // FileError formats a failed file operation GNU-style as "name: reason". An

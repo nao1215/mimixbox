@@ -105,10 +105,12 @@ func firstEncrypted(data []byte) (entry, error) {
 		if err != nil {
 			return entry{}, err
 		}
-		end := off + int64(f.CompressedSize64)
-		if off < 0 || end > int64(len(data)) {
+		// Compare in uint64 before converting: a Zip64 size can exceed
+		// MaxInt64 and would wrap negative as an int64.
+		if off < 0 || off > int64(len(data)) || f.CompressedSize64 > uint64(int64(len(data))-off) { // #nosec G115 -- off is checked to be in 0..len(data) earlier in the condition
 			return entry{}, errors.New("archive entry data is out of bounds")
 		}
+		end := off + int64(f.CompressedSize64) // #nosec G115 -- CompressedSize64 <= len(data)-off, checked above
 		return entry{
 			encrypted: data[off:end],
 			crc32:     f.CRC32,
@@ -171,14 +173,14 @@ func newZipCrypto(password string) *zipCrypto {
 // update advances the three keys by one plaintext byte.
 func (z *zipCrypto) update(c byte) {
 	z.key0 = crc32Update(z.key0, c)
-	z.key1 = (z.key1 + (z.key0 & 0xff)) * 134775813 + 1
+	z.key1 = (z.key1+(z.key0&0xff))*134775813 + 1
 	z.key2 = crc32Update(z.key2, byte(z.key1>>24))
 }
 
 // decryptByte decrypts one ciphertext byte and advances the key schedule.
 func (z *zipCrypto) decryptByte(c byte) byte {
-	temp := uint16(z.key2|2) & 0xffff
-	plain := c ^ byte((uint32(temp)*uint32(temp^1))>>8)
+	temp := uint16(z.key2|2) & 0xffff                   // #nosec G115 -- ZipCrypto (APPNOTE 6.1.5) keeps only the low 16 bits of key2
+	plain := c ^ byte((uint32(temp)*uint32(temp^1))>>8) // #nosec G115 -- ZipCrypto takes the low byte of the product as the keystream byte
 	z.update(plain)
 	return plain
 }

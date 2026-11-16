@@ -63,7 +63,7 @@ func (c *Command) Run(_ context.Context, stdio command.IO, args []string) error 
 	if len(pool) == 0 {
 		return command.Failuref("no fortunes available")
 	}
-	choice := pool[rand.Intn(len(pool))] //nolint:gosec // a fortune need not be cryptographically random
+	choice := pool[rand.Intn(len(pool))] // #nosec G404 -- a fortune need not be cryptographically random
 	if _, err := fmt.Fprintln(stdio.Out, choice); err != nil {
 		return command.Failure(err)
 	}

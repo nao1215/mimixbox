@@ -78,7 +78,7 @@ func (c *Command) Run(_ context.Context, stdio command.IO, args []string) error 
 // appendMbox appends a message to an mbox file with a proper "From " separator
 // and ">From " body escaping.
 func appendMbox(path, from string, body []byte) error {
-	f, err := os.OpenFile(path, os.O_CREATE|os.O_WRONLY|os.O_APPEND, 0o600) //nolint:gosec // user-named file
+	f, err := os.OpenFile(path, os.O_CREATE|os.O_WRONLY|os.O_APPEND, 0o600) // #nosec G304 -- user-named file
 	if err != nil {
 		return err
 	}

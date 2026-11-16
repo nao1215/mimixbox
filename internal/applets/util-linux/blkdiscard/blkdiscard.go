@@ -30,26 +30,26 @@ const blkDiscard = 0x1277
 // Injected so the privileged ioctls can be tested.
 var (
 	sizeFn = func(device string) (uint64, error) {
-		f, err := os.Open(device) //nolint:gosec // user-named device
+		f, err := os.Open(device) // #nosec G304 -- user-named device
 		if err != nil {
 			return 0, err
 		}
 		defer func() { _ = f.Close() }()
 		var sz uint64
-		_, _, errno := unix.Syscall(unix.SYS_IOCTL, f.Fd(), uintptr(unix.BLKGETSIZE64), uintptr(unsafe.Pointer(&sz)))
+		_, _, errno := unix.Syscall(unix.SYS_IOCTL, f.Fd(), uintptr(unix.BLKGETSIZE64), uintptr(unsafe.Pointer(&sz))) // #nosec G103 -- the BLKGETSIZE64 ioctl ABI takes a pointer to a uint64 it fills in
 		if errno != 0 {
 			return 0, errno
 		}
 		return sz, nil
 	}
 	discardFn = func(device string, offset, length uint64) error {
-		f, err := os.OpenFile(device, os.O_WRONLY, 0) //nolint:gosec // user-named device
+		f, err := os.OpenFile(device, os.O_WRONLY, 0) // #nosec G304 -- user-named device
 		if err != nil {
 			return err
 		}
 		defer func() { _ = f.Close() }()
 		rng := [2]uint64{offset, length}
-		_, _, errno := unix.Syscall(unix.SYS_IOCTL, f.Fd(), blkDiscard, uintptr(unsafe.Pointer(&rng)))
+		_, _, errno := unix.Syscall(unix.SYS_IOCTL, f.Fd(), blkDiscard, uintptr(unsafe.Pointer(&rng))) // #nosec G103 -- the BLKDISCARD ioctl ABI takes a pointer to a uint64[2] range
 		if errno != 0 {
 			return errno
 		}

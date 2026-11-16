@@ -40,7 +40,7 @@ var getActiveFn = func() (int, error) {
 	}
 	defer func() { _ = f.Close() }()
 	var vs vtStat
-	if _, _, errno := unix.Syscall(unix.SYS_IOCTL, f.Fd(), vtGetState, uintptr(unsafe.Pointer(&vs))); errno != 0 {
+	if _, _, errno := unix.Syscall(unix.SYS_IOCTL, f.Fd(), vtGetState, uintptr(unsafe.Pointer(&vs))); errno != 0 { // #nosec G103 -- the VT_GETSTATE ioctl ABI takes a pointer to struct vt_stat
 		return 0, errno
 	}
 	return int(vs.active), nil

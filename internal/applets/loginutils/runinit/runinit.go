@@ -40,7 +40,7 @@ var (
 	}
 	// execFn replaces the current process with init; it does not return on success.
 	execFn = func(path string, argv []string) error {
-		return syscall.Exec(path, argv, os.Environ())
+		return syscall.Exec(path, argv, os.Environ()) // #nosec G204 -- execs the init program the user named, which is what run-init does
 	}
 )
 

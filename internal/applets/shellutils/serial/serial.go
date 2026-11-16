@@ -248,7 +248,7 @@ func makeDirIfNeeded(filePath string) error {
 	if exists(dirPath) {
 		return nil
 	}
-	if err := os.MkdirAll(dirPath, 0755); err != nil {
+	if err := os.MkdirAll(dirPath, 0755); err != nil { // #nosec G301 -- missing parent directories of the user-named output are created 0755 before umask, like mkdir -p
 		return fmt.Errorf("can't make %s directory", dirPath)
 	}
 	return nil

@@ -7,6 +7,7 @@ import (
 	"errors"
 	"fmt"
 	"io"
+	"math"
 	"os"
 	"os/exec"
 	"strconv"
@@ -69,6 +70,17 @@ func (c *Command) Run(ctx context.Context, stdio command.IO, args []string) erro
 		return err
 	}
 
+	// -1 means "leave unchanged"; anything else must be a valid uid_t/gid_t.
+	// (uid_t)-1 itself is reserved, so the largest usable ID is MaxUint32-1.
+	for _, id := range []struct {
+		flag string
+		v    int
+	}{{"--reuid", *reuid}, {"--regid", *regid}} {
+		if id.v < -1 || id.v >= math.MaxUint32 {
+			return command.Failuref("%s: invalid ID %d", id.flag, id.v)
+		}
+	}
+
 	if *dump {
 		c.dump(stdio.Out)
 		return nil
@@ -89,15 +101,18 @@ func (c *Command) Run(ctx context.Context, stdio command.IO, args []string) erro
 		}
 	}
 
-	cmd := exec.CommandContext(ctx, rest[0], rest[1:]...) //nolint:gosec // running the user's command is the point
+	cmd := exec.CommandContext(ctx, rest[0], rest[1:]...) // #nosec G204 -- running the user's command is the point
 	cmd.Stdin, cmd.Stdout, cmd.Stderr = stdio.In, stdio.Out, stdio.Err
 	if *reuid >= 0 || *regid >= 0 {
-		cred := &syscall.Credential{Uid: uint32(getuid()), Gid: uint32(getgid())}
+		cred := &syscall.Credential{
+			Uid: uint32(getuid()), // #nosec G115 -- getuid(2) returns a 32-bit uid_t
+			Gid: uint32(getgid()), // #nosec G115 -- getgid(2) returns a 32-bit gid_t
+		}
 		if *reuid >= 0 {
-			cred.Uid = uint32(*reuid)
+			cred.Uid = uint32(*reuid) // #nosec G115 -- range-checked against MaxUint32 after flag parsing
 		}
 		if *regid >= 0 {
-			cred.Gid = uint32(*regid)
+			cred.Gid = uint32(*regid) // #nosec G115 -- range-checked against MaxUint32 after flag parsing
 		}
 		cmd.SysProcAttr = &syscall.SysProcAttr{Credential: cred}
 	}

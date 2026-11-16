@@ -231,7 +231,7 @@ func (s *session) handleRetr(name string) {
 		s.reply(550, "no such file")
 		return
 	}
-	data, err := os.ReadFile(real)
+	data, err := os.ReadFile(real) // #nosec G304 -- realPath confines the client's path to the served root directory
 	if err != nil {
 		s.reply(550, "cannot read file")
 		return

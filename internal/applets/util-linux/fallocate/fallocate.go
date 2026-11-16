@@ -72,7 +72,7 @@ func (c *Command) Run(_ context.Context, stdio command.IO, args []string) error 
 
 // allocate sizes name to at least size bytes, never shrinking it.
 func allocate(name string, size int64) error {
-	f, err := os.OpenFile(name, os.O_CREATE|os.O_WRONLY, 0o644) //nolint:gosec // user-named file
+	f, err := os.OpenFile(name, os.O_CREATE|os.O_WRONLY, 0o644) // #nosec G302 G304 -- user-named file
 	if err != nil {
 		return err
 	}

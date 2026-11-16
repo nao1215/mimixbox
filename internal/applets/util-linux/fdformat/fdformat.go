@@ -48,14 +48,14 @@ type formatDescr struct {
 
 // formatFn is indirected so the privileged format sequence can be tested.
 var formatFn = func(device string) (tracks int, err error) {
-	f, err := os.Open(device) //nolint:gosec // user-named device
+	f, err := os.Open(device) // #nosec G304 -- user-named device
 	if err != nil {
 		return 0, err
 	}
 	defer func() { _ = f.Close() }()
 
 	var g floppyStruct
-	if _, _, errno := unix.Syscall(unix.SYS_IOCTL, f.Fd(), fdGetPrm, uintptr(unsafe.Pointer(&g))); errno != 0 {
+	if _, _, errno := unix.Syscall(unix.SYS_IOCTL, f.Fd(), fdGetPrm, uintptr(unsafe.Pointer(&g))); errno != 0 { // #nosec G103 -- the FDGETPRM ioctl ABI takes a pointer to struct floppy_struct
 		return 0, errno
 	}
 	if _, _, errno := unix.Syscall(unix.SYS_IOCTL, f.Fd(), fdFmtBeg, 0); errno != 0 {
@@ -69,7 +69,7 @@ var formatFn = func(device string) (tracks int, err error) {
 	for cyl := uint32(0); cyl < cylinders; cyl++ {
 		for head := uint32(0); head < heads; head++ {
 			fd := formatDescr{Head: head, Track: cyl}
-			if _, _, errno := unix.Syscall(unix.SYS_IOCTL, f.Fd(), fdFmtTrk, uintptr(unsafe.Pointer(&fd))); errno != 0 {
+			if _, _, errno := unix.Syscall(unix.SYS_IOCTL, f.Fd(), fdFmtTrk, uintptr(unsafe.Pointer(&fd))); errno != 0 { // #nosec G103 -- the FDFMTTRK ioctl ABI takes a pointer to struct format_descr
 				return 0, errno
 			}
 		}

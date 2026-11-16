@@ -105,7 +105,7 @@ func openInputs(stdio command.IO, files []string) ([]io.Reader, []io.Closer, err
 			readers = append(readers, stdio.In)
 			continue
 		}
-		fh, err := os.Open(f) //nolint:gosec // user-named file
+		fh, err := os.Open(f) // #nosec G304 -- user-named file
 		if err != nil {
 			for _, rc := range closers {
 				_ = rc.Close()

@@ -173,7 +173,7 @@ func printEnviron(stdio command.IO, environ []string, null bool) {
 // fatal error). The signals in ignoreSignals are set to SIG_IGN so the
 // launched child inherits that disposition.
 func runCommand(ctx context.Context, stdio command.IO, environ, argv []string, chdir string, ignoreSignals []os.Signal) error {
-	cmd := exec.CommandContext(ctx, argv[0], argv[1:]...) //nolint:gosec // running a user-named command is the whole point
+	cmd := exec.CommandContext(ctx, argv[0], argv[1:]...) // #nosec G204 -- running a user-named command is the whole point
 	cmd.Env = environ
 	cmd.Stdin = stdio.In
 	cmd.Stdout = stdio.Out

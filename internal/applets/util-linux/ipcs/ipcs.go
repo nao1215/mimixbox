@@ -105,7 +105,7 @@ func (c *Command) semaphores(out io.Writer) {
 // records reads a /proc/sysvipc file, skips its header line, and returns the
 // whitespace-split fields of each remaining line.
 func records(path string) [][]string {
-	f, err := os.Open(path) //nolint:gosec // the sysvipc path
+	f, err := os.Open(path) // #nosec G304 -- the sysvipc path
 	if err != nil {
 		return nil
 	}
@@ -129,11 +129,11 @@ func records(path string) [][]string {
 
 // key formats a decimal key field as ipcs does (0x%08x).
 func key(s string) string {
-	n, err := strconv.ParseInt(s, 10, 64)
+	n, err := strconv.ParseInt(s, 10, 32)
 	if err != nil {
 		return s
 	}
-	return fmt.Sprintf("0x%08x", uint32(n))
+	return fmt.Sprintf("0x%08x", uint32(n)) // #nosec G115 -- the IPC key is a 32-bit key_t printed as unsigned hex, as ipcs does
 }
 
 var userCache = map[string]string{}

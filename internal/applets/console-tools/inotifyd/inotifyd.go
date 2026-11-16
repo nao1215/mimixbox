@@ -77,7 +77,7 @@ var (
 		if name != "" { // the NAME argument is omitted for an event on the watched file itself
 			argv = append(argv, name)
 		}
-		cmd := exec.Command(prog, argv...) //nolint:gosec // running the handler is the point
+		cmd := exec.Command(prog, argv...) // #nosec G204 -- running the handler is the point
 		cmd.Stdin, cmd.Stdout, cmd.Stderr = stdio.In, stdio.Out, stdio.Err
 		_ = cmd.Run()
 	}
@@ -188,7 +188,7 @@ func openInotify(watches []watch) (source, error) {
 			_ = unix.Close(fd)
 			return nil, err
 		}
-		s.wdPath[int32(wd)] = w.path
+		s.wdPath[int32(wd)] = w.path // #nosec G115 -- inotify_add_watch(2) returns a C int watch descriptor
 	}
 	return s, nil
 }
@@ -210,7 +210,7 @@ func (s *inotifySource) Recv() (event, error) {
 // parse splits a read buffer into the individual inotify_event records.
 func (s *inotifySource) parse(data []byte) {
 	for off := 0; off+16 <= len(data); {
-		wd := int32(binary.LittleEndian.Uint32(data[off:]))
+		wd := int32(binary.LittleEndian.Uint32(data[off:])) // #nosec G115 -- struct inotify_event.wd is a C int; the kernel writes it as 4 bytes
 		mask := binary.LittleEndian.Uint32(data[off+4:])
 		nameLen := int(binary.LittleEndian.Uint32(data[off+12:]))
 		name := ""

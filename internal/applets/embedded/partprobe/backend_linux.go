@@ -17,7 +17,7 @@ type osReReader struct{}
 
 // ReRead opens the device and issues BLKRRPART.
 func (osReReader) ReRead(device string) error {
-	f, err := os.OpenFile(device, os.O_RDONLY, 0)
+	f, err := os.OpenFile(device, os.O_RDONLY, 0) // #nosec G304 -- the block device the user named on the command line
 	if err != nil {
 		if os.IsPermission(err) {
 			return fmt.Errorf("permission denied (re-reading a partition table needs privilege)")

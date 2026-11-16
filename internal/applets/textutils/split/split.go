@@ -230,7 +230,7 @@ func (c *Command) byBytes(stdio command.IO, r io.Reader, prefix string, perFile 
 // create opens the idx-th output file, named according to the naming scheme.
 func create(ns namingScheme, prefix string, idx int) (*os.File, error) {
 	name := ns.name(prefix, idx)
-	return os.Create(name) //nolint:gosec // writing a user-named output file is the point
+	return os.Create(name) // #nosec G304 -- writing a user-named output file is the point
 }
 
 // alphaSuffix returns the alphabetic split suffix for the idx-th file padded to

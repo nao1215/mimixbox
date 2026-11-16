@@ -5,6 +5,7 @@ package watchdog
 import (
 	"context"
 	"fmt"
+	"math"
 	"time"
 
 	"github.com/nao1215/mimixbox/internal/command"
@@ -62,6 +63,10 @@ func (c *Command) Run(ctx context.Context, stdio command.IO, args []string) erro
 	}
 	if *interval <= 0 || *timeout <= 0 {
 		return command.Failuref("interval and timeout must be positive")
+	}
+	// WDIOC_SETTIMEOUT takes a C int.
+	if *timeout > math.MaxInt32 {
+		return command.Failuref("timeout must be at most %d seconds", math.MaxInt32)
 	}
 	if *count < 0 {
 		return command.Failuref("count must not be negative")

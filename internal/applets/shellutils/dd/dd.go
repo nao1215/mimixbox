@@ -170,7 +170,7 @@ func openOutput(stdio command.IO, opts options) (io.Writer, func(), error) {
 	if !opts.notrunc {
 		flag |= os.O_TRUNC
 	}
-	f, err := os.OpenFile(opts.outputFile, flag, 0o644) //nolint:gosec // user-named file
+	f, err := os.OpenFile(opts.outputFile, flag, 0o644) // #nosec G302 -- user-named file
 	if err != nil {
 		return nil, func() {}, err
 	}

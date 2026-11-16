@@ -85,7 +85,7 @@ func (c *Command) Run(_ context.Context, stdio command.IO, args []string) error 
 			_, _ = fmt.Fprintln(stdio.Err, "vi: no file name")
 			return command.SilentFailure()
 		}
-		if err := os.WriteFile(filename, []byte(ed.content()), 0o644); err != nil { //nolint:gosec // simple default mode
+		if err := os.WriteFile(filename, []byte(ed.content()), 0o644); err != nil { // #nosec G306 G703 -- simple default mode
 			_, _ = fmt.Fprintf(stdio.Err, "vi: %v\n", err)
 			return command.SilentFailure()
 		}

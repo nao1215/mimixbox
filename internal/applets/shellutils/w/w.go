@@ -116,21 +116,21 @@ func formatUptime(d time.Duration) string {
 
 // readEntries parses the USER_PROCESS records from utmp.
 func readEntries(path string) []entry {
-	data, err := os.ReadFile(path) //nolint:gosec // the utmp database path
+	data, err := os.ReadFile(path) // #nosec G304 -- the utmp database path
 	if err != nil {
 		return nil
 	}
 	var entries []entry
 	for off := 0; off+recordSize <= len(data); off += recordSize {
 		rec := data[off : off+recordSize]
-		if int16(binary.LittleEndian.Uint16(rec[typeOffset:])) != userProcess {
+		if int16(binary.LittleEndian.Uint16(rec[typeOffset:])) != userProcess { // #nosec G115 -- utmp ut_type is a C short
 			continue
 		}
 		entries = append(entries, entry{
 			user:  cstr(rec[userOffset : userOffset+fieldLen]),
 			line:  cstr(rec[lineOffset : lineOffset+fieldLen]),
 			host:  cstr(rec[hostOffset : hostOffset+hostLen]),
-			login: int64(int32(binary.LittleEndian.Uint32(rec[tvSecOffset:]))),
+			login: int64(int32(binary.LittleEndian.Uint32(rec[tvSecOffset:]))), // #nosec G115 -- utmp ut_tv.tv_sec is a signed 32-bit field
 		})
 	}
 	return entries

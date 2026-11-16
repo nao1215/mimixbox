@@ -237,7 +237,7 @@ func changeShell(username, newShell string) error {
 }
 
 func readLines(path string) ([]string, error) {
-	data, err := os.ReadFile(path) //nolint:gosec // well-known passwd path
+	data, err := os.ReadFile(path) // #nosec G304 -- well-known passwd path
 	if err != nil {
 		return nil, err
 	}

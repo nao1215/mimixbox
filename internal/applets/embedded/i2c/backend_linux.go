@@ -23,7 +23,7 @@ type osBackend struct{}
 // openBus opens /dev/i2c-N and binds it to the slave address.
 func openBus(bus, addr int) (*os.File, error) {
 	path := fmt.Sprintf(i2cDevPattern, bus)
-	f, err := os.OpenFile(path, os.O_RDWR, 0)
+	f, err := os.OpenFile(path, os.O_RDWR, 0) // #nosec G304 -- the path is /dev/i2c-N formatted from the user's numeric bus argument
 	if err != nil {
 		if os.IsPermission(err) {
 			return nil, fmt.Errorf("open %s: permission denied (I2C access needs privilege)", path)
@@ -49,8 +49,11 @@ func (osBackend) ReadReg(bus, addr, reg int) (byte, error) {
 		return 0, err
 	}
 	defer func() { _ = f.Close() }()
+	if reg > 0xff {
+		return 0, fmt.Errorf("register 0x%x is out of range", reg)
+	}
 	if reg >= 0 {
-		if _, err := f.Write([]byte{byte(reg)}); err != nil {
+		if _, err := f.Write([]byte{byte(reg)}); err != nil { // #nosec G115 -- reg is 0..0xff, checked above
 			return 0, fmt.Errorf("select register 0x%02x: %w", reg, err)
 		}
 	}
@@ -68,7 +71,10 @@ func (osBackend) WriteReg(bus, addr, reg int, value byte) error {
 		return err
 	}
 	defer func() { _ = f.Close() }()
-	if _, err := f.Write([]byte{byte(reg), value}); err != nil {
+	if reg < 0 || reg > 0xff {
+		return fmt.Errorf("register 0x%x is out of range", reg)
+	}
+	if _, err := f.Write([]byte{byte(reg), value}); err != nil { // #nosec G115 -- reg is 0..0xff, checked above
 		return fmt.Errorf("write register 0x%02x: %w", reg, err)
 	}
 	return nil

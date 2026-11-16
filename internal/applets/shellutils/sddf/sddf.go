@@ -25,7 +25,7 @@ package sddf
 import (
 	"bufio"
 	"context"
-	"crypto/md5" //nolint:gosec // md5 is used as a fast content fingerprint, not for security
+	"crypto/md5" // #nosec G501 -- md5 is used as a fast content fingerprint, not for security
 	"fmt"
 	"io"
 	"os"
@@ -204,13 +204,13 @@ func findDuplicates(files []string) []fileGroup {
 
 // hashFile returns the md5 hex digest of the file's content.
 func hashFile(path string) (string, error) {
-	f, err := os.Open(path) //nolint:gosec // operating on a user-named file is the point
+	f, err := os.Open(path) // #nosec G304 -- operating on a user-named file is the point
 	if err != nil {
 		return "", err
 	}
 	defer func() { _ = f.Close() }()
 
-	h := md5.New() //nolint:gosec // content fingerprint only
+	h := md5.New() // #nosec G401 -- content fingerprint only
 	if _, err := io.Copy(h, f); err != nil {
 		return "", err
 	}
@@ -369,7 +369,7 @@ func fileSize(path string) int64 {
 // deleted with "sddf <report>".
 func dumpToFile(stdio command.IO, groups []fileGroup, output string) (err error) {
 	_, _ = fmt.Fprintln(stdio.Out, "Write down duplicated file list to "+output)
-	f, err := os.Create(output) //nolint:gosec // user-named output file
+	f, err := os.Create(output) // #nosec G304 -- user-named output file
 	if err != nil {
 		return err
 	}
@@ -417,7 +417,7 @@ func (c *Command) restoreAndDelete(stdio command.IO, in *bufio.Reader, path stri
 
 // restore parses a *.sddf report back into duplicate groups.
 func restore(path string) ([]fileGroup, error) {
-	f, err := os.Open(path) //nolint:gosec // user-named report file
+	f, err := os.Open(path) // #nosec G304 -- user-named report file
 	if err != nil {
 		return nil, err
 	}

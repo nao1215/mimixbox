@@ -2,8 +2,10 @@ package lzw_test
 
 import (
 	"bytes"
+	"io"
 	"strings"
 	"testing"
+	"time"
 
 	"github.com/nao1215/mimixbox/internal/applets/archival/lzw"
 )
@@ -207,4 +209,55 @@ func TestRoundTripBinaryWithAllByteValues(t *testing.T) {
 		b.WriteByte(byte(i*7 + 3))
 	}
 	roundTrip(t, b.Bytes())
+}
+
+// packCodes packs 9-bit codes LSB-first the way compress(1) does at the
+// initial code width, behind a block-mode, 16-bit .Z header.
+func packCodes(codes ...int) []byte {
+	out := []byte{0x1f, 0x9d, 0x80 | 16}
+	body := make([]byte, (len(codes)*9+7)/8)
+	for i, c := range codes {
+		for b := 0; b < 9; b++ {
+			if c&(1<<b) != 0 {
+				pos := i*9 + b
+				body[pos>>3] |= 1 << (pos & 7)
+			}
+		}
+	}
+	return append(out, body...)
+}
+
+// TestDecompressRejectsCorruptCodes feeds codes that no encoder can emit. A
+// code above the next free dictionary slot (or a non-literal first code) used
+// to be accepted and could make a dictionary entry its own prefix, sending the
+// decoder into an endless loop that grows its output stack without bound.
+func TestDecompressRejectsCorruptCodes(t *testing.T) {
+	t.Parallel()
+	tests := []struct {
+		name  string
+		input []byte
+	}{
+		{"code beyond next free entry", packCodes('A', 258, 258, 258, 258, 258, 258, 258)},
+		{"first code is not a literal", packCodes(300, 'A', 'B', 'C', 'D', 'E', 'F', 'G')},
+		// After a clear code the decoder skips to the next 9-byte block, so the
+		// code that must be a literal is the ninth one.
+		{"literal after clear is not a literal", packCodes('A', 256, 0, 0, 0, 0, 0, 0, 300, 'B', 'C', 'D', 'E', 'F', 'G', 'H')},
+	}
+	for _, tt := range tests {
+		t.Run(tt.name, func(t *testing.T) {
+			t.Parallel()
+			done := make(chan error, 1)
+			go func() {
+				done <- lzw.Decompress(bytes.NewReader(tt.input), io.Discard)
+			}()
+			select {
+			case err := <-done:
+				if err == nil {
+					t.Fatal("Decompress accepted a corrupt stream")
+				}
+			case <-time.After(5 * time.Second):
+				t.Fatal("Decompress did not finish on a corrupt stream")
+			}
+		})
+	}
 }

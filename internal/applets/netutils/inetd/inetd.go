@@ -150,7 +150,7 @@ type Runner func(ctx context.Context, svc Service, conn net.Conn) error
 
 // runProgram is the production Runner: it forks the configured program.
 func runProgram(ctx context.Context, svc Service, conn net.Conn) error {
-	cmd := exec.CommandContext(ctx, svc.Program, svc.Args...)
+	cmd := exec.CommandContext(ctx, svc.Program, svc.Args...) // #nosec G204 -- runs the server program configured in inetd.conf, which is what inetd does
 	cmd.Stdin = conn
 	cmd.Stdout = conn
 	return cmd.Run()

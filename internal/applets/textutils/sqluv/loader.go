@@ -44,7 +44,7 @@ type table struct {
 // its decompressed bytes along with a cleanup function. The cleanup closes both
 // the decompressor (when one was wrapped) and the underlying file.
 func openSource(path string) (io.Reader, func() error, error) {
-	f, err := os.Open(path) //nolint:gosec // path comes from a user-supplied operand by design
+	f, err := os.Open(path) // #nosec G304 -- path comes from a user-supplied operand by design
 	if err != nil {
 		return nil, nil, err
 	}

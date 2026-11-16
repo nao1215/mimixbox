@@ -96,7 +96,7 @@ func removeShells(path string, shells []string) (err error) {
 		kept = append(kept, line)
 	}
 
-	f, err := os.OpenFile(path, os.O_TRUNC|os.O_WRONLY|os.O_CREATE, 0644) //nolint:gosec // /etc/shells is world-readable
+	f, err := os.OpenFile(path, os.O_TRUNC|os.O_WRONLY|os.O_CREATE, 0644) // #nosec G302 G304 -- /etc/shells is world-readable
 	if err != nil {
 		return err
 	}
@@ -117,7 +117,7 @@ func removeShells(path string, shells []string) (err error) {
 // readShells returns the non-empty, whitespace-trimmed lines of the file at
 // path. A missing file is treated as an empty list.
 func readShells(path string) ([]string, error) {
-	f, err := os.Open(path) //nolint:gosec // operating on the named shells file is the point
+	f, err := os.Open(path) // #nosec G304 -- operating on the named shells file is the point
 	if err != nil {
 		if os.IsNotExist(err) {
 			return nil, nil

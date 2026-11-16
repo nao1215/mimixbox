@@ -148,7 +148,7 @@ func decodeCells(data []byte) []cell {
 // appendCell writes a cell to out: a raw byte as itself, a normal rune as UTF-8.
 func appendCell(out []byte, c cell) []byte {
 	if c.raw {
-		return append(out, byte(c.r))
+		return append(out, byte(c.r)) // #nosec G115 -- raw cells hold an input byte (raw is cleared for mapped runes above 0xff)
 	}
 	return utf8.AppendRune(out, c.r)
 }

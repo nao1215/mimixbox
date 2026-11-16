@@ -68,7 +68,7 @@ func (c *Command) Run(_ context.Context, stdio command.IO, args []string) error 
 
 // create writes a ZIP archive containing the inputs.
 func (c *Command) create(stdio command.IO, archive string, inputs []string, opts options) error {
-	out, err := os.Create(archive) //nolint:gosec // user-named file
+	out, err := os.Create(archive) // #nosec G304 -- user-named file
 	if err != nil {
 		return err
 	}
@@ -114,7 +114,7 @@ func addDir(stdio command.IO, zw *zip.Writer, root string, verbose bool) error {
 
 // addFile copies one file into the archive under the name entry.
 func addFile(stdio command.IO, zw *zip.Writer, path, entry string, verbose bool) error {
-	f, err := os.Open(path) //nolint:gosec // archiving a user-named file
+	f, err := os.Open(path) // #nosec G304 -- archiving a user-named file
 	if err != nil {
 		return err
 	}

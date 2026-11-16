@@ -81,7 +81,7 @@ func (c *Command) Run(_ context.Context, stdio command.IO, args []string) error 
 			}
 			continue
 		}
-		data, err := os.ReadFile(src) //nolint:gosec // path under given maildir
+		data, err := os.ReadFile(src) // #nosec G304 -- path under given maildir
 		if err != nil {
 			fmt.Fprintf(stdio.Err, "%s: %v\n", c.Name(), err)
 			failed = true

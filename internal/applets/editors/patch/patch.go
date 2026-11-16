@@ -136,7 +136,7 @@ func stripComponents(name string, n int) string {
 
 // applyFile applies a file patch to its target on disk.
 func applyFile(stdio command.IO, target string, fp *filePatch, dryRun bool) error {
-	data, err := os.ReadFile(target) //nolint:gosec // user-named target file
+	data, err := os.ReadFile(target) // #nosec G304 G703 -- user-named target file
 	if err != nil {
 		return fmt.Errorf("cannot open %s", command.FileError(target, err))
 	}
@@ -155,7 +155,7 @@ func applyFile(stdio command.IO, target string, fp *filePatch, dryRun bool) erro
 		_, _ = fmt.Fprintf(stdio.Out, "checking file %s\n", target)
 		return nil
 	}
-	return os.WriteFile(target, []byte(out), 0o644) //nolint:gosec // preserve simple default mode
+	return os.WriteFile(target, []byte(out), 0o644) // #nosec G306 G703 -- preserve simple default mode
 }
 
 // splitLinesKeep splits text into lines, dropping a single trailing newline.

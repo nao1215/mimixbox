@@ -53,7 +53,7 @@ func (s *spool) enqueue(file string, stdin io.Reader) error {
 		src = stdin
 		name = "(stdin)"
 	} else {
-		f, err := os.Open(file) //nolint:gosec // user-named file
+		f, err := os.Open(file) // #nosec G304 -- user-named file
 		if err != nil {
 			return err
 		}
@@ -64,7 +64,7 @@ func (s *spool) enqueue(file string, stdin io.Reader) error {
 
 	dataName := fmt.Sprintf("df%04d", id)
 	dataPath := filepath.Join(s.dir, dataName)
-	out, err := os.Create(dataPath) //nolint:gosec // path under spool
+	out, err := os.Create(dataPath) // #nosec G304 -- path under spool
 	if err != nil {
 		return err
 	}
@@ -147,7 +147,7 @@ func (s *spool) list() ([]job, error) {
 // failed print leaves the job queued.
 func (s *spool) print(outDir string, j job) error {
 	src := filepath.Join(s.dir, j.DataFile)
-	in, err := os.Open(src) //nolint:gosec // path under spool
+	in, err := os.Open(src) // #nosec G304 -- path under spool
 	if err != nil {
 		return err
 	}
@@ -155,7 +155,7 @@ func (s *spool) print(outDir string, j job) error {
 
 	safe := strings.ReplaceAll(j.Name, "/", "_")
 	dst := filepath.Join(outDir, fmt.Sprintf("%04d-%s", j.ID, safe))
-	out, err := os.Create(dst) //nolint:gosec // path under outDir
+	out, err := os.Create(dst) // #nosec G304 -- path under outDir
 	if err != nil {
 		return err
 	}

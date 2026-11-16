@@ -219,7 +219,7 @@ func (c *Command) runIfupdown(ctx context.Context, stdio command.IO, args []stri
 // with "/bin/sh -c", wiring the applet's stdout/stderr to the child.
 func shellHook(stdio command.IO) HookRunner {
 	return func(ctx context.Context, cmdline string) error {
-		cmd := exec.CommandContext(ctx, "/bin/sh", "-c", cmdline)
+		cmd := exec.CommandContext(ctx, "/bin/sh", "-c", cmdline) // #nosec G204 -- runs the pre-up/up/down hook command from the administrator's interfaces file, as ifupdown does
 		cmd.Stdout = stdio.Out
 		cmd.Stderr = stdio.Err
 		return cmd.Run()

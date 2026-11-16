@@ -66,7 +66,7 @@ func hostID() uint32 {
 // hostIDFromFile reads the first four bytes of path as a host-byte-order
 // (little-endian on the supported platforms) unsigned 32-bit integer.
 func hostIDFromFile(path string) (uint32, bool) {
-	b, err := os.ReadFile(path) //nolint:gosec // /etc/hostid is a well-known system file
+	b, err := os.ReadFile(path) // #nosec G304 -- /etc/hostid is a well-known system file
 	if err != nil || len(b) < 4 {
 		return 0, false
 	}

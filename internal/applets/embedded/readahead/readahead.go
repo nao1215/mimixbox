@@ -26,7 +26,7 @@ func (c *Command) Synopsis() string { return "Preload files into the page cache"
 // preload warms one file into the page cache. It is injected so tests can
 // observe which files were requested without depending on kernel cache state.
 var preload = func(path string) error {
-	f, err := os.Open(path) //nolint:gosec // user-named file
+	f, err := os.Open(path) // #nosec G304 -- user-named file
 	if err != nil {
 		return err
 	}

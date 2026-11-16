@@ -138,3 +138,25 @@ func TestHelpSections(t *testing.T) {
 		t.Errorf("--help missing Exit status section:\n%s", got)
 	}
 }
+
+// TestIsReplyToWrapsSequence covers runs longer than 65535 probes. The ICMP
+// sequence field is 16 bits, so echoRequest(id, 65536) carries sequence 0; the
+// reply used to be compared with the unwrapped counter and never matched, so
+// every probe after the 65535th was reported as a timeout.
+func TestIsReplyToWrapsSequence(t *testing.T) {
+	t.Parallel()
+	const id = 0x1234
+	for _, seq := range []int{0, 1, 65535, 65536, 65537, 200000} {
+		req := echoRequest(id, seq)
+		// An echo reply is the request with type 0, behind a 20-byte IPv4 header.
+		reply := append(make([]byte, 20), req...)
+		reply[0] = 0x45
+		reply[20] = icmpEchoReply
+		if !isReplyTo(reply, id, seq) {
+			t.Errorf("isReplyTo(reply to seq %d, %d) = false, want true", seq, seq)
+		}
+		if isReplyTo(reply, id, seq+1) {
+			t.Errorf("isReplyTo(reply to seq %d, %d) = true, want false", seq, seq+1)
+		}
+	}
+}

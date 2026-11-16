@@ -117,7 +117,7 @@ func (c *Command) runMode(ctx context.Context, stdio command.IO, operands []stri
 		return command.Failuref("failed to set affinity: %v", err)
 	}
 
-	cmd := exec.CommandContext(ctx, rest[0], rest[1:]...) //nolint:gosec // running the user's command is the point
+	cmd := exec.CommandContext(ctx, rest[0], rest[1:]...) // #nosec G204 -- running the user's command is the point
 	cmd.Stdin, cmd.Stdout, cmd.Stderr = stdio.In, stdio.Out, stdio.Err
 	if err := cmd.Run(); err != nil {
 		var exitErr *exec.ExitError

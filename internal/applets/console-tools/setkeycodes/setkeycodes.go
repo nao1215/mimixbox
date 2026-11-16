@@ -40,7 +40,7 @@ var setKeycodeFn = func(scancode, keycode int) error {
 	}
 	defer func() { _ = f.Close() }()
 	kc := kbkeycode{scancode: uint32(scancode), keycode: uint32(keycode)}
-	if _, _, errno := unix.Syscall(unix.SYS_IOCTL, f.Fd(), kdSetKeycode, uintptr(unsafe.Pointer(&kc))); errno != 0 {
+	if _, _, errno := unix.Syscall(unix.SYS_IOCTL, f.Fd(), kdSetKeycode, uintptr(unsafe.Pointer(&kc))); errno != 0 { // #nosec G103 -- the KDSETKEYCODE ioctl ABI takes a pointer to struct kbkeycode
 		return errno
 	}
 	return nil

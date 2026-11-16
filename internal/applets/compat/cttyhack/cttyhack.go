@@ -24,7 +24,9 @@ func New() *Command { return &Command{} }
 func (c *Command) Name() string { return "cttyhack" }
 
 // Synopsis returns the one-line description shown in the applet list.
-func (c *Command) Synopsis() string { return "Run PROGRAM with the current stdio (no controlling-TTY trick)" }
+func (c *Command) Synopsis() string {
+	return "Run PROGRAM with the current stdio (no controlling-TTY trick)"
+}
 
 // Run executes the program operand, forwarding the shell's streams.
 func (c *Command) Run(ctx context.Context, stdio command.IO, args []string) error {
@@ -49,7 +51,7 @@ func (c *Command) Run(ctx context.Context, stdio command.IO, args []string) erro
 	}
 
 	path, argv := resolve(operands)
-	cmd := exec.CommandContext(ctx, path, argv...) //nolint:gosec // running a user-named program is the point
+	cmd := exec.CommandContext(ctx, path, argv...) // #nosec G204 -- running a user-named program is the point
 	cmd.Stdin, cmd.Stdout, cmd.Stderr = stdio.In, stdio.Out, stdio.Err
 	if err := cmd.Run(); err != nil {
 		var exitErr *exec.ExitError

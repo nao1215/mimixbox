@@ -161,8 +161,10 @@ func octal(s string) (byte, int) {
 	if end == 0 {
 		return 0, 0
 	}
-	v, _ := strconv.ParseInt(s[:end], 8, 16)
-	return byte(v), end
+	v, _ := strconv.ParseUint(s[:end], 8, 16)
+	// An escape of up to 3 octal digits wraps to one byte, as GNU echo does.
+	v &= 0xff
+	return byte(v), end // #nosec G115 -- masked to 0..0xff just above
 }
 
 func hex(s string) (byte, int) {
@@ -173,8 +175,8 @@ func hex(s string) (byte, int) {
 	if end == 0 {
 		return 0, 0
 	}
-	v, _ := strconv.ParseInt(s[:end], 16, 16)
-	return byte(v), end
+	v, _ := strconv.ParseUint(s[:end], 16, 8)
+	return byte(v), end // #nosec G115 -- at most 2 hex digits, parsed as 8 bits
 }
 
 func isHex(b byte) bool {

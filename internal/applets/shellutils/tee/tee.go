@@ -147,7 +147,7 @@ func tee(stdio command.IO, files []string, appendMode bool, mode outputErrorMode
 	var opened []*os.File
 	var failed bool
 	for _, name := range files {
-		f, err := os.OpenFile(name, flags, 0o644) //nolint:gosec // operating on a user-named file is the whole point
+		f, err := os.OpenFile(name, flags, 0o644) // #nosec G302 G304 -- operating on a user-named file is the whole point
 		if err != nil {
 			_, _ = fmt.Fprintf(stdio.Err, "tee: %s\n", command.FileError(name, err))
 			failed = true

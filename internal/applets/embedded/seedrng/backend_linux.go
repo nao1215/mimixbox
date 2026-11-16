@@ -37,11 +37,11 @@ func (osSeeder) Credit(seed []byte, credit bool) error {
 
 	var info rndEntropy
 	n := copy(info.buf[:], seed)
-	info.bufSize = int32(n)
+	info.bufSize = int32(n) // #nosec G115 -- n is at most len(info.buf), a small fixed-size array
 	if credit {
-		info.entropyCount = int32(n * 8)
+		info.entropyCount = int32(n * 8) // #nosec G115 -- n is at most len(info.buf), so n*8 fits an int32
 	}
-	if _, _, errno := unix.Syscall(unix.SYS_IOCTL, f.Fd(), rndAddEntropy, uintptr(unsafe.Pointer(&info))); errno != 0 {
+	if _, _, errno := unix.Syscall(unix.SYS_IOCTL, f.Fd(), rndAddEntropy, uintptr(unsafe.Pointer(&info))); errno != 0 { // #nosec G103 -- the RNDADDENTROPY ioctl ABI takes a pointer to struct rand_pool_info
 		if errno == unix.EPERM {
 			return fmt.Errorf("operation not permitted (crediting kernel entropy needs CAP_SYS_ADMIN)")
 		}

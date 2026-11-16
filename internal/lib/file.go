@@ -149,13 +149,13 @@ func Copy(src string, dest string) error {
 		return err
 	}
 
-	s, err := os.Open(src)
+	s, err := os.Open(src) // #nosec G304 -- the source file the user named for the copy
 	if err != nil {
 		return err
 	}
 	defer func() { _ = s.Close() }()
 
-	d, err := os.OpenFile(dest, os.O_WRONLY|os.O_CREATE|os.O_TRUNC, info.Mode().Perm())
+	d, err := os.OpenFile(dest, os.O_WRONLY|os.O_CREATE|os.O_TRUNC, info.Mode().Perm()) // #nosec G304 -- the destination the user named for the copy
 	if err != nil {
 		return err
 	}
@@ -206,7 +206,7 @@ func CopyTree(src string, dest string) error {
 
 func ReadFileToStrList(path string) ([]string, error) {
 	var strList []string
-	f, err := os.Open(path)
+	f, err := os.Open(path) // #nosec G304 -- a file the user named on the command line
 	if err != nil {
 		return nil, err
 	}

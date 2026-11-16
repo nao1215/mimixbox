@@ -67,9 +67,9 @@ func Render(message string) string {
 		}
 		for row := 0; row < glyphHeight; row++ {
 			if i > 0 {
-				rows[row].WriteByte(' ')
+				rows[row].WriteByte(' ') // #nosec G104 -- strings.Builder.WriteByte always returns nil
 			}
-			rows[row].WriteString(glyph[row])
+			rows[row].WriteString(glyph[row]) // #nosec G104 -- strings.Builder.WriteString always returns nil
 		}
 	}
 

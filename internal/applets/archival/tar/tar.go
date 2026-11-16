@@ -167,7 +167,7 @@ func addPath(stdio command.IO, tw *tar.Writer, base, p string, verbose bool) err
 		if !info.Mode().IsRegular() {
 			return nil
 		}
-		f, err := os.Open(path) //nolint:gosec // archiving a user-named file
+		f, err := os.Open(path) // #nosec G122 G304 -- archiving a user-named file
 		if err != nil {
 			return err
 		}
@@ -271,12 +271,12 @@ func extractEntry(stdio command.IO, tr *tar.Reader, dest string, hdr *tar.Header
 
 	switch hdr.Typeflag {
 	case tar.TypeDir:
-		return os.MkdirAll(target, fs.FileMode(hdr.Mode)) //nolint:gosec // archive-defined mode
+		return os.MkdirAll(target, fs.FileMode(hdr.Mode)) // #nosec G115 -- archive-defined mode
 	case tar.TypeReg:
-		if err := os.MkdirAll(filepath.Dir(target), 0o755); err != nil {
+		if err := os.MkdirAll(filepath.Dir(target), 0o755); err != nil { // #nosec G301 -- parent directories of extracted entries are created 0755 before umask, no wider than the 0777-minus-umask GNU tar uses
 			return err
 		}
-		f, err := os.OpenFile(target, os.O_CREATE|os.O_TRUNC|os.O_WRONLY, fs.FileMode(hdr.Mode)) //nolint:gosec // archive-defined mode
+		f, err := os.OpenFile(target, os.O_CREATE|os.O_TRUNC|os.O_WRONLY, fs.FileMode(hdr.Mode)) // #nosec G115 G304 -- archive-defined mode
 		if err != nil {
 			return err
 		}

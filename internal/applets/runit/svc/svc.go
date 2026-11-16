@@ -101,7 +101,7 @@ func (c *Command) Run(_ context.Context, stdio command.IO, args []string) error 
 // sendControl writes the control bytes to the service's control file.
 func sendControl(dir string, control []byte) error {
 	path := filepath.Join(dir, "supervise", "control")
-	f, err := os.OpenFile(path, os.O_WRONLY, 0) //nolint:gosec // the supervise control fifo
+	f, err := os.OpenFile(path, os.O_WRONLY, 0) // #nosec G304 -- the supervise control fifo
 	if err != nil {
 		return fmt.Errorf("not supervised (no %s): %v", path, err)
 	}

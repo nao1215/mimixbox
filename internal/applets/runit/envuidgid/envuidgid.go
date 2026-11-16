@@ -56,7 +56,7 @@ func (c *Command) Run(ctx context.Context, stdio command.IO, args []string) erro
 		return command.Failuref("%v", err)
 	}
 
-	cmd := exec.CommandContext(ctx, rest[1], rest[2:]...) //nolint:gosec // running the user's program is the point
+	cmd := exec.CommandContext(ctx, rest[1], rest[2:]...) // #nosec G204 -- running the user's program is the point
 	cmd.Env = append(os.Environ(), "UID="+strconv.Itoa(uid), "GID="+strconv.Itoa(gid))
 	cmd.Stdin, cmd.Stdout, cmd.Stderr = stdio.In, stdio.Out, stdio.Err
 	if err := cmd.Run(); err != nil {

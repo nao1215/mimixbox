@@ -134,7 +134,7 @@ func blockNode(dir string) string {
 
 // attr reads a one-line sysfs attribute, trimmed.
 func attr(dir, name string) string {
-	data, err := os.ReadFile(filepath.Join(dir, name)) //nolint:gosec // a /sys attribute path
+	data, err := os.ReadFile(filepath.Join(dir, name)) // #nosec G304 -- a /sys attribute path
 	if err != nil {
 		return ""
 	}

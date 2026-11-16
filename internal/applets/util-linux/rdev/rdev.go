@@ -54,7 +54,7 @@ func (c *Command) Run(_ context.Context, stdio command.IO, args []string) error 
 
 // rootDevice returns the device mounted at "/" from the mount table.
 func rootDevice(path string) (string, error) {
-	f, err := os.Open(path) //nolint:gosec // the mount table path
+	f, err := os.Open(path) // #nosec G304 -- the mount table path
 	if err != nil {
 		return "", err
 	}

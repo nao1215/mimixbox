@@ -129,7 +129,7 @@ func awaitReply(fd, id, seq int, timeout time.Duration, start time.Time) (time.D
 			return 0, false
 		}
 		// Skip the IPv4 header to reach the ICMP message.
-		if rid, rseq, ok := parseReply(buf[:n]); ok && rid == id && rseq == seq {
+		if isReplyTo(buf[:n], id, seq) {
 			return time.Since(start), true
 		}
 	}
@@ -142,12 +142,20 @@ func echoRequest(id, seq int) []byte {
 	pkt := make([]byte, 8+len(body))
 	pkt[0] = icmpEchoRequest
 	pkt[1] = 0
-	binary.BigEndian.PutUint16(pkt[4:], uint16(id))
-	binary.BigEndian.PutUint16(pkt[6:], uint16(seq))
+	binary.BigEndian.PutUint16(pkt[4:], uint16(id))  // #nosec G115 -- the ICMP identifier is 16 bits; it wraps and isReplyTo compares the wrapped value
+	binary.BigEndian.PutUint16(pkt[6:], uint16(seq)) // #nosec G115 -- the ICMP sequence is 16 bits; it wraps like iputils ping and isReplyTo compares the wrapped value
 	copy(pkt[8:], body)
 	cs := checksum(pkt)
 	binary.BigEndian.PutUint16(pkt[2:], cs)
 	return pkt
+}
+
+// isReplyTo reports whether packet is the echo reply to the request built by
+// echoRequest(id, seq). Both fields are 16 bits on the wire, so the wrapped
+// values are compared.
+func isReplyTo(packet []byte, id, seq int) bool {
+	rid, rseq, ok := parseReply(packet)
+	return ok && rid == id&0xffff && rseq == seq&0xffff
 }
 
 // parseReply extracts the id and seq from a received IPv4+ICMP echo reply.

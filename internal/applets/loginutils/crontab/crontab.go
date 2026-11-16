@@ -9,6 +9,7 @@ import (
 	"os"
 	"os/user"
 	"path/filepath"
+	"strings"
 
 	"github.com/nao1215/mimixbox/internal/command"
 )
@@ -68,6 +69,11 @@ func (c *Command) Run(_ context.Context, stdio command.IO, args []string) error 
 			return command.Failuref("cannot determine the current user: %v", err)
 		}
 	}
+	// The spool file is named after the user; a name with a separator or a
+	// dot entry would point outside the spool directory.
+	if target == "" || target == "." || target == ".." || strings.ContainsAny(target, `/\`) {
+		return command.Failuref("invalid user name %q", target)
+	}
 	path := filepath.Join(spoolDir, target)
 
 	switch {
@@ -83,7 +89,7 @@ func (c *Command) Run(_ context.Context, stdio command.IO, args []string) error 
 }
 
 func listCrontab(stdio command.IO, path string) error {
-	data, err := os.ReadFile(path) //nolint:gosec // spool path
+	data, err := os.ReadFile(path) // #nosec G304 -- spool path
 	if err != nil {
 		return command.Failuref("no crontab for this user")
 	}
@@ -110,10 +116,10 @@ func installCrontab(stdio command.IO, path string, operands []string) error {
 		return command.Failuref("cannot read the new crontab: %v", err)
 	}
 
-	if err := os.MkdirAll(spoolDir, 0o755); err != nil {
+	if err := os.MkdirAll(spoolDir, 0o755); err != nil { // #nosec G301 -- the spool directory is created only when missing; every crontab inside is written 0600
 		return command.Failuref("cannot create the spool directory: %v", err)
 	}
-	if err := os.WriteFile(path, data, 0o600); err != nil {
+	if err := os.WriteFile(path, data, 0o600); err != nil { // #nosec G703 -- path is spoolDir joined with a user name checked to have no separator or dot entry
 		return command.Failuref("cannot install the crontab: %v", err)
 	}
 	_, _ = fmt.Fprintln(stdio.Err, "crontab: installing new crontab")

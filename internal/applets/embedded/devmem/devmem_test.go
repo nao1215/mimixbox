@@ -81,7 +81,7 @@ func TestParsePlanErrors(t *testing.T) {
 		{},
 		{"a", "b", "c", "d"},
 		{"notanaddr"},
-		{"0x10", "7"},       // bad width
+		{"0x10", "7"},          // bad width
 		{"0x10", "8", "0x1FF"}, // value too wide for 8 bits
 	}
 	for _, args := range cases {
@@ -121,5 +121,30 @@ func TestRunBackendError(t *testing.T) {
 	withBackend(t, &fakeBackend{readErr: errors.New("permission denied")})
 	if _, err := run(t, "0x10"); err == nil {
 		t.Fatal("expected error when backend fails")
+	}
+}
+
+// TestMapSpanCoversAccess covers an access that starts near the end of a page.
+// Only one page used to be mapped, so "devmem 0xFFE 32" sliced past the end of
+// the mapping and panicked; the mapping must cover every accessed byte.
+func TestMapSpanCoversAccess(t *testing.T) {
+	t.Parallel()
+	const page = 4096
+	for _, tc := range []struct {
+		addr  uint64
+		width int
+	}{
+		{0x1000, 4}, {0x1FFC, 4}, {0x1FFE, 4}, {0x1FFF, 1}, {0x1FFF, 8}, {0x1FF9, 8},
+	} {
+		base, off, length := mapSpan(tc.addr, tc.width, page)
+		if base%page != 0 {
+			t.Errorf("mapSpan(%#x, %d): base %#x is not page aligned", tc.addr, tc.width, base)
+		}
+		if base+uint64(off) != tc.addr {
+			t.Errorf("mapSpan(%#x, %d): base+off = %#x", tc.addr, tc.width, base+uint64(off))
+		}
+		if off+tc.width > length {
+			t.Errorf("mapSpan(%#x, %d): access [%d:%d] exceeds the %d-byte mapping", tc.addr, tc.width, off, off+tc.width, length)
+		}
 	}
 }

@@ -43,8 +43,8 @@ var (
 	passwdPath = "/etc/passwd"
 	isRootFn   = func() bool { return os.Geteuid() == 0 }
 	authFn     = auth.Authenticate
-	runFn = func(stdio command.IO, acc account, argv []string) error {
-		cmd := exec.Command(acc.shell) //nolint:gosec // running the user's shell is the point
+	runFn      = func(stdio command.IO, acc account, argv []string) error {
+		cmd := exec.Command(acc.shell) // #nosec G204 -- running the user's shell is the point
 		cmd.Args = argv
 		cmd.Dir = acc.home
 		cmd.Env = append(os.Environ(), "HOME="+acc.home, "USER="+acc.name, "SHELL="+acc.shell)

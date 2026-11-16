@@ -83,7 +83,7 @@ func (c *Command) Run(_ context.Context, stdio command.IO, args []string) error 
 	}
 
 	name, cmdArgs := shellOr(fs.Args())
-	cmd := exec.Command(name, cmdArgs...) //nolint:gosec // user-specified command, as unshare is designed to run
+	cmd := exec.Command(name, cmdArgs...) // #nosec G204 -- user-specified command, as unshare is designed to run
 	cmd.Stdin, cmd.Stdout, cmd.Stderr = stdio.In, stdio.Out, stdio.Err
 	if err := cmd.Run(); err != nil {
 		var ee *exec.ExitError

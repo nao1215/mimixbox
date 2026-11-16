@@ -96,7 +96,7 @@ func create(archive string, files []string, verbose bool, stdio command.IO) erro
 	if len(files) == 0 {
 		return fmt.Errorf("no members specified")
 	}
-	out, err := os.Create(archive) //nolint:gosec // user-named file
+	out, err := os.Create(archive) // #nosec G304 -- user-named file
 	if err != nil {
 		return err
 	}
@@ -110,7 +110,7 @@ func create(archive string, files []string, verbose bool, stdio command.IO) erro
 		if err != nil {
 			return err
 		}
-		data, err := os.ReadFile(f) //nolint:gosec // archiving a user-named file
+		data, err := os.ReadFile(f) // #nosec G304 -- archiving a user-named file
 		if err != nil {
 			return err
 		}
@@ -155,7 +155,7 @@ func trunc(s string, n int) string {
 
 // readArchive parses every member of an archive.
 func readArchive(archive string) ([]member, error) {
-	f, err := os.Open(archive) //nolint:gosec // user-named file
+	f, err := os.Open(archive) // #nosec G304 -- user-named file
 	if err != nil {
 		return nil, err
 	}
@@ -181,7 +181,7 @@ func readArchive(archive string) ([]member, error) {
 		}
 		name := strings.TrimRight(string(h[0:16]), " ")
 		name = strings.TrimSuffix(name, "/")
-		mode, _ := strconv.ParseInt(strings.TrimSpace(string(h[40:48])), 8, 64)
+		mode, _ := strconv.ParseInt(strings.TrimSpace(string(h[40:48])), 8, 32) // the 8-digit octal field fits in 32 bits
 		size, err := strconv.ParseInt(strings.TrimSpace(string(h[48:58])), 10, 64)
 		if err != nil {
 			return nil, fmt.Errorf("corrupt member header")
@@ -226,7 +226,7 @@ func extract(archive string, want []string, verbose bool, stdio command.IO) erro
 		if len(want) > 0 && !wanted[m.name] {
 			continue
 		}
-		mode := os.FileMode(m.mode)
+		mode := os.FileMode(m.mode) // #nosec G115 -- os.FileMode keeps the low 32 bits of the octal header mode; WriteFile applies only permission, setuid, setgid and sticky bits, as GNU ar does with the header mode
 		if mode == 0 {
 			mode = 0o644
 		}

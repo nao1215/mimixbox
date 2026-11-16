@@ -95,7 +95,7 @@ func pathFor(name string) string {
 }
 
 func (c *Command) write(out io.Writer, name, value string) error {
-	if err := os.WriteFile(pathFor(name), []byte(value), 0o644); err != nil { //nolint:gosec // sysctl path
+	if err := os.WriteFile(pathFor(name), []byte(value), 0o644); err != nil { // #nosec G306 -- sysctl path
 		return fmt.Errorf("cannot set %s: %w", name, err)
 	}
 	_, _ = fmt.Fprintf(out, "%s = %s\n", name, value)
@@ -108,7 +108,7 @@ func (c *Command) listAll(out io.Writer) {
 		if err != nil || d.IsDir() {
 			return nil
 		}
-		data, rerr := os.ReadFile(path) //nolint:gosec // sysctl path
+		data, rerr := os.ReadFile(path) // #nosec G122 G304 -- sysctl path
 		if rerr != nil {
 			return nil
 		}

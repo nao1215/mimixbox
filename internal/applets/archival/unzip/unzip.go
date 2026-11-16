@@ -103,7 +103,7 @@ func extractFile(stdio command.IO, f *zip.File, dest string, verbose bool) error
 	if f.FileInfo().IsDir() {
 		return os.MkdirAll(target, f.Mode())
 	}
-	if err := os.MkdirAll(filepath.Dir(target), 0o755); err != nil {
+	if err := os.MkdirAll(filepath.Dir(target), 0o755); err != nil { // #nosec G301 -- parent directories of extracted entries are created 0755 before umask, no wider than the 0777-minus-umask Info-ZIP unzip uses
 		return err
 	}
 
@@ -113,11 +113,11 @@ func extractFile(stdio command.IO, f *zip.File, dest string, verbose bool) error
 	}
 	defer func() { _ = rc.Close() }()
 
-	out, err := os.OpenFile(target, os.O_CREATE|os.O_TRUNC|os.O_WRONLY, f.Mode()) //nolint:gosec // archive-defined mode
+	out, err := os.OpenFile(target, os.O_CREATE|os.O_TRUNC|os.O_WRONLY, f.Mode()) // #nosec G304 -- archive-defined mode
 	if err != nil {
 		return err
 	}
-	if _, err := io.Copy(out, rc); err != nil { //nolint:gosec // extracting user archive
+	if _, err := io.Copy(out, rc); err != nil { // #nosec G110 -- extracting user archive
 		_ = out.Close()
 		return err
 	}

@@ -53,7 +53,7 @@ func (c *Command) Run(ctx context.Context, stdio command.IO, args []string) erro
 	defer func() { _ = conn.Close() }()
 	defer func() { _ = os.Remove(*socket) }()
 
-	out, err := os.OpenFile(*logfile, os.O_CREATE|os.O_WRONLY|os.O_APPEND, 0o644) //nolint:gosec // user-named log
+	out, err := os.OpenFile(*logfile, os.O_CREATE|os.O_WRONLY|os.O_APPEND, 0o644) // #nosec G302 -- user-named log
 	if err != nil {
 		return command.Failuref("cannot open %s: %v", *logfile, err)
 	}

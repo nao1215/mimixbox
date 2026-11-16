@@ -26,7 +26,9 @@ func New() *Command { return &Command{} }
 func (c *Command) Name() string { return "nohup" }
 
 // Synopsis returns the one-line description shown in the applet list.
-func (c *Command) Synopsis() string { return "Run a command immune to hangups, with output to a non-tty" }
+func (c *Command) Synopsis() string {
+	return "Run a command immune to hangups, with output to a non-tty"
+}
 
 // Exit codes follow GNU nohup's convention.
 const (
@@ -69,7 +71,7 @@ func (c *Command) Run(_ context.Context, stdio command.IO, args []string) error 
 	}
 	defer cleanup()
 
-	cmd := exec.Command(rest[0], rest[1:]...) //nolint:gosec // running a user-named command is the point
+	cmd := exec.Command(rest[0], rest[1:]...) // #nosec G204 -- running a user-named command is the point
 	cmd.Stdin = stdio.In
 	cmd.Stdout = out
 	cmd.Stderr = out
@@ -104,7 +106,7 @@ func outputWriter(stdio command.IO) (io.Writer, func(), error) {
 	f, err := os.OpenFile("nohup.out", os.O_WRONLY|os.O_CREATE|os.O_APPEND, 0o600)
 	if err != nil {
 		if home := os.Getenv("HOME"); home != "" {
-			f, err = os.OpenFile(home+"/nohup.out", os.O_WRONLY|os.O_CREATE|os.O_APPEND, 0o600)
+			f, err = os.OpenFile(home+"/nohup.out", os.O_WRONLY|os.O_CREATE|os.O_APPEND, 0o600) // #nosec G304 G703 -- nohup falls back to $HOME/nohup.out, as POSIX nohup specifies
 		}
 	}
 	if err != nil {

@@ -226,7 +226,7 @@ func (c *Command) resolveDest(operands []string, opts options) (sources []string
 // when -D is set, then applies the mode and (with -p) the source timestamps.
 func (c *Command) installOne(stdio command.IO, src, dest string, opts options) error {
 	if opts.createDir {
-		if err := os.MkdirAll(filepath.Dir(dest), 0o755); err != nil {
+		if err := os.MkdirAll(filepath.Dir(dest), 0o755); err != nil { // #nosec G301 -- install -D creates leading directories 0755 (u=rwx,go=rx) before umask, as GNU install does
 			return fmt.Errorf("cannot create directory for %s: %w", dest, err)
 		}
 	}
@@ -333,7 +333,7 @@ func stripFile(dest string) error {
 	if err != nil {
 		return fmt.Errorf("strip program not found")
 	}
-	cmd := exec.Command(prog, dest) //nolint:gosec // operating on a user-named file
+	cmd := exec.Command(prog, dest) // #nosec G204 -- operating on a user-named file
 	if out, err := cmd.CombinedOutput(); err != nil {
 		if len(out) > 0 {
 			return fmt.Errorf("strip %s: %s", dest, string(out))
@@ -427,13 +427,13 @@ func nextNumberedBackup(target string) string {
 
 // copyFile copies the contents of src to dest, truncating dest if it exists.
 func copyFile(src, dest string) error {
-	in, err := os.Open(src) //nolint:gosec // operating on a user-named file
+	in, err := os.Open(src) // #nosec G304 -- operating on a user-named file
 	if err != nil {
 		return err
 	}
 	defer func() { _ = in.Close() }()
 
-	out, err := os.Create(dest) //nolint:gosec // operating on a user-named file
+	out, err := os.Create(dest) // #nosec G304 -- operating on a user-named file
 	if err != nil {
 		return err
 	}

@@ -67,7 +67,7 @@ func collect(source, dst string) (copied, skipped int, err error) {
 	if !root.IsDir() {
 		return 0, 0, fmt.Errorf("source %q is not a directory", source)
 	}
-	if err := os.MkdirAll(dst, 0o755); err != nil { //nolint:gosec // a collection directory is not sensitive
+	if err := os.MkdirAll(dst, 0o755); err != nil { // #nosec G301 -- a collection directory is not sensitive
 		return 0, 0, fmt.Errorf("cannot create %q: %v", dst, err)
 	}
 
@@ -95,16 +95,16 @@ func collect(source, dst string) (copied, skipped int, err error) {
 
 // copyFile copies src to dst, creating parent directories as needed.
 func copyFile(src, dst string) error {
-	in, err := os.Open(src) //nolint:gosec // reading a discovered log file is the point
+	in, err := os.Open(src) // #nosec G304 -- reading a discovered log file is the point
 	if err != nil {
 		return err
 	}
 	defer func() { _ = in.Close() }()
 
-	if err := os.MkdirAll(filepath.Dir(dst), 0o755); err != nil { //nolint:gosec // mirror layout
+	if err := os.MkdirAll(filepath.Dir(dst), 0o755); err != nil { // #nosec G301 -- mirror layout
 		return err
 	}
-	out, err := os.Create(dst) //nolint:gosec // writing into the collection directory
+	out, err := os.Create(dst) // #nosec G304 -- writing into the collection directory
 	if err != nil {
 		return err
 	}

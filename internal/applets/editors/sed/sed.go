@@ -95,7 +95,7 @@ func gatherScript(exprs []string, file string, operands []string) (string, []str
 	var parts []string
 	parts = append(parts, exprs...)
 	if file != "" {
-		data, err := os.ReadFile(file) //nolint:gosec // user-named script file
+		data, err := os.ReadFile(file) // #nosec G304 -- user-named script file
 		if err != nil {
 			return "", nil, err
 		}

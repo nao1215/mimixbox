@@ -42,8 +42,8 @@ func encodeWtmpRecord(now time.Time) []byte {
 	copy(rec[8:40], "~~")                                                   // ut_line[32]
 	copy(rec[40:44], "~~")                                                  // ut_id[4]
 	copy(rec[44:76], "shutdown")                                            // ut_user[32]
-	binary.LittleEndian.PutUint32(rec[340:], uint32(now.Unix()))            // ut_tv.tv_sec
-	binary.LittleEndian.PutUint32(rec[344:], uint32(now.Nanosecond()/1000)) // ut_tv.tv_usec
+	binary.LittleEndian.PutUint32(rec[340:], uint32(now.Unix()))            // #nosec G115 -- ut_tv.tv_sec is a 32-bit field in utmp, as glibc writes it
+	binary.LittleEndian.PutUint32(rec[344:], uint32(now.Nanosecond()/1000)) // #nosec G115 -- ut_tv.tv_usec: microseconds are below 1000000
 	return rec
 }
 
@@ -52,7 +52,7 @@ func encodeWtmpRecord(now time.Time) []byte {
 func writeWtmp(path string, now time.Time) error {
 	rec := encodeWtmpRecord(now)
 
-	f, err := os.OpenFile(path, os.O_WRONLY|os.O_APPEND|os.O_CREATE, 0644) //nolint:gosec // wtmp is world-readable
+	f, err := os.OpenFile(path, os.O_WRONLY|os.O_APPEND|os.O_CREATE, 0644) // #nosec G302 G304 -- wtmp is world-readable
 	if err != nil {
 		return err
 	}

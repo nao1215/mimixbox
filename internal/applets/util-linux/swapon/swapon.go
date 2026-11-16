@@ -32,7 +32,7 @@ var (
 		if err != nil {
 			return err
 		}
-		_, _, errno := unix.Syscall(unix.SYS_SWAPON, uintptr(unsafe.Pointer(p)), 0, 0)
+		_, _, errno := unix.Syscall(unix.SYS_SWAPON, uintptr(unsafe.Pointer(p)), 0, 0) // #nosec G103 -- swapon(2) takes a pointer to the NUL-terminated path from BytePtrFromString
 		if errno != 0 {
 			return errno
 		}

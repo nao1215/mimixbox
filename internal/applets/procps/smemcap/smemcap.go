@@ -65,7 +65,7 @@ func (c *Command) Run(_ context.Context, stdio command.IO, args []string) error 
 
 // add writes one file into the archive, skipping it if it cannot be read.
 func add(tw *tar.Writer, name, srcPath string) {
-	data, err := os.ReadFile(srcPath) //nolint:gosec // /proc path
+	data, err := os.ReadFile(srcPath) // #nosec G304 -- /proc path
 	if err != nil {
 		return
 	}

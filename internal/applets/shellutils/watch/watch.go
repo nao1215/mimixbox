@@ -24,7 +24,9 @@ func New() *Command { return &Command{} }
 func (c *Command) Name() string { return "watch" }
 
 // Synopsis returns the one-line description shown in the applet list.
-func (c *Command) Synopsis() string { return "Execute a program periodically, showing output fullscreen" }
+func (c *Command) Synopsis() string {
+	return "Execute a program periodically, showing output fullscreen"
+}
 
 // clearScreen is the escape sequence that homes the cursor and clears the
 // screen between refreshes.
@@ -105,7 +107,7 @@ func header(interval float64, argv []string) string {
 // is honored, so a cancelled watch (Ctrl-C) terminates a still-running child
 // instead of hanging on it.
 func runCommand(ctx context.Context, argv []string) string {
-	cmd := exec.CommandContext(ctx, argv[0], argv[1:]...) //nolint:gosec // running a user-named command is the point
+	cmd := exec.CommandContext(ctx, argv[0], argv[1:]...) // #nosec G204 -- running a user-named command is the point
 	out, err := cmd.CombinedOutput()
 	if err != nil {
 		return string(out) + fmt.Sprintf("watch: %v\n", err)

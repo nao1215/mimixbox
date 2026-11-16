@@ -1,0 +1,5 @@
+misconfigurations:
+  - id: DS-0026
+    paths:
+      - Dockerfile
+    statement: The image is an interactive test environment for the applets; it runs no long-lived service to health-check.

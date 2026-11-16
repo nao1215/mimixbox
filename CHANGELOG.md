@@ -7,8 +7,28 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## [Unreleased]
 
+### Fixed
+
+- `uncompress` and `compress -d` return `corrupt input` for a code beyond the next dictionary entry, instead of expanding forever.
+- `cpio -i` reads an entry body as it arrives instead of allocating the size the header claims, and rejects a header field that is not hexadecimal. A 112-byte archive claiming a 4 GiB file no longer allocates 4 GiB. `cpio -o` refuses a file over 4 GiB, which newc cannot record.
+- `zippwcrack` returns an error for a Zip64 entry whose compressed size exceeds 2^63 bytes, instead of panicking.
+- `ping -c` with 65536 or more packets matches replies by the 16-bit sequence number the packets carry, so replies after the 65536th are no longer reported as timeouts.
+- `setpriv` rejects a uid or gid outside 0..4294967294 (or -1), instead of truncating 4294967296 to 0, which requested root.
+- `makedevs` rejects a negative or over-32-bit major, minor, start, inc or count, and a uid or gid outside 0..2147483647, instead of wrapping it.
+- `mkswap` rejects an area of more than 2^32 pages, instead of writing a header for a smaller one.
+- `mkfs.minix` rejects more than 65535 blocks, which a version 1 superblock cannot record, instead of writing nzones 0.
+- `watchdog -T` rejects a timeout over 2147483647 seconds, instead of truncating it.
+- `devmem` maps two pages for an access that crosses a page end, as BusyBox does, instead of panicking.
+- `crontab -u` rejects a user name containing `/`, `\`, or that is `.`, `..` or empty, so it cannot read, write or remove a file outside the spool directory.
+- The Docker test image installs without sudo and runs as the mimixbox user.
+
+### Security
+
+- Update golang.org/x/crypto to v0.59.0 for GO-2026-5932.
+
 ### Changed
 
+- CI scans the repository with gosec and Trivy on every pull request (Trivy covers dependency vulnerabilities, committed secrets and misconfigurations, and also runs daily). Workflow actions are recorded in `.github/workflows/actions.lock`, which CI verifies against the pinned commits.
 - Building from source now needs Go 1.26.11 or later (was 1.26.10). Go 1.26.11 fixes the `net/http` advisory GO-2026-6859, which govulncheck finds reachable from mimixbox on the earlier patch.
 
 ## [0.42.6] - 2026-11-09

@@ -99,7 +99,7 @@ func (c *Command) Run(_ context.Context, stdio command.IO, args []string) error 
 
 // readLines reads a file into a slice of lines (without trailing newlines).
 func readLines(name string) ([]string, error) {
-	data, err := os.ReadFile(name) //nolint:gosec // user-named file
+	data, err := os.ReadFile(name) // #nosec G304 -- user-named file
 	if err != nil {
 		return nil, err
 	}

@@ -91,7 +91,7 @@ func hasFATLabel(buf []byte, off int) bool {
 
 // readHead reads the first 8 KiB of path (enough for every signature checked).
 func readHead(path string) ([]byte, error) {
-	f, err := os.Open(path) //nolint:gosec // user-named device or image
+	f, err := os.Open(path) // #nosec G304 -- user-named device or image
 	if err != nil {
 		return nil, err
 	}

@@ -78,7 +78,7 @@ func (c *Command) shredFile(stdio command.IO, name string, iterations int, zero,
 	}
 	size := info.Size()
 
-	f, err := os.OpenFile(name, os.O_WRONLY, 0) //nolint:gosec // overwriting a user-named file is the point
+	f, err := os.OpenFile(name, os.O_WRONLY, 0) // #nosec G304 -- overwriting a user-named file is the point
 	if err != nil {
 		return err
 	}

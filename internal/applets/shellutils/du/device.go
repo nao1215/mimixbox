@@ -19,5 +19,5 @@ func deviceOf(path string) (uint64, error) {
 	if !ok {
 		return 0, fmt.Errorf("cannot determine device of %s", path)
 	}
-	return uint64(st.Dev), nil
+	return uint64(st.Dev), nil // #nosec G115 -- st_dev is a 32-bit dev_t on darwin; it is only compared for equality, so sign extension is harmless
 }

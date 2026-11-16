@@ -30,7 +30,7 @@ func (c *Command) Synopsis() string { return "Run a program as a user's uid/gid"
 var (
 	passwdPath = "/etc/passwd"
 	runFn      = func(ctx context.Context, stdio command.IO, uid, gid int, prog string, args []string) error {
-		cmd := exec.CommandContext(ctx, prog, args...) //nolint:gosec // running the user's program is the point
+		cmd := exec.CommandContext(ctx, prog, args...) // #nosec G204 -- running the user's program is the point
 		cmd.Stdin, cmd.Stdout, cmd.Stderr = stdio.In, stdio.Out, stdio.Err
 		cmd.SysProcAttr = &syscall.SysProcAttr{
 			Credential: &syscall.Credential{Uid: uint32(uid), Gid: uint32(gid)},

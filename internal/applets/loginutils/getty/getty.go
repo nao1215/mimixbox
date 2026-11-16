@@ -29,7 +29,7 @@ func (c *Command) Synopsis() string { return "Prompt for a username and run logi
 var (
 	issuePath   = "/etc/issue"
 	loginExecFn = func(stdio command.IO, username string) error {
-		cmd := exec.Command("login", username) //nolint:gosec // handing off to login is the point
+		cmd := exec.Command("login", username) // #nosec G204 -- handing off to login is the point
 		cmd.Stdin, cmd.Stdout, cmd.Stderr = stdio.In, stdio.Out, stdio.Err
 		return cmd.Run()
 	}

@@ -140,7 +140,7 @@ func (c *Command) Run(_ context.Context, stdio command.IO, args []string) error 
 		return command.SilentFailure()
 	}
 
-	cmd := exec.Command(name, argv...) //nolint:gosec // running a user-named command is the whole point
+	cmd := exec.Command(name, argv...) // #nosec G204 -- running a user-named command is the whole point
 	cmd.Stdin = stdio.In
 	cmd.Stdout = stdio.Out
 	cmd.Stderr = stdio.Err

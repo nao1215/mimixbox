@@ -32,6 +32,7 @@ const (
 	dirEntrySize = 16         // 2-byte inode number + 14-byte name
 	maxSize      = 0x10081C00 // Minix v1 maximum file size (7+512+512*512 zones)
 	minBlocks    = 16         // refuse to format anything smaller
+	maxBlocks    = 65535      // s_nzones is 16 bits in a v1 superblock
 )
 
 // Run executes mkfs.minix.
@@ -57,7 +58,7 @@ func (c *Command) Run(_ context.Context, stdio command.IO, args []string) error 
 		return command.Failuref("a device or image is required")
 	}
 
-	f, err := os.OpenFile(rest[0], os.O_RDWR, 0o644) //nolint:gosec // user-named device or image
+	f, err := os.OpenFile(rest[0], os.O_RDWR, 0o644) // #nosec G302 -- user-named device or image
 	if err != nil {
 		return command.Failuref("cannot open %s: %v", rest[0], err)
 	}
@@ -69,6 +70,11 @@ func (c *Command) Run(_ context.Context, stdio command.IO, args []string) error 
 	}
 	if nblocks < minBlocks {
 		return command.Failuref("%s: device is too small (need at least %d blocks)", rest[0], minBlocks)
+	}
+
+	// Minix v1 stores the zone count in 16 bits.
+	if nblocks > maxBlocks {
+		return command.Failuref("%s: %d blocks is too large for Minix v1 (at most %d)", rest[0], nblocks, maxBlocks)
 	}
 
 	if err := writeMinix(f, nblocks); err != nil {
@@ -139,12 +145,12 @@ func writeMinix(f *os.File, nblocks int) error {
 	l := computeLayout(nblocks)
 
 	sb := make([]byte, blockSize)
-	binary.LittleEndian.PutUint16(sb[0:], uint16(l.ninodes))
-	binary.LittleEndian.PutUint16(sb[2:], uint16(l.nzones))
-	binary.LittleEndian.PutUint16(sb[4:], uint16(l.imapBlocks))
-	binary.LittleEndian.PutUint16(sb[6:], uint16(l.zmapBlocks))
-	binary.LittleEndian.PutUint16(sb[8:], uint16(l.firstDataZone))
-	binary.LittleEndian.PutUint16(sb[10:], 0) // log_zone_size
+	binary.LittleEndian.PutUint16(sb[0:], uint16(l.ninodes))       // #nosec G115 -- Run caps nblocks at 65535 and ninodes is nblocks/3 rounded to an inode block
+	binary.LittleEndian.PutUint16(sb[2:], uint16(l.nzones))        // #nosec G115 -- Run caps nblocks (nzones) at 65535
+	binary.LittleEndian.PutUint16(sb[4:], uint16(l.imapBlocks))    // #nosec G115 -- the bitmap block count for at most 65535 inodes is tiny
+	binary.LittleEndian.PutUint16(sb[6:], uint16(l.zmapBlocks))    // #nosec G115 -- the bitmap block count for at most 65535 zones is tiny
+	binary.LittleEndian.PutUint16(sb[8:], uint16(l.firstDataZone)) // #nosec G115 -- the first data zone is below nzones, which Run caps at 65535
+	binary.LittleEndian.PutUint16(sb[10:], 0)                      // log_zone_size
 	binary.LittleEndian.PutUint32(sb[12:], maxSize)
 	binary.LittleEndian.PutUint16(sb[16:], minixMagic)
 	binary.LittleEndian.PutUint16(sb[18:], 1) // MINIX_VALID_FS
@@ -181,9 +187,9 @@ func writeMinix(f *os.File, nblocks int) error {
 	inodeTable := int64(2+l.imapBlocks+l.zmapBlocks) * blockSize
 	ino := make([]byte, 32)
 	binary.LittleEndian.PutUint16(ino[0:], rootMode)
-	binary.LittleEndian.PutUint32(ino[4:], 2*dirEntrySize) // size: "." and ".."
-	ino[13] = 2                                            // nlinks
-	binary.LittleEndian.PutUint16(ino[14:], uint16(l.firstDataZone))
+	binary.LittleEndian.PutUint32(ino[4:], 2*dirEntrySize)           // size: "." and ".."
+	ino[13] = 2                                                      // nlinks
+	binary.LittleEndian.PutUint16(ino[14:], uint16(l.firstDataZone)) // #nosec G115 -- the first data zone is below nzones, which Run caps at 65535
 	if err := writeAt(f, ino, inodeTable); err != nil {
 		return err
 	}

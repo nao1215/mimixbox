@@ -121,3 +121,16 @@ func parsePlan(args []string) (plan, error) {
 func parseUint(s string) (uint64, error) {
 	return strconv.ParseUint(s, 0, 64)
 }
+
+// mapSpan returns the page-aligned base to mmap, the offset of addr inside the
+// mapping, and the mapping length for a width-byte access. An access that
+// crosses into the next page maps two pages, as BusyBox devmem does.
+func mapSpan(addr uint64, width int, pageSize uint64) (base uint64, off, length int) {
+	base = addr &^ (pageSize - 1)
+	off = int(addr - base) // #nosec G115 -- addr-base is below pageSize
+	length = int(pageSize) // #nosec G115 -- the page size from getpagesize(2) fits an int
+	if off+width > length {
+		length *= 2
+	}
+	return base, off, length
+}

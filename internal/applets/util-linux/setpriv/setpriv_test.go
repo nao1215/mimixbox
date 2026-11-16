@@ -72,3 +72,25 @@ func TestJoinInts(t *testing.T) {
 		t.Errorf("joinInts(nil) = %q", got)
 	}
 }
+
+// TestRejectsIDOutsideUint32 covers IDs that do not fit the 32-bit uid_t and
+// gid_t. They used to be truncated, so --reuid 4294967296 asked the kernel for
+// uid 0 (root) instead of failing.
+func TestRejectsIDOutsideUint32(t *testing.T) {
+	fakecmd.UseOnly(t, "echo")
+	withStubs(t)
+	for _, args := range [][]string{
+		{"--reuid", "4294967296", "--", "echo", "hi"},
+		{"--regid", "4294967296", "--", "echo", "hi"},
+		{"--reuid", "4294967295", "--", "echo", "hi"},
+		{"--reuid", "-2", "--", "echo", "hi"},
+	} {
+		out, err := run(t, args...)
+		if err == nil || !strings.Contains(err.Error(), args[1]) {
+			t.Errorf("setpriv %v: err = %v, want an error naming %s", args, err, args[1])
+		}
+		if strings.Contains(out, "hi") {
+			t.Errorf("setpriv %v ran the command: %q", args, out)
+		}
+	}
+}

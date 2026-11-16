@@ -72,7 +72,7 @@ var gracePeriod = 50 * time.Millisecond
 // test. In production it opens the named device for reading and writing; the
 // caller is responsible for any line settings.
 var openDeviceFn = func(name string) (io.ReadWriteCloser, error) {
-	f, err := os.OpenFile(name, os.O_RDWR, 0) //nolint:gosec // user-named serial device
+	f, err := os.OpenFile(name, os.O_RDWR, 0) // #nosec G304 -- user-named serial device
 	if err != nil {
 		return nil, err
 	}

@@ -17,7 +17,7 @@ type osAutoRunner struct{}
 
 // Run opens the md device and triggers autodetection.
 func (osAutoRunner) Run(device string) error {
-	f, err := os.OpenFile(device, os.O_RDONLY, 0)
+	f, err := os.OpenFile(device, os.O_RDONLY, 0) // #nosec G304 -- the md device the user named on the command line
 	if err != nil {
 		if os.IsPermission(err) {
 			return fmt.Errorf("permission denied (RAID autorun needs privilege)")

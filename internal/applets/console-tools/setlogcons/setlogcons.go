@@ -38,7 +38,7 @@ var setFn = func(n int) error {
 	}
 	defer func() { _ = f.Close() }()
 	arg := [2]byte{setLogSubcmd, byte(n)}
-	if _, _, errno := unix.Syscall(unix.SYS_IOCTL, f.Fd(), tioclinux, uintptr(unsafe.Pointer(&arg))); errno != 0 {
+	if _, _, errno := unix.Syscall(unix.SYS_IOCTL, f.Fd(), tioclinux, uintptr(unsafe.Pointer(&arg))); errno != 0 { // #nosec G103 -- the TIOCLINUX ioctl ABI takes a pointer to its subcode byte array
 		return errno
 	}
 	return nil

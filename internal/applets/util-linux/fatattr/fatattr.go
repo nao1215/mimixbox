@@ -47,25 +47,25 @@ var attrBits = []struct {
 // Injected so the logic is testable without a FAT filesystem.
 var (
 	getAttrFn = func(path string) (uint32, error) {
-		f, err := os.Open(path) //nolint:gosec // user-named file
+		f, err := os.Open(path) // #nosec G304 -- user-named file
 		if err != nil {
 			return 0, err
 		}
 		defer func() { _ = f.Close() }()
 		var attr uint32
-		_, _, errno := unix.Syscall(unix.SYS_IOCTL, f.Fd(), fatGetAttrs, uintptr(unsafe.Pointer(&attr)))
+		_, _, errno := unix.Syscall(unix.SYS_IOCTL, f.Fd(), fatGetAttrs, uintptr(unsafe.Pointer(&attr))) // #nosec G103 -- the FAT_IOCTL_GET_ATTRIBUTES ioctl ABI takes a pointer to a uint32
 		if errno != 0 {
 			return 0, errno
 		}
 		return attr, nil
 	}
 	setAttrFn = func(path string, attr uint32) error {
-		f, err := os.Open(path) //nolint:gosec // user-named file
+		f, err := os.Open(path) // #nosec G304 -- user-named file
 		if err != nil {
 			return err
 		}
 		defer func() { _ = f.Close() }()
-		_, _, errno := unix.Syscall(unix.SYS_IOCTL, f.Fd(), fatSetAttrs, uintptr(unsafe.Pointer(&attr)))
+		_, _, errno := unix.Syscall(unix.SYS_IOCTL, f.Fd(), fatSetAttrs, uintptr(unsafe.Pointer(&attr))) // #nosec G103 -- the FAT_IOCTL_SET_ATTRIBUTES ioctl ABI takes a pointer to a uint32
 		if errno != 0 {
 			return errno
 		}

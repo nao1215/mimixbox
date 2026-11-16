@@ -56,7 +56,7 @@ type Package struct {
 
 // Open reads and parses the .deb file at path.
 func Open(path string) (*Package, error) {
-	f, err := os.Open(path) //nolint:gosec // user-named file
+	f, err := os.Open(path) // #nosec G304 -- user-named file
 	if err != nil {
 		return nil, err
 	}
@@ -264,7 +264,7 @@ func (p *Package) Extract(dest string) error {
 	if err != nil {
 		return err
 	}
-	if err := os.MkdirAll(absDest, 0o755); err != nil {
+	if err := os.MkdirAll(absDest, 0o755); err != nil { // #nosec G301 -- the user-named extraction directory is created 0755 before umask, like mkdir -p
 		return err
 	}
 
@@ -309,12 +309,12 @@ func safeJoin(base, name string) (string, error) {
 func extractEntry(tr *tar.Reader, hdr *tar.Header, target, absDest string) error {
 	switch hdr.Typeflag {
 	case tar.TypeDir:
-		return os.MkdirAll(target, os.FileMode(hdr.Mode)&os.ModePerm) //nolint:gosec // archive-defined mode
+		return os.MkdirAll(target, os.FileMode(hdr.Mode)&os.ModePerm) // #nosec G115 -- archive-defined mode
 	case tar.TypeReg:
-		if err := os.MkdirAll(filepath.Dir(target), 0o755); err != nil {
+		if err := os.MkdirAll(filepath.Dir(target), 0o755); err != nil { // #nosec G301 -- parent directories of extracted entries are created 0755 before umask, no wider than the 0777-minus-umask tar uses for dpkg-deb -x
 			return err
 		}
-		f, err := os.OpenFile(target, os.O_CREATE|os.O_TRUNC|os.O_WRONLY, os.FileMode(hdr.Mode)&os.ModePerm) //nolint:gosec // path validated by safeJoin
+		f, err := os.OpenFile(target, os.O_CREATE|os.O_TRUNC|os.O_WRONLY, os.FileMode(hdr.Mode)&os.ModePerm) // #nosec G115 G304 -- path validated by safeJoin
 		if err != nil {
 			return err
 		}
@@ -328,7 +328,7 @@ func extractEntry(tr *tar.Reader, hdr *tar.Header, target, absDest string) error
 		if _, err := safeJoin(filepath.Dir(target), hdr.Linkname); err != nil {
 			return err
 		}
-		if err := os.MkdirAll(filepath.Dir(target), 0o755); err != nil {
+		if err := os.MkdirAll(filepath.Dir(target), 0o755); err != nil { // #nosec G301 -- parent directories of extracted entries are created 0755 before umask, no wider than the 0777-minus-umask tar uses for dpkg-deb -x
 			return err
 		}
 		_ = os.Remove(target)
@@ -338,7 +338,7 @@ func extractEntry(tr *tar.Reader, hdr *tar.Header, target, absDest string) error
 		if err != nil {
 			return err
 		}
-		if err := os.MkdirAll(filepath.Dir(target), 0o755); err != nil {
+		if err := os.MkdirAll(filepath.Dir(target), 0o755); err != nil { // #nosec G301 -- parent directories of extracted entries are created 0755 before umask, no wider than the 0777-minus-umask tar uses for dpkg-deb -x
 			return err
 		}
 		_ = os.Remove(target)

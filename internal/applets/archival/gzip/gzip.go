@@ -108,6 +108,6 @@ func decompressStream(r io.Reader, w io.Writer) error {
 		return err
 	}
 	defer func() { _ = gr.Close() }()
-	_, err = io.Copy(w, gr) //nolint:gosec // decompressing a user-supplied file is the whole point
+	_, err = io.Copy(w, gr) // #nosec G110 -- decompressing a user-supplied file is the whole point
 	return err
 }

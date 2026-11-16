@@ -1,6 +1,7 @@
 package zippwcrack
 
 import (
+	"archive/zip"
 	"bytes"
 	"context"
 	"encoding/base64"
@@ -156,5 +157,34 @@ func TestHelpSections(t *testing.T) {
 		if !strings.Contains(out.String(), want) {
 			t.Errorf("--help output missing %q:\n%s", want, out.String())
 		}
+	}
+}
+
+// TestFirstEncryptedHugeCompressedSize covers a Zip64 entry whose compressed
+// size does not fit in int64. Converting it to int64 used to wrap negative, so
+// the end offset passed the bounds check and slicing the archive panicked.
+func TestFirstEncryptedHugeCompressedSize(t *testing.T) {
+	t.Parallel()
+	var buf bytes.Buffer
+	zw := zip.NewWriter(&buf)
+	w, err := zw.CreateRaw(&zip.FileHeader{
+		Name:               "a.txt",
+		Method:             zip.Store,
+		Flags:              0x1,
+		CompressedSize64:   1<<63 + 16,
+		UncompressedSize64: 4,
+	})
+	if err != nil {
+		t.Fatal(err)
+	}
+	if _, err := w.Write(make([]byte, 16)); err != nil {
+		t.Fatal(err)
+	}
+	if err := zw.Close(); err != nil {
+		t.Fatal(err)
+	}
+
+	if _, err := firstEncrypted(buf.Bytes()); err == nil {
+		t.Fatal("firstEncrypted accepted an entry larger than the archive")
 	}
 }

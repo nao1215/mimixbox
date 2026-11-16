@@ -32,7 +32,7 @@ var (
 	spoolDir = "/var/spool/cron/crontabs"
 	now      = time.Now
 	runFn    = func(cmdline string) {
-		cmd := exec.Command("sh", "-c", cmdline) //nolint:gosec // running scheduled jobs is the point
+		cmd := exec.Command("sh", "-c", cmdline) // #nosec G204 -- running scheduled jobs is the point
 		_ = cmd.Start()
 	}
 )

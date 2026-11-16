@@ -43,11 +43,11 @@ func historyPath(explicit string) string {
 func recordHistory(explicit, query string) error {
 	path := historyPath(explicit)
 	if dir := filepath.Dir(path); dir != "" {
-		if err := os.MkdirAll(dir, 0o755); err != nil { //nolint:gosec // history dir is user-visible by design
+		if err := os.MkdirAll(dir, 0o755); err != nil { // #nosec G301 -- history dir is user-visible by design
 			return err
 		}
 	}
-	f, err := os.OpenFile(path, os.O_APPEND|os.O_CREATE|os.O_WRONLY, 0o600)
+	f, err := os.OpenFile(path, os.O_APPEND|os.O_CREATE|os.O_WRONLY, 0o600) // #nosec G304 -- the --history path the user named, or the documented default file in os.TempDir()
 	if err != nil {
 		return err
 	}

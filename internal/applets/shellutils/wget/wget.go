@@ -271,7 +271,7 @@ func openDest(stdio command.IO, dest string, appendMode bool) (io.Writer, func()
 		return stdio.Out, nil, nil
 	}
 	if dir := filepath.Dir(dest); dir != "" && dir != "." {
-		if err := os.MkdirAll(dir, 0o755); err != nil {
+		if err := os.MkdirAll(dir, 0o755); err != nil { // #nosec G301 -- missing parent directories of the user-named output file are created 0755 before umask, like mkdir -p
 			return nil, nil, err
 		}
 	}
@@ -281,7 +281,7 @@ func openDest(stdio command.IO, dest string, appendMode bool) (io.Writer, func()
 	} else {
 		flags |= os.O_TRUNC
 	}
-	f, err := os.OpenFile(dest, flags, 0o644) //nolint:gosec // operating on a user-named file is the whole point
+	f, err := os.OpenFile(dest, flags, 0o644) // #nosec G302 G304 -- operating on a user-named file is the whole point
 	if err != nil {
 		return nil, nil, err
 	}

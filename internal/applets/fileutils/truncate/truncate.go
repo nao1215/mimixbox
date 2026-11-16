@@ -85,7 +85,7 @@ func (c *Command) truncateFile(name, spec string, noCreate bool) error {
 		return err
 	}
 
-	f, err := os.OpenFile(name, os.O_WRONLY|os.O_CREATE, 0o644) //nolint:gosec // creating a user-named file is the point
+	f, err := os.OpenFile(name, os.O_WRONLY|os.O_CREATE, 0o644) // #nosec G302 G304 -- creating a user-named file is the point
 	if err != nil {
 		return fmt.Errorf("cannot open %q: %v", name, err)
 	}

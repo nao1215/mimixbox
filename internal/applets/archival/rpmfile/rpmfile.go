@@ -158,10 +158,10 @@ func readHeader(br *bufio.Reader, pad8 bool) (*Header, int, error) {
 	for i := 0; i < nindex; i++ {
 		b := idx[i*16 : i*16+16]
 		e := entry{
-			tag:    int32(binary.BigEndian.Uint32(b[0:4])),
-			typ:    int32(binary.BigEndian.Uint32(b[4:8])),
-			offset: int32(binary.BigEndian.Uint32(b[8:12])),
-			count:  int32(binary.BigEndian.Uint32(b[12:16])),
+			tag:    int32(binary.BigEndian.Uint32(b[0:4])),   // #nosec G115 -- RPM header index fields are signed int32 (rpmlib entryInfo); negative values are rejected by the readers
+			typ:    int32(binary.BigEndian.Uint32(b[4:8])),   // #nosec G115 -- RPM header index fields are signed int32 (rpmlib entryInfo); negative values are rejected by the readers
+			offset: int32(binary.BigEndian.Uint32(b[8:12])),  // #nosec G115 -- RPM header index fields are signed int32; String/StringArray/Int32Array reject a negative offset
+			count:  int32(binary.BigEndian.Uint32(b[12:16])), // #nosec G115 -- RPM header index fields are signed int32; validCount rejects a negative count
 		}
 		h.entries[e.tag] = e
 	}
@@ -230,7 +230,7 @@ func (h *Header) Int32Array(tag int32) []int32 {
 			break
 		}
 		if width == 4 {
-			out = append(out, int32(binary.BigEndian.Uint32(h.store[off:off+4])))
+			out = append(out, int32(binary.BigEndian.Uint32(h.store[off:off+4]))) // #nosec G115 -- an RPM INT32 tag value is a signed 32-bit integer stored big-endian
 		} else {
 			out = append(out, int32(binary.BigEndian.Uint16(h.store[off:off+2])))
 		}

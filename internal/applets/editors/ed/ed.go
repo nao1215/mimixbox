@@ -263,7 +263,7 @@ func (e *editor) write(arg string) {
 		b.WriteString(l)
 		b.WriteByte('\n')
 	}
-	if err := os.WriteFile(name, []byte(b.String()), 0o644); err != nil { //nolint:gosec // user-named file
+	if err := os.WriteFile(name, []byte(b.String()), 0o644); err != nil { // #nosec G306 -- user-named file
 		e.fail()
 		return
 	}

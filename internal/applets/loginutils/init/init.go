@@ -32,7 +32,7 @@ var inittabPath = "/etc/inittab"
 
 // runFn runs one inittab process, waiting for it when wait is true.
 var runFn = func(stdio command.IO, process string, wait bool) error {
-	cmd := exec.Command("sh", "-c", process) //nolint:gosec // running configured init actions is the point
+	cmd := exec.Command("sh", "-c", process) // #nosec G204 -- running configured init actions is the point
 	cmd.Stdin, cmd.Stdout, cmd.Stderr = stdio.In, stdio.Out, stdio.Err
 	if wait {
 		return cmd.Run()

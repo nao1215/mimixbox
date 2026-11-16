@@ -63,7 +63,7 @@ func dispatch(ctx context.Context, stdio command.IO, args []string) error {
 	if err != nil {
 		return command.Failuref("cannot locate the MimixBox binary: %v", err)
 	}
-	cmd := exec.CommandContext(ctx, self, args...) //nolint:gosec // dispatching to our own applets
+	cmd := exec.CommandContext(ctx, self, args...) // #nosec G204 -- dispatching to our own applets
 	cmd.Stdin, cmd.Stdout, cmd.Stderr = stdio.In, stdio.Out, stdio.Err
 	if err := cmd.Run(); err != nil {
 		var exitErr *exec.ExitError

@@ -40,15 +40,14 @@ func access(addr uint64, width int, write bool, value uint64) (uint64, error) {
 	}
 	defer func() { _ = f.Close() }()
 
-	pageSize := uint64(unix.Getpagesize())
-	base := addr &^ (pageSize - 1)
-	off := int(addr - base)
+	pageSize := uint64(unix.Getpagesize()) // #nosec G115 -- getpagesize(2) returns a small positive value
+	base, off, length := mapSpan(addr, width, pageSize)
 
 	prot := unix.PROT_READ
 	if write {
 		prot |= unix.PROT_WRITE
 	}
-	data, err := unix.Mmap(int(f.Fd()), int64(base), int(pageSize), prot, unix.MAP_SHARED)
+	data, err := unix.Mmap(int(f.Fd()), int64(base), length, prot, unix.MAP_SHARED) // #nosec G115 -- fd numbers fit an int; a base past MaxInt64 wraps negative and mmap(2) rejects it with EINVAL
 	if err != nil {
 		return 0, fmt.Errorf("mmap %s: %w", devMem, err)
 	}
@@ -76,16 +75,10 @@ func getLE(b []byte, width int) uint64 {
 	}
 }
 
-// putLE writes value as width little-endian bytes.
+// putLE writes value as width little-endian bytes: the low width bytes of
+// its 8-byte little-endian form.
 func putLE(b []byte, width int, value uint64) {
-	switch width {
-	case 1:
-		b[0] = byte(value)
-	case 2:
-		binary.LittleEndian.PutUint16(b, uint16(value))
-	case 4:
-		binary.LittleEndian.PutUint32(b, uint32(value))
-	default:
-		binary.LittleEndian.PutUint64(b, value)
-	}
+	var full [8]byte
+	binary.LittleEndian.PutUint64(full[:], value)
+	copy(b[:width], full[:width])
 }

@@ -72,7 +72,7 @@ func (c *Command) Run(_ context.Context, stdio command.IO, args []string) error 
 	}
 	files := fs.Args()
 	for _, f := range files {
-		data, rerr := os.ReadFile(f) //nolint:gosec // user-named file
+		data, rerr := os.ReadFile(f) // #nosec G304 -- user-named file
 		if rerr != nil {
 			_, _ = fmt.Fprintf(stdio.Err, "dc: %s\n", command.FileError(f, rerr))
 			return command.SilentFailure()

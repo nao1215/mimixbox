@@ -104,9 +104,9 @@ func (c *Command) animate(ctx context.Context) error {
 
 	heads := make([]int, width)
 	for i := range heads {
-		heads[i] = rand.Intn(height) //nolint:gosec // rain need not be cryptographically random
+		heads[i] = rand.Intn(height) // #nosec G404 -- rain need not be cryptographically random
 	}
-	restart := func() int { return -rand.Intn(height) } //nolint:gosec // see above
+	restart := func() int { return -rand.Intn(height) } // #nosec G404 -- see above
 
 	for {
 		select {
@@ -136,5 +136,5 @@ func (c *Command) animate(ctx context.Context) error {
 
 // randomGlyph returns a random rune from the rain alphabet.
 func randomGlyph() rune {
-	return rune(glyphs[rand.Intn(len(glyphs))]) //nolint:gosec // decorative randomness
+	return rune(glyphs[rand.Intn(len(glyphs))]) // #nosec G404 -- decorative randomness
 }

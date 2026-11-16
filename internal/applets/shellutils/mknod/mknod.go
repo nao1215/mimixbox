@@ -104,7 +104,7 @@ func makeNode(name, typ string, mode uint32, devArgs []string) error {
 		if err != nil {
 			return fmt.Errorf("invalid minor device number '%s'", devArgs[1])
 		}
-		dev = int(unix.Mkdev(major, minor))
+		dev = int(unix.Mkdev(major, minor)) // #nosec G115 -- mknod(2) takes a 64-bit dev_t on Linux, and unix.Mknod passes it as an int
 	} else if len(devArgs) != 0 {
 		return fmt.Errorf("type '%s' must not have device numbers", typ)
 	}

@@ -84,7 +84,7 @@ func decompressStream(r io.Reader, w io.Writer) error {
 		return err
 	}
 	defer func() { _ = zr.Close() }()
-	if _, err := io.Copy(w, zr); err != nil { //nolint:gosec // decompressing user data
+	if _, err := io.Copy(w, zr); err != nil { // #nosec G110 -- decompressing user data
 		return err
 	}
 	return nil

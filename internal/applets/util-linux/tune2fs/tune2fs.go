@@ -79,7 +79,7 @@ type superblock struct {
 
 // readSuperblock reads and parses the ext2 superblock from path.
 func readSuperblock(path string) (*superblock, error) {
-	f, err := os.Open(path) //nolint:gosec // user-named device or image
+	f, err := os.Open(path) // #nosec G304 -- user-named device or image
 	if err != nil {
 		return nil, err
 	}

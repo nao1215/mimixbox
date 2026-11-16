@@ -77,7 +77,7 @@ func readRunlevel() (prev, cur byte, ok bool) {
 			continue
 		}
 		pid := binary.LittleEndian.Uint32(rec[pidOffset:])
-		return byte(pid >> 8), byte(pid & 0xFF), true
+		return byte(pid >> 8), byte(pid & 0xFF), true // #nosec G115 -- the RUN_LVL record keeps the previous and current runlevel in the low two bytes of ut_pid
 	}
 	return 0, 0, false
 }

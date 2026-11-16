@@ -7,6 +7,7 @@ import (
 	"context"
 	"fmt"
 	"io"
+	"math"
 	"os"
 	"path/filepath"
 	"strconv"
@@ -95,7 +96,7 @@ func (c *Command) Run(_ context.Context, stdio command.IO, args []string) error 
 		return command.Failuref("%v", err)
 	}
 
-	if err := os.MkdirAll(root, 0o755); err != nil {
+	if err := os.MkdirAll(root, 0o755); err != nil { // #nosec G301 -- the user-named root of a system image tree is created 0755 before umask, like mkdir -p
 		return command.Failuref("%s", command.FileError(root, err))
 	}
 	for _, e := range entries {
@@ -111,7 +112,7 @@ func openTable(stdio command.IO, name string) (io.Reader, func(), error) {
 	if name == "-" {
 		return stdio.In, func() {}, nil
 	}
-	f, err := os.Open(name) //nolint:gosec // user-named table file
+	f, err := os.Open(name) // #nosec G304 -- user-named table file
 	if err != nil {
 		return nil, func() {}, err
 	}
@@ -141,6 +142,14 @@ func parseTable(r io.Reader) ([]entry, error) {
 	return entries, nil
 }
 
+// toUint32 converts n when it fits a 32-bit field.
+func toUint32(n int64) (uint32, bool) {
+	if n < 0 || n > math.MaxUint32 {
+		return 0, false
+	}
+	return uint32(n), true
+}
+
 // parseRow parses one device-table row.
 func parseRow(text string) (entry, error) {
 	fields := strings.Fields(text)
@@ -154,25 +163,40 @@ func parseRow(text string) (entry, error) {
 	if err != nil {
 		return entry{}, fmt.Errorf("invalid mode %q", fields[2])
 	}
-	nums := make([]int64, 7)
+	var ids [2]int
+	var u32 [5]uint32
 	for i, f := range fields[3:10] {
 		n, err := parseNum(f)
 		if err != nil {
 			return entry{}, fmt.Errorf("invalid number %q", f)
 		}
-		nums[i] = n
+		if i < 2 {
+			// uid and gid are handed to chown as an int.
+			if n < 0 || n > math.MaxInt32 {
+				return entry{}, fmt.Errorf("number %q out of range", f)
+			}
+			ids[i] = int(n)
+			continue
+		}
+		// major, minor, start, inc and count fill 32-bit fields; reject
+		// values that would wrap instead of creating the wrong nodes.
+		v, ok := toUint32(n)
+		if !ok {
+			return entry{}, fmt.Errorf("number %q out of range", f)
+		}
+		u32[i-2] = v // #nosec G602 -- i is 2..6 here, so i-2 indexes the 5 fields
 	}
 	return entry{
 		path:  fields[0],
 		typ:   fields[1][0],
 		mode:  os.FileMode(mode),
-		uid:   int(nums[0]),
-		gid:   int(nums[1]),
-		major: uint32(nums[2]),
-		minor: uint32(nums[3]),
-		start: uint32(nums[4]),
-		inc:   uint32(nums[5]),
-		count: uint32(nums[6]),
+		uid:   ids[0],
+		gid:   ids[1],
+		major: u32[0],
+		minor: u32[1],
+		start: u32[2],
+		inc:   u32[3],
+		count: u32[4],
 	}, nil
 }
 
@@ -192,16 +216,16 @@ func apply(root string, e entry) error {
 	case 'd':
 		return os.MkdirAll(target, e.mode.Perm())
 	case 'f':
-		if err := os.MkdirAll(filepath.Dir(target), 0o755); err != nil {
+		if err := os.MkdirAll(filepath.Dir(target), 0o755); err != nil { // #nosec G301 -- intermediate directories of a system image tree are created 0755 before umask, like mkdir -p; table rows set their own modes
 			return err
 		}
-		f, err := os.OpenFile(target, os.O_CREATE|os.O_WRONLY, e.mode.Perm()) //nolint:gosec // table-driven path under root
+		f, err := os.OpenFile(target, os.O_CREATE|os.O_WRONLY, e.mode.Perm()) // #nosec G304 -- table-driven path under root
 		if err != nil {
 			return err
 		}
 		return f.Close()
 	case 'p':
-		if err := os.MkdirAll(filepath.Dir(target), 0o755); err != nil {
+		if err := os.MkdirAll(filepath.Dir(target), 0o755); err != nil { // #nosec G301 -- intermediate directories of a system image tree are created 0755 before umask, like mkdir -p; table rows set their own modes
 			return err
 		}
 		return nodeMaker.Mknod(target, 'p', e.mode.Perm(), 0, 0)
@@ -213,7 +237,7 @@ func apply(root string, e entry) error {
 
 // applyNodes creates one device node, or a numbered range when count > 0.
 func applyNodes(root string, e entry) error {
-	if err := os.MkdirAll(filepath.Join(root, filepath.Dir(e.path)), 0o755); err != nil {
+	if err := os.MkdirAll(filepath.Join(root, filepath.Dir(e.path)), 0o755); err != nil { // #nosec G301 -- intermediate directories of a system image tree are created 0755 before umask, like mkdir -p; table rows set their own modes
 		return err
 	}
 	if e.count == 0 {
