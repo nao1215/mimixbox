@@ -208,7 +208,7 @@ func copyIn(stdio command.IO, opts options, listOnly bool) error {
 			return err
 		}
 		name := strings.TrimRight(string(nameBuf), "\x00")
-		if err := skip(r, 110+int(nameSize)); err != nil {
+		if err := skip(r, 110+uint64(nameSize)); err != nil {
 			return err
 		}
 
@@ -220,7 +220,7 @@ func copyIn(stdio command.IO, opts options, listOnly bool) error {
 		if err != nil {
 			return err
 		}
-		if err := skip(r, int(fileSize)); err != nil {
+		if err := skip(r, uint64(fileSize)); err != nil {
 			return err
 		}
 
@@ -260,12 +260,14 @@ func readN(r io.Reader, n uint32) ([]byte, error) {
 }
 
 // skip discards the padding bytes that align n to a 4-byte boundary.
-func skip(r *bufio.Reader, n int) error {
-	if rem := n % 4; rem != 0 {
-		_, err := io.CopyN(io.Discard, r, int64(4-rem))
-		return err
+func skip(r *bufio.Reader, n uint64) error {
+	// The padding up to the next multiple of 4, for n % 4 = 0, 1, 2, 3.
+	pad := [4]int64{0, 3, 2, 1}[n%4]
+	if pad == 0 {
+		return nil
 	}
-	return nil
+	_, err := io.CopyN(io.Discard, r, pad)
+	return err
 }
 
 // extractEntry writes one extracted entry (directory or regular file) to disk.

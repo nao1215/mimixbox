@@ -142,6 +142,14 @@ func parseTable(r io.Reader) ([]entry, error) {
 	return entries, nil
 }
 
+// toUint32 converts n when it fits a 32-bit field.
+func toUint32(n int64) (uint32, bool) {
+	if n < 0 || n > math.MaxUint32 {
+		return 0, false
+	}
+	return uint32(n), true
+}
+
 // parseRow parses one device-table row.
 func parseRow(text string) (entry, error) {
 	fields := strings.Fields(text)
@@ -155,30 +163,36 @@ func parseRow(text string) (entry, error) {
 	if err != nil {
 		return entry{}, fmt.Errorf("invalid mode %q", fields[2])
 	}
-	nums := make([]int64, 7)
+	var ids [2]int64
+	var u32 [5]uint32
 	for i, f := range fields[3:10] {
 		n, err := parseNum(f)
 		if err != nil {
 			return entry{}, fmt.Errorf("invalid number %q", f)
 		}
+		if i < 2 {
+			ids[i] = n
+			continue
+		}
 		// major, minor, start, inc and count fill 32-bit fields; reject
 		// values that would wrap instead of creating the wrong nodes.
-		if i >= 2 && (n < 0 || n > math.MaxUint32) {
+		v, ok := toUint32(n)
+		if !ok {
 			return entry{}, fmt.Errorf("number %q out of range", f)
 		}
-		nums[i] = n
+		u32[i-2] = v // #nosec G602 -- i is 2..6 here, so i-2 indexes the 5 fields
 	}
 	return entry{
 		path:  fields[0],
 		typ:   fields[1][0],
 		mode:  os.FileMode(mode),
-		uid:   int(nums[0]),
-		gid:   int(nums[1]),
-		major: uint32(nums[2]), // #nosec G115 -- range-checked to 0..MaxUint32 in the loop above
-		minor: uint32(nums[3]), // #nosec G115 -- range-checked to 0..MaxUint32 in the loop above
-		start: uint32(nums[4]), // #nosec G115 -- range-checked to 0..MaxUint32 in the loop above
-		inc:   uint32(nums[5]), // #nosec G115 -- range-checked to 0..MaxUint32 in the loop above
-		count: uint32(nums[6]), // #nosec G115 -- range-checked to 0..MaxUint32 in the loop above
+		uid:   int(ids[0]),
+		gid:   int(ids[1]),
+		major: u32[0],
+		minor: u32[1],
+		start: u32[2],
+		inc:   u32[3],
+		count: u32[4],
 	}, nil
 }
 

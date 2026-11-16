@@ -75,16 +75,10 @@ func getLE(b []byte, width int) uint64 {
 	}
 }
 
-// putLE writes value as width little-endian bytes.
+// putLE writes value as width little-endian bytes: the low width bytes of
+// its 8-byte little-endian form.
 func putLE(b []byte, width int, value uint64) {
-	switch width {
-	case 1:
-		b[0] = byte(value) // #nosec G115 -- parsePlan rejects a value wider than the access width, so it fits one byte here
-	case 2:
-		binary.LittleEndian.PutUint16(b, uint16(value)) // #nosec G115 -- parsePlan rejects a value wider than the access width, so it fits 16 bits here
-	case 4:
-		binary.LittleEndian.PutUint32(b, uint32(value)) // #nosec G115 -- parsePlan rejects a value wider than the access width, so it fits 32 bits here
-	default:
-		binary.LittleEndian.PutUint64(b, value)
-	}
+	var full [8]byte
+	binary.LittleEndian.PutUint64(full[:], value)
+	copy(b[:width], full[:width])
 }
