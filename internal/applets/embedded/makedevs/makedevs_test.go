@@ -76,6 +76,8 @@ func TestParseRowErrors(t *testing.T) {
 		"/dev/x c 660 0 0 4 0 -1 0 0",         // negative start
 		"/dev/x c 660 0 0 4 0 0 -1 0",         // negative inc
 		"/dev/x c 660 0 0 4 0 0 1 -1",         // negative count
+		"/dev/x c 660 -1 0 4 0 0 1 1",         // negative uid
+		"/dev/x c 660 0 2147483648 4 0 0 1 1", // gid past the int32 chown takes
 	}
 	for _, r := range rows {
 		if _, err := parseRow(r); err == nil {

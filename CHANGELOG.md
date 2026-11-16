@@ -14,7 +14,7 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 - `zippwcrack` returns an error for a Zip64 entry whose compressed size exceeds 2^63 bytes, instead of panicking.
 - `ping -c` with 65536 or more packets matches replies by the 16-bit sequence number the packets carry, so replies after the 65536th are no longer reported as timeouts.
 - `setpriv` rejects a uid or gid outside 0..4294967294 (or -1), instead of truncating 4294967296 to 0, which requested root.
-- `makedevs` rejects a negative or over-32-bit major, minor, start, inc or count, instead of wrapping it.
+- `makedevs` rejects a negative or over-32-bit major, minor, start, inc or count, and a uid or gid outside 0..2147483647, instead of wrapping it.
 - `mkswap` rejects an area of more than 2^32 pages, instead of writing a header for a smaller one.
 - `mkfs.minix` rejects more than 65535 blocks, which a version 1 superblock cannot record, instead of writing nzones 0.
 - `watchdog -T` rejects a timeout over 2147483647 seconds, instead of truncating it.

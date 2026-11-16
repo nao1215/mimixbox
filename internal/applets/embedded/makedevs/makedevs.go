@@ -163,7 +163,7 @@ func parseRow(text string) (entry, error) {
 	if err != nil {
 		return entry{}, fmt.Errorf("invalid mode %q", fields[2])
 	}
-	var ids [2]int64
+	var ids [2]int
 	var u32 [5]uint32
 	for i, f := range fields[3:10] {
 		n, err := parseNum(f)
@@ -171,7 +171,11 @@ func parseRow(text string) (entry, error) {
 			return entry{}, fmt.Errorf("invalid number %q", f)
 		}
 		if i < 2 {
-			ids[i] = n
+			// uid and gid are handed to chown as an int.
+			if n < 0 || n > math.MaxInt32 {
+				return entry{}, fmt.Errorf("number %q out of range", f)
+			}
+			ids[i] = int(n)
 			continue
 		}
 		// major, minor, start, inc and count fill 32-bit fields; reject
@@ -186,8 +190,8 @@ func parseRow(text string) (entry, error) {
 		path:  fields[0],
 		typ:   fields[1][0],
 		mode:  os.FileMode(mode),
-		uid:   int(ids[0]),
-		gid:   int(ids[1]),
+		uid:   ids[0],
+		gid:   ids[1],
 		major: u32[0],
 		minor: u32[1],
 		start: u32[2],
