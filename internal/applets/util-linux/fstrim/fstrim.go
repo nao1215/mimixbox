@@ -37,14 +37,14 @@ type fstrimRange struct {
 // trimFn is indirected so the privileged ioctl can be tested. It returns the
 // number of bytes the kernel reported as trimmed.
 var trimFn = func(path string) (uint64, error) {
-	f, err := os.Open(path) //nolint:gosec // user-named mount point
+	f, err := os.Open(path) // #nosec G304 -- user-named mount point
 	if err != nil {
 		return 0, err
 	}
 	defer func() { _ = f.Close() }()
 
 	r := fstrimRange{start: 0, length: ^uint64(0), minlen: 0}
-	_, _, errno := unix.Syscall(unix.SYS_IOCTL, f.Fd(), fiTrim, uintptr(unsafe.Pointer(&r)))
+	_, _, errno := unix.Syscall(unix.SYS_IOCTL, f.Fd(), fiTrim, uintptr(unsafe.Pointer(&r))) // #nosec G103 -- the FITRIM ioctl ABI takes a pointer to struct fstrim_range
 	if errno != 0 {
 		return 0, errno
 	}

@@ -30,7 +30,7 @@ const (
 
 // freezeFn is indirected so the privileged ioctl can be tested.
 var freezeFn = func(path string, freeze bool) error {
-	f, err := os.Open(path) //nolint:gosec // user-named mount point
+	f, err := os.Open(path) // #nosec G304 -- user-named mount point
 	if err != nil {
 		return err
 	}

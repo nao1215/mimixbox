@@ -40,15 +40,14 @@ func access(addr uint64, width int, write bool, value uint64) (uint64, error) {
 	}
 	defer func() { _ = f.Close() }()
 
-	pageSize := uint64(unix.Getpagesize())
-	base := addr &^ (pageSize - 1)
-	off := int(addr - base)
+	pageSize := uint64(unix.Getpagesize()) // #nosec G115 -- getpagesize(2) returns a small positive value
+	base, off, length := mapSpan(addr, width, pageSize)
 
 	prot := unix.PROT_READ
 	if write {
 		prot |= unix.PROT_WRITE
 	}
-	data, err := unix.Mmap(int(f.Fd()), int64(base), int(pageSize), prot, unix.MAP_SHARED)
+	data, err := unix.Mmap(int(f.Fd()), int64(base), length, prot, unix.MAP_SHARED) // #nosec G115 -- fd numbers fit an int; a base past MaxInt64 wraps negative and mmap(2) rejects it with EINVAL
 	if err != nil {
 		return 0, fmt.Errorf("mmap %s: %w", devMem, err)
 	}
@@ -80,11 +79,11 @@ func getLE(b []byte, width int) uint64 {
 func putLE(b []byte, width int, value uint64) {
 	switch width {
 	case 1:
-		b[0] = byte(value)
+		b[0] = byte(value) // #nosec G115 -- parsePlan rejects a value wider than the access width, so it fits one byte here
 	case 2:
-		binary.LittleEndian.PutUint16(b, uint16(value))
+		binary.LittleEndian.PutUint16(b, uint16(value)) // #nosec G115 -- parsePlan rejects a value wider than the access width, so it fits 16 bits here
 	case 4:
-		binary.LittleEndian.PutUint32(b, uint32(value))
+		binary.LittleEndian.PutUint32(b, uint32(value)) // #nosec G115 -- parsePlan rejects a value wider than the access width, so it fits 32 bits here
 	default:
 		binary.LittleEndian.PutUint64(b, value)
 	}

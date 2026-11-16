@@ -69,7 +69,7 @@ func sumFile(stdio command.IO, name string) (uint16, int64, error) {
 	if name == "-" {
 		return bsdSum(stdio.In)
 	}
-	f, err := os.Open(name) //nolint:gosec // user-named file
+	f, err := os.Open(name) // #nosec G304 -- user-named file
 	if err != nil {
 		return 0, 0, err
 	}

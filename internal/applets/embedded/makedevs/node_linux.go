@@ -28,7 +28,7 @@ func (osNodeMaker) Mknod(path string, kind byte, mode os.FileMode, major, minor 
 		return fmt.Errorf("unsupported node kind %q", string(kind))
 	}
 	dev := unix.Mkdev(major, minor)
-	if err := unix.Mknod(path, modeBits|uint32(mode.Perm()), int(dev)); err != nil {
+	if err := unix.Mknod(path, modeBits|uint32(mode.Perm()), int(dev)); err != nil { // #nosec G115 -- mknod(2) takes a 64-bit dev_t on Linux, and unix.Mknod passes it as an int
 		if err == unix.EPERM {
 			return fmt.Errorf("mknod: operation not permitted (creating %c device nodes needs CAP_MKNOD)", kind)
 		}

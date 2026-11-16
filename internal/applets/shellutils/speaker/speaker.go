@@ -56,7 +56,7 @@ var lookPath = exec.LookPath
 
 // runEngine runs the chosen engine with its arguments; tests replace it.
 var runEngine = func(name string, args []string) error {
-	return exec.Command(name, args...).Run() //nolint:gosec // invoking a known TTS engine
+	return exec.Command(name, args...).Run() // #nosec G204 -- invoking a known TTS engine
 }
 
 // Run executes speaker.

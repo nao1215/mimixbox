@@ -83,7 +83,7 @@ func (c *Command) Run(_ context.Context, stdio command.IO, args []string) error 
 // lines are ignored. It returns ok=true only when every listed shell exists and
 // is executable.
 func validateShells(path string, out io.Writer) (bool, error) {
-	f, err := os.Open(path) //nolint:gosec // operating on the named shells file is the point
+	f, err := os.Open(path) // #nosec G304 -- operating on the named shells file is the point
 	if err != nil {
 		return false, err
 	}

@@ -69,7 +69,7 @@ func (e *engine) loadTable(t *table) error {
 	}
 
 	placeholders := strings.TrimSuffix(strings.Repeat("?,", len(t.columns)), ",")
-	insert := fmt.Sprintf("INSERT INTO %s VALUES (%s)", quoteIdent(t.name), placeholders)
+	insert := fmt.Sprintf("INSERT INTO %s VALUES (%s)", quoteIdent(t.name), placeholders) // #nosec G201 -- the table name is quoted by quoteIdent and the values are bound through ? placeholders
 
 	tx, err := e.db.Begin()
 	if err != nil {
@@ -126,7 +126,7 @@ func (e *engine) loadSQLiteFile(path string) error {
 	_ = rows.Close()
 
 	for _, name := range names {
-		copySQL := fmt.Sprintf("CREATE TABLE %s AS SELECT * FROM src.%s", quoteIdent(name), quoteIdent(name))
+		copySQL := fmt.Sprintf("CREATE TABLE %s AS SELECT * FROM src.%s", quoteIdent(name), quoteIdent(name)) // #nosec G201 -- table names are quoted by quoteIdent
 		if _, err := e.db.Exec(copySQL); err != nil {
 			return fmt.Errorf("copy table %q from %q: %w", name, path, err)
 		}

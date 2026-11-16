@@ -235,7 +235,7 @@ func expectAck(conn net.Conn, want uint16) error {
 // request builds an RRQ/WRQ packet for filename in octet mode.
 func request(op int, filename string) []byte {
 	var b bytes.Buffer
-	_ = binary.Write(&b, binary.BigEndian, uint16(op))
+	_ = binary.Write(&b, binary.BigEndian, uint16(op)) // #nosec G115 -- op is opRRQ or opWRQ, the TFTP opcodes 1 and 2
 	b.WriteString(filename)
 	b.WriteByte(0)
 	b.WriteString("octet")

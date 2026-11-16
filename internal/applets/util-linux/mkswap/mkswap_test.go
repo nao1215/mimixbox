@@ -83,3 +83,20 @@ func TestErrors(t *testing.T) {
 		t.Errorf("a missing file should fail")
 	}
 }
+
+// TestWriteSwapRejectsTooManyPages covers a swap area whose last page index
+// does not fit the 32-bit last_page header field (over 16 TiB with 4 KiB
+// pages). It used to be truncated, so the header advertised a tiny area.
+func TestWriteSwapRejectsTooManyPages(t *testing.T) {
+	img := makeImage(t, 2)
+	f, err := os.OpenFile(img, os.O_RDWR, 0)
+	if err != nil {
+		t.Fatal(err)
+	}
+	defer func() { _ = f.Close() }()
+	if err := writeSwap(f, 1<<32+15, ""); err == nil {
+		data, _ := os.ReadFile(img)
+		t.Errorf("writeSwap accepted 2^32+15 pages; header last_page = %d",
+			binary.LittleEndian.Uint32(data[headerOffset+4:]))
+	}
+}

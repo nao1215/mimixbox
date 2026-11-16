@@ -91,7 +91,7 @@ func doStart(stdio command.IO, pidfile, execPath string, args []string) error {
 		return command.Failuref("cannot start %s: %v", execPath, err)
 	}
 	if pidfile != "" {
-		if err := os.WriteFile(pidfile, []byte(strconv.Itoa(pid)+"\n"), 0o644); err != nil {
+		if err := os.WriteFile(pidfile, []byte(strconv.Itoa(pid)+"\n"), 0o644); err != nil { // #nosec G306 -- pid files are world-readable so other tools can find the daemon; start-stop-daemon creates them 0666 minus umask
 			return command.Failuref("cannot write %s: %v", pidfile, err)
 		}
 	}
@@ -119,7 +119,7 @@ func doStop(stdio command.IO, pidfile, signalName string) error {
 }
 
 func readPidfile(path string) (int, bool) {
-	data, err := os.ReadFile(path) //nolint:gosec // user-named pidfile
+	data, err := os.ReadFile(path) // #nosec G304 -- user-named pidfile
 	if err != nil {
 		return 0, false
 	}

@@ -63,7 +63,7 @@ func (c *Command) Run(_ context.Context, stdio command.IO, args []string) error 
 func crcOf(stdio command.IO, name string) (uint32, error) {
 	r := stdio.In
 	if name != "-" {
-		f, err := os.Open(name) //nolint:gosec // user-named file
+		f, err := os.Open(name) // #nosec G304 -- user-named file
 		if err != nil {
 			return 0, err
 		}

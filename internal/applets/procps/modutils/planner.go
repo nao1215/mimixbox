@@ -28,7 +28,7 @@ func gatedError(name, detail string) error {
 // validateModuleFile checks that path is an ELF object carrying a .modinfo
 // section, the minimum that identifies a kernel module.
 func validateModuleFile(path string) error {
-	f, err := os.Open(path) //nolint:gosec // user-named file
+	f, err := os.Open(path) // #nosec G304 -- user-named file
 	if err != nil {
 		return err
 	}
@@ -102,7 +102,7 @@ func buildDeps(dir string) ([]dep, error) {
 
 // modinfoField returns one field value from a .ko file's .modinfo section.
 func modinfoField(path, key string) (string, error) {
-	f, err := os.Open(path) //nolint:gosec // user-named file
+	f, err := os.Open(path) // #nosec G304 -- user-named file
 	if err != nil {
 		return "", err
 	}

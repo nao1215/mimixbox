@@ -163,7 +163,7 @@ func (sh *shell) execPipeline(ctx context.Context, stdio command.IO, pl pipeline
 			_, _ = fmt.Fprintf(stdio.Err, "mbsh: %s: command not found\n", sc.args[0])
 			return 127
 		}
-		c := exec.CommandContext(ctx, path, argv...) //nolint:gosec // user-typed command
+		c := exec.CommandContext(ctx, path, argv...) // #nosec G204 -- user-typed command
 		if len(sc.assigns) > 0 {
 			c.Env = append(os.Environ(), sc.assigns...)
 		}
@@ -278,7 +278,7 @@ func (sh *shell) execSimple(ctx context.Context, stdio command.IO, sc simpleComm
 		_, _ = fmt.Fprintf(stdio.Err, "mbsh: %s: command not found\n", sc.args[0])
 		return 127
 	}
-	c := exec.CommandContext(ctx, path, argv...) //nolint:gosec // user-typed command
+	c := exec.CommandContext(ctx, path, argv...) // #nosec G204 -- user-typed command
 	c.Stdin, c.Stdout, c.Stderr = io.In, io.Out, io.Err
 	if len(sc.assigns) > 0 {
 		c.Env = append(os.Environ(), sc.assigns...)
@@ -316,7 +316,7 @@ func openRedir(r redirect) (*os.File, error) {
 	case ">":
 		return os.Create(r.file) //nolint:gosec // user-named file
 	case ">>":
-		return os.OpenFile(r.file, os.O_APPEND|os.O_CREATE|os.O_WRONLY, 0o644) //nolint:gosec // user-named file
+		return os.OpenFile(r.file, os.O_APPEND|os.O_CREATE|os.O_WRONLY, 0o644) // #nosec G302 -- user-named file
 	default:
 		return nil, fmt.Errorf("unknown redirection %q", r.op)
 	}

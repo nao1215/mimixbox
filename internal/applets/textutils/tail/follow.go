@@ -43,7 +43,7 @@ type followTarget struct {
 func newFollowTargets(paths []string, retry bool) []followTarget {
 	targets := make([]followTarget, 0, len(paths))
 	for _, path := range paths {
-		f, err := os.Open(path) //nolint:gosec // operating on a user-named file is the point
+		f, err := os.Open(path) // #nosec G304 -- operating on a user-named file is the point
 		if err != nil {
 			if retry {
 				targets = append(targets, followTarget{path: path})

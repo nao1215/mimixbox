@@ -113,7 +113,7 @@ func scanDevices() []device {
 
 // readDev parses a "major:minor" sysfs dev attribute file.
 func readDev(path string) (major, minor uint32, ok bool) {
-	data, err := os.ReadFile(path) //nolint:gosec // sysfs attribute path
+	data, err := os.ReadFile(path) // #nosec G304 -- sysfs attribute path
 	if err != nil {
 		return 0, 0, false
 	}

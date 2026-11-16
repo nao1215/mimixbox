@@ -61,7 +61,7 @@ func (c *Command) Run(_ context.Context, stdio command.IO, args []string) error 
 	if err != nil {
 		return command.Failuref("%s: %v", rest[0], err)
 	}
-	if err := os.WriteFile(resumePath, []byte(devnum), 0o644); err != nil {
+	if err := os.WriteFile(resumePath, []byte(devnum), 0o644); err != nil { // #nosec G306 -- writes the existing sysfs attribute /sys/power/resume; the mode is never applied
 		if os.IsPermission(err) {
 			return command.Failuref("%s: permission denied (resume needs privilege)", resumePath)
 		}

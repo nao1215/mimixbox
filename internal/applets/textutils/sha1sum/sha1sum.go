@@ -3,7 +3,7 @@
 package sha1sum
 
 import (
-	"crypto/sha1" //nolint:gosec // sha1sum is by definition a SHA-1 utility
+	"crypto/sha1" // #nosec G505 -- sha1sum is by definition a SHA-1 utility
 
 	"github.com/nao1215/mimixbox/internal/hashsum"
 )

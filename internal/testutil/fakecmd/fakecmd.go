@@ -288,7 +288,7 @@ func helperBinary(t *testing.T) string {
 		if runtime.GOOS == "windows" {
 			bin += ".exe"
 		}
-		cmd := exec.Command("go", "build", "-o", bin, src)
+		cmd := exec.Command("go", "build", "-o", bin, src) // #nosec G204 -- test helper builds its own helper source with the go tool
 		cmd.Stderr = os.Stderr
 		if err := cmd.Run(); err != nil {
 			buildErr = err
@@ -360,11 +360,11 @@ func linkOrCopy(t *testing.T, src, dst string) {
 	if err := os.Symlink(src, dst); err == nil {
 		return
 	}
-	data, err := os.ReadFile(src)
+	data, err := os.ReadFile(src) // #nosec G304 -- test helper copies the fakecmd binary it just built
 	if err != nil {
 		t.Fatalf("fakecmd: reading helper: %v", err)
 	}
-	if err := os.WriteFile(dst, data, 0o700); err != nil {
+	if err := os.WriteFile(dst, data, 0o700); err != nil { // #nosec G306 G703 -- test helper installs the fakecmd binary under t.TempDir(); it must be executable
 		t.Fatalf("fakecmd: writing fake %q: %v", dst, err)
 	}
 }

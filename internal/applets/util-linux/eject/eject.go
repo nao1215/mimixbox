@@ -33,7 +33,7 @@ const defaultDevice = "/dev/cdrom"
 
 // ejectFn is indirected so the privileged ioctl can be tested.
 var ejectFn = func(device string, closeTray bool) error {
-	f, err := os.Open(device) //nolint:gosec // user-named device
+	f, err := os.Open(device) // #nosec G304 -- user-named device
 	if err != nil {
 		return err
 	}

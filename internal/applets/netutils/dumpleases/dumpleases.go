@@ -74,7 +74,7 @@ func (c *Command) Run(_ context.Context, stdio command.IO, args []string) error 
 		path = rest[0]
 	}
 
-	f, err := os.Open(path)
+	f, err := os.Open(path) // #nosec G304 -- the lease file the user named, or the default udhcpd lease file
 	if err != nil {
 		return command.Failuref("cannot open lease file %q: %v", path, err)
 	}

@@ -64,7 +64,7 @@ func (c *Command) Run(_ context.Context, stdio command.IO, args []string) error 
 		return command.SilentFailure()
 	}
 
-	f, err := os.OpenFile(lockPath, os.O_RDWR|os.O_CREATE, 0o600) //nolint:gosec // user-named lock file
+	f, err := os.OpenFile(lockPath, os.O_RDWR|os.O_CREATE, 0o600) // #nosec G304 -- user-named lock file
 	if err != nil {
 		return command.Failuref("cannot open %s: %v", lockPath, err)
 	}
@@ -78,7 +78,7 @@ func (c *Command) Run(_ context.Context, stdio command.IO, args []string) error 
 		return command.Failuref("cannot lock %s: %v", lockPath, err)
 	}
 
-	cmd := exec.Command(name, cmdArgs...) //nolint:gosec // user-specified command, as flock is designed to run
+	cmd := exec.Command(name, cmdArgs...) // #nosec G204 -- user-specified command, as flock is designed to run
 	cmd.Stdin, cmd.Stdout, cmd.Stderr = stdio.In, stdio.Out, stdio.Err
 	if err := cmd.Run(); err != nil {
 		var ee *exec.ExitError

@@ -30,7 +30,7 @@ const defaultDevice = "/dev/console"
 
 // redirectFn is indirected so the ioctl can be tested without a console.
 var redirectFn = func(device string) error {
-	f, err := os.Open(device) //nolint:gosec // user-named console device
+	f, err := os.Open(device) // #nosec G304 -- user-named console device
 	if err != nil {
 		return err
 	}

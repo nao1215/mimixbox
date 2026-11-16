@@ -131,7 +131,7 @@ func (cfg *Config) runStream(stdio command.IO, opts Options) error {
 // -c, otherwise in place with the suffix added or stripped.
 func (cfg *Config) processFile(stdio command.IO, name string, opts Options) error {
 	if opts.Test && cfg.Test != nil {
-		in, err := os.Open(name) //nolint:gosec // user-named file
+		in, err := os.Open(name) // #nosec G304 -- user-named file
 		if err != nil {
 			return err
 		}
@@ -143,7 +143,7 @@ func (cfg *Config) processFile(stdio command.IO, name string, opts Options) erro
 	}
 
 	if opts.Stdout {
-		in, err := os.Open(name) //nolint:gosec // user-named file
+		in, err := os.Open(name) // #nosec G304 -- user-named file
 		if err != nil {
 			return err
 		}
@@ -161,13 +161,13 @@ func (cfg *Config) processFile(stdio command.IO, name string, opts Options) erro
 		}
 	}
 
-	in, err := os.Open(name) //nolint:gosec // user-named file
+	in, err := os.Open(name) // #nosec G304 -- user-named file
 	if err != nil {
 		return err
 	}
 	defer func() { _ = in.Close() }()
 
-	w, err := os.Create(out) //nolint:gosec // user-named file
+	w, err := os.Create(out) // #nosec G304 -- user-named file
 	if err != nil {
 		return err
 	}

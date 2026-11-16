@@ -79,10 +79,10 @@ func (c *Command) Run(_ context.Context, stdio command.IO, args []string) error 
 	alarm := filepath.Join(sysRTCDir, *device, "wakealarm")
 	// Clear any existing alarm before setting the new one, as the kernel rejects
 	// a write while an alarm is already pending.
-	if err := os.WriteFile(alarm, []byte("0\n"), 0o644); err != nil {
+	if err := os.WriteFile(alarm, []byte("0\n"), 0o644); err != nil { // #nosec G306 -- writes the existing sysfs attribute wakealarm; the mode is never applied
 		return command.Failuref("cannot access %s: %v", alarm, err)
 	}
-	if err := os.WriteFile(alarm, []byte(strconv.FormatInt(wake, 10)+"\n"), 0o644); err != nil {
+	if err := os.WriteFile(alarm, []byte(strconv.FormatInt(wake, 10)+"\n"), 0o644); err != nil { // #nosec G306 -- writes the existing sysfs attribute wakealarm; the mode is never applied
 		return command.Failuref("cannot set alarm on %s: %v", alarm, err)
 	}
 

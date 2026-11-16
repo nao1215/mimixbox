@@ -19,7 +19,7 @@ import (
 // create opens name for writing, truncating any existing file. It is a thin
 // wrapper kept separate so the I/O surface used by sort stays small.
 func create(name string) (*os.File, error) {
-	return os.Create(name) //nolint:gosec // operating on a user-named file is the whole point
+	return os.Create(name) // #nosec G304 -- operating on a user-named file is the whole point
 }
 
 // Command is the sort applet.

@@ -148,7 +148,7 @@ func printDevice(out io.Writer, d device, prefix string) {
 // readMounts maps a device path to its mount point from /proc/mounts.
 func readMounts(path string) map[string]string {
 	m := map[string]string{}
-	f, err := os.Open(path) //nolint:gosec // the mounts path
+	f, err := os.Open(path) // #nosec G304 -- the mounts path
 	if err != nil {
 		return m
 	}
@@ -166,7 +166,7 @@ func readMounts(path string) map[string]string {
 }
 
 func readField(path string) string {
-	data, err := os.ReadFile(path) //nolint:gosec // a /sys attribute path
+	data, err := os.ReadFile(path) // #nosec G304 -- a /sys attribute path
 	if err != nil {
 		return ""
 	}

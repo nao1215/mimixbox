@@ -145,7 +145,7 @@ func sectionDir(sec string) string {
 
 // display writes the page to out, decompressing a .gz page on the way.
 func display(out io.Writer, path string) error {
-	f, err := os.Open(path) //nolint:gosec // resolved manual page path
+	f, err := os.Open(path) // #nosec G304 -- resolved manual page path
 	if err != nil {
 		return err
 	}

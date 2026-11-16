@@ -39,7 +39,7 @@ func List(procDir string) ([]Process, error) {
 		if err != nil {
 			continue
 		}
-		data, err := os.ReadFile(filepath.Join(procDir, e.Name(), "comm")) //nolint:gosec // /proc path
+		data, err := os.ReadFile(filepath.Join(procDir, e.Name(), "comm")) // #nosec G304 -- /proc path
 		if err != nil {
 			continue
 		}

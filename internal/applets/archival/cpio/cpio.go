@@ -6,9 +6,11 @@ package cpio
 
 import (
 	"bufio"
+	"bytes"
 	"context"
 	"fmt"
 	"io"
+	"math"
 	"os"
 	"path/filepath"
 	"strconv"
@@ -105,7 +107,7 @@ func copyOut(stdio command.IO, opts options) error {
 		}
 		var data []byte
 		if info.Mode().IsRegular() {
-			data, err = os.ReadFile(name) //nolint:gosec // archiving a user-named file
+			data, err = os.ReadFile(name) // #nosec G304 -- archiving a user-named file
 			if err != nil {
 				return err
 			}
@@ -128,9 +130,18 @@ func copyOut(stdio command.IO, opts options) error {
 // each padded to a 4-byte boundary.
 func writeEntry(w io.Writer, ino int, mode uint32, mtime int64, name string, data []byte) error {
 	nameBytes := append([]byte(name), 0)
+	// newc size fields are 32 bits wide; a larger file cannot be stored.
+	if uint64(len(data)) > math.MaxUint32 || uint64(len(nameBytes)) > math.MaxUint32 {
+		return fmt.Errorf("%s: too large for the newc format", name)
+	}
 	fields := []uint32{
-		uint32(ino), mode, 0, 0, 1, uint32(mtime), uint32(len(data)),
-		0, 0, 0, 0, uint32(len(nameBytes)), 0,
+		uint32(ino), // #nosec G115 -- inode numbers only tell entries apart; newc stores 32 bits and wraps like GNU cpio
+		mode, 0, 0, 1,
+		uint32(mtime),     // #nosec G115 -- newc stores mtime as an unsigned 32-bit field, as GNU cpio does
+		uint32(len(data)), // #nosec G115 -- checked against MaxUint32 above
+		0, 0, 0, 0,
+		uint32(len(nameBytes)), // #nosec G115 -- checked against MaxUint32 above
+		0,
 	}
 	var b strings.Builder
 	b.WriteString(newcMagic)
@@ -177,16 +188,27 @@ func copyIn(stdio command.IO, opts options, listOnly bool) error {
 		if string(hdr[0:6]) != newcMagic {
 			return fmt.Errorf("not a newc cpio archive")
 		}
-		nameSize := int(hexField(hdr, 94))
-		fileSize := int(hexField(hdr, 54))
-		mode := hexField(hdr, 14)
+		nameSize, err := hexField(hdr, 94)
+		if err != nil {
+			return err
+		}
+		fileSize, err := hexField(hdr, 54)
+		if err != nil {
+			return err
+		}
+		mode, err := hexField(hdr, 14)
+		if err != nil {
+			return err
+		}
 
-		nameBuf := make([]byte, nameSize)
-		if _, err := io.ReadFull(r, nameBuf); err != nil {
+		// Read through a growing buffer instead of allocating the size the
+		// header claims: a 110-byte header can claim 4 GiB.
+		nameBuf, err := readN(r, nameSize)
+		if err != nil {
 			return err
 		}
 		name := strings.TrimRight(string(nameBuf), "\x00")
-		if err := skip(r, (110 + nameSize)); err != nil {
+		if err := skip(r, 110+int(nameSize)); err != nil {
 			return err
 		}
 
@@ -194,11 +216,11 @@ func copyIn(stdio command.IO, opts options, listOnly bool) error {
 			return nil
 		}
 
-		data := make([]byte, fileSize)
-		if _, err := io.ReadFull(r, data); err != nil {
+		data, err := readN(r, fileSize)
+		if err != nil {
 			return err
 		}
-		if err := skip(r, fileSize); err != nil {
+		if err := skip(r, int(fileSize)); err != nil {
 			return err
 		}
 
@@ -216,9 +238,25 @@ func copyIn(stdio command.IO, opts options, listOnly bool) error {
 }
 
 // hexField parses the 8-char hex newc field at offset off in hdr.
-func hexField(hdr []byte, off int) uint64 {
-	v, _ := strconv.ParseUint(string(hdr[off:off+8]), 16, 64)
-	return v
+func hexField(hdr []byte, off int) (uint32, error) {
+	v, err := strconv.ParseUint(string(hdr[off:off+8]), 16, 32)
+	if err != nil {
+		return 0, fmt.Errorf("invalid header field %q", hdr[off:off+8])
+	}
+	return uint32(v), nil // #nosec G115 -- ParseUint with bitSize 32 returns at most MaxUint32
+}
+
+// readN reads exactly n bytes from r, growing the buffer only as data
+// actually arrives.
+func readN(r io.Reader, n uint32) ([]byte, error) {
+	var buf bytes.Buffer
+	if _, err := io.CopyN(&buf, r, int64(n)); err != nil {
+		if err == io.EOF {
+			return nil, io.ErrUnexpectedEOF
+		}
+		return nil, err
+	}
+	return buf.Bytes(), nil
 }
 
 // skip discards the padding bytes that align n to a 4-byte boundary.
@@ -236,7 +274,7 @@ func extractEntry(name string, mode os.FileMode, data []byte) error {
 		return os.MkdirAll(name, mode.Perm()|0o700)
 	}
 	if dir := filepath.Dir(name); dir != "." {
-		if err := os.MkdirAll(dir, 0o755); err != nil {
+		if err := os.MkdirAll(dir, 0o755); err != nil { // #nosec G301 -- parent directories of extracted entries are created 0755 before umask, no wider than the 0777-minus-umask GNU cpio uses
 			return err
 		}
 	}

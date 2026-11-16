@@ -49,7 +49,7 @@ func run() error {
 	if err != nil {
 		return err
 	}
-	return os.WriteFile(filepath.Join(root, outputRel), src, 0o644) //nolint:gosec // generated source is world-readable
+	return os.WriteFile(filepath.Join(root, outputRel), src, 0o644) // #nosec G306 -- generated source is world-readable
 }
 
 // moduleRoot walks up from the working directory until it finds go.mod, so the

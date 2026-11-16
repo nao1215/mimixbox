@@ -37,7 +37,7 @@ var (
 		_, _ = fmt.Fprintf(stdio.Out, "acpid: %s\n", event)
 		const handler = "/etc/acpi/handler.sh"
 		if _, err := os.Stat(handler); err == nil {
-			cmd := exec.Command(handler, strings.Fields(event)...) //nolint:gosec // configured ACPI handler
+			cmd := exec.Command(handler, strings.Fields(event)...) // #nosec G204 -- configured ACPI handler
 			cmd.Stdout, cmd.Stderr = stdio.Out, stdio.Err
 			_ = cmd.Run()
 		}

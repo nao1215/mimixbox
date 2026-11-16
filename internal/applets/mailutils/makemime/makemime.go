@@ -84,7 +84,7 @@ func build(files []string, contentType string) ([]byte, error) {
 }
 
 func buildSingle(file, contentType string) ([]byte, error) {
-	data, err := os.ReadFile(file) //nolint:gosec // user-named file
+	data, err := os.ReadFile(file) // #nosec G304 -- user-named file
 	if err != nil {
 		return nil, err
 	}
@@ -102,7 +102,7 @@ func buildMultipart(files []string, contentType string) ([]byte, error) {
 	var body bytes.Buffer
 	mw := multipart.NewWriter(&body)
 	for _, f := range files {
-		data, err := os.ReadFile(f) //nolint:gosec // user-named file
+		data, err := os.ReadFile(f) // #nosec G304 -- user-named file
 		if err != nil {
 			return nil, err
 		}

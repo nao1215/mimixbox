@@ -27,7 +27,7 @@ const fdFlush = 0x254b
 
 // flushFn is indirected so the privileged ioctl can be tested.
 var flushFn = func(device string) error {
-	f, err := os.Open(device) //nolint:gosec // user-named device
+	f, err := os.Open(device) // #nosec G304 -- user-named device
 	if err != nil {
 		return err
 	}

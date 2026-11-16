@@ -70,7 +70,7 @@ func (c *Command) Run(_ context.Context, stdio command.IO, args []string) error 
 
 // report prints one process's map and total.
 func (c *Command) report(stdio command.IO, pid string) error {
-	f, err := os.Open(filepath.Join(procDir, pid, "maps")) //nolint:gosec // /proc path
+	f, err := os.Open(filepath.Join(procDir, pid, "maps")) // #nosec G304 -- /proc path
 	if err != nil {
 		return err
 	}
@@ -120,7 +120,7 @@ func parseLine(line string) (start uint64, sizeKB int64, perms, name string, ok 
 			name = filepath.Base(path)
 		}
 	}
-	return s, int64(e-s) / 1024, mode(fields[1]), name, true
+	return s, int64(e-s) / 1024, mode(fields[1]), name, true // #nosec G115 -- the kernel's /proc/PID/maps lists start <= end, so e-s is a mapping size below 2^63
 }
 
 // mode converts maps permissions ("r-xp") to pmap's "r-x--" form.
@@ -139,7 +139,7 @@ func mode(p string) string {
 
 // cmdline returns the process command line, or "[unknown]".
 func cmdline(pid string) string {
-	data, err := os.ReadFile(filepath.Join(procDir, pid, "cmdline")) //nolint:gosec // /proc path
+	data, err := os.ReadFile(filepath.Join(procDir, pid, "cmdline")) // #nosec G304 -- /proc path
 	if err != nil || len(data) == 0 {
 		return "[unknown]"
 	}

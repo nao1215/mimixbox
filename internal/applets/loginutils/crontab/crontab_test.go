@@ -98,3 +98,19 @@ func TestErrors(t *testing.T) {
 		t.Errorf("interactive edit should be unsupported")
 	}
 }
+
+// TestRejectsUserNameOutsideSpool covers a -u value that is not a plain user
+// name. It used to be joined onto the spool directory as is, so
+// "-u ../escaped" wrote (or removed) a file next to the spool directory.
+func TestRejectsUserNameOutsideSpool(t *testing.T) {
+	dir := setup(t)
+	escaped := filepath.Join(filepath.Dir(dir), "escaped")
+	for _, name := range []string{"../escaped", "..", ".", "a/b"} {
+		if _, err := run(t, "@daily x\n", "-u", name); err == nil {
+			t.Errorf("-u %q was accepted", name)
+		}
+	}
+	if _, err := os.Stat(escaped); err == nil {
+		t.Errorf("crontab written outside the spool directory: %s", escaped)
+	}
+}

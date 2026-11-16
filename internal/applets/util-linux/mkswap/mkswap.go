@@ -6,6 +6,7 @@ import (
 	"context"
 	"encoding/binary"
 	"fmt"
+	"math"
 	"os"
 
 	"github.com/nao1215/mimixbox/internal/command"
@@ -58,7 +59,7 @@ func (c *Command) Run(_ context.Context, stdio command.IO, args []string) error 
 	}
 	path := rest[0]
 
-	f, err := os.OpenFile(path, os.O_RDWR, 0o600) //nolint:gosec // user-named swap file
+	f, err := os.OpenFile(path, os.O_RDWR, 0o600) // #nosec G304 -- user-named swap file
 	if err != nil {
 		return command.Failuref("cannot open %s: %v", path, err)
 	}
@@ -89,10 +90,13 @@ func (c *Command) Run(_ context.Context, stdio command.IO, args []string) error 
 
 // writeSwap writes the version-1 header, optional label, and signature.
 func writeSwap(f *os.File, lastPage int, label string) error {
+	if lastPage < 0 || uint64(lastPage) > math.MaxUint32 {
+		return fmt.Errorf("swap area too large: %d pages (the header holds at most %d)", lastPage, uint64(math.MaxUint32))
+	}
 	header := make([]byte, 12)
-	binary.LittleEndian.PutUint32(header[0:], 1)                  // version
-	binary.LittleEndian.PutUint32(header[4:], uint32(lastPage))   // last usable page
-	binary.LittleEndian.PutUint32(header[8:], 0)                  // nr_badpages
+	binary.LittleEndian.PutUint32(header[0:], 1)                // version
+	binary.LittleEndian.PutUint32(header[4:], uint32(lastPage)) // #nosec G115 -- range-checked against MaxUint32 above
+	binary.LittleEndian.PutUint32(header[8:], 0)                // nr_badpages
 	if _, err := f.WriteAt(header, headerOffset); err != nil {
 		return err
 	}

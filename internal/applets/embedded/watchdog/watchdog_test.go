@@ -11,12 +11,12 @@ import (
 )
 
 type fakePinger struct {
-	device   string
-	timeout  int
-	pets     int
-	closed   bool
-	openErr  error
-	petErr   error
+	device  string
+	timeout int
+	pets    int
+	closed  bool
+	openErr error
+	petErr  error
 }
 
 func (f *fakePinger) Open(device string, timeoutSec int) (func() error, func() error, error) {
@@ -107,5 +107,16 @@ func TestWatchdogUsageErrors(t *testing.T) {
 	}
 	if _, err := run(t, "-t", "0", "/dev/watchdog"); err == nil {
 		t.Error("expected error for non-positive interval")
+	}
+}
+
+// TestWatchdogRejectsTimeoutOverInt32 covers a -T value that does not fit the
+// int the WDIOC_SETTIMEOUT ioctl takes. It used to be truncated, so -T
+// 4294967356 programmed a 60-second timeout.
+func TestWatchdogRejectsTimeoutOverInt32(t *testing.T) {
+	fake := &fakePinger{}
+	withPinger(t, fake)
+	if _, err := run(t, "-n", "1", "-t", "1", "-T", "4294967356", "/dev/watchdog"); err == nil {
+		t.Errorf("expected error for a timeout over MaxInt32, device got %d", fake.timeout)
 	}
 }

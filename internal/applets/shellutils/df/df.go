@@ -142,7 +142,7 @@ type inodeUsage struct {
 // computeUsage turns a Statfs result into byte-based disk usage figures. It is a
 // pure function so it can be unit-tested without a real filesystem.
 func computeUsage(s statfsResult) usage {
-	bsize := uint64(s.Bsize)
+	bsize := uint64(s.Bsize) // #nosec G115 -- statfs f_bsize is a positive block size
 	total := s.Blocks * bsize
 	free := s.Bfree * bsize
 	avail := s.Bavail * bsize
@@ -173,7 +173,7 @@ func percent(used, total uint64) int {
 		return 0
 	}
 	// Round up: ceil(used*100/total).
-	return int((used*100 + total - 1) / total)
+	return int((used*100 + total - 1) / total) // #nosec G115 -- a percentage of used/total, at most 100 for a consistent statfs result
 }
 
 // humanReadable formats n bytes using powers of 1024 (e.g. 1024 -> "1.0K",
@@ -190,7 +190,7 @@ func humanReadable(n uint64) string {
 		value /= unit
 		i++
 	}
-	return fmt.Sprintf("%.1f%s", value, units[i])
+	return fmt.Sprintf("%.1f%s", value, units[i]) // #nosec G602 -- i starts at 0 after the first division (n >= 1024 is checked above) and the loop stops at len(units)-1
 }
 
 // formatSize renders a byte count either human-readable or in 1K blocks.
@@ -271,7 +271,7 @@ func fsTypeName(magic int64) string {
 	if name, ok := fsMagic[magic]; ok {
 		return name
 	}
-	return fmt.Sprintf("0x%x", uint64(magic))
+	return fmt.Sprintf("0x%x", uint64(magic)) // #nosec G115 -- prints the filesystem magic as unsigned hex, as df -T style output shows it
 }
 
 // fsMagic is a small table of common Linux filesystem magic numbers. df uses it

@@ -189,7 +189,7 @@ func terseLine(name string, info os.FileInfo) string {
 	mt = info.ModTime().Unix()
 	rawmode = uint64(info.Mode())
 	if sys != nil {
-		blocks = uint64(sys.Blocks)
+		blocks = uint64(sys.Blocks) // #nosec G115 -- st_blocks is never negative
 		uid = uint64(sys.Uid)
 		gid = uint64(sys.Gid)
 		dev = uint64(sys.Dev)

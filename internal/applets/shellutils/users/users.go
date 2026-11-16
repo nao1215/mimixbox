@@ -80,7 +80,7 @@ func parse(data []byte) []string {
 	var names []string
 	for off := 0; off+recordSize <= len(data); off += recordSize {
 		rec := data[off : off+recordSize]
-		if int16(binary.LittleEndian.Uint16(rec[typeOffset:])) != userProcess {
+		if int16(binary.LittleEndian.Uint16(rec[typeOffset:])) != userProcess { // #nosec G115 -- utmp ut_type is a C short
 			continue
 		}
 		if name := cstr(rec[userOffset : userOffset+userLen]); name != "" {

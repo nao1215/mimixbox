@@ -3,7 +3,7 @@
 package md5sum
 
 import (
-	"crypto/md5" //nolint:gosec // md5sum is by definition an MD5 utility
+	"crypto/md5" // #nosec G501 -- md5sum is by definition an MD5 utility
 
 	"github.com/nao1215/mimixbox/internal/hashsum"
 )

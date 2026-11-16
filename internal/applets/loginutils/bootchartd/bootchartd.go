@@ -64,7 +64,7 @@ func (c *Command) Run(_ context.Context, stdio command.IO, args []string) error 
 		outputDir = *out
 	}
 
-	if err := os.MkdirAll(outputDir, 0o755); err != nil {
+	if err := os.MkdirAll(outputDir, 0o755); err != nil { // #nosec G301 -- the user-chosen chart output directory is created 0755 before umask, like mkdir -p
 		return command.Failuref("cannot create %s: %v", outputDir, err)
 	}
 
@@ -91,7 +91,7 @@ func uptimeJiffies() int64 {
 }
 
 func read(path string) string {
-	data, err := os.ReadFile(path) //nolint:gosec // /proc or test fixture path
+	data, err := os.ReadFile(path) // #nosec G304 -- /proc or test fixture path
 	if err != nil {
 		return ""
 	}
@@ -99,7 +99,7 @@ func read(path string) string {
 }
 
 func appendFile(path, content string) error {
-	f, err := os.OpenFile(path, os.O_CREATE|os.O_WRONLY|os.O_APPEND, 0o644) //nolint:gosec // log file
+	f, err := os.OpenFile(path, os.O_CREATE|os.O_WRONLY|os.O_APPEND, 0o644) // #nosec G302 G304 -- log file
 	if err != nil {
 		return err
 	}

@@ -112,7 +112,7 @@ func lookPathAll(name string) []string {
 
 // isExecutable reports whether path is a regular file with an executable bit set.
 func isExecutable(path string) bool {
-	info, err := os.Stat(path)
+	info, err := os.Stat(path) // #nosec G703 -- which inspects each PATH entry joined with the user-named program; it only stats it
 	if err != nil {
 		return false
 	}

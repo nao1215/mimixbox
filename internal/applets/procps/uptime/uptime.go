@@ -117,7 +117,7 @@ func countUsers() int {
 	}
 	n := 0
 	for off := 0; off+recordSize <= len(data); off += recordSize {
-		if int16(binary.LittleEndian.Uint16(data[off:])) == userProcess {
+		if int16(binary.LittleEndian.Uint16(data[off:])) == userProcess { // #nosec G115 -- utmp ut_type is a C short
 			n++
 		}
 	}

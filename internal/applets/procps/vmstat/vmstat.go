@@ -140,7 +140,7 @@ func cpuPercents(cpu []int64) (us, sy, id, wa, st int64) {
 // readKeyed reads a "Key: value kB" or "key value" file into a map of int64.
 func readKeyed(path string) map[string]int64 {
 	m := map[string]int64{}
-	data, err := os.ReadFile(path)
+	data, err := os.ReadFile(path) // #nosec G304 -- reads fixed /proc files (meminfo, stat, vmstat)
 	if err != nil {
 		return m
 	}

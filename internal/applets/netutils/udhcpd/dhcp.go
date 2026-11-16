@@ -24,14 +24,14 @@ var magicCookie = []byte{99, 130, 83, 99}
 
 // DHCP option codes used by this slice.
 const (
-	OptSubnetMask    = 1
-	OptRouter        = 3
-	OptDNSServer     = 6
-	OptRequestedIP   = 50
-	OptLeaseTime     = 51
-	OptMessageType   = 53
-	OptServerID      = 54
-	OptEnd           = 255
+	OptSubnetMask  = 1
+	OptRouter      = 3
+	OptDNSServer   = 6
+	OptRequestedIP = 50
+	OptLeaseTime   = 51
+	OptMessageType = 53
+	OptServerID    = 54
+	OptEnd         = 255
 )
 
 // DHCP message types (option 53 values).
@@ -70,8 +70,8 @@ func (m *Message) Type() byte {
 func (m *Message) Marshal() []byte {
 	buf := make([]byte, 240)
 	buf[0] = m.Op
-	buf[1] = 1  // htype: Ethernet
-	buf[2] = 6  // hlen
+	buf[1] = 1 // htype: Ethernet
+	buf[2] = 6 // hlen
 	binary.BigEndian.PutUint32(buf[4:8], m.XID)
 	copyIP(buf[12:16], m.CIAddr)
 	copyIP(buf[16:20], m.YIAddr)
@@ -84,14 +84,14 @@ func (m *Message) Marshal() []byte {
 
 	// Options, with message type first when present.
 	if v, ok := m.Options[OptMessageType]; ok {
-		buf = append(buf, OptMessageType, byte(len(v)))
+		buf = append(buf, OptMessageType, byte(len(v))) // #nosec G115 -- the message type option is one byte (built by buildReply or parsed with a 1-byte length)
 		buf = append(buf, v...)
 	}
 	for code, val := range m.Options {
 		if code == OptMessageType || code == OptEnd {
 			continue
 		}
-		buf = append(buf, code, byte(len(val)))
+		buf = append(buf, code, byte(len(val))) // #nosec G115 -- options are at most 255 bytes: parsed with a 1-byte length or built by buildReply from 4-byte IPv4 values
 		buf = append(buf, val...)
 	}
 	buf = append(buf, OptEnd)

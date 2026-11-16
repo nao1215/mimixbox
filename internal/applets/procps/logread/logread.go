@@ -47,7 +47,7 @@ func (c *Command) Run(_ context.Context, stdio command.IO, args []string) error 
 	}
 
 	for _, path := range candidates {
-		data, err := os.ReadFile(path) //nolint:gosec // user-named or well-known log path
+		data, err := os.ReadFile(path) // #nosec G304 -- user-named or well-known log path
 		if err != nil {
 			continue
 		}

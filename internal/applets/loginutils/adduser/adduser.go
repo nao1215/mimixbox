@@ -149,7 +149,7 @@ func resolveGroup(name string, uid int, ingroup string) (int, error) {
 }
 
 func readLines(path string) ([]string, error) {
-	data, err := os.ReadFile(path) //nolint:gosec // well-known account database path
+	data, err := os.ReadFile(path) // #nosec G304 -- well-known account database path
 	if err != nil {
 		return nil, err
 	}

@@ -60,6 +60,6 @@ func repr(code int) string {
 	case code == 127:
 		return "DEL"
 	default:
-		return string(rune(code))
+		return string(rune(code)) // #nosec G115 -- code is the loop variable 0..127 from Run
 	}
 }

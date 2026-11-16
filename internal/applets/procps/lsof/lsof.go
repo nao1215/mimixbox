@@ -124,7 +124,7 @@ func allPids() []int {
 }
 
 func field(dir, name string) string {
-	data, err := os.ReadFile(filepath.Join(dir, name)) //nolint:gosec // /proc path
+	data, err := os.ReadFile(filepath.Join(dir, name)) // #nosec G304 -- /proc path
 	if err != nil {
 		return ""
 	}

@@ -87,7 +87,7 @@ func (c *Command) Run(_ context.Context, stdio command.IO, args []string) error 
 // and the process is still running that long after the initial signal, SIGKILL
 // is sent (GNU timeout's -k/--kill-after).
 func (c *Command) runWithTimeout(stdio command.IO, dur, killGrace time.Duration, sig syscall.Signal, name string, args []string) error {
-	cmd := exec.Command(name, args...) //nolint:gosec // running a user-named command is the point
+	cmd := exec.Command(name, args...) // #nosec G204 -- running a user-named command is the point
 	cmd.Stdin = stdio.In
 	cmd.Stdout = stdio.Out
 	cmd.Stderr = stdio.Err

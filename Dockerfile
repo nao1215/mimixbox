@@ -28,7 +28,9 @@ RUN env GOTOOLCHAIN=auto go install "github.com/nao1215/atago@${ATAGO_VERSION}" 
 # Build MimixBox from the local source tree (not a remote clone) so the image
 # always reflects the working copy, with cgo enabled in the toolchain image.
 COPY . ${ROOT}/mimixbox
-RUN cd ${ROOT}/mimixbox && make build && sudo make full-install
+WORKDIR ${ROOT}/mimixbox
+# The build runs as root, so the install needs no sudo.
+RUN make build && make full-install
 
 # Make the integration tests available to the mimixbox user. The applets are
 # already full-installed into /usr/local/bin, so atago runs the specs against
@@ -40,6 +42,9 @@ RUN echo "#!/bin/bash" > ${IT_SHELL} && \
     chmod a+x ${IT_SHELL} && \
     chown -R mimixbox:mimixbox /home/mimixbox/.
 
-# If you want administrator privileges, become the root user.
+# The container runs as the mimixbox user. For administrator privileges,
+# run `su -` (the root password is set above).
 # RUN echo "mimixbox    ALL=(ALL)       ALL" >> /etc/sudoers
-CMD ["su", "-", "mimixbox"]
+USER mimixbox
+WORKDIR /home/mimixbox
+CMD ["/bin/bash", "-l"]

@@ -110,7 +110,7 @@ func PrintChecksums(out io.Writer, errw io.Writer, cmdName string, hash hash.Has
 			continue
 		}
 
-		r, err := os.Open(p)
+		r, err := os.Open(p) // #nosec G304 -- a file the user named for the checksum applet
 		if err != nil {
 			fmt.Fprint(errw, cmdName+": "+err.Error())
 			status = 1
@@ -129,7 +129,7 @@ func PrintChecksums(out io.Writer, errw io.Writer, cmdName string, hash hash.Has
 }
 
 func CalcChecksum(hash hash.Hash, path string) (string, error) {
-	r, err := os.Open(path)
+	r, err := os.Open(path) // #nosec G304 -- a file the user named for the checksum applet
 	if err != nil {
 		return "", err
 	}

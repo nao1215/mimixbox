@@ -69,7 +69,7 @@ func (c *Command) Run(_ context.Context, stdio command.IO, args []string) error 
 	}
 
 	// Read the existing seed, if any, and feed it to the kernel.
-	old, readErr := os.ReadFile(path) //nolint:gosec // fixed seed path under seedDir
+	old, readErr := os.ReadFile(path) // #nosec G304 -- fixed seed path under seedDir
 
 	// Always refresh the seed file first so a privilege failure does not leave
 	// the system without a fresh seed for next boot.

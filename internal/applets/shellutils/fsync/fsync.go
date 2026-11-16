@@ -57,7 +57,7 @@ func (c *Command) Run(_ context.Context, stdio command.IO, args []string) error 
 }
 
 func syncFile(name string) error {
-	f, err := os.Open(name) //nolint:gosec // user-named file
+	f, err := os.Open(name) // #nosec G304 -- user-named file
 	if err != nil {
 		return err
 	}

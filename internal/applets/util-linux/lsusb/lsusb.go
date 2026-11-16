@@ -97,7 +97,7 @@ func printDevice(out io.Writer, d usbDevice) {
 }
 
 func field(dir, name string) string {
-	data, err := os.ReadFile(filepath.Join(dir, name)) //nolint:gosec // a /sys attribute path
+	data, err := os.ReadFile(filepath.Join(dir, name)) // #nosec G304 -- a /sys attribute path
 	if err != nil {
 		return ""
 	}

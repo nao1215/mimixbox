@@ -66,9 +66,16 @@ func TestParseRow(t *testing.T) {
 func TestParseRowErrors(t *testing.T) {
 	rows := []string{
 		"too few fields",
-		"/dev/x z 660 0 0 0 0 0 0 0", // bad type
-		"/dev/x c 8z8 0 0 0 0 0 0 0", // bad mode
+		"/dev/x z 660 0 0 0 0 0 0 0",  // bad type
+		"/dev/x c 8z8 0 0 0 0 0 0 0",  // bad mode
 		"/dev/x c 660 0 0 0 0 0 0 zz", // bad number
+		// Numbers outside the 32-bit device fields used to wrap silently: a
+		// count of -1 became 4294967295 nodes and major 4294967304 became 8.
+		"/dev/x c 660 0 0 4294967304 0 0 0 0", // major too large
+		"/dev/x c 660 0 0 4 -1 0 0 0",         // negative minor
+		"/dev/x c 660 0 0 4 0 -1 0 0",         // negative start
+		"/dev/x c 660 0 0 4 0 0 -1 0",         // negative inc
+		"/dev/x c 660 0 0 4 0 0 1 -1",         // negative count
 	}
 	for _, r := range rows {
 		if _, err := parseRow(r); err == nil {

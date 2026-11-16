@@ -163,7 +163,7 @@ func AddButton(img image.Image, radius int, phub bool) image.Image {
 }
 
 func openImage(imageFileName string) (image.Image, error) {
-	f, err := os.Open(imageFileName) //nolint:gosec // operating on a user-named file is the whole point
+	f, err := os.Open(imageFileName) // #nosec G304 -- operating on a user-named file is the whole point
 	if err != nil {
 		return nil, err
 	}
@@ -210,7 +210,7 @@ func extractFileNameWithoutExt(path string) string {
 // writeImage encodes img to outputFileName. A close error on the write path is
 // returned, because a failed close can mean the file was left corrupt.
 func writeImage(img image.Image, outputFileName string) (err error) {
-	f, err := os.Create(outputFileName) //nolint:gosec // operating on a user-named file is the whole point
+	f, err := os.Create(outputFileName) // #nosec G304 -- operating on a user-named file is the whole point
 	if err != nil {
 		return err
 	}

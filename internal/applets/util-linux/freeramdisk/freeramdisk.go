@@ -27,7 +27,7 @@ const blkFlsBuf = 0x1261
 
 // flushFn is indirected so the privileged ioctl can be tested.
 var flushFn = func(device string) error {
-	f, err := os.OpenFile(device, os.O_RDWR, 0) //nolint:gosec // user-named device
+	f, err := os.OpenFile(device, os.O_RDWR, 0) // #nosec G304 -- user-named device
 	if err != nil {
 		return err
 	}

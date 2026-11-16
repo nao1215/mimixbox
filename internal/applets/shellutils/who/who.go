@@ -132,11 +132,11 @@ func parseUtmp(r io.Reader) ([]Entry, error) {
 			break
 		}
 		entries = append(entries, Entry{
-			Type: int16(binary.LittleEndian.Uint16(rec[offType:])),
+			Type: int16(binary.LittleEndian.Uint16(rec[offType:])), // #nosec G115 -- utmp ut_type is a C short
 			User: cString(rec[offUser : offUser+32]),
 			Line: cString(rec[offLine : offLine+32]),
 			Host: cString(rec[offHost : offHost+256]),
-			Time: time.Unix(int64(int32(binary.LittleEndian.Uint32(rec[offSec:]))), 0),
+			Time: time.Unix(int64(int32(binary.LittleEndian.Uint32(rec[offSec:]))), 0), // #nosec G115 -- utmp ut_tv.tv_sec is a signed 32-bit field
 		})
 	}
 	return entries, nil

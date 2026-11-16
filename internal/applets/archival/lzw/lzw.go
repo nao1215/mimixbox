@@ -10,6 +10,7 @@ package lzw
 
 import (
 	"bufio"
+	"errors"
 	"fmt"
 	"io"
 )
@@ -170,6 +171,9 @@ func (e *encoder) finish() error {
 	return e.bw.Flush()
 }
 
+// errCorrupt reports a .Z stream containing a code no encoder can emit.
+var errCorrupt = errors.New("corrupt input")
+
 // Decompress reads a .Z stream from r and writes the original bytes to w.
 func Decompress(r io.Reader, w io.Writer) error {
 	br := bufio.NewReader(r)
@@ -273,11 +277,14 @@ func (d *decoder) run() error {
 	if !ok {
 		return nil
 	}
+	if first >= 256 {
+		return errCorrupt
+	}
 	prevCode := first
-	if err := d.bw.WriteByte(byte(first)); err != nil {
+	if err := d.bw.WriteByte(byte(first)); err != nil { // #nosec G115 -- first < 256 is checked just above
 		return err
 	}
-	finChar := byte(first)
+	finChar := byte(first) // #nosec G115 -- first < 256 is checked just above
 
 	for {
 		code, ok, err := readCode()
@@ -297,14 +304,23 @@ func (d *decoder) run() error {
 			if !ok {
 				return nil
 			}
+			if c >= 256 {
+				return errCorrupt
+			}
 			prevCode = c
-			finChar = byte(c)
+			finChar = byte(c) // #nosec G115 -- c < 256 is checked just above
 			if err := d.bw.WriteByte(finChar); err != nil {
 				return err
 			}
 			continue
 		}
 
+		// A code may name an existing entry or the one about to be
+		// created (KwKwK); anything above that is corrupt. Accepting it
+		// could make an entry its own prefix and loop forever below.
+		if code > free {
+			return errCorrupt
+		}
 		cur := code
 		d.stack = d.stack[:0]
 		if code >= free {
@@ -316,7 +332,7 @@ func (d *decoder) run() error {
 			d.stack = append(d.stack, d.suffix[cur])
 			cur = d.prefix[cur]
 		}
-		finChar = byte(cur)
+		finChar = byte(cur) // #nosec G115 -- the prefix walk above stops only once cur < 256
 		d.stack = append(d.stack, finChar)
 		for i := len(d.stack) - 1; i >= 0; i-- {
 			if err := d.bw.WriteByte(d.stack[i]); err != nil {

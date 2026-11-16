@@ -261,7 +261,7 @@ const (
 // Anything that is not provably ours (a real file, a foreign symlink, or an
 // entry we cannot inspect) is treated as foreign so it is never removed.
 func classifySlot(path, self string) slot {
-	fi, err := os.Lstat(path)
+	fi, err := os.Lstat(path) // #nosec G703 -- the applet link path is built from --install's target directory and a registered applet name
 	if err != nil {
 		if os.IsNotExist(err) {
 			return slotFree
@@ -305,7 +305,7 @@ func install(mimixboxPath string, installPath string, full bool, stdio command.I
 			// alone; --full-install refreshes it so its target is corrected if
 			// the binary moved.
 			if full {
-				if err := os.Remove(newPath); err != nil {
+				if err := os.Remove(newPath); err != nil { // #nosec G703 -- removes only a link classifySlot proved points at this binary, inside the --install target directory
 					_, _ = fmt.Fprintln(stdio.Err, err)
 					continue
 				}
@@ -374,7 +374,7 @@ func remove(mimixboxPath string, installPath string, stdio command.IO) error {
 		if !ownedBySelf(realPath, self) {
 			continue
 		}
-		if err := os.Remove(symbolicPath); err != nil {
+		if err := os.Remove(symbolicPath); err != nil { // #nosec G703 -- removes only a link ownedBySelf proved points at this binary, inside the --remove target directory
 			_, _ = fmt.Fprintln(stdio.Err, err)
 			continue
 		}

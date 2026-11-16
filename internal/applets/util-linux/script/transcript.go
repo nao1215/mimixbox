@@ -58,7 +58,7 @@ func formatTiming(timing []entry) string {
 
 // readTiming parses a "delay bytes" timing file.
 func readTiming(path string) ([]entry, error) {
-	f, err := os.Open(path) //nolint:gosec // user-named file
+	f, err := os.Open(path) // #nosec G304 -- user-named file
 	if err != nil {
 		return nil, err
 	}

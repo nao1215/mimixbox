@@ -81,7 +81,7 @@ func (c *Command) runScript(ctx context.Context, stdio command.IO, args []string
 	}
 
 	rec := &recorder{mirror: stdio.Out}
-	cmd := exec.CommandContext(ctx, "sh", "-c", *cmdStr) //nolint:gosec // running the user's command is the point
+	cmd := exec.CommandContext(ctx, "sh", "-c", *cmdStr) // #nosec G204 -- running the user's command is the point
 	cmd.Stdin = stdio.In
 	cmd.Stdout = rec
 	cmd.Stderr = rec
@@ -96,13 +96,13 @@ func (c *Command) runScript(ctx context.Context, stdio command.IO, args []string
 	fmt.Fprintf(&b, "Script started on %s [COMMAND=%q]\n", started, *cmdStr)
 	b.Write(rec.buf.Bytes())
 	fmt.Fprintf(&b, "\nScript done on %s [COMMAND_EXIT_CODE=%q]\n", started, strconv.Itoa(exitCode))
-	if err := os.WriteFile(typescript, []byte(b.String()), 0o644); err != nil { //nolint:gosec // user-named file
+	if err := os.WriteFile(typescript, []byte(b.String()), 0o644); err != nil { // #nosec G306 -- user-named file
 		_, _ = fmt.Fprintf(stdio.Err, "script: %v\n", err)
 		return command.SilentFailure()
 	}
 
 	if *timingFile != "" {
-		if err := os.WriteFile(*timingFile, []byte(formatTiming(rec.timing)), 0o644); err != nil { //nolint:gosec // user-named file
+		if err := os.WriteFile(*timingFile, []byte(formatTiming(rec.timing)), 0o644); err != nil { // #nosec G306 -- user-named file
 			_, _ = fmt.Fprintf(stdio.Err, "script: %v\n", err)
 			return command.SilentFailure()
 		}

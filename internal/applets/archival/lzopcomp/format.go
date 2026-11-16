@@ -92,7 +92,7 @@ func writeHeader(w io.Writer) error {
 	_ = binary.Write(&hdr, binary.BigEndian, uint32(0)) // mode
 	_ = binary.Write(&hdr, binary.BigEndian, uint32(0)) // mtime low
 	_ = binary.Write(&hdr, binary.BigEndian, uint32(0)) // mtime high
-	hdr.WriteByte(0)                                     // file name length (none)
+	hdr.WriteByte(0)                                    // file name length (none)
 
 	// Header checksum covers everything written so far (after the magic).
 	sum := adler32.Checksum(hdr.Bytes())
@@ -118,15 +118,15 @@ func writeBlock(w io.Writer, src []byte) error {
 	storeCompChecksum := false
 	if len(comp) < len(src) {
 		payload = comp
-		compLen = uint32(len(comp))
+		compLen = uint32(len(comp)) // #nosec G115 -- len(comp) < len(src) <= maxBlockSize (compressStream reads at most maxBlockSize per block)
 		storeCompChecksum = true
 	} else {
 		// Incompressible: store the original bytes verbatim.
 		payload = src
-		compLen = uint32(len(src))
+		compLen = uint32(len(src)) // #nosec G115 -- len(src) <= maxBlockSize (compressStream reads at most maxBlockSize per block)
 	}
 
-	if err := binary.Write(w, binary.BigEndian, uint32(len(src))); err != nil {
+	if err := binary.Write(w, binary.BigEndian, uint32(len(src))); err != nil { // #nosec G115 -- len(src) <= maxBlockSize (compressStream reads at most maxBlockSize per block)
 		return err
 	}
 	if err := binary.Write(w, binary.BigEndian, compLen); err != nil {

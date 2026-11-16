@@ -49,7 +49,7 @@ func (c *Command) action(opts options) int {
 // via the replaceable rebootFn so tests stay safe.
 func (c *Command) stop(opts options) error {
 	if !opts.noSync && !opts.force {
-		syncFn()
+		syncFn() // #nosec G104 -- sync(2) is void (Linux returns no error; darwin's wrapper only reports errno, which sync never sets); halt proceeds as BusyBox halt does
 	}
 	if err := rebootFn(c.action(opts)); err != nil {
 		return command.Failure(err)

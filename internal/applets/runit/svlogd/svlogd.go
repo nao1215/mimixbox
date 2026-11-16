@@ -54,7 +54,7 @@ func (c *Command) Run(_ context.Context, stdio command.IO, args []string) error 
 		return command.Failuref("a log directory is required")
 	}
 	dir := rest[0]
-	if err := os.MkdirAll(dir, 0o755); err != nil {
+	if err := os.MkdirAll(dir, 0o755); err != nil { // #nosec G301 -- the log directory the user named is created 0755 before umask, like mkdir -p
 		return command.Failuref("cannot create %s: %v", dir, err)
 	}
 
@@ -87,7 +87,7 @@ type writer struct {
 
 func newWriter(dir string) (*writer, error) {
 	current := filepath.Join(dir, "current")
-	f, err := os.OpenFile(current, os.O_CREATE|os.O_WRONLY|os.O_APPEND, 0o644) //nolint:gosec // log file
+	f, err := os.OpenFile(current, os.O_CREATE|os.O_WRONLY|os.O_APPEND, 0o644) // #nosec G302 G304 -- log file
 	if err != nil {
 		return nil, err
 	}
@@ -116,7 +116,7 @@ func (w *writer) rotate() error {
 	if err := os.Rename(w.current, rotated); err != nil {
 		return err
 	}
-	f, err := os.OpenFile(w.current, os.O_CREATE|os.O_WRONLY|os.O_APPEND, 0o644) //nolint:gosec // log file
+	f, err := os.OpenFile(w.current, os.O_CREATE|os.O_WRONLY|os.O_APPEND, 0o644) // #nosec G302 -- log file
 	if err != nil {
 		return err
 	}

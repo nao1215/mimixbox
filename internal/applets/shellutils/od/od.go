@@ -309,9 +309,9 @@ func hexUnit(b []byte) string {
 
 func signedUnit(b []byte) string {
 	if len(b) == 1 {
-		return fmt.Sprintf("%d", int8(b[0]))
+		return fmt.Sprintf("%d", int8(b[0])) // #nosec G115 -- od -d prints the byte as a signed char
 	}
-	return fmt.Sprintf("%d", int16(little(b)))
+	return fmt.Sprintf("%d", int16(little(b))) // #nosec G115 -- od -s prints the 2-byte unit as a signed short
 }
 
 func unsignedUnit(b []byte) string {

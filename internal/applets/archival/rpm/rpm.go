@@ -76,7 +76,7 @@ func (c *Command) Run(_ context.Context, stdio command.IO, args []string) error 
 
 // queryFile prints the requested view of one package file.
 func (c *Command) queryFile(stdio command.IO, name string, info, list bool) error {
-	f, err := os.Open(name) //nolint:gosec // user-named file
+	f, err := os.Open(name) // #nosec G304 -- user-named file
 	if err != nil {
 		return fmt.Errorf("%s", command.FileError(name, err))
 	}

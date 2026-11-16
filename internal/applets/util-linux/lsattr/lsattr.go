@@ -48,7 +48,7 @@ var attrFlags = []struct {
 
 // getFlags is indirected so the decoding can be tested without a real ioctl.
 var getFlags = func(path string) (int, error) {
-	f, err := os.Open(path) //nolint:gosec // user-named file
+	f, err := os.Open(path) // #nosec G304 -- user-named file
 	if err != nil {
 		return 0, err
 	}

@@ -132,7 +132,7 @@ func handleRequest(pc net.PacketConn, raddr net.Addr, req []byte, root string) {
 		_, _ = pc.WriteTo(ErrorPacket(2, "access violation"), raddr)
 		return
 	}
-	data, err := os.ReadFile(path)
+	data, err := os.ReadFile(path) // #nosec G304 -- safeJoin confines the client's file name to the served root directory
 	if err != nil {
 		_, _ = pc.WriteTo(ErrorPacket(1, "file not found"), raddr)
 		return

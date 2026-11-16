@@ -93,7 +93,7 @@ func (c *Command) Run(ctx context.Context, stdio command.IO, args []string) erro
 // the program's stdin/stdout.
 func execHandler(ctx context.Context, prog string, args []string) ConnHandler {
 	return func(conn net.Conn) error {
-		cmd := exec.CommandContext(ctx, prog, args...)
+		cmd := exec.CommandContext(ctx, prog, args...) // #nosec G204 -- runs the program the user named on the command line for each connection, which is what tcpsvd does
 		cmd.Stdin = conn
 		cmd.Stdout = conn
 		return cmd.Run()

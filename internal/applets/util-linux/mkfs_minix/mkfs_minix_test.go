@@ -106,3 +106,18 @@ func TestErrors(t *testing.T) {
 		t.Errorf("a too-small device should fail")
 	}
 }
+
+// TestRejectsMoreThan65535Blocks covers a block count past the 16-bit zone
+// count of the Minix v1 superblock. It used to be truncated, so 65536 blocks
+// produced a superblock claiming 0 zones.
+func TestRejectsMoreThan65535Blocks(t *testing.T) {
+	img := makeImage(t, 64)
+	if err := run(t, img, "65536"); err == nil {
+		data, _ := os.ReadFile(img)
+		t.Errorf("65536 blocks accepted; superblock nzones = %d",
+			binary.LittleEndian.Uint16(data[blockSize+2:]))
+	}
+	if err := run(t, img, "65535"); err != nil {
+		t.Errorf("65535 blocks rejected: %v", err)
+	}
+}

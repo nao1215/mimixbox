@@ -47,14 +47,14 @@ var (
 	}
 	getParam = func(pid int) (int, error) {
 		var p int32
-		if _, _, errno := unix.Syscall(unix.SYS_SCHED_GETPARAM, uintptr(pid), uintptr(unsafe.Pointer(&p)), 0); errno != 0 {
+		if _, _, errno := unix.Syscall(unix.SYS_SCHED_GETPARAM, uintptr(pid), uintptr(unsafe.Pointer(&p)), 0); errno != 0 { // #nosec G103 -- sched_getparam(2) takes a pointer to struct sched_param
 			return 0, errno
 		}
 		return int(p), nil
 	}
 	setScheduler = func(pid, policy, priority int) error {
 		p := int32(priority)
-		if _, _, errno := unix.Syscall(unix.SYS_SCHED_SETSCHEDULER, uintptr(pid), uintptr(policy), uintptr(unsafe.Pointer(&p))); errno != 0 {
+		if _, _, errno := unix.Syscall(unix.SYS_SCHED_SETSCHEDULER, uintptr(pid), uintptr(policy), uintptr(unsafe.Pointer(&p))); errno != 0 { // #nosec G103 -- sched_setscheduler(2) takes a pointer to struct sched_param
 			return errno
 		}
 		return nil
@@ -153,7 +153,7 @@ func (c *Command) Run(ctx context.Context, stdio command.IO, args []string) erro
 	if err := setScheduler(0, policy, priority); err != nil {
 		return command.Failuref("failed to set policy: %v", err)
 	}
-	cmd := exec.CommandContext(ctx, rest[0], rest[1:]...) //nolint:gosec // running the user's command is the point
+	cmd := exec.CommandContext(ctx, rest[0], rest[1:]...) // #nosec G204 -- running the user's command is the point
 	cmd.Stdin, cmd.Stdout, cmd.Stderr = stdio.In, stdio.Out, stdio.Err
 	if err := cmd.Run(); err != nil {
 		var exitErr *exec.ExitError

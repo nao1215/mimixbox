@@ -188,7 +188,7 @@ func extractControl(pkg *Package, rest []string) error {
 	if err != nil {
 		return err
 	}
-	if err := os.MkdirAll(dest, 0o755); err != nil {
+	if err := os.MkdirAll(dest, 0o755); err != nil { // #nosec G301 -- the user-named control directory is created 0755 before umask, like mkdir -p
 		return err
 	}
 	absDest, err := filepath.Abs(dest)
@@ -204,10 +204,10 @@ func extractControl(pkg *Package, rest []string) error {
 		if err != nil {
 			return err
 		}
-		if err := os.MkdirAll(filepath.Dir(target), 0o755); err != nil {
+		if err := os.MkdirAll(filepath.Dir(target), 0o755); err != nil { // #nosec G301 -- parent directories of extracted control files are created 0755 before umask, like mkdir -p
 			return err
 		}
-		if err := os.WriteFile(target, data, 0o644); err != nil { //nolint:gosec // control files are world-readable by convention
+		if err := os.WriteFile(target, data, 0o644); err != nil { // #nosec G306 -- control files are world-readable by convention
 			return err
 		}
 	}

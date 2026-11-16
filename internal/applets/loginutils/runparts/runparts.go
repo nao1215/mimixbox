@@ -86,7 +86,7 @@ func (c *Command) Run(_ context.Context, stdio command.IO, args []string) error 
 		if *verbose {
 			_, _ = fmt.Fprintf(stdio.Err, "run-parts: executing %s\n", path)
 		}
-		cmd := exec.Command(path, *extraArgs...) //nolint:gosec // running the directory's programs is the point
+		cmd := exec.Command(path, *extraArgs...) // #nosec G204 -- running the directory's programs is the point
 		cmd.Stdin, cmd.Stdout, cmd.Stderr = stdio.In, stdio.Out, stdio.Err
 		if err := cmd.Run(); err != nil {
 			var ee *exec.ExitError

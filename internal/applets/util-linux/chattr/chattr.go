@@ -34,7 +34,7 @@ var attrBits = map[byte]uint{
 // getFlags and setFlags are indirected so the logic is testable without ioctls.
 var (
 	getFlags = func(path string) (int, error) {
-		f, err := os.Open(path) //nolint:gosec // user-named file
+		f, err := os.Open(path) // #nosec G304 -- user-named file
 		if err != nil {
 			return 0, err
 		}
@@ -42,7 +42,7 @@ var (
 		return unix.IoctlGetInt(int(f.Fd()), unix.FS_IOC_GETFLAGS)
 	}
 	setFlags = func(path string, flags int) error {
-		f, err := os.Open(path) //nolint:gosec // user-named file
+		f, err := os.Open(path) // #nosec G304 -- user-named file
 		if err != nil {
 			return err
 		}

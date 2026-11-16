@@ -48,7 +48,7 @@ var (
 		if spec.setNice {
 			_ = unix.Setpriority(unix.PRIO_PROCESS, 0, spec.nice)
 		}
-		cmd := exec.CommandContext(ctx, spec.prog, spec.args...) //nolint:gosec // running the user's program is the point
+		cmd := exec.CommandContext(ctx, spec.prog, spec.args...) // #nosec G204 -- running the user's program is the point
 		cmd.Env = spec.env
 		cmd.Stdin, cmd.Stdout, cmd.Stderr = stdio.In, stdio.Out, stdio.Err
 		if spec.setCreds {
@@ -151,7 +151,7 @@ func applyDir(env []string, dir string) ([]string, error) {
 		if e.IsDir() || strings.ContainsRune(e.Name(), '=') {
 			continue
 		}
-		data, err := os.ReadFile(dir + "/" + e.Name()) //nolint:gosec // env directory file
+		data, err := os.ReadFile(dir + "/" + e.Name()) // #nosec G304 -- env directory file
 		if err != nil {
 			return nil, err
 		}

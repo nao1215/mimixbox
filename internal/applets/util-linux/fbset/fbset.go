@@ -34,7 +34,7 @@ type varScreenInfo struct {
 
 // readVarFn is indirected so the formatting can be tested without a framebuffer.
 var readVarFn = func(device string) (varScreenInfo, error) {
-	f, err := os.Open(device) //nolint:gosec // user-named framebuffer device
+	f, err := os.Open(device) // #nosec G304 -- user-named framebuffer device
 	if err != nil {
 		return varScreenInfo{}, err
 	}
@@ -43,7 +43,7 @@ var readVarFn = func(device string) (varScreenInfo, error) {
 	// The kernel writes struct fb_var_screeninfo in host byte order, so read the
 	// leading fields through a matching struct rather than a fixed endianness.
 	var raw fbVarScreenInfo
-	_, _, errno := unix.Syscall(unix.SYS_IOCTL, f.Fd(), fbioGetVScreenInfo, uintptr(unsafe.Pointer(&raw)))
+	_, _, errno := unix.Syscall(unix.SYS_IOCTL, f.Fd(), fbioGetVScreenInfo, uintptr(unsafe.Pointer(&raw))) // #nosec G103 -- the FBIOGET_VSCREENINFO ioctl ABI takes a pointer to struct fb_var_screeninfo
 	if errno != 0 {
 		return varScreenInfo{}, errno
 	}

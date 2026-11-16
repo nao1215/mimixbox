@@ -28,7 +28,7 @@ func (c *Command) Synopsis() string { return "Run a program in another process's
 // setnsFn is indirected so entering namespaces can be tested without privilege.
 // It receives the /proc/PID/ns/<type> path to enter.
 var setnsFn = func(nsPath string) error {
-	f, err := os.Open(nsPath) //nolint:gosec // /proc namespace path
+	f, err := os.Open(nsPath) // #nosec G304 -- /proc namespace path
 	if err != nil {
 		return err
 	}
@@ -95,7 +95,7 @@ func (c *Command) Run(_ context.Context, stdio command.IO, args []string) error 
 	}
 
 	name, cmdArgs := shellOr(fs.Args())
-	cmd := exec.Command(name, cmdArgs...) //nolint:gosec // user-specified command, as nsenter is designed to run
+	cmd := exec.Command(name, cmdArgs...) // #nosec G204 -- user-specified command, as nsenter is designed to run
 	cmd.Stdin, cmd.Stdout, cmd.Stderr = stdio.In, stdio.Out, stdio.Err
 	if err := cmd.Run(); err != nil {
 		var ee *exec.ExitError

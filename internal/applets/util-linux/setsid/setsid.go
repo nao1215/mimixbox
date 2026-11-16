@@ -49,7 +49,7 @@ func (c *Command) Run(ctx context.Context, stdio command.IO, args []string) erro
 		return command.SilentFailure()
 	}
 
-	cmd := exec.CommandContext(ctx, rest[0], rest[1:]...) //nolint:gosec // running a user-named program is the point
+	cmd := exec.CommandContext(ctx, rest[0], rest[1:]...) // #nosec G204 -- running a user-named program is the point
 	cmd.Stdin, cmd.Stdout, cmd.Stderr = stdio.In, stdio.Out, stdio.Err
 	cmd.SysProcAttr = &syscall.SysProcAttr{Setsid: true}
 	if *ctty {

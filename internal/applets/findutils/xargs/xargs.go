@@ -357,7 +357,7 @@ func exec1(ctx context.Context, stdio command.IO, name string, argv []string, op
 	if opts.verbose {
 		_, _ = fmt.Fprintln(stdio.Err, strings.TrimSpace(name+" "+strings.Join(argv, " ")))
 	}
-	cmd := exec.CommandContext(ctx, name, argv...) //nolint:gosec // running a user-named command is the purpose of xargs
+	cmd := exec.CommandContext(ctx, name, argv...) // #nosec G204 -- running a user-named command is the purpose of xargs
 	cmd.Stdin = stdio.In
 	cmd.Stdout = stdio.Out
 	cmd.Stderr = stdio.Err

@@ -36,7 +36,7 @@ var (
 			return err
 		}
 		// Record the supervised child's pid (not the supervisor's) for sv/svok.
-		_ = os.WriteFile(filepath.Join(dir, "supervise", "pid"),
+		_ = os.WriteFile(filepath.Join(dir, "supervise", "pid"), // #nosec G306 -- the supervise/pid file holds only a pid for sv and svok, which runit also writes 0644
 			[]byte(strconv.Itoa(cmd.Process.Pid)+"\n"), 0o644)
 		return cmd.Wait()
 	}
@@ -97,16 +97,16 @@ func (c *Command) Run(ctx context.Context, stdio command.IO, args []string) erro
 // returning a cleanup that removes the ok file when supervision ends.
 func startSupervise(dir string) (func(), error) {
 	sup := filepath.Join(dir, "supervise")
-	if err := os.MkdirAll(sup, 0o755); err != nil {
+	if err := os.MkdirAll(sup, 0o755); err != nil { // #nosec G301 -- supervise state (pid and markers, no secrets) is read by sv and svok, which may run as another user
 		return nil, err
 	}
 	okPath := filepath.Join(sup, "ok")
-	if err := os.WriteFile(okPath, nil, 0o644); err != nil {
+	if err := os.WriteFile(okPath, nil, 0o644); err != nil { // #nosec G306 -- supervise/ok is an empty marker that sv and svok test for
 		return nil, err
 	}
 	// The control file is part of the supervision contract; fail if it cannot be
 	// created. The pid file is written by each run with the child's pid.
-	if err := os.WriteFile(filepath.Join(sup, "control"), nil, 0o644); err != nil {
+	if err := os.WriteFile(filepath.Join(sup, "control"), nil, 0o644); err != nil { // #nosec G306 -- supervise/control is an empty marker that sv and svok test for
 		return nil, err
 	}
 	return func() { _ = os.Remove(okPath) }, nil

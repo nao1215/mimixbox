@@ -124,7 +124,7 @@ func readDevices() []device {
 }
 
 func attr(dir, name string) string {
-	data, err := os.ReadFile(filepath.Join(dir, name)) //nolint:gosec // sysfs attribute path
+	data, err := os.ReadFile(filepath.Join(dir, name)) // #nosec G304 -- sysfs attribute path
 	if err != nil {
 		return ""
 	}

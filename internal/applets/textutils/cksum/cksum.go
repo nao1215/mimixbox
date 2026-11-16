@@ -126,7 +126,7 @@ func checksumReader(r io.Reader) (uint32, int64, error) {
 		}
 	}
 	for n := total; n != 0; n >>= 8 {
-		crc = (crc << 8) ^ crcTable[byte(crc>>24)^byte(n)]
+		crc = (crc << 8) ^ crcTable[byte(crc>>24)^byte(n)] // #nosec G115 -- POSIX cksum feeds the length one low-order byte at a time
 	}
 	return ^crc, total, nil
 }

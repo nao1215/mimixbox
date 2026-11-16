@@ -130,7 +130,7 @@ func writeUU(w io.Writer, name string, r io.Reader) error {
 // 4-character groups) and returns the first write error. bufio.Writer is sticky,
 // so the final WriteByte reflects any earlier failure.
 func writeUULine(bw *bufio.Writer, line []byte) error {
-	_ = bw.WriteByte(enc(byte(len(line))))
+	_ = bw.WriteByte(enc(byte(len(line)))) // #nosec G115 -- uuencode lines hold at most 45 bytes
 	for i := 0; i < len(line); i += 3 {
 		var g [3]byte
 		copy(g[:], line[i:])
@@ -245,7 +245,7 @@ func runUudecode(stdio command.IO, args []string) error {
 		_, _ = stdio.Out.Write(data)
 		return nil
 	}
-	if err := os.WriteFile(dest, data, 0o644); err != nil { //nolint:gosec // recreate with the documented default mode
+	if err := os.WriteFile(dest, data, 0o644); err != nil { // #nosec G306 -- recreate with the documented default mode
 		_, _ = fmt.Fprintf(stdio.Err, "uudecode: %v\n", err)
 		return command.SilentFailure()
 	}

@@ -63,8 +63,8 @@ func Unmarshal(b []byte) (*Packet, error) {
 // ToNTP converts a time.Time to an NTP timestamp (seconds in the high 32 bits,
 // fractional seconds in the low 32 bits).
 func ToNTP(t time.Time) uint64 {
-	secs := uint64(t.Unix() + ntpEpochOffset)
-	frac := uint64(t.Nanosecond()) << 32 / 1e9
+	secs := uint64(t.Unix() + ntpEpochOffset)  // #nosec G115 -- NTP seconds are modulo 2^32 (eras); the shift below keeps only the low 32 bits
+	frac := uint64(t.Nanosecond()) << 32 / 1e9 // #nosec G115 -- Nanosecond() is in 0..999999999
 	return secs<<32 | frac
 }
 

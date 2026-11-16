@@ -89,7 +89,7 @@ func (c *Command) Run(_ context.Context, stdio command.IO, args []string) error 
 		return command.Failuref("a device or image is required")
 	}
 
-	f, err := os.OpenFile(rest[0], os.O_RDWR, 0o644) //nolint:gosec // user-named device or image
+	f, err := os.OpenFile(rest[0], os.O_RDWR, 0o644) // #nosec G302 -- user-named device or image
 	if err != nil {
 		return command.Failuref("cannot open %s: %v", rest[0], err)
 	}
@@ -178,7 +178,7 @@ func writeExt2(f *os.File, nblocks int) error {
 	freeBlocks := groupBlocks - l.usedBlocks
 	freeInodes := l.inodes - l.usedInodes
 	reserved := l.blocks / 20
-	ts := uint32(now().Unix())
+	ts := uint32(now().Unix()) // #nosec G115 -- ext2 rev 1 timestamps are 32-bit seconds
 
 	if err := writeAt(f, superblock(l, freeBlocks, freeInodes, reserved, ts), firstDataBlock*blockSize); err != nil {
 		return err
@@ -203,21 +203,21 @@ func writeExt2(f *os.File, nblocks int) error {
 
 func superblock(l layout, freeBlocks, freeInodes, reserved int, ts uint32) []byte {
 	sb := make([]byte, blockSize)
-	le32(sb, 0, uint32(l.inodes))
-	le32(sb, 4, uint32(l.blocks))
-	le32(sb, 8, uint32(reserved))
-	le32(sb, 12, uint32(freeBlocks))
-	le32(sb, 16, uint32(freeInodes))
+	le32(sb, 0, uint32(l.inodes))    // #nosec G115 -- computeLayout caps the filesystem at one 8192-block group, so the inode count is small
+	le32(sb, 4, uint32(l.blocks))    // #nosec G115 -- computeLayout caps blocks at 8192
+	le32(sb, 8, uint32(reserved))    // #nosec G115 -- reserved is blocks/20 and computeLayout caps blocks at 8192
+	le32(sb, 12, uint32(freeBlocks)) // #nosec G115 -- free blocks are below the 8192-block cap from computeLayout
+	le32(sb, 16, uint32(freeInodes)) // #nosec G115 -- free inodes are below the inode count, which the 8192-block cap keeps small
 	le32(sb, 20, firstDataBlock)
 	le32(sb, 24, 0) // log_block_size: 1024 << 0
 	le32(sb, 28, 0) // log_frag_size
 	le32(sb, 32, blocksPerGroup)
-	le32(sb, 36, blocksPerGroup) // frags_per_group
-	le32(sb, 40, uint32(l.inodes))
-	le32(sb, 44, ts)     // mtime
-	le32(sb, 48, ts)     // wtime
-	le16(sb, 52, 0)      // mnt_count
-	le16(sb, 54, 0xFFFF) // max_mnt_count = -1
+	le32(sb, 36, blocksPerGroup)   // frags_per_group
+	le32(sb, 40, uint32(l.inodes)) // #nosec G115 -- computeLayout caps the filesystem at one 8192-block group, so the inode count is small
+	le32(sb, 44, ts)               // mtime
+	le32(sb, 48, ts)               // wtime
+	le16(sb, 52, 0)                // mnt_count
+	le16(sb, 54, 0xFFFF)           // max_mnt_count = -1
 	le16(sb, 56, extMagic)
 	le16(sb, 58, 1)  // state: clean
 	le16(sb, 60, 1)  // errors: continue
@@ -240,12 +240,12 @@ func superblock(l layout, freeBlocks, freeInodes, reserved int, ts uint32) []byt
 func groupDesc(l layout, freeBlocks, freeInodes int) []byte {
 	// The descriptor lives at the start of the GDT block.
 	blk := make([]byte, blockSize)
-	le32(blk, 0, uint32(l.blockBitmapBlock))
-	le32(blk, 4, uint32(l.inodeBitmapBlock))
-	le32(blk, 8, uint32(l.inodeTableBlock))
-	le16(blk, 12, uint16(freeBlocks))
-	le16(blk, 14, uint16(freeInodes))
-	le16(blk, 16, 2) // used_dirs_count: root and lost+found
+	le32(blk, 0, uint32(l.blockBitmapBlock)) // #nosec G115 -- a block number inside the single 8192-block group
+	le32(blk, 4, uint32(l.inodeBitmapBlock)) // #nosec G115 -- a block number inside the single 8192-block group
+	le32(blk, 8, uint32(l.inodeTableBlock))  // #nosec G115 -- a block number inside the single 8192-block group
+	le16(blk, 12, uint16(freeBlocks))        // #nosec G115 -- free blocks are below the 8192-block cap from computeLayout
+	le16(blk, 14, uint16(freeInodes))        // #nosec G115 -- free inodes fit one 1 KiB bitmap block (8192 bits)
+	le16(blk, 16, 2)                         // used_dirs_count: root and lost+found
 	return blk
 }
 
@@ -288,9 +288,9 @@ func dirInode(mode uint16, links int, block int, ts uint32) []byte {
 	le32(ino, 8, ts)             // atime
 	le32(ino, 12, ts)            // ctime
 	le32(ino, 16, ts)            // mtime
-	le16(ino, 26, uint16(links)) // links_count
+	le16(ino, 26, uint16(links)) // #nosec G115 -- links_count: links is 2 or 3 (root and lost+found)
 	le32(ino, 28, blockSize/512) // i_blocks in 512-byte units
-	le32(ino, 40, uint32(block)) // i_block[0]
+	le32(ino, 40, uint32(block)) // #nosec G115 -- i_block[0]: a block number inside the single 8192-block group
 	return ino
 }
 
@@ -329,8 +329,8 @@ func putDirEntryFill(blk []byte, off int, inode uint32, fileType byte, name stri
 
 func writeDirEntry(blk []byte, off int, inode uint32, recLen int, fileType byte, name string) {
 	le32(blk, off, inode)
-	le16(blk, off+4, uint16(recLen))
-	blk[off+6] = byte(len(name))
+	le16(blk, off+4, uint16(recLen)) // #nosec G115 -- rec_len is at most blockSize (1024)
+	blk[off+6] = byte(len(name))     // #nosec G115 -- names are ".", ".." and "lost+found"
 	blk[off+7] = fileType
 	copy(blk[off+8:], name)
 }

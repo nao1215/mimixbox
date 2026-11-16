@@ -89,7 +89,7 @@ func (c *Command) Run(_ context.Context, stdio command.IO, args []string) error 
 
 // probe reads name and returns the first matching filesystem type, or "".
 func probe(name string) (string, error) {
-	f, err := os.Open(name) //nolint:gosec // user-named device/image
+	f, err := os.Open(name) // #nosec G304 -- user-named device/image
 	if err != nil {
 		return "", err
 	}

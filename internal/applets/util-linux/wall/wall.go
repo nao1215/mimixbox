@@ -33,7 +33,7 @@ var (
 	now      = time.Now
 	sender   = defaultSender
 	writeTTY = func(line, text string) error {
-		f, err := os.OpenFile("/dev/"+line, os.O_WRONLY, 0) //nolint:gosec // a terminal device
+		f, err := os.OpenFile("/dev/"+line, os.O_WRONLY, 0) // #nosec G304 -- a terminal device
 		if err != nil {
 			return err
 		}
@@ -96,14 +96,14 @@ func (c *Command) banner(message string) string {
 
 // loggedInLines returns the terminal lines of every USER_PROCESS in utmp.
 func loggedInLines(path string) []string {
-	data, err := os.ReadFile(path) //nolint:gosec // the utmp path
+	data, err := os.ReadFile(path) // #nosec G304 -- the utmp path
 	if err != nil {
 		return nil
 	}
 	var lines []string
 	for off := 0; off+recordSize <= len(data); off += recordSize {
 		rec := data[off : off+recordSize]
-		if int16(binary.LittleEndian.Uint16(rec[typeOffset:])) != userProcess {
+		if int16(binary.LittleEndian.Uint16(rec[typeOffset:])) != userProcess { // #nosec G115 -- utmp ut_type is a C short
 			continue
 		}
 		if line := cstr(rec[lineOffset : lineOffset+fieldLen]); line != "" {

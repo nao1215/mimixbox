@@ -145,7 +145,7 @@ func countTrue(bs ...bool) int {
 // by a concurrent run. If the lockfile cannot be created (e.g. an unprivileged
 // run), fn proceeds without the lock.
 func withLock(path string, fn func() error) error {
-	f, err := os.OpenFile(path+".lock", os.O_CREATE|os.O_RDWR, 0o600) //nolint:gosec // adjacent to the shadow path
+	f, err := os.OpenFile(path+".lock", os.O_CREATE|os.O_RDWR, 0o600) // #nosec G304 -- adjacent to the shadow path
 	if err != nil {
 		return fn()
 	}

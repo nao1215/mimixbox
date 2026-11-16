@@ -78,7 +78,7 @@ type Session func(conn net.Conn) error
 // stream wired to the program's stdin/stdout.
 func execSession(ctx context.Context, prog string, args []string) Session {
 	return func(conn net.Conn) error {
-		cmd := exec.CommandContext(ctx, prog, args...)
+		cmd := exec.CommandContext(ctx, prog, args...) // #nosec G204 -- runs the login program the user named on the command line, which is what telnetd does
 		cmd.Stdin = NewReader(conn)
 		cmd.Stdout = conn
 		return cmd.Run()

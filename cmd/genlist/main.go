@@ -53,7 +53,7 @@ func run() error {
 	if updated == content {
 		return nil // already up to date
 	}
-	return os.WriteFile(readmePath, []byte(updated), 0o644) //nolint:gosec // README is world-readable
+	return os.WriteFile(readmePath, []byte(updated), 0o644) // #nosec G306 G703 -- README is world-readable
 }
 
 // table renders the sorted applet list as a GitHub-flavored Markdown table.

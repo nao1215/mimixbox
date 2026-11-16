@@ -63,7 +63,7 @@ func ServerConfig(certFile, keyFile string) (*tls.Config, error) {
 // skips certificate verification, which the -k/--insecure flag opts into for
 // self-signed loopback servers.
 func ClientConfig(insecure bool) *tls.Config {
-	return &tls.Config{InsecureSkipVerify: insecure} //nolint:gosec // -k is an explicit opt-in for self-signed servers
+	return &tls.Config{InsecureSkipVerify: insecure} // #nosec G402 -- -k is an explicit opt-in for self-signed servers
 }
 
 // Handler handles one accepted TLS connection.

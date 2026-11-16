@@ -51,7 +51,7 @@ var (
 		}
 		defer func() { _ = f.Close() }()
 		var mode int
-		if _, _, errno := unix.Syscall(unix.SYS_IOCTL, f.Fd(), kdgkbMode, uintptr(unsafe.Pointer(&mode))); errno != 0 {
+		if _, _, errno := unix.Syscall(unix.SYS_IOCTL, f.Fd(), kdgkbMode, uintptr(unsafe.Pointer(&mode))); errno != 0 { // #nosec G103 -- the KDGKBMODE ioctl ABI takes a pointer to an int it fills in
 			return 0, errno
 		}
 		return mode, nil

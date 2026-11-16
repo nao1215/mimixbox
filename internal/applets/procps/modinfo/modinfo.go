@@ -111,7 +111,7 @@ type pair struct {
 // key/value pairs. The section is a sequence of NUL-terminated "key=value"
 // strings.
 func readModinfo(name string) ([]pair, error) {
-	f, err := os.Open(name) //nolint:gosec // user-named file
+	f, err := os.Open(name) // #nosec G304 -- user-named file
 	if err != nil {
 		return nil, err
 	}

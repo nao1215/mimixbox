@@ -134,7 +134,7 @@ func readUpdates(r io.Reader, encrypted bool, method crypt.Crypt) (map[string]st
 }
 
 func readLines(path string) ([]string, error) {
-	data, err := os.ReadFile(path) //nolint:gosec // well-known shadow path
+	data, err := os.ReadFile(path) // #nosec G304 -- well-known shadow path
 	if err != nil {
 		return nil, err
 	}

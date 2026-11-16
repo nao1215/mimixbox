@@ -43,7 +43,7 @@ func defaultAppletNames() ([]string, error) {
 		return nil, fmt.Errorf("cannot locate the MimixBox binary: %w", err)
 	}
 	var out bytes.Buffer
-	cmd := exec.Command(self, "--list") //nolint:gosec // re-invoking our own binary
+	cmd := exec.Command(self, "--list") // #nosec G204 -- re-invoking our own binary
 	cmd.Stdout = &out
 	if err := cmd.Run(); err != nil {
 		return nil, fmt.Errorf("cannot read the applet list: %w", err)

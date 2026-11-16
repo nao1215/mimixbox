@@ -94,7 +94,7 @@ func isRegularFile(path string) bool {
 // readFileToStrList reads path and returns it split into lines, each line still
 // carrying its trailing newline.
 func readFileToStrList(path string) ([]string, error) {
-	f, err := os.Open(path) //nolint:gosec // operating on a user-named file is the whole point
+	f, err := os.Open(path) // #nosec G304 -- operating on a user-named file is the whole point
 	if err != nil {
 		return nil, err
 	}

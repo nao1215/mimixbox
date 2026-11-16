@@ -54,6 +54,6 @@ func sync() (err error) {
 			err = fmt.Errorf("%v", r)
 		}
 	}()
-	syscall.Sync()
+	syscall.Sync() // #nosec G104 -- sync(2) is void (Linux returns no error; darwin's wrapper only reports errno, which sync never sets)
 	return nil
 }

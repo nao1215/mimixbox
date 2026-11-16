@@ -33,8 +33,8 @@ install: ## Install mimixbox (with symbolic links) on your system
 
 full-install: ## Install mimixbox and create symbolic links for every applet
 	# Intentionally does NOT depend on the "build" target: the installer is
-	# frequently invoked under sudo (e.g. the Dockerfile runs
-	# "make build && sudo make full-install"), and a sudo-stripped PATH may not
+	# frequently invoked under sudo (e.g. "make build && sudo make full-install"),
+	# and a sudo-stripped PATH may not
 	# expose the Go toolchain. Run "make build" first; the installer also has a
 	# Git-checkout build fallback when the binary is absent.
 	-$(INSTALLER)

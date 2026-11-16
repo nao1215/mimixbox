@@ -80,7 +80,7 @@ func (c *Command) Run(_ context.Context, stdio command.IO, args []string) error 
 // sendControl writes the control character to the service's control file.
 func sendControl(dir, ch string) error {
 	control := filepath.Join(dir, "supervise", "control")
-	f, err := os.OpenFile(control, os.O_WRONLY, 0) //nolint:gosec // the supervise control fifo
+	f, err := os.OpenFile(control, os.O_WRONLY, 0) // #nosec G304 -- the supervise control fifo
 	if err != nil {
 		return fmt.Errorf("not supervised (no %s): %v", control, err)
 	}
@@ -99,7 +99,7 @@ func reportStatus(stdio command.IO, dirs []string) error {
 			continue
 		}
 		state, detail := "run", ""
-		if pid, err := os.ReadFile(filepath.Join(dir, "supervise", "pid")); err == nil { //nolint:gosec // supervise dir
+		if pid, err := os.ReadFile(filepath.Join(dir, "supervise", "pid")); err == nil { // #nosec G304 -- supervise dir
 			if p := strings.TrimSpace(string(pid)); p != "" {
 				detail = " (pid " + p + ")"
 			}

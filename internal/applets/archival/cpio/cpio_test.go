@@ -5,6 +5,7 @@ import (
 	"context"
 	"os"
 	"path/filepath"
+	"runtime"
 	"strings"
 	"testing"
 
@@ -243,5 +244,56 @@ func TestHelp(t *testing.T) {
 		if !strings.Contains(out, want) {
 			t.Errorf("--help output missing %q:\n%s", want, out)
 		}
+	}
+}
+
+// newcHeader builds a newc header with the given mode, file size and name
+// size fields (as raw 8-character strings) followed by name, NUL-terminated
+// and padded to a 4-byte boundary.
+func newcHeader(fileSize, nameSize, name string) []byte {
+	fields := []string{
+		"00000001", "000081A4", "00000000", "00000000", "00000001", "00000000",
+		fileSize, "00000000", "00000000", "00000000", "00000000", nameSize, "00000000",
+	}
+	b := []byte("070701" + strings.Join(fields, ""))
+	b = append(b, name...)
+	b = append(b, 0)
+	for len(b)%4 != 0 {
+		b = append(b, 0)
+	}
+	return b
+}
+
+// TestHugeSizeFieldDoesNotAllocate covers a header whose file size claims
+// 4 GiB while the archive ends right after the name. copy-in used to allocate
+// the whole claimed size before reading a byte of it.
+func TestHugeSizeFieldDoesNotAllocate(t *testing.T) {
+	// Measures process-wide allocations; cannot be parallel.
+	archive := newcHeader("FFFFFFFF", "00000002", "a")
+
+	var before, after runtime.MemStats
+	runtime.ReadMemStats(&before)
+	_, _, err := run(t, archive, "-i", "-t")
+	runtime.ReadMemStats(&after)
+
+	if err == nil {
+		t.Fatal("expected error for a truncated 4 GiB entry")
+	}
+	if grew := after.TotalAlloc - before.TotalAlloc; grew > 64<<20 {
+		t.Errorf("copy-in allocated %d bytes for a %d-byte archive", grew, len(archive))
+	}
+}
+
+// TestInvalidHexField covers a header field that is not hexadecimal. It used
+// to be read as zero, so a garbled name size silently produced an empty name.
+func TestInvalidHexField(t *testing.T) {
+	t.Parallel()
+	archive := newcHeader("00000000", "ZZZZZZZZ", "a")
+	_, errOut, err := run(t, archive, "-i", "-t")
+	if err == nil {
+		t.Fatal("expected error for a non-hex name size")
+	}
+	if !strings.Contains(errOut, "cpio:") {
+		t.Errorf("stderr = %q, want cpio: prefix", errOut)
 	}
 }

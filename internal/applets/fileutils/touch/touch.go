@@ -145,7 +145,7 @@ func touch(file string, opts options) error {
 		if opts.noCreate {
 			return nil
 		}
-		f, err := os.Create(path) //nolint:gosec // operating on a user-named file is the whole point
+		f, err := os.Create(path) // #nosec G304 -- operating on a user-named file is the whole point
 		if err != nil {
 			return err
 		}

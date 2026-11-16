@@ -26,7 +26,7 @@ func (c *Command) Synopsis() string { return "Report block device properties" }
 
 // blockQuery is indirected so the flag dispatch can be tested without a device.
 var blockQuery = func(path, name string) (uint64, error) {
-	f, err := os.OpenFile(path, os.O_RDONLY, 0) //nolint:gosec // user-named device
+	f, err := os.OpenFile(path, os.O_RDONLY, 0) // #nosec G304 -- user-named device
 	if err != nil {
 		return 0, err
 	}
@@ -36,7 +36,7 @@ var blockQuery = func(path, name string) (uint64, error) {
 	switch name {
 	case "getsize64":
 		var sz uint64
-		if _, _, errno := unix.Syscall(unix.SYS_IOCTL, uintptr(fd), uintptr(unix.BLKGETSIZE64), uintptr(unsafe.Pointer(&sz))); errno != 0 {
+		if _, _, errno := unix.Syscall(unix.SYS_IOCTL, uintptr(fd), uintptr(unix.BLKGETSIZE64), uintptr(unsafe.Pointer(&sz))); errno != 0 { // #nosec G103 -- the BLKGETSIZE64 ioctl ABI takes a pointer to a uint64 it fills in
 			return 0, errno
 		}
 		return sz, nil

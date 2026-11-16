@@ -263,7 +263,7 @@ func cp(stdio command.IO, operands []string, opts options) error {
 			prefix := filepath.Dir(src)
 			if prefix != "." && prefix != string(os.PathSeparator) {
 				effectiveDest = filepath.Join(dest, prefix)
-				if err := os.MkdirAll(effectiveDest, 0o755); err != nil {
+				if err := os.MkdirAll(effectiveDest, 0o755); err != nil { // #nosec G301 -- cp --parents creates missing directories 0755 before umask, no wider than GNU cp's 0777 minus umask
 					_, _ = fmt.Fprintf(stdio.Err, "cp: %s\n", err)
 					return command.SilentFailure()
 				}
@@ -432,7 +432,7 @@ func isSubpath(path, base string) bool {
 // copyFileContents writes src's contents to dst, honoring -p (mode and
 // timestamps).
 func copyFileContents(src, dst string, info os.FileInfo, opts options) error {
-	in, err := os.Open(src) //nolint:gosec // operating on a user-named file is the whole point
+	in, err := os.Open(src) // #nosec G304 -- operating on a user-named file is the whole point
 	if err != nil {
 		return err
 	}
@@ -444,13 +444,13 @@ func copyFileContents(src, dst string, info os.FileInfo, opts options) error {
 	// existing destination keeps its own permissions.
 	mode := info.Mode().Perm()
 
-	out, err := os.OpenFile(dst, os.O_WRONLY|os.O_CREATE|os.O_TRUNC, mode) //nolint:gosec // user-named destination
+	out, err := os.OpenFile(dst, os.O_WRONLY|os.O_CREATE|os.O_TRUNC, mode) // #nosec G304 -- user-named destination
 	if err != nil {
 		// cp -f: if an existing destination cannot be opened (for example it is
 		// read-only), remove it and try once more.
 		if opts.force && os.IsPermission(err) {
 			if rmErr := os.Remove(dst); rmErr == nil {
-				out, err = os.OpenFile(dst, os.O_WRONLY|os.O_CREATE|os.O_TRUNC, mode) //nolint:gosec // user-named destination
+				out, err = os.OpenFile(dst, os.O_WRONLY|os.O_CREATE|os.O_TRUNC, mode) // #nosec G304 -- user-named destination
 			}
 		}
 		if err != nil {

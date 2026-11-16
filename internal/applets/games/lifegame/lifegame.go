@@ -168,7 +168,7 @@ func (c *Command) animate(ctx context.Context) error {
 	}
 
 	board := NewBoard(width, height)
-	board.Randomize(rand.New(rand.NewSource(time.Now().UnixNano())))
+	board.Randomize(rand.New(rand.NewSource(time.Now().UnixNano()))) // #nosec G404 -- the random starting board of a game needs no cryptographic randomness
 
 	queue := pollEvent()
 	for {

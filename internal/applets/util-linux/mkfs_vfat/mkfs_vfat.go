@@ -89,7 +89,7 @@ func (c *Command) Run(_ context.Context, stdio command.IO, args []string) error 
 		return command.Failuref("a device or image is required")
 	}
 
-	f, err := os.OpenFile(rest[0], os.O_RDWR, 0o644) //nolint:gosec // user-named device or image
+	f, err := os.OpenFile(rest[0], os.O_RDWR, 0o644) // #nosec G302 -- user-named device or image
 	if err != nil {
 		return command.Failuref("cannot open %s: %v", rest[0], err)
 	}
@@ -117,7 +117,7 @@ func deviceSectors(f *os.File) (int, error) {
 	size := info.Size()
 	if size == 0 {
 		var bytes uint64
-		_, _, errno := unix.Syscall(unix.SYS_IOCTL, f.Fd(), uintptr(unix.BLKGETSIZE64), uintptr(unsafe.Pointer(&bytes)))
+		_, _, errno := unix.Syscall(unix.SYS_IOCTL, f.Fd(), uintptr(unix.BLKGETSIZE64), uintptr(unsafe.Pointer(&bytes))) // #nosec G103 -- the BLKGETSIZE64 ioctl ABI takes a pointer to a uint64 it fills in
 		if errno != 0 {
 			return 0, errno
 		}
@@ -182,19 +182,19 @@ func writeFAT16(f *os.File, totalSectors int, label string, hasLabel bool) error
 	boot[0], boot[1], boot[2] = 0xEB, 0x3C, 0x90 // jump
 	copy(boot[3:11], "MIMIXBOX")
 	binary.LittleEndian.PutUint16(boot[11:], sectorSize)
-	boot[13] = byte(g.sectorsPerCluster)
+	boot[13] = byte(g.sectorsPerCluster) // #nosec G115 -- sectors per cluster comes from clusterSizes (at most 128)
 	binary.LittleEndian.PutUint16(boot[14:], reservedSectors)
 	boot[16] = numFATs
 	binary.LittleEndian.PutUint16(boot[17:], rootEntries)
 	if totalSectors < 0x10000 {
-		binary.LittleEndian.PutUint16(boot[19:], uint16(totalSectors))
+		binary.LittleEndian.PutUint16(boot[19:], uint16(totalSectors)) // #nosec G115 -- guarded by totalSectors < 0x10000
 	}
 	boot[21] = mediaByte
-	binary.LittleEndian.PutUint16(boot[22:], uint16(g.sectorsPerFAT))
-	binary.LittleEndian.PutUint16(boot[24:], 32) // sectors per track
-	binary.LittleEndian.PutUint16(boot[26:], 64) // heads
+	binary.LittleEndian.PutUint16(boot[22:], uint16(g.sectorsPerFAT)) // #nosec G115 -- computeGeometry keeps clusters within FAT16 (<= 65524), so one FAT is at most 256 sectors
+	binary.LittleEndian.PutUint16(boot[24:], 32)                      // sectors per track
+	binary.LittleEndian.PutUint16(boot[26:], 64)                      // heads
 	if totalSectors >= 0x10000 {
-		binary.LittleEndian.PutUint32(boot[32:], uint32(totalSectors))
+		binary.LittleEndian.PutUint32(boot[32:], uint32(totalSectors)) // #nosec G115 -- computeGeometry accepts only FAT16 sizes (<= 65524 clusters of at most 128 sectors), far below 2^32 sectors
 	}
 	boot[36] = 0x80 // drive number
 	boot[38] = 0x29 // extended boot signature

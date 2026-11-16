@@ -73,7 +73,7 @@ func (c *Command) Run(_ context.Context, stdio command.IO, args []string) error 
 
 // readVolumeName reads and trims the ISO 9660 volume identifier from device.
 func readVolumeName(device string) (string, error) {
-	f, err := os.Open(device) //nolint:gosec // user-named device/image
+	f, err := os.Open(device) // #nosec G304 -- user-named device/image
 	if err != nil {
 		return "", err
 	}

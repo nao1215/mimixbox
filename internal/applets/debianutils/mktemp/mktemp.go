@@ -148,7 +148,7 @@ func generate(path string, directory, dryRun bool) (string, error) {
 			}
 			return name, nil
 		}
-		f, derr := os.OpenFile(name, os.O_RDWR|os.O_CREATE|os.O_EXCL, 0o600)
+		f, derr := os.OpenFile(name, os.O_RDWR|os.O_CREATE|os.O_EXCL, 0o600) // #nosec G304 -- the name comes from the user's TEMPLATE with random characters filled in; O_EXCL refuses an existing file
 		if derr != nil {
 			if os.IsExist(derr) {
 				continue
