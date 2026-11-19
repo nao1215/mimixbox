@@ -7,6 +7,12 @@ on:
   workflow_dispatch:
 permissions:
   contents: read
+
+# A new push to a pull request cancels the run of the push before it;
+# runs on main and on a schedule are never canceled.
+concurrency:
+  group: ${{ github.workflow }}-${{ github.event.pull_request.number || github.run_id }}
+  cancel-in-progress: ${{ github.event_name == 'pull_request' }}
 # After editing any workflow, regenerate actions.lock with
 # `python3 scripts/lock_actions.py` (needs `gh extension install github/gh-actions-lock`).
 # It keeps the full-SHA references that Scorecard reads.

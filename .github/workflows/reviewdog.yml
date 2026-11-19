@@ -4,6 +4,12 @@ on: [pull_request]
 permissions:
   contents: read
 
+# A new push to a pull request cancels the run of the push before it;
+# runs on main and on a schedule are never canceled.
+concurrency:
+  group: ${{ github.workflow }}-${{ github.event.pull_request.number || github.run_id }}
+  cancel-in-progress: ${{ github.event_name == 'pull_request' }}
+
 jobs:
   golangci-lint:
     # Advisory: named apart from golangci-lint.yml, whose "golangci-lint" job is

@@ -9,6 +9,12 @@ on:
 permissions:
   contents: read
 
+# A new push to a pull request cancels the run of the push before it;
+# runs on main and on a schedule are never canceled.
+concurrency:
+  group: ${{ github.workflow }}-${{ github.event.pull_request.number || github.run_id }}
+  cancel-in-progress: ${{ github.event_name == 'pull_request' }}
+
 jobs:
   # The matrix is the floor and the ceiling of the supported Go range. The floor
   # is the lowest Go that builds MimixBox without source changes (it is what
