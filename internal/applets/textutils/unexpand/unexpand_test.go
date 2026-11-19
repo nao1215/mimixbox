@@ -49,6 +49,10 @@ func TestRunStdin(t *testing.T) {
 		{"lone space after a word kept with -t 1", "a b\n", []string{"-t", "1"}, "a b\n"},
 		{"a tab one column wide stays a tab", "aaaaaaa\tb\n", []string{"-a"}, "aaaaaaa\tb\n"},
 		{"run past two tab stops", "aaaaaaa         b\n", []string{"-a"}, "aaaaaaa\t\tb\n"},
+		// Without -a only the leading blanks are rewritten; the blanks after
+		// the first non-blank are written as they were, tabs included.
+		{"inner tab kept by default", "a\tb\n", nil, "a\tb\n"},
+		{"inner spaces and tab kept by default", "a  \t b\n", nil, "a  \t b\n"},
 	}
 	for _, tt := range tests {
 		tt := tt
