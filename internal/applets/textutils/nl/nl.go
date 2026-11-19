@@ -93,6 +93,7 @@ func (c *Command) Run(_ context.Context, stdio command.IO, args []string) error 
 		FooterStyle:    footerStyle,
 		FooterRegexp:   footerRe,
 		JoinBlankLines: *join,
+		TerminateLines: true,
 	}
 
 	files := fs.Args()

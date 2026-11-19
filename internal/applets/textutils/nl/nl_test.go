@@ -32,6 +32,12 @@ func TestRun(t *testing.T) {
 		{"number none", "a\nb\n", []string{"-b", "n"}, "       a\n       b\n"},
 		{"separator and width", "a\n", []string{"-s", ": ", "-w", "3"}, "  1: a\n"},
 		{"zero format", "a\n", []string{"-n", "rz", "-w", "3"}, "001\ta\n"},
+		// GNU nl ends every line it writes with a newline, the last one too
+		// when the input stops without one; cat -n, which numbers the same
+		// way, does not add one.
+		{"last line without a newline", "a\nb", nil, "     1\ta\n     2\tb\n"},
+		{"unnumbered last line without a newline", "a\n\t", []string{"-b", "n"}, "       a\n       \t\n"},
+		{"section delimiter without a newline", "a\n\\:\\:", nil, "     1\ta\n\n"},
 		{"start and increment", "a\nb\n", []string{"-v", "5", "-i", "5", "-b", "a"}, "     5\ta\n    10\tb\n"},
 	}
 	for _, tt := range tests {

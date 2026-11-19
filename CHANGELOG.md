@@ -12,6 +12,7 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 - `base64` and `base32` write nothing for empty input and no trailing newline with `-w 0`, as GNU does. They wrote a lone newline for empty input and ended `-w 0` output with one.
 - `fold` counts columns as GNU fold does: a tab runs to the next multiple of eight, a backspace moves back one column and a carriage return goes back to the start, and `-s` also breaks after a tab. It counted each of them as one column.
 - `fold` ends a last line that has no newline without one, and keeps a carriage return before a newline, as GNU fold does. It added a newline to the last line and dropped the carriage return.
+- `nl` ends a last line that has no newline with one, as GNU nl does. `cat -n`, which also writes no newline it did not read in GNU, is unchanged.
 - `uncompress` and `compress -d` return `corrupt input` for a code beyond the next dictionary entry, instead of expanding forever.
 - `cpio -i` reads an entry body as it arrives instead of allocating the size the header claims, and rejects a header field that is not hexadecimal. A 112-byte archive claiming a 4 GiB file no longer allocates 4 GiB. `cpio -o` refuses a file over 4 GiB, which newc cannot record.
 - `zippwcrack` returns an error for a Zip64 entry whose compressed size exceeds 2^63 bytes, instead of panicking.

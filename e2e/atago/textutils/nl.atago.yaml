@@ -136,3 +136,15 @@ scenarios:
           exit_code: { not: 0 }
           stderr:
             equals: "nl: no_exist_file: no such file or directory"
+
+  # GNU nl ends every line it writes with a newline. "     1", a tab, "a"
+  # and a newline are nine bytes.
+  - name: ends a last line without a newline with one
+    steps:
+      - run:
+          shell: true
+          command: printf "a" | nl | wc -c
+      - assert:
+          exit_code: 0
+          stdout:
+            equals: "9"
