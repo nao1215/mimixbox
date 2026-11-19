@@ -144,7 +144,9 @@ func renderStream(w io.Writer, r io.Reader, opts options) error {
 				if opts.showTabs {
 					body = strings.ReplaceAll(body, "\t", "^I")
 				}
-				if opts.showEnds {
+				// -E marks a newline; a last line without one gets no $,
+				// as in GNU cat.
+				if opts.showEnds && nl != "" {
 					body += "$"
 				}
 				if _, werr := io.WriteString(w, body+nl); werr != nil {
