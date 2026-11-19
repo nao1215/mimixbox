@@ -602,6 +602,19 @@ $ serial -n photo .             # photo0, photo1, ... in the current directory
 $ serial -d -n photo .          # dry run: print the renames without applying them
 ```
 
+## Testing
+
+| Technique | Bug class caught here |
+|---|---|
+| [Unit tests](internal/applets) | An applet that writes the wrong output or exit status for an option |
+| [End-to-end scenarios](e2e/atago) | The binary and its applet names behaving differently from the unit under test |
+| [Differential tests against GNU coreutils](internal/applets/differential_test.go) | Output or exit status that differs from GNU coreutils on generated input |
+| [Fuzzing](.github/workflows/fuzz.yml) | Panics and hangs in decoders and option parsers on malformed input |
+| [Mutation testing](.github/workflows/mutation.yml) | Logic a change can break without a test failing |
+| [himorime benchmarks](bench) | A pull request that makes an applet slower or larger in memory than its base |
+
+The commands, the recorded mutation scores and where each runs in CI are in [doc/testing.md](doc/testing.md).
+
 ## Development
 
 ### Tools & Libraries

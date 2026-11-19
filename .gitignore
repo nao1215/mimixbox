@@ -42,3 +42,5 @@ cover.html
 
 # Isolated applet staging directory built by `make e2e-setup`
 test/it/.mbbin/
+# rapid writes a failing input here; it is a local artifact
+internal/**/testdata/rapid/

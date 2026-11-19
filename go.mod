@@ -16,6 +16,7 @@ require (
 	golang.org/x/sys v0.50.0
 	golang.org/x/term v0.48.0
 	modernc.org/sqlite v1.61.1
+	pgregory.net/rapid v1.3.0
 )
 
 require (
