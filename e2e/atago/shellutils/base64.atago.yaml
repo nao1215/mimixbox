@@ -57,3 +57,25 @@ scenarios:
           exit_code: { not: 0 }
           stderr:
             equals: "base64: /no_exist_file: no such file or directory"
+
+  # GNU base64 ends the last line with a newline only when it wraps lines.
+  # The byte counts show what equals cannot: whether a newline was written.
+  - name: writes nothing for empty input
+    steps:
+      - run:
+          shell: true
+          command: printf '' | base64 | wc -c
+      - assert:
+          exit_code: 0
+          stdout:
+            equals: "0"
+
+  - name: writes the encoding without a newline with -w 0
+    steps:
+      - run:
+          shell: true
+          command: printf 'a' | base64 -w 0 | wc -c
+      - assert:
+          exit_code: 0
+          stdout:
+            equals: "4"

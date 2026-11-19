@@ -53,8 +53,13 @@ func TestRun(t *testing.T) {
 		{"encode", "hello\n", nil, "aGVsbG8K\n"},
 		{"decode round trip", "aGVsbG8K\n", []string{"-d"}, "hello\n"},
 		{"decode long flag", "aGVsbG8K\n", []string{"--decode"}, "hello\n"},
-		{"wrap zero no wrap", strings.Repeat("\x00", 60), []string{"-w", "0"},
-			strings.Repeat("A", 80) + "\n"},
+		// GNU base64 ends the last line with a newline only when it wraps
+		// lines: -w 0 writes the encoding alone, and no input writes nothing.
+		{"wrap zero writes no newline", strings.Repeat("\x00", 60), []string{"-w", "0"},
+			strings.Repeat("A", 80)},
+		{"empty input writes nothing", "", nil, ""},
+		{"empty input with wrap zero writes nothing", "", []string{"-w", "0"}, ""},
+		{"output ending on the wrap column ends with one newline", "abc", []string{"-w", "4"}, "YWJj\n"},
 		{"wrap at ten", strings.Repeat("\x00", 60), []string{"-w", "10"},
 			"AAAAAAAAAA\nAAAAAAAAAA\nAAAAAAAAAA\nAAAAAAAAAA\nAAAAAAAAAA\nAAAAAAAAAA\nAAAAAAAAAA\nAAAAAAAAAA\n"},
 		{"default wrap at 76", strings.Repeat("\x00", 60), nil,

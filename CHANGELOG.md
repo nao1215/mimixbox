@@ -9,6 +9,7 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ### Fixed
 
+- `base64` and `base32` write nothing for empty input and no trailing newline with `-w 0`, as GNU does. They wrote a lone newline for empty input and ended `-w 0` output with one.
 - `uncompress` and `compress -d` return `corrupt input` for a code beyond the next dictionary entry, instead of expanding forever.
 - `cpio -i` reads an entry body as it arrives instead of allocating the size the header claims, and rejects a header field that is not hexadecimal. A 112-byte archive claiming a 4 GiB file no longer allocates 4 GiB. `cpio -o` refuses a file over 4 GiB, which newc cannot record.
 - `zippwcrack` returns an error for a Zip64 entry whose compressed size exceeds 2^63 bytes, instead of panicking.
