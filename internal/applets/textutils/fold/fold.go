@@ -4,6 +4,7 @@ package fold
 
 import (
 	"bufio"
+	"bytes"
 	"context"
 	"fmt"
 	"io"
@@ -75,14 +76,39 @@ func (c *Command) foldFile(stdio command.IO, name string, width int, spaces bool
 
 	sc := bufio.NewScanner(r)
 	sc.Buffer(make([]byte, 0, 64*1024), command.MaxLineSize)
+	sc.Split(scanLinesKeepingNewline)
 	for sc.Scan() {
-		for _, piece := range foldLine(sc.Text(), width, spaces) {
-			if _, err := io.WriteString(stdio.Out, piece+"\n"); err != nil {
+		line, newline := strings.CutSuffix(sc.Text(), "\n")
+		pieces := foldLine(line, width, spaces)
+		for i, piece := range pieces {
+			// The pieces a line was cut into end with a newline, and
+			// the last ends the way the line did: GNU fold writes no
+			// newline it did not read.
+			if i < len(pieces)-1 || newline {
+				piece += "\n"
+			}
+			if _, err := io.WriteString(stdio.Out, piece); err != nil {
 				return err
 			}
 		}
 	}
 	return sc.Err()
+}
+
+// scanLinesKeepingNewline is bufio.ScanLines without the stripping: a token
+// is a line with its newline, or the last line without one, and a carriage
+// return before the newline stays part of the line.
+func scanLinesKeepingNewline(data []byte, atEOF bool) (int, []byte, error) {
+	if atEOF && len(data) == 0 {
+		return 0, nil, nil
+	}
+	if i := bytes.IndexByte(data, '\n'); i >= 0 {
+		return i + 1, data[:i+1], nil
+	}
+	if atEOF {
+		return len(data), data, nil
+	}
+	return 0, nil, nil
 }
 
 // foldLine splits a single line into chunks no wider than width. When spaces is

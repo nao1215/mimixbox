@@ -17,3 +17,15 @@ scenarios:
               abc
               def
               gh
+
+  # GNU fold writes no newline it did not read. The byte count shows what
+  # equals cannot: "abc", a newline and "de" are six bytes.
+  - name: ends a last line without a newline without one
+    steps:
+      - run:
+          shell: true
+          command: printf 'abcde' | fold -w 3 | wc -c
+      - assert:
+          exit_code: 0
+          stdout:
+            equals: "6"
