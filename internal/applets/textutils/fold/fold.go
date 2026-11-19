@@ -78,18 +78,8 @@ func (c *Command) foldFile(stdio command.IO, name string, width int, spaces bool
 	sc.Buffer(make([]byte, 0, 64*1024), command.MaxLineSize)
 	sc.Split(scanLinesKeepingNewline)
 	for sc.Scan() {
-		line, newline := strings.CutSuffix(sc.Text(), "\n")
-		pieces := foldLine(line, width, spaces)
-		for i, piece := range pieces {
-			// The pieces a line was cut into end with a newline, and
-			// the last ends the way the line did: GNU fold writes no
-			// newline it did not read.
-			if i < len(pieces)-1 || newline {
-				piece += "\n"
-			}
-			if _, err := io.WriteString(stdio.Out, piece); err != nil {
-				return err
-			}
+		if _, err := io.WriteString(stdio.Out, foldLine(sc.Text(), width, spaces)); err != nil {
+			return err
 		}
 	}
 	return sc.Err()
@@ -111,24 +101,76 @@ func scanLinesKeepingNewline(data []byte, atEOF bool) (int, []byte, error) {
 	return 0, nil, nil
 }
 
-// foldLine splits a single line into chunks no wider than width. When spaces is
-// set it prefers to break after the last blank within the chunk, matching
-// "fold -s".
-func foldLine(line string, width int, spaces bool) []string {
-	if line == "" {
-		return []string{""}
-	}
-	var out []string
-	for len(line) > width {
-		cut := width
-		if spaces {
-			if idx := strings.LastIndexAny(line[:width], " \t"); idx > 0 {
-				cut = idx + 1
-			}
+// tabWidth is the distance between tab stops fold assumes.
+const tabWidth = 8
+
+// advance returns the column after c is written at column, the way GNU fold
+// counts: a backspace moves back one, a carriage return goes to the start, a
+// tab goes to the next tab stop and any other byte takes one column.
+func advance(column int, c byte) int {
+	switch c {
+	case '\b':
+		if column > 0 {
+			return column - 1
 		}
-		out = append(out, line[:cut])
-		line = line[cut:]
+		return 0
+	case '\r':
+		return 0
+	case '\t':
+		return column + tabWidth - column%tabWidth
+	default:
+		return column + 1
 	}
-	out = append(out, line)
-	return out
+}
+
+// foldLine folds one line, read with its newline if it had one, so that no
+// output line runs past width columns. It is GNU fold's algorithm: a byte
+// that would end past width starts a new line, unless it is the first of the
+// line, which is then written alone; with spaces, the break goes after the
+// last blank (space or tab) before that byte when there is one. Columns are
+// counted by advance, and a newline is written only where a line is broken
+// or where the input had one.
+func foldLine(line string, width int, spaces bool) string {
+	var out strings.Builder
+	pending := make([]byte, 0, len(line))
+	column := 0
+	for k := 0; k < len(line); k++ {
+		c := line[k]
+		if c == '\n' {
+			out.Write(pending)
+			out.WriteByte('\n')
+			pending, column = pending[:0], 0
+			continue
+		}
+		for {
+			next := advance(column, c)
+			if next <= width {
+				column = next
+				pending = append(pending, c)
+				break
+			}
+			if spaces {
+				if end := bytes.LastIndexAny(pending, " \t"); end >= 0 {
+					out.Write(pending[:end+1])
+					out.WriteByte('\n')
+					pending = append(pending[:0], pending[end+1:]...)
+					column = 0
+					for _, b := range pending {
+						column = advance(column, b)
+					}
+					continue
+				}
+			}
+			if len(pending) == 0 {
+				column = next
+				pending = append(pending, c)
+				break
+			}
+			out.Write(pending)
+			out.WriteByte('\n')
+			pending, column = pending[:0], 0
+		}
+	}
+	out.Write(pending)
+	return out.String()
 }
