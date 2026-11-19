@@ -16,6 +16,9 @@
 #  licenses/gpl.txt, so go-licenses cannot classify it. MimixBox uses it under
 #  the FreeType License: it is skipped here and its LICENSE and ftl.txt are
 #  copied by hand. The README carries the acknowledgement that license asks for.
+#
+#  go-licenses leaves the standard library out, and the binary links it, so the
+#  LICENSE of the Go toolchain that builds it is copied to go/LICENSE.
 set -eu
 
 out=third_party_licenses/linux
@@ -30,3 +33,6 @@ GOOS=linux CGO_ENABLED=0 go-licenses save ./cmd/mimixbox \
 freetype_dir="$(go list -m -f '{{.Dir}}' github.com/golang/freetype)"
 mkdir -p "${out}/github.com/golang/freetype"
 cp "${freetype_dir}/LICENSE" "${freetype_dir}/licenses/ftl.txt" "${out}/github.com/golang/freetype/"
+
+mkdir -p "${out}/go"
+cp "${GOROOT}/LICENSE" "${out}/go/LICENSE"

@@ -30,6 +30,8 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 - CI scans the repository with gosec and Trivy on every pull request (Trivy covers dependency vulnerabilities, committed secrets and misconfigurations, and also runs daily). Workflow actions are recorded in `.github/workflows/actions.lock`, which CI verifies against the pinned commits.
 - Building from source now needs Go 1.26.11 or later (was 1.26.10). Go 1.26.11 fixes the `net/http` advisory GO-2026-6859, which govulncheck finds reachable from mimixbox on the earlier patch.
+- Release archives and packages also carry the license of the Go standard library, at `THIRD_PARTY_LICENSES/go/LICENSE`. go-licenses leaves the standard library out, and the binary links it.
+- CI scans every pull request and push to main for committed secrets with gitleaks, and the end-to-end suite runs with atago v0.26.3.
 
 ## [0.42.6] - 2026-11-09
 
