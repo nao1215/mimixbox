@@ -15,12 +15,9 @@ func TestEncodeNoWrap(t *testing.T) {
 	if err != nil {
 		t.Fatalf("Run error = %v", err)
 	}
-	body := strings.TrimRight(out, "\n")
-	if strings.Contains(body, "\n") {
-		t.Errorf("-w 0 should not wrap, got %d lines: %q", strings.Count(body, "\n")+1, out)
-	}
-	if !strings.HasSuffix(out, "\n") {
-		t.Errorf("output should end with a newline: %q", out)
+	// -w 0 writes the encoding on one line with no newline, as GNU does.
+	if strings.Contains(out, "\n") {
+		t.Errorf("-w 0 should write no newline: %q", out)
 	}
 }
 

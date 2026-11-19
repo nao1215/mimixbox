@@ -151,8 +151,13 @@ func (ww *wrapWriter) Write(p []byte) (int, error) {
 	return total, nil
 }
 
-// finish writes the single trailing newline that GNU base32 always appends.
+// finish ends the last line the way GNU base32 does: with a newline when
+// lines are wrapped and something was written. -w 0 writes the encoding
+// alone, and no input writes nothing.
 func (ww *wrapWriter) finish() error {
+	if ww.cols <= 0 || ww.col == 0 {
+		return nil
+	}
 	_, err := io.WriteString(ww.w, "\n")
 	return err
 }

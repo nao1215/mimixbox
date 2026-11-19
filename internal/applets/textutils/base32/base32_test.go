@@ -69,6 +69,35 @@ func TestWrap(t *testing.T) {
 	}
 }
 
+// GNU base32 ends the last line with a newline only when it wraps lines:
+// -w 0 writes the encoding alone, and no input writes nothing.
+func TestEncodeEndsWithANewlineOnlyWhenWrapping(t *testing.T) {
+	t.Parallel()
+	tests := []struct {
+		name  string
+		stdin string
+		args  []string
+		want  string
+	}{
+		{"empty input writes nothing", "", nil, ""},
+		{"empty input with wrap zero writes nothing", "", []string{"-w", "0"}, ""},
+		{"wrap zero writes no newline", "a", []string{"-w", "0"}, "ME======"},
+		{"wrapped output ends with one newline", "a", []string{"-w", "4"}, "ME==\n====\n"},
+	}
+	for _, tt := range tests {
+		t.Run(tt.name, func(t *testing.T) {
+			t.Parallel()
+			out, _, err := run(t, tt.stdin, tt.args...)
+			if err != nil {
+				t.Fatalf("Run error = %v", err)
+			}
+			if out != tt.want {
+				t.Errorf("out = %q, want %q", out, tt.want)
+			}
+		})
+	}
+}
+
 func TestDecodeInvalid(t *testing.T) {
 	t.Parallel()
 	_, errOut, err := run(t, "!!!not-base32!!!", "-d")
