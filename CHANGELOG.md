@@ -32,6 +32,7 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 - Building from source now needs Go 1.26.11 or later (was 1.26.10). Go 1.26.11 fixes the `net/http` advisory GO-2026-6859, which govulncheck finds reachable from mimixbox on the earlier patch.
 - Release archives and packages also carry the license of the Go standard library, at `THIRD_PARTY_LICENSES/go/LICENSE`. go-licenses leaves the standard library out, and the binary links it.
 - CI scans every pull request and push to main for committed secrets with gitleaks, and the end-to-end suite runs with atago v0.26.3.
+- Pull requests are measured with himorime (bench/): start-up, cat, sort and wc on 10 and 100,000 lines, ls -l of 10 and 500 files, and a failing cat, compared with the base on the same runner. The testing.B benchmark of ls moved there.
 
 ## [0.42.6] - 2026-11-09
 

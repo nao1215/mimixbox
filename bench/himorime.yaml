@@ -1,0 +1,103 @@
+# yaml-language-server: $schema=https://raw.githubusercontent.com/nao1215/himorime/main/schema/himorime.schema.json
+#
+# mimixbox measured end to end with himorime (https://github.com/nao1215/himorime):
+# one process per call, as a shell runs an applet, from its first
+# instruction to its exit.
+#
+#   make bench          measure the working tree
+#   make bench-compare  compare main with the working tree
+#
+# On a pull request, .github/workflows/bench.yml runs `himorime ci bench`:
+# the base of the pull request and its head are built and measured in
+# interleaved rounds on the same runner. See bench/README.md.
+version: "1"
+
+name: mimixbox
+description: Start-up, and the applets that read lines and list directories, on small and large input and on a missing file.
+
+build:
+  command: [go, build, -trimpath, -o, "${artifact}", ./cmd/mimixbox]
+  cwd: ..
+
+defaults:
+  warmup: 2
+  runs: 20
+  metrics:
+    cpu: true
+    memory: true
+  regression:
+    confidence: 0.95
+    latency:
+      max_percent: 10
+      min_difference: 1ms
+    cpu_total:
+      max_percent: 15
+      min_difference: 2ms
+    peak_rss:
+      max_percent: 15
+      min_difference: 2MiB
+
+benchmarks:
+  - name: version
+    description: Starting mimixbox and exiting, which every applet call pays.
+    tags: [smoke]
+    commands:
+      mimixbox:
+        command: ["${artifact}", --version]
+
+  - name: sort 10
+    description: sort, wc -l and cat of ten lines, where start-up dominates.
+    tags: [smoke]
+    setup:
+      - command: [sh, "${head_root}/gen.sh", lines, "10", "${workdir}/lines.txt"]
+    baseline: cat
+    commands:
+      cat:
+        command: ["${artifact}", cat, "${workdir}/lines.txt"]
+      sort:
+        command: ["${artifact}", sort, "${workdir}/lines.txt"]
+      wc:
+        command: ["${artifact}", wc, -l, "${workdir}/lines.txt"]
+
+  - name: sort 100k
+    description: The same applets on 100,000 lines, where reading and sorting dominate.
+    tags: [large]
+    setup:
+      - command: [sh, "${head_root}/gen.sh", lines, "100000", "${workdir}/lines.txt"]
+    baseline: cat
+    metrics:
+      throughput:
+        work: {value: 100000, unit: lines}
+    commands:
+      cat:
+        command: ["${artifact}", cat, "${workdir}/lines.txt"]
+      sort:
+        command: ["${artifact}", sort, "${workdir}/lines.txt"]
+      wc:
+        command: ["${artifact}", wc, -l, "${workdir}/lines.txt"]
+
+  - name: ls 10
+    description: ls -l -i --sort=size of a directory of ten files.
+    tags: [smoke]
+    setup:
+      - command: [sh, "${head_root}/gen.sh", files, "10", "${workdir}/dir"]
+    commands:
+      mimixbox:
+        command: ["${artifact}", ls, -l, -i, --sort=size, "${workdir}/dir"]
+
+  - name: ls 500
+    description: ls -l -i --sort=size of a directory of 500 files, what the testing.B benchmark of ls measured before it moved here.
+    tags: [large]
+    setup:
+      - command: [sh, "${head_root}/gen.sh", files, "500", "${workdir}/dir"]
+    commands:
+      mimixbox:
+        command: ["${artifact}", ls, -l, -i, --sort=size, "${workdir}/dir"]
+
+  - name: cat error
+    description: cat of a file that does not exist, which reports it and exits 1.
+    tags: [smoke]
+    exit_codes: [1]
+    commands:
+      mimixbox:
+        command: ["${artifact}", cat, "${workdir}/missing.txt"]

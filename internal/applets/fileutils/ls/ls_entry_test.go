@@ -1,8 +1,6 @@
 package ls
 
 import (
-	"context"
-	"io"
 	"os"
 	"path/filepath"
 	"strconv"
@@ -10,8 +8,6 @@ import (
 	"syscall"
 	"testing"
 	"time"
-
-	"github.com/nao1215/mimixbox/internal/command"
 )
 
 // richFixture builds a directory holding one of each entry kind the listing
@@ -244,26 +240,4 @@ func equalSlice(a, b []string) bool {
 		}
 	}
 	return true
-}
-
-// BenchmarkListManyEntriesLong measures listing a directory with many entries in
-// long+inode form, where the old code restatted each entry many times. It lets
-// the entry-model refactor demonstrate fewer duplicate metadata lookups without
-// changing output.
-func BenchmarkListManyEntriesLong(b *testing.B) {
-	dir := b.TempDir()
-	for i := 0; i < 500; i++ {
-		p := filepath.Join(dir, "file"+strconv.Itoa(i)+".txt")
-		if err := os.WriteFile(p, []byte("x"), 0o644); err != nil {
-			b.Fatal(err)
-		}
-	}
-	stdio := command.IO{In: strings.NewReader(""), Out: io.Discard, Err: io.Discard}
-	cmd := New()
-	b.ResetTimer()
-	for i := 0; i < b.N; i++ {
-		if err := cmd.Run(context.Background(), stdio, []string{"-l", "-i", "--sort=size", dir}); err != nil {
-			b.Fatal(err)
-		}
-	}
 }
