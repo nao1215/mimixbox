@@ -204,3 +204,33 @@ func TestNumericSortReadsOnlyTheLeadingNumber(t *testing.T) {
 		})
 	}
 }
+
+// TestKeyStartsAtTheBlanksBeforeItsField checks -k against GNU sort: without
+// -b a field starts at the blanks that come before it, and the key runs to
+// the end of the line as written, so the blanks count in the comparison.
+func TestKeyStartsAtTheBlanksBeforeItsField(t *testing.T) {
+	t.Parallel()
+	tests := []struct {
+		name string
+		in   string
+		args []string
+		want string
+	}{
+		{"a blank field sorts after an absent one", "a \nb\n", []string{"-k", "2"}, "b\na \n"},
+		{"two blanks sort before one", "y a\nx  b\n", []string{"-k", "2"}, "x  b\ny a\n"},
+		{"the blanks are skipped with -b", "x  b\ny a\n", []string{"-b", "-k", "2"}, "y a\nx  b\n"},
+		{"a separator keeps empty fields", "b:x\na::y\n", []string{"-t", ":", "-k", "2"}, "a::y\nb:x\n"},
+	}
+	for _, tt := range tests {
+		t.Run(tt.name, func(t *testing.T) {
+			t.Parallel()
+			out, _, err := run(t, tt.in, tt.args...)
+			if err != nil {
+				t.Fatalf("Run error = %v", err)
+			}
+			if out != tt.want {
+				t.Errorf("sort %v of %q = %q, want %q", tt.args, tt.in, out, tt.want)
+			}
+		})
+	}
+}
