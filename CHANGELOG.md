@@ -7,6 +7,8 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## [Unreleased]
 
+## [0.42.7] - 2026-11-19
+
 ### Fixed
 
 - `base64` and `base32` write nothing for empty input and no trailing newline with `-w 0`, as GNU does. They wrote a lone newline for empty input and ended `-w 0` output with one.
