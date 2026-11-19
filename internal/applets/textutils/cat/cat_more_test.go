@@ -55,13 +55,25 @@ func TestRunSqueezeShowEndsTabsCombined(t *testing.T) {
 }
 
 // TestRunNoTrailingNewline checks renderStream's handling of a final chunk that
-// lacks a trailing newline (the body/no-newline path).
+// lacks a trailing newline: -E marks where a line ends, and GNU cat writes no
+// $ where there is no newline, numbered or not.
 func TestRunNoTrailingNewline(t *testing.T) {
-	out, _, err := runStdin(t, "tail", "-E")
-	if err != nil {
-		t.Fatalf("Run error = %v", err)
+	t.Parallel()
+	tests := []struct {
+		args []string
+		want string
+	}{
+		{[]string{"-E"}, "a$\ntail"},
+		{[]string{"-A"}, "a$\ntail"},
+		{[]string{"-n", "-E"}, "     1\ta$\n     2\ttail"},
 	}
-	if out != "tail$" {
-		t.Errorf("out = %q, want %q", out, "tail$")
+	for _, tt := range tests {
+		out, _, err := runStdin(t, "a\ntail", tt.args...)
+		if err != nil {
+			t.Fatalf("Run error = %v", err)
+		}
+		if out != tt.want {
+			t.Errorf("cat %v = %q, want %q", tt.args, out, tt.want)
+		}
 	}
 }

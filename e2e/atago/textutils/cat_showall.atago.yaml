@@ -73,3 +73,15 @@ scenarios:
           exit_code: 0
           stdout:
             equals: "a\tb^A\n\n^?M-^@"
+
+  # -E marks where a newline is. GNU cat writes no $ after a last line that
+  # has none: "a", "$", a newline and "b" are four bytes.
+  - name: writes no $ after a last line without a newline
+    steps:
+      - run:
+          shell: true
+          command: printf "a\nb" | cat -E | wc -c
+      - assert:
+          exit_code: 0
+          stdout:
+            equals: "4"

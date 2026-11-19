@@ -15,6 +15,7 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 - `nl` ends a last line that has no newline with one, as GNU nl does. `cat -n`, which also writes no newline it did not read in GNU, is unchanged.
 - `sort -n` and `sort -h` read the number at the start of a key as GNU sort does: an optional minus sign, digits and a fraction. A key such as `7-` sorted as 0 because the trailing sign made the whole key unreadable, and `+5` sorted as 5, where GNU reads neither sign.
 - `sort -k` takes the key from the line as written: without `-b` a field begins at the blanks before it, as in GNU sort. The key was rebuilt with the blanks removed and fields joined by one space, which ordered lines differently.
+- `cat -E` and `cat -A` write no `$` after a last line that has no newline, as GNU cat does.
 - `uncompress` and `compress -d` return `corrupt input` for a code beyond the next dictionary entry, instead of expanding forever.
 - `cpio -i` reads an entry body as it arrives instead of allocating the size the header claims, and rejects a header field that is not hexadecimal. A 112-byte archive claiming a 4 GiB file no longer allocates 4 GiB. `cpio -o` refuses a file over 4 GiB, which newc cannot record.
 - `zippwcrack` returns an error for a Zip64 entry whose compressed size exceeds 2^63 bytes, instead of panicking.
