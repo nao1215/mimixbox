@@ -55,3 +55,18 @@ scenarios:
             equals: |
               a
               b
+
+  # GNU sort -n reads the number at the start of a line and nothing after
+  # it, and a plus sign is not part of a number: "+5" is 0 and "7-" is 7.
+  - name: reads only the leading number with -n
+    steps:
+      - run:
+          shell: true
+          command: printf "7-\n+5\n3\n" | sort -n
+      - assert:
+          exit_code: 0
+          stdout:
+            equals: |
+              +5
+              3
+              7-

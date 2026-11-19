@@ -170,3 +170,37 @@ func TestVersionSortAgainstSystem(t *testing.T) {
 		t.Errorf("out = %q", out)
 	}
 }
+
+// TestNumericSortReadsOnlyTheLeadingNumber checks -n and -h against what GNU
+// sort reads as the number at the start of a key: an optional minus sign,
+// digits and a fraction, and nothing after them. A plus sign is not part of
+// a number, and text after the number does not make the key zero.
+func TestNumericSortReadsOnlyTheLeadingNumber(t *testing.T) {
+	t.Parallel()
+	tests := []struct {
+		name string
+		in   string
+		args []string
+		want string
+	}{
+		{"text after the number", "7-\na\n", []string{"-n"}, "a\n7-\n"},
+		{"a second sign ends the number", "1-2\n1.5\n", []string{"-n"}, "1-2\n1.5\n"},
+		{"plus is not a sign", "3\n+5\n", []string{"-n"}, "+5\n3\n"},
+		{"two minus signs are not a number", "--1\n-2\n", []string{"-n"}, "-2\n--1\n"},
+		{"a fraction without a leading digit", ".5\n0.4\n", []string{"-n"}, "0.4\n.5\n"},
+		{"human: text after the suffix", "2K-\n1K\n", []string{"-h"}, "1K\n2K-\n"},
+		{"human: plus is not a sign", "2\n+1K\n", []string{"-h"}, "+1K\n2\n"},
+	}
+	for _, tt := range tests {
+		t.Run(tt.name, func(t *testing.T) {
+			t.Parallel()
+			out, _, err := run(t, tt.in, tt.args...)
+			if err != nil {
+				t.Fatalf("Run error = %v", err)
+			}
+			if out != tt.want {
+				t.Errorf("sort %v of %q = %q, want %q", tt.args, tt.in, out, tt.want)
+			}
+		})
+	}
+}

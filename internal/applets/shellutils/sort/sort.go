@@ -289,15 +289,7 @@ func field(line string, opts options) string {
 // A string with no number parses as 0, matching GNU sort -n.
 func leadingNumber(s string) float64 {
 	s = strings.TrimLeft(s, " \t")
-	end := 0
-	for end < len(s) {
-		ch := s[end]
-		if (ch >= '0' && ch <= '9') || ch == '+' || ch == '-' || ch == '.' {
-			end++
-			continue
-		}
-		break
-	}
+	end := numberPrefix(s)
 	if end == 0 {
 		return 0
 	}
@@ -306,6 +298,35 @@ func leadingNumber(s string) float64 {
 		return 0
 	}
 	return n
+}
+
+// numberPrefix returns the length of the number at the start of s as GNU
+// sort -n and -h read it in the C locale: an optional minus sign, digits, and
+// a decimal point with more digits, holding at least one digit. A plus sign is
+// not part of it, and what follows the number does not change it. It returns
+// 0 when s does not start with a number.
+func numberPrefix(s string) int {
+	i := 0
+	if i < len(s) && s[i] == '-' {
+		i++
+	}
+	digits := 0
+	for i < len(s) && s[i] >= '0' && s[i] <= '9' {
+		i++
+		digits++
+	}
+	if i < len(s) && s[i] == '.' {
+		j := i + 1
+		for j < len(s) && s[j] >= '0' && s[j] <= '9' {
+			j++
+			digits++
+		}
+		i = j
+	}
+	if digits == 0 {
+		return 0
+	}
+	return i
 }
 
 // generalNumber parses the leading floating-point value of s for -g, accepting
@@ -336,15 +357,7 @@ func generalNumber(s string) float64 {
 // number parses as 0.
 func humanNumber(s string) float64 {
 	s = strings.TrimLeft(s, " \t")
-	end := 0
-	for end < len(s) {
-		ch := s[end]
-		if (ch >= '0' && ch <= '9') || ch == '+' || ch == '-' || ch == '.' {
-			end++
-			continue
-		}
-		break
-	}
+	end := numberPrefix(s)
 	if end == 0 {
 		return 0
 	}
