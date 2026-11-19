@@ -1,15 +1,18 @@
 <!-- ALL-CONTRIBUTORS-BADGE:START - Do not remove or modify this section -->
 [![All Contributors](https://img.shields.io/badge/all_contributors-4-orange.svg?style=flat-square)](#contributors-)
 <!-- ALL-CONTRIBUTORS-BADGE:END -->
-![Coverage](https://raw.githubusercontent.com/nao1215/octocovs-central-repo/main/badges/nao1215/mimixbox/coverage.svg)
-[![tested with atago](https://img.shields.io/badge/tested%20with-atago-7c3aed?logo=data:image/svg%2Bxml;base64,PHN2ZyB4bWxucz0iaHR0cDovL3d3dy53My5vcmcvMjAwMC9zdmciIHZpZXdCb3g9IjAgMCAyNCAyNCI%2BPHBhdGggZmlsbD0iI2ZmZiIgZD0iTTMuNiA0LjIgMTEuOSAxMmwtOC4zIDcuOC0xLjktMi4yTDcuOSAxMiAxLjcgNi40eiIvPjxyZWN0IGZpbGw9IiNmZmYiIHg9IjEyLjYiIHk9IjE3LjIiIHdpZHRoPSI5LjciIGhlaWdodD0iMi44IiByeD0iMS40Ii8%2BPC9zdmc%2B&logoColor=white)](https://github.com/nao1215/atago)
 [![Build](https://github.com/nao1215/mimixbox/actions/workflows/build.yml/badge.svg?branch=main)](https://github.com/nao1215/mimixbox/actions/workflows/build.yml)
 [![UnitTest](https://github.com/nao1215/mimixbox/actions/workflows/unit_test.yml/badge.svg?branch=main&event=push)](https://github.com/nao1215/mimixbox/actions/workflows/unit_test.yml)
 [![IntegrationTest](https://github.com/nao1215/mimixbox/actions/workflows/integration_test.yml/badge.svg?event=push)](https://github.com/nao1215/mimixbox/actions/workflows/integration_test.yml)
-[![Gosec](https://github.com/nao1215/mimixbox/actions/workflows/gosec.yml/badge.svg)](https://github.com/nao1215/mimixbox/actions/workflows/gosec.yml)
+![Coverage](https://raw.githubusercontent.com/nao1215/octocovs-central-repo/main/badges/nao1215/mimixbox/coverage.svg)
+[![Gitleaks](https://github.com/nao1215/mimixbox/actions/workflows/gitleaks.yml/badge.svg)](https://github.com/nao1215/mimixbox/actions/workflows/gitleaks.yml)
 [![Trivy](https://github.com/nao1215/mimixbox/actions/workflows/trivy.yml/badge.svg)](https://github.com/nao1215/mimixbox/actions/workflows/trivy.yml)
-![GitHub](https://img.shields.io/github/license/nao1215/mimixbox)
+[![govulncheck](https://github.com/nao1215/mimixbox/actions/workflows/govulncheck.yml/badge.svg)](https://github.com/nao1215/mimixbox/actions/workflows/govulncheck.yml)
+[![Gosec](https://github.com/nao1215/mimixbox/actions/workflows/gosec.yml/badge.svg)](https://github.com/nao1215/mimixbox/actions/workflows/gosec.yml)
+[![reviewdog](https://github.com/nao1215/mimixbox/actions/workflows/reviewdog.yml/badge.svg)](https://github.com/nao1215/mimixbox/actions/workflows/reviewdog.yml)
+[![tested with atago](https://img.shields.io/badge/tested%20with-atago-7c3aed?logo=data:image/svg%2Bxml;base64,PHN2ZyB4bWxucz0iaHR0cDovL3d3dy53My5vcmcvMjAwMC9zdmciIHZpZXdCb3g9IjAgMCAyNCAyNCI%2BPHBhdGggZmlsbD0iI2ZmZiIgZD0iTTMuNiA0LjIgMTEuOSAxMmwtOC4zIDcuOC0xLjktMi4yTDcuOSAxMiAxLjcgNi40eiIvPjxyZWN0IGZpbGw9IiNmZmYiIHg9IjEyLjYiIHk9IjE3LjIiIHdpZHRoPSI5LjciIGhlaWdodD0iMi44IiByeD0iMS40Ii8%2BPC9zdmc%2B&logoColor=white)](https://github.com/nao1215/atago)
 [![GitHub Downloads (all assets, all releases)](https://img.shields.io/github/downloads/nao1215/mimixbox/total)](https://github.com/nao1215/mimixbox/releases)
+[![License](https://img.shields.io/github/license/nao1215/mimixbox)](./LICENSE)
 [![OpenSSF Scorecard](https://api.scorecard.dev/projects/github.com/nao1215/mimixbox/badge)](https://scorecard.dev/viewer/?uri=github.com/nao1215/mimixbox)
 
 ![mimixbox-logo](./doc/image/mimixbox-logo-truss.jpg)

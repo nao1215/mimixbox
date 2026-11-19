@@ -10,6 +10,12 @@ on:
 permissions:
   contents: read
 
+# A new push to a pull request cancels the run of the push before it;
+# runs on main and on a schedule are never canceled.
+concurrency:
+  group: ${{ github.workflow }}-${{ github.event.pull_request.number || github.run_id }}
+  cancel-in-progress: ${{ github.event_name == 'pull_request' }}
+
 jobs:
   coverage:
     name: Coverage (unit + e2e)
@@ -34,9 +40,9 @@ jobs:
       # coverage-instrumented mimixbox. atago is the runner; install it with the
       # same pinned action ref the integration_test workflow uses.
       - name: Install atago
-        uses: nao1215/setup-atago@5c563dcd9d85e114f8abe8bbdcd058e51de09efb # v0.1.3
+        uses: nao1215/setup-atago@5dca90fe652651408ccd1c2aee030767484482a9 # v0.1.5
         with:
-          version: v0.25.2
+          version: v0.26.3
 
       # Combines unit-test coverage with self-hosted E2E coverage (the E2E suite
       # runs a `go build -cover` mimixbox and collects covdata via GOCOVERDIR),

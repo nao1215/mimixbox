@@ -34,7 +34,7 @@ fi
 # "THIRD_PARTY_LICENSES" is a directory; the rest are regular files. The
 # FreeType License text is copied by hand (go-licenses cannot classify it), so
 # it is checked by name.
-REQUIRED_FILES="mimixbox LICENSE installer.sh libshell.sh THIRD_PARTY_LICENSES/github.com/golang/freetype/ftl.txt"
+REQUIRED_FILES="mimixbox LICENSE installer.sh libshell.sh THIRD_PARTY_LICENSES/github.com/golang/freetype/ftl.txt THIRD_PARTY_LICENSES/go/LICENSE"
 REQUIRED_DIRS="THIRD_PARTY_LICENSES"
 
 # checkExtractedDir verifies a single extracted archive root contains every

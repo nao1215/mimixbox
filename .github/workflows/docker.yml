@@ -10,6 +10,12 @@ on:
 permissions:
   contents: read
 
+# A new push to a pull request cancels the run of the push before it;
+# runs on main and on a schedule are never canceled.
+concurrency:
+  group: ${{ github.workflow }}-${{ github.event.pull_request.number || github.run_id }}
+  cancel-in-progress: ${{ github.event_name == 'pull_request' }}
+
 # Builds the Docker image from the local source tree to guarantee that
 # "build mimixbox in Docker" keeps working (GitHub issue #4). The image's
 # Dockerfile compiles MimixBox inside the golang toolchain image, so a broken
