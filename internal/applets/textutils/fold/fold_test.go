@@ -38,6 +38,13 @@ func TestRun(t *testing.T) {
 		{"last line without a newline", "abc\nde", []string{"-w", "5"}, "abc\nde"},
 		{"last line without a newline is folded", "abcdefg", []string{"-w", "3"}, "abc\ndef\ng"},
 		{"carriage return kept", "ab\r\n", []string{"-w", "5"}, "ab\r\n"},
+		// Columns are counted as GNU fold counts them: a tab runs to the next
+		// multiple of eight, a backspace moves back one and a carriage
+		// return goes back to the start.
+		{"tab runs to the next tab stop", "a\tb\n", []string{"-w", "4"}, "a\n\t\nb\n"},
+		{"backspace moves back a column", "ab\bcdef\n", []string{"-w", "4"}, "ab\bcde\nf\n"},
+		{"carriage return goes to the start", "abc\rdefgh\n", []string{"-w", "4"}, "abc\rdefg\nh\n"},
+		{"break at a tab with -s", "aa bb\tcc dd ee\n", []string{"-s", "-w", "6"}, "aa \nbb\n\t\ncc dd \nee\n"},
 	}
 	for _, tt := range tests {
 		tt := tt

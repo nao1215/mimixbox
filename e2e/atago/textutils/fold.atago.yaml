@@ -29,3 +29,15 @@ scenarios:
           exit_code: 0
           stdout:
             equals: "6"
+
+  # A tab runs to the next multiple of eight columns, so under -w 4 it
+  # cannot share a line with anything: "a", the tab and "b" are three lines.
+  - name: counts a tab as running to the next tab stop
+    steps:
+      - run:
+          shell: true
+          command: printf "a\tb\n" | fold -w 4 | wc -l
+      - assert:
+          exit_code: 0
+          stdout:
+            equals: "3"
