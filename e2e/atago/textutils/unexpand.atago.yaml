@@ -35,3 +35,15 @@ scenarios:
           exit_code: { not: 0 }
           stderr:
             equals: "unexpand: /no_exist_file: no such file or directory"
+
+  # A lone space after a word stays a space even where it reaches a tab
+  # stop, as in GNU unexpand: seven letters, a space and b are nine bytes.
+  - name: keeps a lone space before a tab stop
+    steps:
+      - run:
+          shell: true
+          command: printf "aaaaaaa b" | unexpand -a | wc -c
+      - assert:
+          exit_code: 0
+          stdout:
+            equals: "9"
