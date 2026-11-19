@@ -47,3 +47,15 @@ scenarios:
           exit_code: 0
           stdout:
             equals: "9"
+
+  # Without -a only the leading blanks change; a tab after the first word is
+  # written as it was: "a", the tab, "b" and the newline are four bytes.
+  - name: keeps a tab after the first word without -a
+    steps:
+      - run:
+          shell: true
+          command: printf "a\tb\n" | unexpand | wc -c
+      - assert:
+          exit_code: 0
+          stdout:
+            equals: "4"

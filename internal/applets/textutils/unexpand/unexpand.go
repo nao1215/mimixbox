@@ -127,6 +127,8 @@ func convertLine(line string, opts options) string {
 	pendingChars := 0   // number of blank characters in the current run
 	pendingTab := false // whether the current run holds a tab
 	convertible := true // whether the current blank run may become tabs
+	pendingFrom := 0    // byte offset in line where the current run starts
+	pendingTo := 0      // byte offset in line just past the current run
 
 	flush := func() {
 		if pendingBlanks == 0 {
@@ -153,9 +155,9 @@ func convertLine(line string, opts options) string {
 				col++
 			}
 		} else {
-			for i := 0; i < pendingBlanks; i++ {
-				b.WriteByte(' ')
-			}
+			// A run that is not converted is written as it was read,
+			// tabs included, as in GNU unexpand without -a.
+			b.WriteString(line[pendingFrom:pendingTo])
 		}
 		pendingBlanks = 0
 	}
@@ -168,9 +170,11 @@ func convertLine(line string, opts options) string {
 				pendingStart = column
 				pendingChars = 0
 				pendingTab = false
+				pendingFrom = i
 			}
 			pendingBlanks++
 			pendingChars++
+			pendingTo = i + 1
 			column++
 		case '\t':
 			// A literal tab advances to the next tab stop. Treat it as part of
@@ -178,11 +182,13 @@ func convertLine(line string, opts options) string {
 			if pendingBlanks == 0 {
 				pendingStart = column
 				pendingChars = 0
+				pendingFrom = i
 			}
 			pendingChars++
 			pendingTab = true
 			next := column + (opts.tabStop - column%opts.tabStop)
 			pendingBlanks += next - column
+			pendingTo = i + 1
 			column = next
 		default:
 			flush()
