@@ -165,6 +165,10 @@ type Numberer struct {
 	// JoinBlankLines counts this many consecutive blank lines as a single line
 	// for numbering (nl -l). Zero or one disables the grouping.
 	JoinBlankLines int
+	// TerminateLines ends every line written with a newline, the last too
+	// when the input stops without one, as GNU nl does. cat -n leaves it
+	// false: GNU cat writes no newline it did not read.
+	TerminateLines bool
 }
 
 // section identifies which logical part of the input a line belongs to.
@@ -191,6 +195,9 @@ func (n Numberer) WriteTo(w io.Writer, r io.Reader) error {
 			body, nl := chunk, ""
 			if strings.HasSuffix(chunk, "\n") {
 				body, nl = chunk[:len(chunk)-1], "\n"
+			}
+			if n.TerminateLines {
+				nl = "\n"
 			}
 
 			// A section delimiter line switches sections, resets the line number
