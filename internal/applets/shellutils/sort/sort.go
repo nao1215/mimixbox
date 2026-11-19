@@ -264,25 +264,37 @@ func key(line string, opts options) string {
 	return s
 }
 
-// field returns the substring of line from the start field selected by -k to the
-// end of the line, using the -t separator (or runs of blanks by default).
+// field returns line from the start of the field -k selects to the end of the
+// line, as written. With -t, field N begins after the (N-1)th separator.
+// Without it, fields are separated by the empty string between a non-blank and
+// a blank, as in GNU sort, so field N begins at the blanks that come before it
+// (-b, applied by key, skips them). A field past the last is empty.
 func field(line string, opts options) string {
-	var fields []string
 	if opts.hasSeparator {
-		fields = strings.Split(line, opts.separator)
-	} else {
-		fields = strings.FieldsFunc(line, func(r rune) bool {
-			return r == ' ' || r == '\t'
-		})
+		rest := line
+		for n := 1; n < opts.key; n++ {
+			i := strings.Index(rest, opts.separator)
+			if i < 0 {
+				return ""
+			}
+			rest = rest[i+len(opts.separator):]
+		}
+		return rest
 	}
-	idx := opts.key - 1
-	if idx >= len(fields) {
-		return ""
+	isBlank := func(c byte) bool { return c == ' ' || c == '\t' }
+	i := 0
+	for n := 1; n < opts.key; n++ {
+		for i < len(line) && isBlank(line[i]) {
+			i++
+		}
+		for i < len(line) && !isBlank(line[i]) {
+			i++
+		}
+		if i == len(line) {
+			return ""
+		}
 	}
-	if opts.hasSeparator {
-		return strings.Join(fields[idx:], opts.separator)
-	}
-	return strings.Join(fields[idx:], " ")
+	return line[i:]
 }
 
 // leadingNumber parses the leading numeric value of s, ignoring leading blanks.

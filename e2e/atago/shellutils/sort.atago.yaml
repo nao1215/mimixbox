@@ -70,3 +70,17 @@ scenarios:
               +5
               3
               7-
+
+  # Without -b, a -k field begins at the blanks before it, as in GNU sort:
+  # the key of "x  b" is "  b", which sorts before the " a" of "y a".
+  - name: counts the blanks before a -k field
+    steps:
+      - run:
+          shell: true
+          command: printf "y a\nx  b\n" | sort -k 2
+      - assert:
+          exit_code: 0
+          stdout:
+            equals: |
+              x  b
+              y a
