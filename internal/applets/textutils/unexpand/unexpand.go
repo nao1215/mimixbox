@@ -124,13 +124,18 @@ func convertLine(line string, opts options) string {
 	column := 0         // visual column of the next output character
 	pendingBlanks := 0  // number of consecutive spaces seen, not yet emitted
 	pendingStart := 0   // column at which the current blank run started
+	pendingChars := 0   // number of blank characters in the current run
+	pendingTab := false // whether the current run holds a tab
 	convertible := true // whether the current blank run may become tabs
 
 	flush := func() {
 		if pendingBlanks == 0 {
 			return
 		}
-		if convertible {
+		// A run of one space after a non-blank stays a space even when it
+		// reaches a tab stop, as in GNU unexpand: a tab would not be
+		// shorter. At the start of a line it becomes a tab.
+		if convertible && (pendingTab || pendingChars > 1 || pendingStart == 0) {
 			col := pendingStart
 			end := pendingStart + pendingBlanks
 			// Emit tabs up to each tab stop that lies within the run.
@@ -161,15 +166,21 @@ func convertLine(line string, opts options) string {
 		case ' ':
 			if pendingBlanks == 0 {
 				pendingStart = column
+				pendingChars = 0
+				pendingTab = false
 			}
 			pendingBlanks++
+			pendingChars++
 			column++
 		case '\t':
 			// A literal tab advances to the next tab stop. Treat it as part of
 			// the blank run so adjacent spaces realign correctly.
 			if pendingBlanks == 0 {
 				pendingStart = column
+				pendingChars = 0
 			}
+			pendingChars++
+			pendingTab = true
 			next := column + (opts.tabStop - column%opts.tabStop)
 			pendingBlanks += next - column
 			column = next

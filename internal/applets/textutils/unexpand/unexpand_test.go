@@ -38,6 +38,17 @@ func TestRunStdin(t *testing.T) {
 		{"tabs long flag", "    x\n", []string{"--tabs=4"}, "\tx\n"},
 		{"plain no blanks", "hello\nworld\n", nil, "hello\nworld\n"},
 		{"no trailing newline", "        x", nil, "\tx"},
+		// GNU unexpand leaves a lone space that reaches a tab stop as a
+		// space: a tab would not be shorter. Two blanks, or a space that the
+		// run goes on past, become tabs.
+		{"lone space before a tab stop kept", "aaaaaaa b\n", []string{"-a"}, "aaaaaaa b\n"},
+		{"lone space at the end of a line kept", "aaaaaaa \n", []string{"-a"}, "aaaaaaa \n"},
+		{"two spaces across a tab stop", "aaaaaaa  b\n", []string{"-a"}, "aaaaaaa\t b\n"},
+		{"space and a tab", "aaaaaaa \tb\n", []string{"-a"}, "aaaaaaa\t\tb\n"},
+		{"lone space at the start of a line converted", " b\n", []string{"-t", "1"}, "\tb\n"},
+		{"lone space after a word kept with -t 1", "a b\n", []string{"-t", "1"}, "a b\n"},
+		{"a tab one column wide stays a tab", "aaaaaaa\tb\n", []string{"-a"}, "aaaaaaa\tb\n"},
+		{"run past two tab stops", "aaaaaaa         b\n", []string{"-a"}, "aaaaaaa\t\tb\n"},
 	}
 	for _, tt := range tests {
 		tt := tt
