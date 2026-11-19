@@ -32,6 +32,12 @@ func TestRun(t *testing.T) {
 		{"empty line preserved", "\n", []string{"-w", "5"}, "\n"},
 		{"break at spaces", "aa bb cc\n", []string{"-w", "5", "-s"}, "aa \nbb cc\n"},
 		{"exact width", "abc\n", []string{"-w", "3"}, "abc\n"},
+		// GNU fold writes a line's own newline and nothing it did not read:
+		// a last line without one ends without one, and a carriage return
+		// before the newline is kept.
+		{"last line without a newline", "abc\nde", []string{"-w", "5"}, "abc\nde"},
+		{"last line without a newline is folded", "abcdefg", []string{"-w", "3"}, "abc\ndef\ng"},
+		{"carriage return kept", "ab\r\n", []string{"-w", "5"}, "ab\r\n"},
 	}
 	for _, tt := range tests {
 		tt := tt
