@@ -15,7 +15,7 @@ concurrency:
 #
 # On a pull request, `himorime ci` checks the base of the pull request out
 # into a temporary worktree, builds it and the head with the same Go, and
-# measures both in interleaved rounds on this runner, so a noisy neighbour
+# measures both in interleaved rounds on this runner, so a noisy neighbor
 # slows both revisions instead of one. The job fails when the head is slower,
 # uses more CPU time or more memory than the base beyond the tolerance of the
 # suite with 95% confidence; a difference too close to call is inconclusive
