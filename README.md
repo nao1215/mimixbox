@@ -33,7 +33,7 @@ sha384sum - Calculate or Check secure hash 384 algorithm
 sha512sum - Calculate or Check secure hash 512 algorithm
 ```
 
-The full list with descriptions is in [doc/commands.md](doc/commands.md), and `mimixbox APPLET --help` shows an applet's options and examples.
+The full list with descriptions is in [doc/commands.md](https://github.com/nao1215/mimixbox/blob/main/doc/commands.md), and `mimixbox APPLET --help` shows an applet's options and examples.
 
 ## Install
 
