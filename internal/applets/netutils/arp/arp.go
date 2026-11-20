@@ -1,5 +1,5 @@
 // Package arp implements the arp applet in read-only inspection mode: it prints
-// the kernel ARP/neighbour cache from an injectable data source. Adding and
+// the kernel ARP/neighbor cache from an injectable data source. Adding and
 // deleting static entries is intentionally deferred and reported as a documented
 // capability error.
 package arp
@@ -23,12 +23,12 @@ func New() *Command { return &Command{} }
 func (c *Command) Name() string { return "arp" }
 
 // Synopsis returns the one-line description shown in the applet list.
-func (c *Command) Synopsis() string { return "Show the ARP/neighbour cache (read-only)" }
+func (c *Command) Synopsis() string { return "Show the ARP/neighbor cache (read-only)" }
 
-// source supplies neighbour fixtures; tests replace it via SetSource.
+// source supplies neighbor fixtures; tests replace it via SetSource.
 var source = func() []ipcmd.Neighbour { return nil }
 
-// SetSource installs fixture neighbours for a test and returns a restore func.
+// SetSource installs fixture neighbors for a test and returns a restore func.
 func SetSource(ns []ipcmd.Neighbour) (restore func()) {
 	orig := source
 	source = func() []ipcmd.Neighbour { return ns }
@@ -38,7 +38,7 @@ func SetSource(ns []ipcmd.Neighbour) (restore func()) {
 // Run executes arp.
 func (c *Command) Run(_ context.Context, stdio command.IO, args []string) error {
 	fs := command.NewFlagSet(c.Name(), "[-n] [-a]", stdio.Err).WithHelp(command.Help{
-		Description: "Print the kernel ARP cache (the IPv4 address-to-MAC neighbour table) in the " +
+		Description: "Print the kernel ARP cache (the IPv4 address-to-MAC neighbor table) in the " +
 			"traditional columnar format (Address, HWtype, HWaddress, Flags, Iface). This slice is " +
 			"read-only: adding (-s) or deleting (-d) entries is intentionally deferred and reported " +
 			"as an error.",

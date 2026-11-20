@@ -16,7 +16,7 @@ There are 451 commands. Run `mimixbox --list` to see them on the terminal.
 | adjtimex | Read or set kernel clock parameters |
 | ar | Create, modify and extract from archives |
 | arch | Print machine hardware name (same as uname -m) |
-| arp | Show the ARP/neighbour cache (read-only) |
+| arp | Show the ARP/neighbor cache (read-only) |
 | arping | Probe a host on the local network with ARP requests |
 | ascii | Print the ASCII code table |
 | ash | Command interpreter (MimixBox mbsh compatibility front-end) |
@@ -172,7 +172,7 @@ There are 451 commands. Run `mimixbox --list` to see them on the terminal.
 | ipcrm | Remove System V IPC objects by id |
 | ipcs | Show System V IPC facilities status |
 | iplink | Show network device link state |
-| ipneigh | Show the ARP/neighbour table |
+| ipneigh | Show the ARP/neighbor table |
 | iproute | Show the routing table |
 | iprule | Show routing policy rules |
 | iptunnel | Show/parse IP tunnels (inspect-only) |
