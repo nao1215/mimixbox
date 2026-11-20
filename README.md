@@ -216,7 +216,7 @@ MimixBox is licensed under the [Apache License 2.0](./LICENSE). Some applets (fo
 
 The release archives and the `.deb` / `.rpm` / `.apk` packages include the license texts of every linked dependency under `THIRD_PARTY_LICENSES/` (installed to `/usr/share/doc/mimixbox/THIRD_PARTY_LICENSES`). The `fakemovie` applet renders text with Freetype-Go, which MimixBox uses under the FreeType License: portions of this software are based in part on the work of the FreeType Team (https://freetype.org/).
 
-## Contributors
+## Contributors ✨
 
 Thanks goes to these wonderful people ([emoji key](https://allcontributors.org/docs/en/emoji-key)):
 

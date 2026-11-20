@@ -58,7 +58,7 @@ func (c *Command) Synopsis() string {
 	case *c.fixedObject == objRoute:
 		return "Show the routing table"
 	case *c.fixedObject == objNeigh:
-		return "Show the ARP/neighbour table"
+		return "Show the ARP/neighbor table"
 	default:
 		return "Show routing policy rules"
 	}
@@ -126,7 +126,7 @@ func (c *Command) help() command.Help {
 			{Command: "ip addr show", Explain: "List addresses on every device."},
 			{Command: "ip link show dev eth0", Explain: "Show one device's link state."},
 			{Command: "iproute show", Explain: "Print the routing table."},
-			{Command: "ipneigh show", Explain: "Print the neighbour (ARP) table."},
+			{Command: "ipneigh show", Explain: "Print the neighbor (ARP) table."},
 		},
 		ExitStatus: "0  the requested table was printed.\n" +
 			"1  bad object/subcommand, or a mutating subcommand was requested.",
