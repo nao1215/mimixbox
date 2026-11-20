@@ -69,7 +69,7 @@ The applet registry is generated. `cmd/genapplets` scans the packages under
 ### Adding or migrating an applet
 
 1. Create (or rewrite) the applet package so its type implements `command.Command`, and export a nullary constructor that returns `*Command` (e.g. `func New() *Command`). `cat`, `wc`, `head`, and `basename` are good references.
-2. Run `make generate` to regenerate the registry (`internal/applets/applet_registry_gen.go`) and the README command table. The generator discovers your constructor automatically; there is no hand-maintained registry to edit.
+2. Run `make generate` to regenerate the registry (`internal/applets/applet_registry_gen.go`) and the command table in `doc/commands.md`. The generator discovers your constructor automatically; there is no hand-maintained registry to edit.
 3. Add table-driven unit tests for the applet (and for any new `internal/...` logic).
 4. Run `make test` and, for behaviour visible from the shell, add an `e2e/atago/` spec.
 

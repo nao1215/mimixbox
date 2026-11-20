@@ -1,11 +1,11 @@
-// Command genlist regenerates the command (applet) list in README.md from the
+// Command genlist regenerates the command (applet) list in doc/commands.md from the
 // single source of truth: the applet table in internal/applets. Each applet's
 // own Synopsis() supplies its description, so the documented list can never
 // drift from the registered commands.
 //
 // Run it with `make command-list` (or `go run ./cmd/genlist`) after adding or
 // renaming an applet. It rewrites the block between the COMMAND_LIST markers in
-// README.md and exits non-zero if those markers are missing.
+// doc/commands.md and exits non-zero if those markers are missing.
 package main
 
 import (
@@ -18,7 +18,7 @@ import (
 )
 
 const (
-	readmePath = "README.md"
+	readmePath = "doc/commands.md"
 	startMark  = "<!-- COMMAND_LIST_START -->"
 	endMark    = "<!-- COMMAND_LIST_END -->"
 )
@@ -53,7 +53,7 @@ func run() error {
 	if updated == content {
 		return nil // already up to date
 	}
-	return os.WriteFile(readmePath, []byte(updated), 0o644) // #nosec G306 G703 -- README is world-readable
+	return os.WriteFile(readmePath, []byte(updated), 0o644) // #nosec G306 G703 -- the command list is world-readable
 }
 
 // table renders the sorted applet list as a GitHub-flavored Markdown table.
