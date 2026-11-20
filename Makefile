@@ -89,11 +89,11 @@ demo: build ## Re-record assets/demo.gif from assets/demo.tape (needs vhs)
 	# demo honest is TestDemoTapeCommandsStillWork, not this target.
 	PATH="$(CURDIR):$$PATH" vhs assets/demo.tape
 
-generate: ## Regenerate code (applet registry) and the README command list
+generate: ## Regenerate code (applet registry) and the command list in doc/commands.md
 	go generate ./...
 	$(MAKE) command-list
 
-command-list: ## Regenerate the command list in README.md from the applet table
+command-list: ## Regenerate the command list in doc/commands.md from the applet table
 	go run ./cmd/genlist
 
 jail:  ## Make jail environment for testing chroot/ischroot

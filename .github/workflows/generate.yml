@@ -15,7 +15,7 @@ concurrency:
   group: ${{ github.workflow }}-${{ github.event.pull_request.number || github.run_id }}
   cancel-in-progress: ${{ github.event_name == 'pull_request' }}
 
-# Ensures the auto-generated applet registry and README command list stay in
+# Ensures the auto-generated applet registry and command list in doc/commands.md stay in
 # sync with the source tree. A drift between `make generate` output and the
 # committed files fails this job so it cannot be merged silently.
 jobs:
